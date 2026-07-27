@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { User } from "./domain/entities/user.entity";
+import { User } from "./user.entity";
 
 describe("User Entity", () => {
   it("should create a user with defaults", () => {

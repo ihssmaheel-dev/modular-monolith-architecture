@@ -2,6 +2,17 @@ import { Controller } from "@nestjs/common";
 import { tsRestHandler, TsRestHandler } from "@ts-rest/nest";
 import { usersContract, UserResponse } from "@repo/shared";
 import { UsersService } from "../application/users.service";
+import { User } from "../domain/entities/user.entity";
+
+function toUserResponse(user: User): UserResponse {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString(),
+  };
+}
 
 @Controller()
 export class UsersController {
@@ -11,19 +22,14 @@ export class UsersController {
   async list() {
     return tsRestHandler(usersContract.list, async ({ query }) => {
       const result = await this.usersService.list(query.page, query.limit);
-      const body = {
-        users: result.users.map((u) => ({
-          id: u.id,
-          email: u.email,
-          name: u.name,
-          createdAt: u.createdAt.toISOString(),
-          updatedAt: u.updatedAt.toISOString(),
-        })),
-        total: result.total,
-        page: result.page,
-        limit: result.limit,
+      if (result.isErr()) {
+        return { status: 500 as const, body: { message: "Internal error" } };
+      }
+      const { users, total, page, limit } = result.value;
+      return {
+        status: 200 as const,
+        body: { users: users.map(toUserResponse), total, page, limit },
       };
-      return { status: 200 as const, body };
     });
   }
 
@@ -34,15 +40,7 @@ export class UsersController {
       if (result.isErr()) {
         return { status: 404 as const, body: { message: `User not found: ${params.id}` } };
       }
-      const user = result.value;
-      const body: UserResponse = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
-      };
-      return { status: 200 as const, body };
+      return { status: 200 as const, body: toUserResponse(result.value) };
     });
   }
 
@@ -53,15 +51,7 @@ export class UsersController {
       if (result.isErr()) {
         return { status: 409 as const, body: { message: "Email already taken" } };
       }
-      const user = result.value;
-      const responseBody: UserResponse = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
-      };
-      return { status: 201 as const, body: responseBody };
+      return { status: 201 as const, body: toUserResponse(result.value) };
     });
   }
 
@@ -73,15 +63,7 @@ export class UsersController {
         const status = result.error.type === "USER_NOT_FOUND" ? 404 : 409;
         return { status: status as 404 | 409, body: { message: result.error.type } };
       }
-      const user = result.value;
-      const responseBody: UserResponse = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
-      };
-      return { status: 200 as const, body: responseBody };
+      return { status: 200 as const, body: toUserResponse(result.value) };
     });
   }
 

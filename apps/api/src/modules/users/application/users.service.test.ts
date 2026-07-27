@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { UsersService } from "./users.service";
 import { UsersRepository } from "../infrastructure/users.repository";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { User } from "../domain/entities/user.entity";
+import { ok, err } from "neverthrow";
 
 describe("UsersService", () => {
   let service: UsersService;
@@ -16,17 +18,18 @@ describe("UsersService", () => {
       save: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
-    } as any;
+      count: vi.fn(),
+    } as UsersRepository;
 
-    eventEmitter = { emit: vi.fn() } as any;
+    eventEmitter = { emit: vi.fn() } as EventEmitter2;
 
     service = new UsersService(repository, eventEmitter);
   });
 
   describe("create", () => {
     it("should create a user when email is available", async () => {
-      vi.mocked(repository.findByEmail).mockResolvedValue(null);
-      vi.mocked(repository.save).mockImplementation(async (user: any) => user);
+      vi.mocked(repository.findByEmail).mockResolvedValue(ok(null));
+      vi.mocked(repository.save).mockImplementation(async (user) => ok(user));
 
       const result = await service.create({ email: "test@example.com", name: "Test" });
 
@@ -37,7 +40,8 @@ describe("UsersService", () => {
     });
 
     it("should return EMAIL_TAKEN when email exists", async () => {
-      vi.mocked(repository.findByEmail).mockResolvedValue({} as any);
+      const existingUser = User.create({ email: "taken@example.com", name: "Taken" });
+      vi.mocked(repository.findByEmail).mockResolvedValue(ok(existingUser));
 
       const result = await service.create({ email: "taken@example.com", name: "Test" });
 
@@ -50,23 +54,21 @@ describe("UsersService", () => {
 
   describe("getById", () => {
     it("should return user when found", async () => {
-      vi.mocked(repository.findById).mockResolvedValue({
-        isOk: () => true,
-        value: { id: "123", email: "a@b.com", name: "A" },
-      } as any);
+      const user = User.create({ email: "a@b.com", name: "A" });
+      vi.mocked(repository.findById).mockResolvedValue(ok(user));
 
-      const result = await service.getById("123");
+      const result = await service.getById("some-id");
       expect(result.isOk()).toBe(true);
     });
 
     it("should return USER_NOT_FOUND when not found", async () => {
-      vi.mocked(repository.findById).mockResolvedValue({
-        isOk: () => true,
-        value: null,
-      } as any);
+      vi.mocked(repository.findById).mockResolvedValue(ok(null));
 
       const result = await service.getById("missing");
       expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error.type).toBe("USER_NOT_FOUND");
+      }
     });
   });
 });

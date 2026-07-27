@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy } from "@nestjs/common";
-import { Queue, Worker } from "bullmq";
+import { Queue, Worker, Job } from "bullmq";
 import { env } from "../../config/env";
 
 @Injectable()
@@ -7,25 +7,28 @@ export class QueueService implements OnModuleDestroy {
   private queues = new Map<string, Queue>();
   private workers = new Map<string, Worker>();
 
-  getQueue(name: string): Queue {
+  getQueue<T = unknown>(name: string): Queue<T> {
     if (!this.queues.has(name)) {
-      const queue = new Queue(name, {
+      const queue = new Queue<T>(name, {
         connection: { url: env.REDIS_URL },
       });
-      this.queues.set(name, queue);
+      this.queues.set(name, queue as Queue);
     }
-    return this.queues.get(name)!;
+    return this.queues.get(name)! as Queue<T>;
   }
 
-  addWorker(name: string, handler: (job: any) => Promise<void>): Worker {
-    const worker = new Worker(
+  addWorker<T = unknown>(
+    name: string,
+    handler: (job: Job<T>) => Promise<void>,
+  ): Worker<T> {
+    const worker = new Worker<T>(
       name,
       async (job) => {
         await handler(job);
       },
       { connection: { url: env.REDIS_URL } },
     );
-    this.workers.set(name, worker);
+    this.workers.set(name, worker as Worker);
     return worker;
   }
 

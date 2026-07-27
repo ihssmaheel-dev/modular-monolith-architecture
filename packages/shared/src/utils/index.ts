@@ -1,8 +1,8 @@
-import { z } from "zod";
+import { DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from "../constants";
 
 export function paginate(page?: number, limit?: number) {
   const safePage = Math.max(1, page ?? 1);
-  const safeLimit = Math.min(100, Math.max(1, limit ?? 20));
+  const safeLimit = Math.min(MAX_PAGE_LIMIT, Math.max(1, limit ?? DEFAULT_PAGE_LIMIT));
   const skip = (safePage - 1) * safeLimit;
 
   return { page: safePage, limit: safeLimit, skip };
