@@ -1,0 +1,25 @@
+# AI Instructions
+
+Read these files in order before making any code changes. They define the non-negotiable rules for this codebase.
+
+| File | Purpose |
+|------|---------|
+| [CORE_RULES.md](./CORE_RULES.md) | Supreme laws. Stack is locked. Never/always rules. |
+| [MODULE_RULES.md](./MODULE_RULES.md) | How to create and modify backend modules correctly. |
+| [PACKAGE_POLICY.md](./PACKAGE_POLICY.md) | How to install any package. Approval flow. |
+| [EVENT_AND_ERROR_RULES.md](./EVENT_AND_ERROR_RULES.md) | Domain events mechanism + neverthrow Result pattern. |
+| [TESTING_RULES.md](./TESTING_RULES.md) | Unit / Integration / E2E test contract. |
+| [FRONTEND_RULES.md](./FRONTEND_RULES.md) | Web + Mobile rules. packages/ui is web-only. |
+| [CODE_QUALITY_RULES.md](./CODE_QUALITY_RULES.md) | File size limits, coding principles, naming, anti-patterns. |
+| [SECURITY_AND_OPS_RULES.md](./SECURITY_AND_OPS_RULES.md) | Env vars, security, indexing, logging, git workflow. |
+
+## How to use this
+
+1. Read `CORE_RULES.md` first — always.
+2. Before creating/modifying a backend module → read `MODULE_RULES.md`.
+3. Before adding any dependency → read `PACKAGE_POLICY.md`.
+4. Before writing error handling or events → read `EVENT_AND_ERROR_RULES.md`.
+5. Before writing tests → read `TESTING_RULES.md`.
+6. Before touching frontend code → read `FRONTEND_RULES.md`.
+7. Before writing any code → read `CODE_QUALITY_RULES.md`.
+8. Before config, security, logging, or git work → read `SECURITY_AND_OPS_RULES.md`.

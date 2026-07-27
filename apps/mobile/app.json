@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "monorepo-mobile",
+    "slug": "monorepo-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "monorepo",
+    "platforms": ["ios", "android"],
+    "plugins": ["expo-router"],
+    "extra": {
+      "API_BASE_URL": "http://localhost:3000"
+    }
+  }
+}
