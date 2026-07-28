@@ -1,7 +1,17 @@
-import { useEffect } from "react";
-import { useColorScheme } from "react-native";
-import "global.css";
+import { Stack } from "expo-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "../global.css";
 
-export function RootLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+const queryClient = new QueryClient();
+
+export default function RootLayout() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Stack>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="users/[id]" options={{ title: "User Details" }} />
+      </Stack>
+    </QueryClientProvider>
+  );
 }

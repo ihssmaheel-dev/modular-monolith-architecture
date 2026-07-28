@@ -1,7 +1,7 @@
 import { createApiClient } from "@repo/api-client";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuthStore } from "../stores/auth.store";
 
 export const api = createApiClient(
-  import.meta.env.VITE_API_URL ?? "http://localhost:3000",
+  "http://localhost:3000",
   () => useAuthStore.getState().getToken(),
 );
