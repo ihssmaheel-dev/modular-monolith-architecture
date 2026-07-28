@@ -13,6 +13,7 @@ You are working in a modular monolith codebase. Before making any changes, read 
 7. `ai_instructions/FRONTEND_RULES.md` — Web and mobile rules.
 8. `ai_instructions/CODE_QUALITY_RULES.md` — Small files, clean code, no anti-patterns.
 9. `ai_instructions/SECURITY_AND_OPS_RULES.md` — Env vars, security, indexing, logging, git workflow.
+10. `ai_instructions/PERFORMANCE_RULES.md` — DB queries, caching, frontend perf, bundle size.
 
 ## Non-Negotiable
 

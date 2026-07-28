@@ -25,9 +25,9 @@ Define domain errors as a union or enum:
 
 ```typescript
 // modules/users/domain/errors/user.errors.ts
-export type UserNotFound = { type: 'USER_NOT_FOUND'; userId: string };
-export type EmailTaken = { type: 'EMAIL_TAKEN'; email: string };
-export type InvalidUserData = { type: 'INVALID_USER_DATA'; field: string; reason: string };
+export type UserNotFound = { type: "USER_NOT_FOUND"; userId: string };
+export type EmailTaken = { type: "EMAIL_TAKEN"; email: string };
+export type InvalidUserData = { type: "INVALID_USER_DATA"; field: string; reason: string };
 
 export type UserError = UserNotFound | EmailTaken | InvalidUserData;
 ```
@@ -36,17 +36,18 @@ export type UserError = UserNotFound | EmailTaken | InvalidUserData;
 
 ```typescript
 // modules/application/users.service.ts
-import { Result, ResultAsync } from 'neverthrow';
+import { Result, ResultAsync } from "neverthrow";
 
 async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
   const exists = await this.userRepository.findByEmail(data.email);
-  if (exists) {
-    return err({ type: 'EMAIL_TAKEN', email: data.email });
-  }
+  if (exists.isErr()) return err(exists.error);
+  if (exists.value) return err({ type: "EMAIL_TAKEN", email: data.email });
 
   const user = User.create(data);
-  await this.userRepository.save(user);
-  return ok(user);
+  const saved = await this.userRepository.save(user);
+  if (saved.isErr()) return err(saved.error);
+
+  return ok(saved.value);
 }
 ```
 
@@ -59,12 +60,12 @@ async createUser(body: CreateUserDto) {
 
   if (result.isErr()) {
     switch (result.error.type) {
-      case 'EMAIL_TAKEN':
-        return { status: 409, body: { message: 'Email already taken' } };
-      case 'INVALID_USER_DATA':
+      case "EMAIL_TAKEN":
+        return { status: 409, body: { message: "Email already taken" } };
+      case "INVALID_USER_DATA":
         return { status: 400, body: { message: result.error.reason } };
       default:
-        return { status: 500, body: { message: 'Internal error' } };
+        return { status: 500, body: { message: "Internal error" } };
     }
   }
 
@@ -83,6 +84,43 @@ async createUser(body: CreateUserDto) {
 | Forbidden | 403 | `FORBIDDEN` |
 | Infrastructure failure | 500 | Never expose internals to client |
 
+### Error Serialization
+
+Domain errors stay internal. Controllers translate them to safe HTTP responses:
+
+```typescript
+// Good — safe for client
+return { status: 404, body: { message: "User not found" } };
+
+// Bad — leaks internal details
+return { status: 404, body: { message: `User ${id} not found in MongoDB collection users` } };
+```
+
+Never expose:
+- Database collection names
+- Internal IDs (unless the API contract defines it)
+- Stack traces
+- File paths
+- Query details
+
+---
+
+## Repository Layer — When to Return Result
+
+Repositories should return `Result` for operations that can fail meaningfully:
+
+| Operation | Return Type | Reasoning |
+|-----------|-------------|-----------|
+| `findById(id)` | `Result<User \| null, UserNotFound>` | ID lookup can meaningfully fail |
+| `findByEmail(email)` | `Result<User \| null, never>` | Lookup by unique field — null is valid, no error type needed |
+| `findAll(options)` | `Result<{ users, total }, never>` | Query success/failure is infrastructure, not domain |
+| `save(user)` | `Result<User, never>` | Save either succeeds or throws (infra failure) |
+| `update(user)` | `Result<User, UserNotFound>` | Update can fail if record was deleted |
+| `delete(id)` | `Result<boolean, UserNotFound>` | Delete can fail if record was deleted |
+| `count()` | `Result<number, never>` | Count either succeeds or throws |
+
+**Rule:** If the operation can fail with a domain-meaningful error (not found, conflict), return `Result<T, E>`. If it can only fail due to infrastructure issues, return `Result<T, never>` and let infrastructure errors throw.
+
 ---
 
 ## Domain Events
@@ -91,7 +129,7 @@ Two clear levels. No fuzzy hand-waving.
 
 ### Level 1: In-Process Events (Default)
 
-- Use NestJS `EventEmitter2` or a tiny internal EventBus.
+- Use NestJS `EventEmitter2` (or a tiny internal EventBus).
 - For consistency inside the monolith.
 - Example: `UserCreated` → welcome email listener.
 - Synchronous or async in-process only.
@@ -112,7 +150,7 @@ export class UserCreatedEvent {
 // modules/users/application/users.service.ts
 async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
   // ... create user ...
-  this.eventEmitter.emit('user.created', new UserCreatedEvent(user.id, user.email, user.name));
+  this.eventEmitter.emit("user.created", new UserCreatedEvent(user.id, user.email, user.name));
   return ok(user);
 }
 ```
@@ -127,7 +165,7 @@ async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
 // modules/users/application/users.service.ts
 async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
   // ... create user ...
-  await this.queue.add('send-welcome-email', { userId: user.id, email: user.email });
+  await this.queue.add("send-welcome-email", { userId: user.id, email: user.email });
   return ok(user);
 }
 ```
@@ -155,4 +193,4 @@ async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
 - One listener per event concern (welcome email, analytics, notifications).
 - Listeners are idempotent — safe to replay.
 - Listeners never throw. Catch and log.
-- Listeners live in the same module or in `infrastructure/`.
+- Listeners live in `application/` (not in a separate `listeners/` folder at the module root).

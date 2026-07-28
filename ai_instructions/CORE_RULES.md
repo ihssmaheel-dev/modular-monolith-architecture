@@ -35,12 +35,14 @@ The following technologies are locked. Do not add, replace, or suggest alternati
 4. **Never** put business logic in `infrastructure/` folders (root or module-level).
 5. **Never** throw in application or domain layers for expected failures. Use `Result` from neverthrow.
 6. **Never** duplicate a Zod schema, type, or constant. If it exists in `packages/shared`, use it.
-7. **Never** use `any` type. Use `unknown` if the type is genuinely unclear.
+7. **Never** use `any` type in production code. Use `unknown` if the type is genuinely unclear. In tests, `as any` is tolerated for mocks but prefer typed mocks.
 8. **Never** skip Zod validation on API inputs.
 9. **Never** create circular dependencies between modules or packages.
 10. **Never** import `packages/ui` from mobile. It is web-only.
 11. **Never** skip migrations for schema changes that affect existing data.
 12. **Never** hand-maintain API client types. Use ts-rest contracts.
+13. **Never** add a dependency without checking its bundle size impact and maintenance status.
+14. **Never** break backwards compatibility without a versioned migration path.
 
 ---
 
@@ -53,7 +55,9 @@ The following technologies are locked. Do not add, replace, or suggest alternati
 5. **Always** write thin controllers — they delegate, they don't decide.
 6. **Always** place cross-cutting infrastructure in `src/infrastructure/`, domain-specific persistence in `modules/[domain]/infrastructure/`.
 7. **Always** prefer fewer, higher-value tests over noisy ones.
-8. **Always** ask: "Is this the simplest structure that could work?"
+8. **Always** index MongoDB fields used in queries, sorts, and filters.
+9. **Always** paginate list endpoints. Never return unbounded arrays.
+10. **Always** consider performance: will this scale to 100k documents? Will this component re-render unnecessarily?
 
 ---
 
@@ -78,4 +82,4 @@ The following technologies are locked. Do not add, replace, or suggest alternati
 
 **Under-engineered but never messy.**
 
-Enforced by asking in every PR: "Is this the simplest structure that could work? Does it belong where I'm putting it?"
+Ask in every PR: "Could this be simpler? Does it belong where I'm putting it?"

@@ -1,6 +1,8 @@
 # AI Instructions
 
-Read these files in order before making any code changes. They define the non-negotiable rules for this codebase.
+These rules define the non-negotiable standards for this codebase. Every AI agent and developer must follow them. They exist to prevent entropy, enforce consistency, and keep the codebase maintainable for years.
+
+Read these files in order before making any code changes.
 
 | File | Purpose |
 |------|---------|
@@ -12,6 +14,7 @@ Read these files in order before making any code changes. They define the non-ne
 | [FRONTEND_RULES.md](./FRONTEND_RULES.md) | Web + Mobile rules. packages/ui is web-only. |
 | [CODE_QUALITY_RULES.md](./CODE_QUALITY_RULES.md) | File size limits, coding principles, naming, anti-patterns. |
 | [SECURITY_AND_OPS_RULES.md](./SECURITY_AND_OPS_RULES.md) | Env vars, security, indexing, logging, git workflow. |
+| [PERFORMANCE_RULES.md](./PERFORMANCE_RULES.md) | DB queries, caching, frontend perf, bundle size. |
 
 ## How to use this
 
@@ -23,3 +26,4 @@ Read these files in order before making any code changes. They define the non-ne
 6. Before touching frontend code → read `FRONTEND_RULES.md`.
 7. Before writing any code → read `CODE_QUALITY_RULES.md`.
 8. Before config, security, logging, or git work → read `SECURITY_AND_OPS_RULES.md`.
+9. Before writing queries, caching, or frontend rendering → read `PERFORMANCE_RULES.md`.

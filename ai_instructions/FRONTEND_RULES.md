@@ -24,6 +24,28 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 6. **API calls** go through `packages/api-client`. Never call fetch/axios directly.
 7. **Styling** uses Tailwind. No inline styles, no CSS modules, no styled-components.
 8. **No `any` types.** Use `unknown` if the type is unclear.
+9. **Environment variables** use `import.meta.env.VITE_*` (Vite convention). Never `process.env`.
+
+### Performance
+
+- **Lazy-load routes** with `React.lazy()` + Suspense:
+  ```typescript
+  const Dashboard = lazy(() => import("./routes/dashboard"));
+  ```
+- **Memoize** expensive computations with `useMemo()`.
+- **Stabilize callbacks** passed to memoized children with `useCallback()`.
+- **Avoid unnecessary re-renders** — profile with React DevTools.
+- **Don't put large objects in Zustand** if only one component needs them.
+- **Configure TanStack Query caching:**
+  ```typescript
+  useQuery({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+    staleTime: 5 * 60 * 1000,  // 5 minutes
+    gcTime: 10 * 60 * 1000,     // 10 minutes
+  });
+  ```
+- **Virtualize long lists** if rendering 100+ items.
 
 ---
 
@@ -44,6 +66,33 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 4. **Styling** uses NativeWind (Tailwind for React Native).
 5. **Navigation** uses Expo Router. No React Navigation directly.
 6. **State management** follows the same pattern: TanStack Query for server state, Zustand for client state.
+7. **Environment variables** use Expo Constants, not `process.env`.
+
+### Performance
+
+- **Use `FlatList`** instead of `ScrollView` for long lists.
+- **Set `getItemLayout`** for fixed-height items (skips measurement):
+  ```typescript
+  <FlatList
+    getItemLayout={(_, index) => ({
+      length: ITEM_HEIGHT,
+      offset: ITEM_HEIGHT * index,
+      index,
+    })}
+  />
+  ```
+- **Memoize list items** with `React.memo()`.
+- **Avoid anonymous functions** in `renderItem`:
+  ```typescript
+  // Bad
+  renderItem={({ item }) => <Item name={item.name} />}
+
+  // Good
+  const renderItem = useCallback(({ item }: { item: User }) => (
+    <Item name={item.name} />
+  ), []);
+  ```
+- **Lazy-load heavy screens** with dynamic imports.
 
 ---
 
@@ -79,16 +128,17 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 Both web and mobile consume the backend through `packages/api-client`:
 
 ```typescript
-import { apiClient } from '@repo/api-client';
-import { contract } from '@repo/shared';
+import { createApiClient } from "@repo/api-client";
+
+const api = createApiClient("http://localhost:3000");
 
 // Type-safe API call
-const result = await apiClient.users.list({});
+const result = await api.users.list({ query: { page: 1, limit: 10 } });
 ```
 
 - Never use `fetch` or `axios` directly.
-- Never hardcode API URLs. Use the client configuration.
-- Handle errors at the component level using the `Result` from neverthrow (if using client-side Result handling) or TanStack Query error handling.
+- Never hardcode API URLs in component files. Configure via environment or app config.
+- Handle errors at the component level using TanStack Query error handling.
 
 ---
 

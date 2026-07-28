@@ -10,7 +10,7 @@ Test contract for the codebase. Quality without ceremony.
 |---------------|-----------|------|--------------|
 | `domain/` | Unit | Vitest | Entities, value objects, business rules. Pure logic. |
 | `application/` | Unit | Vitest | Use cases, service logic. Mock repository. |
-| `infrastructure/` | Integration | Vitest + testcontainers or local Docker | Repositories, adapters. Real Mongo/Redis. |
+| `infrastructure/` | Integration | Vitest + real Mongo/Redis (testcontainers or local docker) | Repositories, adapters. Real Mongo/Redis. |
 | `presentation/` + full flows | E2E | Supertest (API), Playwright (web), Maestro (mobile) | API endpoints, user journeys. |
 
 ---
@@ -22,7 +22,7 @@ Test contract for the codebase. Quality without ceremony.
 - Mock repository and external dependencies.
 - Test business rules in isolation.
 - Fast. Should complete in milliseconds.
-- One test file per source file.
+- One test file per source file, co-located next to it.
 
 ### Integration Tests (infrastructure)
 - Use real MongoDB and Redis (via testcontainers or local docker).
@@ -39,33 +39,124 @@ Test contract for the codebase. Quality without ceremony.
 
 ---
 
+## Vitest Configuration
+
+Create `vitest.config.ts` in `apps/api/`:
+
+```typescript
+import { defineConfig } from "vitest/config";
+import path from "path";
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: "node",
+    include: ["src/**/*.test.ts"],
+    exclude: ["**/*.e2e.test.ts", "**/*.integration.test.ts"],
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+});
+```
+
+For integration tests, create `vitest.integration.config.ts`:
+
+```typescript
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: "node",
+    include: ["src/**/*.integration.test.ts"],
+    testTimeout: 30000,
+  },
+});
+```
+
+---
+
+## Mock Patterns
+
+### Mocking Repositories
+
+Use `vi.fn()` with typed interfaces:
+
+```typescript
+import { vi } from "vitest";
+import { UsersRepository } from "../infrastructure/users.repository";
+
+const mockRepository = {
+  findByEmail: vi.fn(),
+  findById: vi.fn(),
+  findAll: vi.fn(),
+  save: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+} as unknown as UsersRepository;
+```
+
+### When to Mock vs Real
+
+| Situation | Approach |
+|-----------|----------|
+| Unit testing a service | Mock the repository |
+| Unit testing domain logic | No mocks needed (pure functions) |
+| Integration testing a repository | Real database (testcontainers) |
+| E2E testing an API | Real everything (Supertest + Docker) |
+
+### Test Data Factories
+
+For complex domain objects, create factory functions:
+
+```typescript
+// test/factories/user.factory.ts
+import { User } from "../domain/entities/user.entity";
+
+export function buildUser(overrides?: Partial<{ email: string; name: string }>): User {
+  return User.create({
+    email: overrides?.email ?? "test@example.com",
+    name: overrides?.name ?? "Test User",
+  });
+}
+```
+
+Use factories instead of inline fixtures when:
+- The same object is created in 3+ tests
+- The object has many required fields
+- You need different variations (admin, banned, etc.)
+
+---
+
 ## File Naming
 
 ```
-users.service.test.ts          # Unit test for users.service.ts
-users.repository.test.ts       # Integration test for users.repository.ts
-users.controller.test.ts       # Unit test for users.controller.ts (mocked service)
+users.service.test.ts          # Unit test for users.service.ts (co-located)
+users.repository.integration.test.ts  # Integration test
 users.e2e.test.ts              # E2E test for user-related API endpoints
 ```
 
-Place test files next to the source file they test.
+Place unit test files next to the source file they test.
 
 ---
 
 ## Test Structure
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-describe('UsersService', () => {
-  describe('createUser', () => {
-    it('should create a user when email is available', async () => {
+describe("UsersService", () => {
+  describe("create", () => {
+    it("should create a user when email is available", async () => {
       // Arrange
       // Act
       // Assert
     });
 
-    it('should return EMAIL_TAKEN when email already exists', async () => {
+    it("should return EMAIL_TAKEN when email already exists", async () => {
       // Arrange
       // Act
       // Assert
@@ -109,3 +200,17 @@ describe('UsersService', () => {
 - E2E tests run on PRs and before merge.
 - All tests must pass before merge.
 - No skipped tests without a linked issue.
+
+---
+
+## Test Scripts
+
+```json
+{
+  "test": "vitest run",
+  "test:unit": "vitest run --exclude '**/*.e2e.test.ts' --exclude '**/*.integration.test.ts'",
+  "test:integration": "vitest run --config vitest.integration.config.ts",
+  "test:e2e": "vitest run --include '**/*.e2e.test.ts'",
+  "test:watch": "vitest watch"
+}
+```

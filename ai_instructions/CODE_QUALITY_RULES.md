@@ -36,11 +36,11 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 // Good
 function processOrder(order: Order): Result<Order, OrderError> {
   if (!order.items.length) {
-    return err({ type: 'EMPTY_ORDER' });
+    return err({ type: "EMPTY_ORDER" });
   }
 
   if (order.total > 10000) {
-    return err({ type: 'ORDER_TOO_LARGE' });
+    return err({ type: "ORDER_TOO_LARGE" });
   }
 
   const processed = calculateDiscount(order);
@@ -55,10 +55,10 @@ function processOrder(order: Order): Result<Order, OrderError> {
         if (order.total <= 10000) {
           // ... 50 more lines of nested logic
         } else {
-          return err({ type: 'ORDER_TOO_LARGE' });
+          return err({ type: "ORDER_TOO_LARGE" });
         }
       } else {
-        return err({ type: 'EMPTY_ORDER' });
+        return err({ type: "EMPTY_ORDER" });
       }
     }
   }
@@ -97,6 +97,97 @@ function calculateDiscount(order: Order, isPremium: boolean): number {
 
 ---
 
+## Async/Await Patterns
+
+### Parallel Operations
+Use `Promise.all()` for independent async operations:
+
+```typescript
+// Bad — sequential (slow)
+const user = await this.userModel.findById(id);
+const orders = await this.orderModel.find({ userId: id });
+const notifications = await this.notifModel.find({ userId: id });
+
+// Good — parallel (fast)
+const [user, orders, notifications] = await Promise.all([
+  this.userModel.findById(id),
+  this.orderModel.find({ userId: id }),
+  this.notifModel.find({ userId: id }),
+]);
+```
+
+### Sequential Dependencies
+Only use sequential awaits when later operations depend on earlier results:
+
+```typescript
+const user = await this.userModel.findById(id);    // need user.id
+const orders = await this.orderModel.find({ userId: user.id }); // depends on user
+```
+
+### Error Handling
+Don't swallow errors silently:
+
+```typescript
+// Bad
+try {
+  await riskyOperation();
+} catch (e) {
+  // silently ignored
+}
+
+// Good
+try {
+  await riskyOperation();
+} catch (e) {
+  logger.error({ err: e }, "Risky operation failed");
+  throw e;
+}
+```
+
+---
+
+## Memory Leak Prevention
+
+### Event Listeners
+Always clean up event listeners:
+
+```typescript
+useEffect(() => {
+  const handler = (e: KeyboardEvent) => { /* ... */ };
+  window.addEventListener("keydown", handler);
+  return () => window.removeEventListener("keydown", handler);
+}, []);
+```
+
+### Abort Controllers
+Cancel in-flight requests when components unmount:
+
+```typescript
+useEffect(() => {
+  const controller = new AbortController();
+
+  fetchData({ signal: controller.signal })
+    .then(setData)
+    .catch((e) => {
+      if (e.name !== "AbortError") throw e;
+    });
+
+  return () => controller.abort();
+}, []);
+```
+
+### Timers
+Clean up intervals and timeouts:
+
+```typescript
+useEffect(() => {
+  const interval = setInterval(poll, 5000);
+  return () => clearInterval(interval);
+}, []);
+```
+
+---
+
 ## File Organization
 
 ### Imports
@@ -107,12 +198,12 @@ function calculateDiscount(order: Order, isPremium: boolean): number {
 
 ```typescript
 // Good
-import { Result, ok, err } from 'neverthrow';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Result, ok, err } from "neverthrow";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { UserRepository } from '../infrastructure/users.repository';
-import { User } from '../domain/entities/user';
-import { CreateUserInput, UserError } from '../types';
+import { UserRepository } from "../infrastructure/users.repository";
+import { User } from "../domain/entities/user";
+import { CreateUserInput, UserError } from "../types";
 ```
 
 ### Exports
@@ -141,6 +232,8 @@ import { CreateUserInput, UserError } from '../types';
 | Barrel exports re-exporting everything | Export only what's needed |
 | Comments explaining "what" | Rename to explain "why" |
 | Empty catch blocks | Log or rethrow, never swallow |
+| Sequential awaits for independent ops | `Promise.all()` |
+| Event listeners without cleanup | Return cleanup function |
 
 ---
 

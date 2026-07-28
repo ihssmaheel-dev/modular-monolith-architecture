@@ -13,6 +13,7 @@ Ask these questions in order:
 3. **Is this package on our locked stack?** Check `CORE_RULES.md` locked stack table.
 4. **Is this package 100% free and open source?** No paid tiers, no "community edition" bait-and-switch.
 5. **Does this package have an active maintainer and recent releases?** Check npm downloads, last publish date, open issues.
+6. **What is the bundle size impact?** Check bundlephobia.com for web/mobile packages.
 
 ---
 
@@ -44,7 +45,8 @@ Ask these questions in order:
 1. Check the locked stack in `CORE_RULES.md`.
 2. Run: `pnpm add <package>` (or `pnpm add -D <package>` for dev deps).
 3. If the package needs configuration, add it to the appropriate config file.
-4. Document the addition in the PR description with a one-line justification.
+4. Run `pnpm audit` to check for known vulnerabilities.
+5. Document the addition in the PR description with a one-line justification.
 
 ---
 
@@ -67,3 +69,4 @@ Reject packages that:
 - Pull in large transitive dependency trees
 - Use `eval()` or dynamic code generation
 - Have known security vulnerabilities (check `pnpm audit`)
+- Exceed 50kB minified for utility libraries

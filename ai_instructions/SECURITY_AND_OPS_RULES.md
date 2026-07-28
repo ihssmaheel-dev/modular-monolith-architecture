@@ -14,28 +14,29 @@ Every environment variable must be validated with Zod at startup. No `process.en
 Create `apps/api/src/config/env.ts`:
 
 ```typescript
-import { z } from 'zod';
+import { envSchema, type Env } from "@repo/shared";
 
-const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']),
-  PORT: z.coerce.number().default(3000),
-  MONGODB_URI: z.string().url(),
-  REDIS_URL: z.string().url(),
-  JWT_SECRET: z.string().min(32),
-  MINIO_ENDPOINT: z.string(),
-  MINIO_ACCESS_KEY: z.string(),
-  MINIO_SECRET_KEY: z.string(),
-});
+function loadEnv(): Env {
+  const result = envSchema.safeParse(process.env);
 
-export const env = envSchema.parse(process.env);
+  if (!result.success) {
+    console.error("Invalid environment variables:");
+    console.error(result.error.flatten().fieldErrors);
+    process.exit(1);
+  }
+
+  return result.data;
+}
+
+export const env = loadEnv();
 ```
 
 ### Rules
 - Validate once at startup, use `env` everywhere.
 - Never access `process.env` directly outside `config/env.ts`.
-- Add new env vars to the schema FIRST, then use them.
-- Default values are allowed only for non-critical config.
+- Add new env vars to the schema in `packages/shared/src/schemas/env.schema.ts` FIRST, then use them.
 - No secrets in code, no secrets in git, no `.env` in version control.
+- The schema lives in `packages/shared` so both API and client can share env types.
 
 ---
 
@@ -69,6 +70,31 @@ export const env = envSchema.parse(process.env);
 - Apply rate limiting to public endpoints.
 - Apply stricter limits to auth endpoints.
 - Use Redis-backed rate limiting for multi-instance safety.
+
+### CORS
+- Configure CORS explicitly. Never use `origin: "*"` in production.
+- Allowlist specific origins:
+  ```typescript
+  app.enableCors({
+    origin: ["https://app.example.com", "https://admin.example.com"],
+    credentials: true,
+  });
+  ```
+- In development, allow `localhost` on standard ports.
+
+### Request Limits
+- Set maximum request body size (e.g., 1MB for JSON, 10MB for file uploads).
+- Set request timeouts (e.g., 30s for API, 60s for file operations).
+- Configure at the Fastify adapter level:
+  ```typescript
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter({
+      bodyLimit: 1048576, // 1MB
+      trustProxy: true,
+    }),
+  );
+  ```
 
 ---
 
@@ -125,7 +151,7 @@ Pino (locked stack). Fast, structured, JSON output.
 ### Rules
 - Never log passwords, tokens, or secrets.
 - Never log full request bodies for endpoints that handle sensitive data.
-- Use structured logging: `logger.info({ userId, action }, 'User created')`.
+- Use structured logging: `logger.info({ userId, action }, "User created")`.
 - Log with context: request ID, user ID, correlation ID.
 - Log errors with stack traces.
 - No `console.log` in production code. Use Pino.
@@ -133,15 +159,15 @@ Pino (locked stack). Fast, structured, JSON output.
 ### Example
 
 ```typescript
-import { logger } from '../infrastructure/logger';
+import { logger } from "../infrastructure/logger/logger.service";
 
 // Good
-logger.info({ userId: user.id, email: user.email }, 'User registered');
-logger.error({ err: error, orderId }, 'Failed to process order');
-logger.warn({ rateLimitKey: key }, 'Rate limit exceeded');
+logger.info({ userId: user.id, email: user.email }, "User registered");
+logger.error({ err: error, orderId }, "Failed to process order");
+logger.warn({ rateLimitKey: key }, "Rate limit exceeded");
 
 // Bad
-console.log('User created');
+console.log("User created");
 logger.info(`User ${user.email} created`);
 ```
 

@@ -16,6 +16,7 @@ modules/[domain]/
 ├── application/
 │   ├── commands/
 │   ├── queries/
+│   ├── listeners/
 │   └── [domain].service.ts
 ├── domain/
 │   ├── entities/
@@ -27,7 +28,9 @@ modules/[domain]/
     └── [domain].repository.ts
 ```
 
-Do not skip folders. Do not merge folders. Do not add extra folders.
+Do not skip folders. Do not add extra folders beyond this structure.
+
+**Exception:** `listeners/` is allowed under `application/` because domain event handlers are a first-class pattern (see `EVENT_AND_ERROR_RULES.md`).
 
 ---
 
@@ -45,14 +48,25 @@ Do not skip folders. Do not merge folders. Do not add extra folders.
 - Business use cases / services.
 - Orchestrates domain logic.
 - Returns `Result<T, E>` or `ResultAsync<T, E>` from neverthrow.
-- `commands/` for write operations.
-- `queries/` for read operations.
+- `commands/` for write operations (create, update, delete).
+- `queries/` for read operations (list, getById, search).
+- `listeners/` for domain event handlers (welcome email, analytics, notifications).
 - Never directly accesses Mongoose. Goes through repository.
+
+### When to Use commands/ vs queries/ vs Flat Service
+
+| Pattern | When to Use |
+|---------|-------------|
+| **Flat service** | Module has ≤5 operations. All in one file. Simple and clear. |
+| **commands/ + queries/** | Module has 6+ operations, or write operations are complex enough to warrant separate files. |
+| **listeners/** | Module emits domain events that trigger side effects. |
+
+**Start flat. Split when the file exceeds 100 lines or when operations have distinct concerns.**
 
 ### `domain/`
 - Pure business rules. No framework dependencies.
 - `entities/` — domain objects with identity.
-- `value-objects/` — immutable domain objects without identity.
+- `value-objects/` — immutable domain objects without identity (Address, Money, DateRange).
 - `events/` — domain event classes (plain classes, no framework).
 - `errors/` — domain-specific error types.
 
@@ -73,7 +87,35 @@ Do not skip folders. Do not merge folders. Do not add extra folders.
 | `src/infrastructure/` | Cross-cutting: Redis connection, BullMQ root config, MinIO client, email transport, logger, mongoose connection |
 | `modules/[domain]/infrastructure/` | Domain-specific: Mongoose schemas, repositories, mappers, external API adapters |
 
+### Shared Infrastructure Modules
+
+Cross-cutting infrastructure modules follow a simple structure:
+
+```
+src/infrastructure/redis/
+├── redis.module.ts      ← NestJS @Module
+└── redis.service.ts     ← Injectable service
+```
+
+Rules for shared infrastructure:
+- Must be `@Global()` if used across multiple modules.
+- Must use `env` from `config/env.ts` — never `process.env`.
+- Must implement `OnModuleDestroy` for cleanup.
+- No business logic. Pure technical concern.
+
 Never put business logic in either infrastructure folder.
+
+---
+
+## Module Size Limits
+
+| Metric | Limit | Action if Exceeded |
+|--------|-------|-------------------|
+| Module files | 15 | Split into sub-domains or extract a new module |
+| Service methods | 10 | Extract use cases into separate files |
+| Repository methods | 8 | Consider if the module is doing too much |
+
+If a module exceeds these limits, ask: "Is this actually two modules?" Split by subdomain, not by technical layer.
 
 ---
 
@@ -115,6 +157,7 @@ export class AppModule {}
 - Never contain business logic.
 - Never access database or repositories.
 - Never modify state directly.
+- Extract response mapping helpers (e.g., `toUserResponse()`) to avoid copy-paste.
 
 ---
 
