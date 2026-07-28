@@ -58,7 +58,7 @@ async getUser(id: string): Promise<User | null> {
   if (cached) return JSON.parse(cached);
 
   const user = await this.userModel.findById(id).lean();
-  if (user) await this.redis.setEx(`user:${id}`, 3600, JSON.stringify(user));
+  if (user) await this.redis.set(`user:${id}`, JSON.stringify(user), "EX", 3600);
   return user;
 }
 ```
@@ -86,6 +86,79 @@ async getUser(id: string): Promise<User | null> {
 - Apply rate limiting to all public endpoints.
 - Stricter limits on auth endpoints (login, register).
 - Use Redis-backed rate limiting for multi-instance safety.
+
+---
+
+## CPU-Bound Work — Piscina Worker Threads
+
+Never block the Node.js event loop with CPU-intensive work. Use Piscina worker threads.
+
+### When to Use Which
+
+| Use Case | Tool | Why |
+|----------|------|-----|
+| Send email, generate PDF, process webhook | BullMQ | Needs persistence, retries, multi-instance safety |
+| Parse large CSV, image resize, crypto hash | Piscina | CPU-bound, in-process, no Redis overhead |
+| Delayed job ("send notification in 1 hour") | BullMQ | Needs delayed execution |
+| Parallel CPU work ("process 1000 rows") | Piscina | Fast context switch, no serialization cost |
+| Background job that must survive restarts | BullMQ | Persistent queue |
+| One-off heavy computation in a request | Piscina | Fast, no queue overhead |
+
+### Infrastructure
+
+```
+src/infrastructure/
+├── queue/          ← BullMQ (persistent, distributed jobs)
+│   ├── queue.module.ts
+│   └── queue.service.ts
+└── workers/        ← Piscina (CPU-bound, in-process work)
+    ├── workers.module.ts
+    ├── piscina.service.ts
+    └── tasks/
+        ├── csv-parser.ts
+        └── hash.ts
+```
+
+### Usage
+
+```typescript
+import { PiscinaService } from "../infrastructure/workers/piscina.service";
+
+@Injectable()
+export class ImportService {
+  constructor(private readonly piscina: PiscinaService) {}
+
+  async importCsv(rows: CsvRow[]) {
+    const pool = this.piscina.getPool({
+      name: "csv",
+      filename: path.resolve(__dirname, "workers/tasks/csv-parser.js"),
+      maxThreads: 4,
+    });
+
+    const chunkSize = 100;
+    const chunks: CsvRow[][] = [];
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      chunks.push(rows.slice(i, i + chunkSize));
+    }
+
+    const results = await Promise.all(
+      chunks.map((chunk) =>
+        this.piscina.run<CsvRow[], ParsedRow[]>("csv", "parseCsvChunk", chunk),
+      ),
+    );
+
+    return results.flat();
+  }
+}
+```
+
+### Rules
+- Worker files must be plain `.js` or `.ts` (Piscina handles transpilation).
+- Worker functions must be exported as named exports.
+- Don't send Mongoose documents to workers — serialize to plain objects first.
+- Workers must not import NestJS modules or services.
+- Workers can import pure utility functions from `packages/shared`.
+- Set `maxThreads` based on workload: I/O-heavy = more threads, CPU-heavy = `os.cpus().length`.
 
 ---
 
@@ -133,7 +206,7 @@ async getUser(id: string): Promise<User | null> {
 ### Event Loop
 - Never block the event loop with synchronous operations.
 - Use `Promise.all()` for independent async operations.
-- Use worker threads for CPU-intensive tasks (image processing, CSV parsing).
+- Use Piscina worker threads for CPU-intensive tasks (see section above).
 
 ### Memory
 - Don't accumulate data in memory. Stream when possible.
@@ -152,6 +225,7 @@ async getUser(id: string): Promise<User | null> {
 - Log cache hit/miss ratios.
 - Track API response times.
 - Alert on memory usage spikes.
+- Monitor Piscina pool stats: `completed`, `ratio`, `queueSize`.
 
 ---
 
@@ -163,5 +237,6 @@ Before writing any code, ask:
 3. Is there a cached result I should check first?
 4. Am I fetching more data than I need?
 5. Is this operation blocking the event loop?
+6. Should this CPU work run in a worker thread?
 
 If the answer to any is concerning — optimize before shipping.

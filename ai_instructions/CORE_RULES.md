@@ -11,16 +11,17 @@ The following technologies are locked. Do not add, replace, or suggest alternati
 | Layer | Locked Choice |
 |-------|---------------|
 | Monorepo | Turborepo + pnpm |
-| Backend | NestJS + Fastify |
-| Validation | Zod + nestjs-zod |
+| Backend | NestJS 11 + Fastify 5 |
+| Validation | Zod 4 + nestjs-zod |
 | API Contract | ts-rest |
-| Database | MongoDB + Mongoose |
+| Database | MongoDB + Mongoose 9 |
 | Migrations | migrate-mongo |
-| Cache & Queues | Redis + BullMQ |
-| Result Type | neverthrow |
-| Web Frontend | React 19 + Vite + TanStack Router + TanStack Query + Zustand + shadcn/ui + Tailwind |
+| Cache & Queues | Redis (ioredis) + BullMQ |
+| Worker Threads | Piscina 5 |
+| Result Type | neverthrow 8 |
+| Web Frontend | React 19 + Vite 8.1 + TanStack Router + TanStack Query + Zustand + shadcn/ui + Tailwind 4 |
 | Mobile | Expo + Expo Router + NativeWind + Zustand |
-| Testing | Vitest + Supertest + Playwright + Maestro |
+| Testing | Vitest 5 + Supertest + Playwright + Maestro |
 | CI | GitHub Actions |
 
 **No paid services. No proprietary dependencies. No exceptions.**

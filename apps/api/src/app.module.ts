@@ -5,6 +5,7 @@ import { UsersModule } from "./modules/users/users.module";
 import { RedisModule } from "./infrastructure/redis/redis.module";
 import { QueueModule } from "./infrastructure/queue/queue.module";
 import { LoggerModule } from "./infrastructure/logger/logger.module";
+import { WorkersModule } from "./infrastructure/workers/workers.module";
 import { env } from "./config/env";
 
 @Module({
@@ -14,6 +15,7 @@ import { env } from "./config/env";
     RedisModule,
     QueueModule,
     LoggerModule,
+    WorkersModule,
     UsersModule,
   ],
 })
