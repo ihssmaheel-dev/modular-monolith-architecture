@@ -10,6 +10,7 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "ignoreDeprecations": "6.0"
   }
 }
