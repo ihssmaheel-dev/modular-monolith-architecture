@@ -223,6 +223,9 @@ chore: update dependencies
 - [ ] No secrets or env vars in code
 - [ ] Input validated with Zod
 - [ ] Errors return `Result`, not throw
+- [ ] Error messages use `I18nService` (not hardcoded)
+- [ ] User-facing text uses i18n keys
+- [ ] New translation keys added to all locales
 - [ ] Logs are structured with Pino
 - [ ] New DB fields have indexes (via migration)
 - [ ] Commit message follows `type(scope): description`

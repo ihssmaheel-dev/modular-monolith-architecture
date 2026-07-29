@@ -234,6 +234,8 @@ import { CreateUserInput, UserError } from "../types";
 | Empty catch blocks | Log or rethrow, never swallow |
 | Sequential awaits for independent ops | `Promise.all()` |
 | Event listeners without cleanup | Return cleanup function |
+| Hardcoded user-facing strings | Use i18n translation keys |
+| Hardcoded error messages | Use `I18nService.t()` |
 
 ---
 
@@ -247,5 +249,7 @@ Before submitting a file, ask:
 4. Is there any duplication I can extract?
 5. Would a new developer understand this without comments?
 6. Does this file belong where I'm putting it?
+7. Are all user-facing strings using i18n keys?
+8. Are all error messages using `I18nService`?
 
 If the answer to any is no — refactor before committing.

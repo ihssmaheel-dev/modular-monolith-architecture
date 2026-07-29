@@ -2,85 +2,71 @@
 
 Supreme laws of this codebase. These are never negotiable.
 
+**VIOLATIONS WILL BE REJECTED.**
+
 ---
 
 ## Locked Stack
-
-The following technologies are locked. Do not add, replace, or suggest alternatives without explicit approval.
 
 | Layer | Locked Choice |
 |-------|---------------|
 | Monorepo | Turborepo + pnpm |
 | Backend | NestJS 11 + Fastify 5 |
-| Validation | Zod 4 + nestjs-zod |
+| Validation | Zod 4 |
 | API Contract | ts-rest |
 | Database | MongoDB + Mongoose 9 |
-| Migrations | migrate-mongo |
 | Cache & Queues | Redis (ioredis) + BullMQ |
 | Worker Threads | Piscina 5 |
 | Result Type | neverthrow 8 |
-| Web Frontend | React 19 + Vite 8.1 + TanStack Router + TanStack Query + Zustand + shadcn/ui + Tailwind 4 |
+| Web | React 19 + Vite + TanStack Router + TanStack Query + Zustand + shadcn/ui + Tailwind 4 |
 | Mobile | Expo + Expo Router + NativeWind + Zustand |
-| Testing | Vitest 5 + Supertest + Playwright + Maestro |
-| CI | GitHub Actions |
+| Testing | Vitest 5 |
+| Icons | Lucide React (web) |
 
 **No paid services. No proprietary dependencies. No exceptions.**
 
 ---
 
-## Never Do These
+## Never (Violation = Rejected)
 
-1. **Never** use microservices. We are a modular monolith. Extraction happens only when pain is measured and documented.
-2. **Never** add a package without checking `PACKAGE_POLICY.md` first.
-3. **Never** import another module's Mongoose model or repository directly.
-4. **Never** put business logic in `infrastructure/` folders (root or module-level).
-5. **Never** throw in application or domain layers for expected failures. Use `Result` from neverthrow.
-6. **Never** duplicate a Zod schema, type, or constant. If it exists in `packages/shared`, use it.
-7. **Never** use `any` type in production code. Use `unknown` if the type is genuinely unclear. In tests, `as any` is tolerated for mocks but prefer typed mocks.
-8. **Never** skip Zod validation on API inputs.
-9. **Never** create circular dependencies between modules or packages.
-10. **Never** import `packages/ui` from mobile. It is web-only.
-11. **Never** skip migrations for schema changes that affect existing data.
-12. **Never** hand-maintain API client types. Use ts-rest contracts.
-13. **Never** add a dependency without checking its bundle size impact and maintenance status.
-14. **Never** break backwards compatibility without a versioned migration path.
+1. Use microservices — we are a modular monolith.
+2. Add packages without checking `PACKAGE_POLICY.md`.
+3. Import another module's Mongoose model.
+4. Put business logic in `infrastructure/`.
+5. Throw in application/domain layers — use `Result`.
+6. Duplicate schemas/types — use `packages/shared`.
+7. Use `any` in production code.
+8. Skip Zod validation on API inputs.
+9. Import `packages/ui` from mobile.
+10. Use `console.log` in production — use Pino.
+11. Hardcode user-facing strings — use i18n.
+12. Hardcode error messages — use `I18nService`.
+13. Use magic numbers — extract to named constants.
+14. Create files in wrong locations — see `FILE_PLACEMENT_RULES.md`.
 
 ---
 
-## Always Do These
+## Always (Violation = Rejected)
 
-1. **Always** define Zod schemas in `packages/shared` before implementing.
-2. **Always** use the mandatory module folder structure (see `MODULE_RULES.md`).
-3. **Always** return `Result<T, E>` or `ResultAsync<T, E>` from application and domain layers.
-4. **Always** validate environment variables with Zod at startup.
-5. **Always** write thin controllers — they delegate, they don't decide.
-6. **Always** place cross-cutting infrastructure in `src/infrastructure/`, domain-specific persistence in `modules/[domain]/infrastructure/`.
-7. **Always** prefer fewer, higher-value tests over noisy ones.
-8. **Always** index MongoDB fields used in queries, sorts, and filters.
-9. **Always** paginate list endpoints. Never return unbounded arrays.
-10. **Always** consider performance: will this scale to 100k documents? Will this component re-render unnecessarily?
+1. Use `Result<T, E>` from neverthrow in application/domain layers.
+2. Validate env vars with Zod at startup.
+3. Write thin controllers — delegate, don't decide.
+4. Use `I18nService` for backend error messages.
+5. Use `useTranslation()` for frontend text.
+6. Index MongoDB fields used in queries.
+7. Paginate list endpoints — never return unbounded arrays.
+8. Keep files under 150 lines, functions under 30 lines.
+9. Use Pino logger with structured context.
+10. Place files in correct locations per `FILE_PLACEMENT_RULES.md`.
 
 ---
 
 ## Single Source of Truth
 
-`packages/shared` is the heart of the system. Every Zod schema, type, constant, permission, and contract lives there.
-
-**Rule:** If a type or validation exists in more than one place → it belongs in `packages/shared`.
+`packages/shared` — every Zod schema, type, constant, permission, contract, and i18n translation.
 
 ---
 
-## Module Boundaries
+## Enforcement
 
-- Modules communicate only through application services or domain events.
-- No cross-module model imports.
-- No shared database state between modules.
-- Modules are independent as much as realistically possible.
-
----
-
-## The North Star
-
-**Under-engineered but never messy.**
-
-Ask in every PR: "Could this be simpler? Does it belong where I'm putting it?"
+Run `pnpm rules:check` to verify compliance before committing.

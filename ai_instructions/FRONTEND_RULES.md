@@ -25,6 +25,8 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 7. **Styling** uses Tailwind. No inline styles, no CSS modules, no styled-components.
 8. **No `any` types.** Use `unknown` if the type is unclear.
 9. **Environment variables** use `import.meta.env.VITE_*` (Vite convention). Never `process.env`.
+10. **All user-facing text** must use i18n via `useTranslation()` hook. Never hardcode strings.
+11. **Translation keys** follow the structure in `I18N_RULES.md`. Import from `@repo/shared`.
 
 ### Performance
 
@@ -67,6 +69,8 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 5. **Navigation** uses Expo Router. No React Navigation directly.
 6. **State management** follows the same pattern: TanStack Query for server state, Zustand for client state.
 7. **Environment variables** use Expo Constants, not `process.env`.
+8. **All user-facing text** must use i18n via `useTranslation()` hook. Never hardcode strings.
+9. **i18n initialization** must happen in root `_layout.tsx` before rendering any screens.
 
 ### Performance
 

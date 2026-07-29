@@ -2,6 +2,8 @@
 
 You are working in a modular monolith codebase. Before making any changes, read and follow the rules in `ai_instructions/`.
 
+**ALL RULES ARE MANDATORY. VIOLATIONS ARE PROHIBITED.**
+
 ## Required Reading Order
 
 1. `ai_instructions/README.md` — Start here.
@@ -15,6 +17,7 @@ You are working in a modular monolith codebase. Before making any changes, read 
 9. `ai_instructions/CODE_QUALITY_RULES.md` — Small files, clean code, no anti-patterns.
 10. `ai_instructions/SECURITY_AND_OPS_RULES.md` — Env vars, security, indexing, logging, git workflow.
 11. `ai_instructions/PERFORMANCE_RULES.md` — DB queries, caching, frontend perf, bundle size.
+12. `ai_instructions/I18N_RULES.md` — Internationalization. Translations, locale management.
 
 ## Non-Negotiable
 
@@ -24,8 +27,27 @@ You are working in a modular monolith codebase. Before making any changes, read 
 - Never import another module's Mongoose model.
 - packages/ui is web-only. Never use in mobile.
 - Every Zod schema, type, and contract lives in packages/shared.
+- **All user-facing text must use i18n.** Translations live in `packages/shared`.
+- **All error messages must use I18nService.** Never hardcode.
 - Ask in every PR: "Is this the simplest structure that could work?"
 - Keep files under 150 lines. If it's longer, split it.
 - Functions under 30 lines. No deep nesting.
-- No magic numbers, no copy-paste, no `any`.
+- No magic numbers, no copy-paste, no `any`, no `console.log`.
 - **Every new file must land in the correct location on first creation.** See `FILE_PLACEMENT_RULES.md`.
+
+## Violation Enforcement
+
+- Every rule in `ai_instructions/` is **mandatory**.
+- Code that violates rules will be **rejected**.
+- When uncertain, consult the relevant rule file before proceeding.
+- All error messages must go through `I18nService` with proper locale keys.
+
+Skills provide specialized instructions and workflows for specific tasks.
+Use the skill tool to load a skill when a task matches its description.
+<available_skills>
+  <skill>
+    <name>customize-opencode</name>
+    <description>Use ONLY when the user is editing or creating opencode's own configuration: opencode.json, opencode.jsonc, files under .opencode/, or files under ~/.config/opencode/. Also use when creating or fixing opencode agents, subagents, skills, plugins, MCP servers, or permission rules. Do not use for the user's own application code, or for any project that is not configuring opencode itself.</description>
+    <location>&lt;built-in&gt;</location>
+  </skill>
+</available_skills>

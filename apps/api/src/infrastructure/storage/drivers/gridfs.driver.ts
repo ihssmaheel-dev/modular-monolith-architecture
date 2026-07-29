@@ -54,6 +54,6 @@ export class GridFsDriver implements StorageDriver {
   private toReadable(input: FileInput): Readable {
     if (input instanceof Readable) return input;
     if (input instanceof Buffer) return Readable.from(input);
-    return Readable.fromWeb(input as any);
+    return Readable.fromWeb(input as ReadableStream);
   }
 }
