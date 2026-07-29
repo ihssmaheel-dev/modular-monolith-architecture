@@ -24,6 +24,7 @@
     "@nestjs/event-emitter": "^3.0.0",
     "@nestjs/websockets": "^11.0.0",
     "@nestjs/platform-ws": "^11.0.0",
+    "@nestjs/terminus": "^11.0.0",
     "@ts-rest/nest": "^3.26.0",
     "@aws-sdk/client-s3": "^3.600.0",
     "@aws-sdk/s3-request-presigner": "^3.600.0",

@@ -1,0 +1,86 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "noResults": "No se encontraron resultados",
+    "confirm": "Confirmar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "name": "Nombre",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "loginSuccess": "Sesión iniciada correctamente",
+    "registerSuccess": "Cuenta creada correctamente",
+    "logoutSuccess": "Sesión cerrada"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "¡Bienvenido, {{name}}!",
+    "stats": {
+      "users": "Usuarios",
+      "activeSessions": "Sesiones activas",
+      "storage": "Uso de almacenamiento"
+    }
+  },
+  "users": {
+    "title": "Usuarios",
+    "list": "Lista de usuarios",
+    "create": "Crear usuario",
+    "edit": "Editar usuario",
+    "delete": "Eliminar usuario",
+    "profile": "Perfil",
+    "noUsers": "No se encontraron usuarios"
+  },
+  "settings": {
+    "title": "Configuración",
+    "profile": "Configuración de perfil",
+    "language": "Idioma",
+    "theme": "Tema",
+    "darkMode": "Modo oscuro",
+    "lightMode": "Modo claro"
+  },
+  "errors": {
+    "notFound": "Página no encontrada",
+    "unauthorized": "Necesitas iniciar sesión",
+    "forbidden": "No tienes permiso",
+    "serverError": "Error del servidor. Inténtalo más tarde.",
+    "networkError": "Error de red. Verifica tu conexión."
+  },
+  "api": {
+    "error": {
+      "internal": "Error interno del servidor",
+      "notFound": "Recurso no encontrado",
+      "unauthorized": "No autorizado",
+      "forbidden": "Prohibido",
+      "badRequest": "Solicitud incorrecta",
+      "conflict": "El recurso ya existe",
+      "validationFailed": "Validación fallida",
+      "rateLimited": "Demasiadas solicitudes",
+      "sessionExpired": "Sesión expirada",
+      "invalidToken": "Token inválido"
+    },
+    "user": {
+      "created": "Usuario creado exitosamente",
+      "updated": "Usuario actualizado exitosamente",
+      "deleted": "Usuario eliminado exitosamente",
+      "notFound": "Usuario no encontrado",
+      "emailTaken": "El correo electrónico ya está en uso"
+    }
+  }
+}

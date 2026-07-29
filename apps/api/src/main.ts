@@ -3,6 +3,7 @@ import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { PinoLoggerService } from "./infrastructure/logger/logger.service";
+import { I18nService } from "./infrastructure/i18n/i18n.service";
 import { env } from "./config/env";
 
 const MAX_BODY_SIZE_BYTES = 1048576; // 1MB
@@ -18,7 +19,8 @@ async function bootstrap() {
   );
 
   const logger = app.get(PinoLoggerService);
-  app.useGlobalFilters(new AllExceptionsFilter(logger));
+  const i18n = app.get(I18nService);
+  app.useGlobalFilters(new AllExceptionsFilter(logger, i18n));
 
   app.setGlobalPrefix("api");
   app.enableCors({

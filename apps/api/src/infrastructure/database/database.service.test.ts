@@ -53,7 +53,7 @@ describe("DatabaseService", () => {
     const result = await service.withTransaction(fn);
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.value.code).toBe("TRANSACTION_FAILED");
+      expect(result.error.code).toBe("TRANSACTION_FAILED");
     }
     expect(mockAbortTransaction).toHaveBeenCalled();
     expect(mockEndSession).toHaveBeenCalled();

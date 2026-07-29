@@ -1,5 +1,6 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import { WebSocket } from "ws";
+import { Redis } from "ioredis";
 import { RedisService } from "../redis/redis.service";
 import { PinoLoggerService } from "../logger/logger.service";
 
@@ -13,9 +14,9 @@ export interface RealtimeEvent {
 }
 
 @Injectable()
-export class RealtimeService implements OnModuleDestroy {
+export class RealtimeService implements OnModuleInit, OnModuleDestroy {
   private clients = new Map<string, Set<WebSocket>>();
-  private subscriber = this.redis.getClient().duplicate();
+  private subscriber: Redis | null = null;
   private logger: PinoLoggerService;
 
   constructor(
@@ -23,10 +24,14 @@ export class RealtimeService implements OnModuleDestroy {
     logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "RealtimeService" });
-    this.initSubscriber();
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.initSubscriber();
   }
 
   private async initSubscriber(): Promise<void> {
+    this.subscriber = this.redis.getClient().duplicate();
     await this.subscriber.connect();
     await this.subscriber.subscribe("realtime:broadcast", (message) => {
       try {
@@ -107,6 +112,8 @@ export class RealtimeService implements OnModuleDestroy {
   }
 
   async onModuleDestroy(): Promise<void> {
-    await this.subscriber.disconnect();
+    if (this.subscriber) {
+      await this.subscriber.disconnect();
+    }
   }
 }

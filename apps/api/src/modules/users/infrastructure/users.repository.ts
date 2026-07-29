@@ -74,13 +74,13 @@ export class UsersRepository {
       .lean()
       .exec();
 
-    if (!doc) return err({ type: "USER_NOT_FOUND" });
+    if (!doc) return err({ type: "USER_NOT_FOUND", userId: user.id });
     return ok(this.toDomain(doc));
   }
 
   async delete(id: string): Promise<Result<boolean, UserNotFound>> {
     const result = await this.model.findByIdAndDelete(id).exec();
-    if (!result) return err({ type: "USER_NOT_FOUND" });
+    if (!result) return err({ type: "USER_NOT_FOUND", userId: id });
     return ok(true);
   }
 

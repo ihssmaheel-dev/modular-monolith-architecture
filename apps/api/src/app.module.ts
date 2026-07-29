@@ -11,6 +11,11 @@ import { CacheModule } from "./infrastructure/cache/cache.module";
 import { StorageModule } from "./infrastructure/storage/storage.module";
 import { EmailModule } from "./infrastructure/email/email.module";
 import { RealtimeModule } from "./infrastructure/realtime/realtime.module";
+import { SessionModule } from "./infrastructure/session/session.module";
+import { HealthModule } from "./infrastructure/health/health.module";
+import { RateLimitModule } from "./infrastructure/rate-limit/rate-limit.module";
+import { WafModule } from "./infrastructure/waf/waf.module";
+import { I18nModule } from "./infrastructure/i18n/i18n.module";
 import { env } from "./config/env";
 
 @Module({
@@ -26,6 +31,11 @@ import { env } from "./config/env";
     StorageModule,
     EmailModule,
     RealtimeModule,
+    SessionModule,
+    HealthModule,
+    RateLimitModule,
+    WafModule,
+    I18nModule,
     UsersModule,
   ],
 })

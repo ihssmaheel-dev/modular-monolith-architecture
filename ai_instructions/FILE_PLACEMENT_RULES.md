@@ -38,7 +38,7 @@ Before creating any file, answer these questions in order:
 
 ## packages/shared/
 
-Single source of truth for schemas, types, contracts, constants, permissions, utils.
+Single source of truth for schemas, types, contracts, constants, permissions, utils, and i18n translations.
 
 ```
 packages/shared/src/
@@ -61,6 +61,12 @@ packages/shared/src/
 ├── utils/
 │   ├── date.ts                ← Pure utility functions
 │   └── index.ts
+├── i18n/
+│   ├── locales/
+│   │   ├── en.json            ← English translations
+│   │   ├── es.json            ← Spanish translations
+│   │   └── fr.json            ← French translations
+│   └── index.ts               ← i18n config and exports
 └── index.ts                   ← Main barrel export
 ```
 
@@ -422,6 +428,7 @@ docs/
 | Shared constant | `packages/shared/src/constants/[category].ts` |
 | Permission | `packages/shared/src/permissions/[domain].permissions.ts` |
 | Pure utility | `packages/shared/src/utils/[name].ts` |
+| i18n translations | `packages/shared/src/i18n/locales/[locale].json` |
 | UI component | `packages/ui/src/components/[Name]/[Name].tsx` |
 | API client helper | `packages/api-client/src/` |
 | Env config | `apps/api/src/config/env.ts` |
@@ -433,6 +440,15 @@ docs/
 | Redis connection | `apps/api/src/infrastructure/redis/` |
 | Queue config | `apps/api/src/infrastructure/queue/` |
 | Worker pool | `apps/api/src/infrastructure/workers/` |
+| Cache service | `apps/api/src/infrastructure/cache/` |
+| Storage service | `apps/api/src/infrastructure/storage/` |
+| Email service | `apps/api/src/infrastructure/email/` |
+| Realtime service | `apps/api/src/infrastructure/realtime/` |
+| Session service | `apps/api/src/infrastructure/session/` |
+| Health probes | `apps/api/src/infrastructure/health/` |
+| Rate limiting | `apps/api/src/infrastructure/rate-limit/` |
+| WAF middleware | `apps/api/src/infrastructure/waf/` |
+| i18n service | `apps/api/src/infrastructure/i18n/` |
 | Backend module | `apps/api/src/modules/[domain]/` |
 | Module controller | `apps/api/src/modules/[domain]/presentation/` |
 | Module service | `apps/api/src/modules/[domain]/application/` |

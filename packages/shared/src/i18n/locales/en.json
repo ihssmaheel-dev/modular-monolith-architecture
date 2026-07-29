@@ -1,0 +1,86 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "noResults": "No results found",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit"
+  },
+  "auth": {
+    "login": "Log In",
+    "register": "Sign Up",
+    "logout": "Log Out",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginSuccess": "Logged in successfully",
+    "registerSuccess": "Account created successfully",
+    "logoutSuccess": "Logged out"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {{name}}!",
+    "stats": {
+      "users": "Users",
+      "activeSessions": "Active Sessions",
+      "storage": "Storage Usage"
+    }
+  },
+  "users": {
+    "title": "Users",
+    "list": "User List",
+    "create": "Create User",
+    "edit": "Edit User",
+    "delete": "Delete User",
+    "profile": "Profile",
+    "noUsers": "No users found"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "unauthorized": "You need to log in",
+    "forbidden": "You don't have permission",
+    "serverError": "Server error. Please try again later.",
+    "networkError": "Network error. Check your connection."
+  },
+  "api": {
+    "error": {
+      "internal": "Internal server error",
+      "notFound": "Resource not found",
+      "unauthorized": "Unauthorized",
+      "forbidden": "Forbidden",
+      "badRequest": "Bad request",
+      "conflict": "Resource already exists",
+      "validationFailed": "Validation failed",
+      "rateLimited": "Too many requests",
+      "sessionExpired": "Session expired",
+      "invalidToken": "Invalid token"
+    },
+    "user": {
+      "created": "User created successfully",
+      "updated": "User updated successfully",
+      "deleted": "User deleted successfully",
+      "notFound": "User not found",
+      "emailTaken": "Email is already taken"
+    }
+  }
+}

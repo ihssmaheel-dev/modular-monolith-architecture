@@ -13,6 +13,7 @@ import { PinoLoggerService } from "../logger/logger.service";
 import { env } from "../../config/env";
 
 const WS_READY_STATE_OPEN = 1;
+const USER_ID_QUERY_PARAM = "userId";
 
 @WebSocketGateway({ cors: { origin: env.WS_CORS_ORIGINS.split(",") } })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -26,12 +27,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private readonly logger: PinoLoggerService,
   ) {}
 
-  handleConnection(@ConnectedSocket() client: WebSocket): void {
-    const userId = (client as any).userId as string;
+  handleConnection(@ConnectedSocket() client: WebSocket, ...args: unknown[]): void {
+    const req = args[0] as { url?: string } | undefined;
+    const url = new URL(req?.url ?? "/", "http://localhost");
+    const userId = url.searchParams.get(USER_ID_QUERY_PARAM);
+
     if (!userId) {
       client.close();
       return;
     }
+
     this.socketToUser.set(client, userId);
     this.realtime.addClient(userId, client);
     this.logger.debug({ userId }, "WS connected");

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
-import { UserCreatedEvent } from "../domain/events/user-created.event";
-import { PinoLoggerService } from "../../../infrastructure/logger/logger.service";
+import { UserCreatedEvent } from "../../domain/events/user.events";
+import { PinoLoggerService } from "../../../../infrastructure/logger/logger.service";
 
 @Injectable()
 export class WelcomeEmailListener {

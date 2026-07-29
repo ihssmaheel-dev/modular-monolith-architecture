@@ -1,4 +1,5 @@
-export type UserRole = "admin" | "user";
+import { type UserRole } from '@repo/shared';
+import { randomUUID } from 'crypto';
 
 export interface UserData {
   id: string;
@@ -15,7 +16,7 @@ export class User {
   static create(input: { email: string; name: string; role?: UserRole }): User {
     const now = new Date();
     return new User({
-      id: "",
+      id: randomUUID(),
       email: input.email,
       name: input.name,
       role: input.role ?? "user",

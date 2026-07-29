@@ -1,13 +1,10 @@
 import { envSchema, type Env } from "@repo/shared";
-import pino from "pino";
-
-const logger = pino({ level: "silent" });
 
 function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    logger.error({ errors: result.error.flatten().fieldErrors }, "Invalid environment variables");
+    console.error("Invalid environment variables", result.error.flatten().fieldErrors);
     process.exit(1);
   }
 

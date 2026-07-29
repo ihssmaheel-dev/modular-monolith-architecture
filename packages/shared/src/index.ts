@@ -5,3 +5,4 @@ export * from "./constants";
 export * from "./permissions";
 export * from "./utils";
 export * from "./design-tokens";
+export * from "./i18n";

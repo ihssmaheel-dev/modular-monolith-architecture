@@ -5,7 +5,7 @@ import { UsersService } from "./application/users.service";
 import { UsersRepository } from "./infrastructure/users.repository";
 import { UserMongooseSchema, UserSchema } from "./infrastructure/schemas/user.mongoose.schema";
 import { EventEmitterModule } from "@nestjs/event-emitter";
-import { WelcomeEmailListener } from "./application/welcome-email.listener";
+import { WelcomeEmailListener } from "./application/listeners/welcome-email.listener";
 
 @Module({
   imports: [

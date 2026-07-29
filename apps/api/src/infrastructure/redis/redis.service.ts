@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import Redis from "ioredis";
 import { env } from "../../config/env";
 
@@ -7,8 +7,12 @@ const RETRY_DELAY_MULTIPLIER = 200;
 const MAX_RETRY_DELAY = 2000;
 
 @Injectable()
-export class RedisService implements OnModuleDestroy {
+export class RedisService implements OnModuleInit, OnModuleDestroy {
   private client: Redis | null = null;
+
+  async onModuleInit() {
+    await this.connect();
+  }
 
   async connect(): Promise<Redis> {
     if (this.client) return this.client;
