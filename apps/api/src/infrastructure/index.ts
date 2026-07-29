@@ -4,6 +4,7 @@ export { CacheModule } from "./cache/cache.module";
 export { CacheService } from "./cache/cache.service";
 export { StorageModule } from "./storage/storage.module";
 export { StorageService } from "./storage/storage.service";
+export type { StorageDriver, StorageError, UploadResult, FileInput } from "./storage/storage.types";
 export { EmailModule } from "./email/email.module";
 export { EmailService } from "./email/email.service";
 export { RealtimeModule } from "./realtime/realtime.module";

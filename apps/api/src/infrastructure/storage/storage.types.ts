@@ -1,3 +1,5 @@
+import { Readable } from "stream";
+
 export const PRESIGN_TTL_SECONDS = 3600; // 1 hour
 
 export interface StorageError {
@@ -8,4 +10,13 @@ export interface StorageError {
 export interface UploadResult {
   key: string;
   url: string;
+}
+
+export type FileInput = Buffer | Readable | ReadableStream;
+
+export interface StorageDriver {
+  upload(key: string, body: FileInput, contentType: string): Promise<UploadResult>;
+  getPresignedUploadUrl(key: string, contentType: string, ttlSeconds?: number): Promise<string>;
+  getPresignedDownloadUrl(key: string, ttlSeconds?: number): Promise<string>;
+  delete(key: string): Promise<void>;
 }

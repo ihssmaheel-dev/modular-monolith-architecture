@@ -19,6 +19,7 @@
     "zustand": "^4.5.0",
     "i18next": "^24.0.0",
     "react-i18next": "^15.0.0",
+    "lucide-react": "^0.460.0",
     "@repo/api-client": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/ui": "workspace:*"

@@ -10,7 +10,7 @@ export const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
 
   // Storage
-  STORAGE_DRIVER: z.enum(["minio", "s3", "r2"]).default("minio"),
+  STORAGE_DRIVER: z.enum(["s3", "gridfs"]).default("gridfs"),
   S3_ENDPOINT: z.string().default("localhost"),
   S3_REGION: z.string().default("us-east-1"),
   S3_BUCKET: z.string().default("uploads"),
