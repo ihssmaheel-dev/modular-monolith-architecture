@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type Theme = "light" | "dark" | "system";
 
@@ -7,7 +8,12 @@ interface UIState {
   setTheme: (theme: Theme) => void;
 }
 
-export const useUIStore = create<UIState>()((set) => ({
-  theme: "system",
-  setTheme: (theme) => set({ theme }),
-}));
+export const useUIStore = create<UIState>()(
+  persist(
+    (set) => ({
+      theme: "system",
+      setTheme: (theme) => set({ theme }),
+    }),
+    { name: "ui-storage" },
+  ),
+);

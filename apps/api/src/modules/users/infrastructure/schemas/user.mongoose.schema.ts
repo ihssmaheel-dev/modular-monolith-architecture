@@ -5,7 +5,7 @@ export type UserDocument = HydratedDocument<UserMongooseSchema>;
 
 @Schema({ timestamps: true, collection: "users" })
 export class UserMongooseSchema {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   email!: string;
 
   @Prop({ required: true })

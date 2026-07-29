@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useAuthStore } from "@/stores/auth.store";
 import { useUIStore } from "@/stores/ui.store";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { Button } from "@repo/ui";
 
 export function Header() {
   const { user, logout } = useAuthStore();
@@ -10,9 +11,11 @@ export function Header() {
   return (
     <header className="flex h-14 items-center justify-between border-b bg-card px-4">
       <div className="flex items-center gap-4">
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={toggleSidebar}
-          className="inline-flex items-center justify-center rounded-md p-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground lg:hidden"
+          className="lg:hidden"
         >
           <svg
             className="h-5 w-5"
@@ -23,18 +26,15 @@ export function Header() {
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
-        </button>
+        </Button>
         <h1 className="text-lg font-semibold">Dashboard</h1>
       </div>
       <div className="flex items-center gap-4">
         <ThemeToggle />
         <span className="text-sm text-muted-foreground">{user?.email}</span>
-        <button
-          onClick={logout}
-          className="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-        >
+        <Button variant="ghost" size="sm" onClick={logout}>
           Logout
-        </button>
+        </Button>
       </div>
     </header>
   );

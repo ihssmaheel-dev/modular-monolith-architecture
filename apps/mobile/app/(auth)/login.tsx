@@ -2,6 +2,9 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../../stores/auth.store";
+import { API_BASE_URL } from "../../lib/api";
+
+const PLACEHOLDER_COLOR = "#9CA3AF";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -18,7 +21,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -57,7 +60,7 @@ export default function LoginScreen() {
               value={email}
               onChangeText={setEmail}
               placeholder="name@example.com"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={PLACEHOLDER_COLOR}
               keyboardType="email-address"
               autoCapitalize="none"
               className="rounded-lg border border-input bg-background px-4 py-3 text-foreground"
@@ -70,7 +73,7 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
               placeholder="Enter your password"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={PLACEHOLDER_COLOR}
               secureTextEntry
               className="rounded-lg border border-input bg-background px-4 py-3 text-foreground"
             />

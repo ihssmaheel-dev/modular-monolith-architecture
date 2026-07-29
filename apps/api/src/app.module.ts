@@ -6,6 +6,11 @@ import { RedisModule } from "./infrastructure/redis/redis.module";
 import { QueueModule } from "./infrastructure/queue/queue.module";
 import { LoggerModule } from "./infrastructure/logger/logger.module";
 import { WorkersModule } from "./infrastructure/workers/workers.module";
+import { DatabaseModule } from "./infrastructure/database/database.module";
+import { CacheModule } from "./infrastructure/cache/cache.module";
+import { StorageModule } from "./infrastructure/storage/storage.module";
+import { EmailModule } from "./infrastructure/email/email.module";
+import { RealtimeModule } from "./infrastructure/realtime/realtime.module";
 import { env } from "./config/env";
 
 @Module({
@@ -16,6 +21,11 @@ import { env } from "./config/env";
     QueueModule,
     LoggerModule,
     WorkersModule,
+    DatabaseModule,
+    CacheModule,
+    StorageModule,
+    EmailModule,
+    RealtimeModule,
     UsersModule,
   ],
 })

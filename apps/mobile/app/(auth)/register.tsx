@@ -2,6 +2,9 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../../stores/auth.store";
+import { API_BASE_URL } from "../../lib/api";
+
+const PLACEHOLDER_COLOR = "#9CA3AF";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
@@ -19,7 +22,7 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/auth/register", {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
@@ -60,7 +63,7 @@ export default function RegisterScreen() {
               value={name}
               onChangeText={setName}
               placeholder="John Doe"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={PLACEHOLDER_COLOR}
               autoCapitalize="words"
               className="rounded-lg border border-input bg-background px-4 py-3 text-foreground"
             />
@@ -72,7 +75,7 @@ export default function RegisterScreen() {
               value={email}
               onChangeText={setEmail}
               placeholder="name@example.com"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={PLACEHOLDER_COLOR}
               keyboardType="email-address"
               autoCapitalize="none"
               className="rounded-lg border border-input bg-background px-4 py-3 text-foreground"
@@ -85,7 +88,7 @@ export default function RegisterScreen() {
               value={password}
               onChangeText={setPassword}
               placeholder="Create a password"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={PLACEHOLDER_COLOR}
               secureTextEntry
               className="rounded-lg border border-input bg-background px-4 py-3 text-foreground"
             />

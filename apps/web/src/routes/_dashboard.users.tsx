@@ -1,14 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { Button } from "@repo/ui";
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
 
 function UsersPage() {
   const { data, isLoading, error } = useQuery({
-    queryKey: ["users"],
+    queryKey: ["users", { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT }],
     queryFn: async () => {
-      const result = await api.users.list({ query: { page: 1, limit: 10 } });
+      const result = await api.users.list({ query: { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT } });
       return result.body;
     },
+    staleTime: 5 * 60 * 1000,
   });
 
   if (isLoading) {
@@ -39,9 +44,7 @@ function UsersPage() {
           <h2 className="text-2xl font-bold">Users</h2>
           <p className="text-muted-foreground">Manage your users</p>
         </div>
-        <button className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          Add User
-        </button>
+        <Button>Add User</Button>
       </div>
 
       <div className="space-y-3">
@@ -55,12 +58,12 @@ function UsersPage() {
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
             <div className="flex gap-2">
-              <button className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent">
+              <Button variant="outline" size="sm">
                 Edit
-              </button>
-              <button className="inline-flex items-center justify-center rounded-md border border-destructive/50 px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10">
+              </Button>
+              <Button variant="destructive" size="sm">
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
         ))}

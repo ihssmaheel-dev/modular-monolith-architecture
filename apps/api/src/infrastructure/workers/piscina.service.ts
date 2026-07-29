@@ -2,6 +2,8 @@ import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import { Piscina } from "piscina";
 import { PinoLoggerService } from "../logger/logger.service";
 
+const DEFAULT_MAX_THREADS = 4;
+
 export interface WorkerPoolConfig {
   name: string;
   filename: string;
@@ -19,13 +21,14 @@ export class PiscinaService implements OnModuleDestroy {
 
   getPool(config: WorkerPoolConfig): Piscina {
     if (!this.pools.has(config.name)) {
+      const maxThreads = config.maxThreads ?? DEFAULT_MAX_THREADS;
       const pool = new Piscina({
         filename: config.filename,
-        maxThreads: config.maxThreads ?? 4,
+        maxThreads,
       });
       this.pools.set(config.name, pool);
       this.logger.info(
-        { pool: config.name, maxThreads: config.maxThreads ?? 4 },
+        { pool: config.name, maxThreads },
         "Worker pool created",
       );
     }

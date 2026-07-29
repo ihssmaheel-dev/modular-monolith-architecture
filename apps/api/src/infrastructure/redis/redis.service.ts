@@ -2,6 +2,10 @@ import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import Redis from "ioredis";
 import { env } from "../../config/env";
 
+const MAX_RETRIES_PER_REQUEST = 3;
+const RETRY_DELAY_MULTIPLIER = 200;
+const MAX_RETRY_DELAY = 2000;
+
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   private client: Redis | null = null;
@@ -10,10 +14,9 @@ export class RedisService implements OnModuleDestroy {
     if (this.client) return this.client;
 
     this.client = new Redis(env.REDIS_URL, {
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: MAX_RETRIES_PER_REQUEST,
       retryStrategy(times) {
-        const delay = Math.min(times * 200, 2000);
-        return delay;
+        return Math.min(times * RETRY_DELAY_MULTIPLIER, MAX_RETRY_DELAY);
       },
     });
 

@@ -9,11 +9,26 @@ export const envSchema = z.object({
 
   JWT_SECRET: z.string().min(32),
 
-  MINIO_ENDPOINT: z.string().default("localhost"),
-  MINIO_PORT: z.coerce.number().default(9000),
-  MINIO_ACCESS_KEY: z.string().default("minioadmin"),
-  MINIO_SECRET_KEY: z.string().default("minioadmin"),
-  MINIO_BUCKET: z.string().default("uploads"),
+  // Storage
+  STORAGE_DRIVER: z.enum(["minio", "s3", "r2"]).default("minio"),
+  S3_ENDPOINT: z.string().default("localhost"),
+  S3_REGION: z.string().default("us-east-1"),
+  S3_BUCKET: z.string().default("uploads"),
+  S3_ACCESS_KEY_ID: z.string().default("minioadmin"),
+  S3_SECRET_ACCESS_KEY: z.string().default("minioadmin"),
+  S3_FORCE_PATH_STYLE: z.coerce.boolean().default(true),
+
+  // Email
+  EMAIL_DRIVER: z.enum(["resend", "smtp"]).default("smtp"),
+  RESEND_API_KEY: z.string().default(""),
+  EMAIL_FROM: z.string().email().default("noreply@example.com"),
+  SMTP_HOST: z.string().default("localhost"),
+  SMTP_PORT: z.coerce.number().default(1025),
+  SMTP_USER: z.string().default(""),
+  SMTP_PASS: z.string().default(""),
+
+  // WebSocket
+  WS_CORS_ORIGINS: z.string().default("http://localhost:5173"),
 });
 
 export type Env = z.infer<typeof envSchema>;

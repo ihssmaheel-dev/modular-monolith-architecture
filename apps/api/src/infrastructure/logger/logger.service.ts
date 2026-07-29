@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import pino from "pino";
 import { env } from "../../config/env";
 
@@ -9,7 +9,7 @@ export interface LogContext {
 }
 
 @Injectable()
-export class PinoLoggerService {
+export class PinoLoggerService implements OnModuleDestroy {
   private logger: pino.Logger;
 
   constructor() {
@@ -42,5 +42,9 @@ export class PinoLoggerService {
     const child = new PinoLoggerService();
     child.logger = this.logger.child(bindings);
     return child;
+  }
+
+  onModuleDestroy() {
+    this.logger.flush();
   }
 }

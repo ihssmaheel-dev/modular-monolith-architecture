@@ -1,3 +1,14 @@
+/**
+ * Design Tokens — Single source of truth for all visual decisions.
+ *
+ * Both web and mobile consume these values via CSS custom properties.
+ * CSS files in apps/web/src/index.css and apps/mobile/global.css
+ * manually mirror these values. To update the color scheme, edit
+ * the CSS files to match any changes here.
+ *
+ * These TypeScript tokens are also available for programmatic use
+ * in React Native, custom components, or theme generators.
+ */
 export const colors = {
   light: {
     background: "0 0% 100%",

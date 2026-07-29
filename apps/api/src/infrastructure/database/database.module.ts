@@ -1,8 +1,9 @@
-import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { env } from "../../config/env";
+import { Module, Global } from "@nestjs/common";
+import { DatabaseService } from "./database.service";
 
+@Global()
 @Module({
-  imports: [MongooseModule.forRoot(env.MONGODB_URI)],
+  providers: [DatabaseService],
+  exports: [DatabaseService],
 })
 export class DatabaseModule {}

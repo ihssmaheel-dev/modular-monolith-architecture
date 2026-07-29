@@ -2,13 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+
 function DashboardPage() {
   const { data, isLoading } = useQuery({
-    queryKey: ["users"],
+    queryKey: ["users", { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT }],
     queryFn: async () => {
-      const result = await api.users.list({ query: { page: 1, limit: 10 } });
+      const result = await api.users.list({ query: { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT } });
       return result.body;
     },
+    staleTime: 5 * 60 * 1000,
   });
 
   return (

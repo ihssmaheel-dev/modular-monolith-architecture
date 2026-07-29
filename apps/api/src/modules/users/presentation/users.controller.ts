@@ -4,6 +4,15 @@ import { usersContract, UserResponse } from "@repo/shared";
 import { UsersService } from "../application/users.service";
 import { User } from "../domain/entities/user.entity";
 
+const HTTP_STATUS = {
+  OK: 200 as const,
+  CREATED: 201 as const,
+  NO_CONTENT: 204 as const,
+  NOT_FOUND: 404 as const,
+  CONFLICT: 409 as const,
+  INTERNAL_ERROR: 500 as const,
+} as const;
+
 function toUserResponse(user: User): UserResponse {
   return {
     id: user.id,
@@ -23,11 +32,11 @@ export class UsersController {
     return tsRestHandler(usersContract.list, async ({ query }) => {
       const result = await this.usersService.list(query.page, query.limit);
       if (result.isErr()) {
-        return { status: 500 as const, body: { message: "Internal error" } };
+        return { status: HTTP_STATUS.INTERNAL_ERROR, body: { message: "Internal error" } };
       }
       const { users, total, page, limit } = result.value;
       return {
-        status: 200 as const,
+        status: HTTP_STATUS.OK,
         body: { users: users.map(toUserResponse), total, page, limit },
       };
     });
@@ -38,9 +47,9 @@ export class UsersController {
     return tsRestHandler(usersContract.getById, async ({ params }) => {
       const result = await this.usersService.getById(params.id);
       if (result.isErr()) {
-        return { status: 404 as const, body: { message: `User not found: ${params.id}` } };
+        return { status: HTTP_STATUS.NOT_FOUND, body: { message: "User not found" } };
       }
-      return { status: 200 as const, body: toUserResponse(result.value) };
+      return { status: HTTP_STATUS.OK, body: toUserResponse(result.value) };
     });
   }
 
@@ -49,9 +58,9 @@ export class UsersController {
     return tsRestHandler(usersContract.create, async ({ body }) => {
       const result = await this.usersService.create(body);
       if (result.isErr()) {
-        return { status: 409 as const, body: { message: "Email already taken" } };
+        return { status: HTTP_STATUS.CONFLICT, body: { message: "Email already taken" } };
       }
-      return { status: 201 as const, body: toUserResponse(result.value) };
+      return { status: HTTP_STATUS.CREATED, body: toUserResponse(result.value) };
     });
   }
 
@@ -60,10 +69,10 @@ export class UsersController {
     return tsRestHandler(usersContract.update, async ({ params, body }) => {
       const result = await this.usersService.update(params.id, body);
       if (result.isErr()) {
-        const status = result.error.type === "USER_NOT_FOUND" ? 404 : 409;
-        return { status: status as 404 | 409, body: { message: result.error.type } };
+        const status = result.error.type === "USER_NOT_FOUND" ? HTTP_STATUS.NOT_FOUND : HTTP_STATUS.CONFLICT;
+        return { status, body: { message: result.error.type } };
       }
-      return { status: 200 as const, body: toUserResponse(result.value) };
+      return { status: HTTP_STATUS.OK, body: toUserResponse(result.value) };
     });
   }
 
@@ -72,9 +81,9 @@ export class UsersController {
     return tsRestHandler(usersContract.delete, async ({ params }) => {
       const result = await this.usersService.delete(params.id);
       if (result.isErr()) {
-        return { status: 404 as const, body: { message: `User not found: ${params.id}` } };
+        return { status: HTTP_STATUS.NOT_FOUND, body: { message: "User not found" } };
       }
-      return { status: 204 as const, body: undefined as unknown as never };
+      return { status: HTTP_STATUS.NO_CONTENT, body: undefined as unknown as never };
     });
   }
 }

@@ -1,11 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import type { User } from "@repo/shared";
 
 interface AuthState {
   token: string | null;

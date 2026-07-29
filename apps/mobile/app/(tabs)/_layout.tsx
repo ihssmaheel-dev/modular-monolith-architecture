@@ -1,19 +1,54 @@
 import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Redirect } from "expo-router";
+import { useAuthStore } from "../../stores/auth.store";
+import { colors } from "@repo/shared";
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+
+const tabIcons: Record<string, IoniconsName> = {
+  index: "home",
+  users: "people",
+  settings: "settings",
+};
+
+const lightTheme = colors.light;
+const darkTheme = colors.dark;
+
+function getTabColors(theme: "light" | "dark") {
+  const t = theme === "dark" ? darkTheme : lightTheme;
+  return {
+    active: `hsl(${t.primary})`,
+    inactive: `hsl(${t["muted-foreground"]})`,
+    background: `hsl(${t.card})`,
+    border: `hsl(${t.border})`,
+    headerBg: `hsl(${t.card})`,
+    headerTint: `hsl(${t.foreground})`,
+  };
+}
 
 export default function TabsLayout() {
+  const { isAuthenticated } = useAuthStore();
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  const tabColors = getTabColors("light");
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "hsl(222.2, 47.4%, 11.2%)",
-        tabBarInactiveTintColor: "hsl(215.4, 16.3%, 46.9%)",
+        tabBarActiveTintColor: tabColors.active,
+        tabBarInactiveTintColor: tabColors.inactive,
         tabBarStyle: {
-          backgroundColor: "hsl(0, 0%, 100%)",
-          borderTopColor: "hsl(214.3, 31.8%, 91.4%)",
+          backgroundColor: tabColors.background,
+          borderTopColor: tabColors.border,
         },
         headerStyle: {
-          backgroundColor: "hsl(0, 0%, 100%)",
+          backgroundColor: tabColors.headerBg,
         },
-        headerTintColor: "hsl(222.2, 84%, 4.9%)",
+        headerTintColor: tabColors.headerTint,
       }}
     >
       <Tabs.Screen
@@ -21,7 +56,7 @@ export default function TabsLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <TabIcon name="home" color={color} size={size} />
+            <Ionicons name={tabIcons.index} size={size} color={color} />
           ),
         }}
       />
@@ -30,7 +65,7 @@ export default function TabsLayout() {
         options={{
           title: "Users",
           tabBarIcon: ({ color, size }) => (
-            <TabIcon name="users" color={color} size={size} />
+            <Ionicons name={tabIcons.users} size={size} color={color} />
           ),
         }}
       />
@@ -39,24 +74,10 @@ export default function TabsLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color, size }) => (
-            <TabIcon name="settings" color={color} size={size} />
+            <Ionicons name={tabIcons.settings} size={size} color={color} />
           ),
         }}
       />
     </Tabs>
-  );
-}
-
-function TabIcon({ name, color, size }: { name: string; color: string; size: number }) {
-  const icons: Record<string, string> = {
-    home: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-    users: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
-    settings: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
-  };
-
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d={icons[name]} />
-    </svg>
   );
 }
