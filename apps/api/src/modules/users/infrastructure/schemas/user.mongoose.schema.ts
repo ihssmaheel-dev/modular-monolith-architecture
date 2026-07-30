@@ -11,7 +11,7 @@ export class UserMongooseSchema {
   @Prop({ required: true })
   name!: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, select: false })
   passwordHash!: string;
 
   @Prop({ required: true, enum: ["admin", "user"], default: "user" })

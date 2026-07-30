@@ -24,10 +24,11 @@ export class CreateUserCommand {
     if (existing.value) return err({ type: "EMAIL_TAKEN", email: data.email });
 
     const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
-    const result = await this.repository.save({
+    const result = await this.repository.create({
       email: data.email,
       name: data.name,
       passwordHash,
+      role: "user",
     });
     if (result.isErr()) return err(result.error);
 

@@ -28,8 +28,13 @@ export class UpdateUserCommand {
     }
 
     existing.value.update(data);
-    const saved = await this.repository.update(existing.value);
-    if (saved.isErr()) return err(saved.error);
+    const saved = await this.repository.updateById(existing.value.id, {
+      email: existing.value.email,
+      name: existing.value.name,
+      role: existing.value.role,
+    });
+    if (saved.isErr()) return err({ type: "USER_NOT_FOUND", userId: existing.value.id });
+    if (!saved.value) return err({ type: "USER_NOT_FOUND", userId: existing.value.id });
 
     this.eventEmitter.emit("user.updated", new UserUpdatedEvent(saved.value.id, data));
 

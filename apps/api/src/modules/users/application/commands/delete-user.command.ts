@@ -18,8 +18,9 @@ export class DeleteUserCommand {
     const existing = await this.getUserById.execute(id);
     if (existing.isErr()) return err(existing.error);
 
-    const deleted = await this.repository.delete(id);
-    if (deleted.isErr()) return err(deleted.error);
+    const deleted = await this.repository.deleteById(id);
+    if (deleted.isErr()) return err({ type: "USER_NOT_FOUND", userId: id });
+    if (!deleted.value) return err({ type: "USER_NOT_FOUND", userId: id });
 
     this.eventEmitter.emit("user.deleted", new UserDeletedEvent(id));
 
