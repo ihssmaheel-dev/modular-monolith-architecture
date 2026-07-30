@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EventEmitterModule } from "@nestjs/event-emitter";
+import { ClsModule } from "nestjs-cls";
 import { UsersModule } from "./modules/users/users.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { RedisModule } from "./infrastructure/redis/redis.module";
@@ -21,6 +22,7 @@ import { env } from "./config/env";
 
 @Module({
   imports: [
+    ClsModule.forRoot({ global: true, middleware: { mount: true } }),
     EventEmitterModule.forRoot(),
     MongooseModule.forRoot(env.MONGODB_URI),
     RedisModule,

@@ -12,9 +12,9 @@ export class GetUsersQuery {
     page?: number,
     limit?: number,
   ): Promise<Result<{ users: User[]; total: number; page: number; limit: number }, never>> {
-    const { skip, page: p, limit: l } = paginate(page, limit);
-    const result = await this.repository.findAll({ skip, limit: l });
+    const { page: p, limit: l } = paginate(page, limit);
+    const result = await this.repository.paginate({}, { page: p, limit: l });
     if (result.isErr()) return err(result.error);
-    return ok({ users: result.value.users, total: result.value.total, page: p, limit: l });
+    return ok({ users: result.value.items, total: result.value.total, page: p, limit: l });
   }
 }

@@ -74,6 +74,9 @@ importers:
       mongoose:
         specifier: ^9.0.0
         version: 9.8.1
+      nestjs-cls:
+        specifier: ^6.2.1
+        version: 6.2.1(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
       neverthrow:
         specifier: ^8.0.0
         version: 8.2.0
@@ -5748,6 +5751,15 @@ packages:
 
   nested-error-stacks@2.0.1:
     resolution: {integrity: sha512-SrQrok4CATudVzBS7coSz26QRSmlK9TzzoFbeKfcPBUFPjcQM9Rqvr/DlJkOrwI/0KcgvMub1n1g5Jt9EgRn4A==}
+
+  nestjs-cls@6.2.1:
+    resolution: {integrity: sha512-LTVvreuhH132+rjP4MwnykUS3byBAuN6WQzh2QA3YSYCjy9GfgRyoiSKE5qrzQe+uCB1/TUNHPCxEMYgR3tRlg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@nestjs/common': '>= 10 < 12'
+      '@nestjs/core': '>= 10 < 12'
+      reflect-metadata: '*'
+      rxjs: '>= 7'
 
   neverthrow@8.2.0:
     resolution: {integrity: sha512-kOCT/1MCPAxY5iUV3wytNFUMUolzuwd/VF/1KCx7kf6CutrOsTie+84zTGTpgQycjvfLdBBdvBvFLqFD2c0wkQ==}
@@ -14457,6 +14469,13 @@ snapshots:
   neo-async@2.6.2: {}
 
   nested-error-stacks@2.0.1: {}
+
+  nestjs-cls@6.2.1(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2):
+    dependencies:
+      '@nestjs/common': 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
 
   neverthrow@8.2.0:
     optionalDependencies:
