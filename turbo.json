@@ -18,12 +18,10 @@
       "dependsOn": ["build"]
     },
     "test:integration": {
-      "dependsOn": ["build"],
-      "docker": true
+      "dependsOn": ["build"]
     },
     "test:e2e": {
-      "dependsOn": ["build"],
-      "docker": true
+      "dependsOn": ["build"]
     },
     "clean": {
       "cache": false

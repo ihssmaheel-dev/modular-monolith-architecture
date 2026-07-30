@@ -5,11 +5,14 @@ export type UserDocument = HydratedDocument<UserMongooseSchema>;
 
 @Schema({ timestamps: true, collection: "users" })
 export class UserMongooseSchema {
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   email!: string;
 
   @Prop({ required: true })
   name!: string;
+
+  @Prop({ required: true })
+  passwordHash!: string;
 
   @Prop({ required: true, enum: ["admin", "user"], default: "user" })
   role!: string;

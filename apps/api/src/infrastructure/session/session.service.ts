@@ -4,11 +4,10 @@ import { PinoLoggerService } from "../logger/logger.service";
 import {
   SessionData,
   CreateSessionInput,
-  SESSION_PREFIX,
-  TOKEN_REVOCATION_PREFIX,
   SESSION_TTL_SECONDS,
   TOKEN_REVOCATION_TTL_SECONDS,
 } from "./session.types";
+import { sessionKey, tokenRevocationKey, generateSessionId, isRevoked } from "./session.utils";
 
 @Injectable()
 export class SessionService {
@@ -22,7 +21,7 @@ export class SessionService {
   }
 
   async create(input: CreateSessionInput): Promise<SessionData> {
-    const sessionId = this.generateSessionId();
+    const sessionId = generateSessionId();
     const now = Date.now();
 
     const session: SessionData = {
@@ -35,7 +34,7 @@ export class SessionService {
       lastAccessedAt: now,
     };
 
-    const key = this.sessionKey(sessionId);
+    const key = sessionKey(sessionId);
     await this.redis.getClient().setex(key, SESSION_TTL_SECONDS, JSON.stringify(session));
     await this.redis.getClient().sadd(`user:${input.userId}:sessions`, sessionId);
 
@@ -44,13 +43,13 @@ export class SessionService {
   }
 
   async getById(sessionId: string): Promise<SessionData | null> {
-    const raw = await this.redis.getClient().get(this.sessionKey(sessionId));
+    const raw = await this.redis.getClient().get(sessionKey(sessionId));
     if (!raw) return null;
     return JSON.parse(raw) as SessionData;
   }
 
   async validate(sessionId: string, ip: string): Promise<SessionData | null> {
-    if (await this.isRevoked(sessionId)) {
+    if (await isRevoked(this.redis, sessionId)) {
       return null;
     }
 
@@ -64,7 +63,7 @@ export class SessionService {
 
     session.lastAccessedAt = Date.now();
     await this.redis.getClient().setex(
-      this.sessionKey(sessionId),
+      sessionKey(sessionId),
       SESSION_TTL_SECONDS,
       JSON.stringify(session),
     );
@@ -76,10 +75,10 @@ export class SessionService {
     const session = await this.getById(sessionId);
     if (!session) return;
 
-    await this.redis.getClient().del(this.sessionKey(sessionId));
+    await this.redis.getClient().del(sessionKey(sessionId));
     await this.redis.getClient().srem(`user:${session.userId}:sessions`, sessionId);
     await this.redis.getClient().setex(
-      this.tokenRevocationKey(sessionId),
+      tokenRevocationKey(sessionId),
       TOKEN_REVOCATION_TTL_SECONDS,
       "1",
     );
@@ -93,8 +92,8 @@ export class SessionService {
     if (sessionIds.length > 0) {
       const pipeline = this.redis.getClient().pipeline();
       for (const sid of sessionIds) {
-        pipeline.del(this.sessionKey(sid));
-        pipeline.setex(this.tokenRevocationKey(sid), TOKEN_REVOCATION_TTL_SECONDS, "1");
+        pipeline.del(sessionKey(sid));
+        pipeline.setex(tokenRevocationKey(sid), TOKEN_REVOCATION_TTL_SECONDS, "1");
       }
       await pipeline.exec();
     }
@@ -107,30 +106,11 @@ export class SessionService {
     const sessionIds = await this.redis.getClient().smembers(`user:${userId}:sessions`);
     if (sessionIds.length === 0) return [];
 
-    const keys = sessionIds.map((sid) => this.sessionKey(sid));
+    const keys = sessionIds.map((sid) => sessionKey(sid));
     const rawSessions = await this.redis.getClient().mget(keys);
 
     return rawSessions
       .filter((raw): raw is string => raw !== null)
       .map((raw) => JSON.parse(raw) as SessionData);
-  }
-
-  private async isRevoked(sessionId: string): Promise<boolean> {
-    const result = await this.redis.getClient().get(this.tokenRevocationKey(sessionId));
-    return result === "1";
-  }
-
-  private sessionKey(sessionId: string): string {
-    return `${SESSION_PREFIX}${sessionId}`;
-  }
-
-  private tokenRevocationKey(sessionId: string): string {
-    return `${TOKEN_REVOCATION_PREFIX}${sessionId}`;
-  }
-
-  private generateSessionId(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
   }
 }

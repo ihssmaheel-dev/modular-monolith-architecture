@@ -1,7 +1,8 @@
 import { Component } from "react";
 import { Button } from "@repo/ui";
+import { withTranslation, WithTranslation } from "react-i18next";
 
-interface ErrorBoundaryProps {
+interface ErrorBoundaryProps extends WithTranslation {
   children: React.ReactNode;
 }
 
@@ -10,7 +11,7 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -22,16 +23,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render() {
     if (this.state.hasError) {
+      const { t } = this.props;
       return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
           <div className="max-w-md text-center">
-            <h2 className="text-2xl font-bold text-foreground">Something went wrong</h2>
+            <h2 className="text-2xl font-bold text-foreground">{t("errors.serverError")}</h2>
             <p className="mt-2 text-muted-foreground">{this.state.error?.message}</p>
             <Button
               onClick={() => this.setState({ hasError: false, error: null })}
               className="mt-4"
             >
-              Try again
+              {t("common.retry")}
             </Button>
           </div>
         </div>
@@ -41,3 +43,5 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return this.props.children;
   }
 }
+
+export const ErrorBoundary = withTranslation()(ErrorBoundaryComponent as any) as any;

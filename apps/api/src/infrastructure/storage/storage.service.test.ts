@@ -16,13 +16,28 @@ vi.mock("../../config/env", () => ({
   },
 }));
 
+vi.mock("./drivers/gridfs.driver", () => {
+  return {
+    GridFsDriver: class {
+      upload = vi.fn().mockResolvedValue({ url: "test", key: "test" });
+      delete = vi.fn().mockResolvedValue(undefined);
+      getPresignedDownloadUrl = vi.fn().mockResolvedValue("http://dl");
+      getPresignedUploadUrl = vi.fn().mockResolvedValue("http://ul");
+    },
+  };
+});
+
 describe("StorageService", () => {
   let service: StorageService;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    const mockLogger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } as any;
+    mockLogger.child = () => mockLogger;
+
     service = new StorageService(
-      { child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn() }) } as any,
+      mockLogger,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { db: {} } as any,
     );
   });

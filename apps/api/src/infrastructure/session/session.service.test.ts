@@ -20,18 +20,27 @@ describe("SessionService", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    const mockLogger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } as any;
+    mockLogger.child = () => mockLogger;
+
     service = new SessionService(
       {
         getClient: () => ({
           setex: mockSetex,
           get: mockGet,
-          del: mockDel,
           sadd: mockSadd,
+          del: mockDel,
           srem: mockSrem,
           smembers: mockSmembers,
+          pipeline: () => ({
+            del: mockDel,
+            setex: mockSetex,
+            exec: vi.fn().mockResolvedValue([]),
+          }),
         }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
-      { child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() }) } as any,
+      mockLogger,
     );
   });
 

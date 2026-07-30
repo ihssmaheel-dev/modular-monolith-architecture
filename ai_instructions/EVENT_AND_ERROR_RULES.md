@@ -35,19 +35,20 @@ export type UserError = UserNotFound | EmailTaken | InvalidUserData;
 ### Application Layer
 
 ```typescript
-// modules/application/users.service.ts
-import { Result, ResultAsync } from "neverthrow";
+// modules/users/application/commands/create-user.command.ts
+import { ok, err, Result } from "neverthrow";
+import { UserError } from "../../domain/errors/user.errors";
 
-async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
-  const exists = await this.userRepository.findByEmail(data.email);
-  if (exists.isErr()) return err(exists.error);
-  if (exists.value) return err({ type: "EMAIL_TAKEN", email: data.email });
-
-  const user = User.create(data);
-  const saved = await this.userRepository.save(user);
-  if (saved.isErr()) return err(saved.error);
-
-  return ok(saved.value);
+@Injectable()
+export class CreateUserCommand {
+  async execute(body: any): Promise<Result<User, UserError>> {
+    const existingUser = await this.repo.findByEmail(body.email);
+    if (existingUser) {
+      return err({ type: "EMAIL_TAKEN", email: body.email }); // Strongly typed, explicit
+    }
+    // ...
+    return ok(newUser);
+  }
 }
 ```
 
@@ -55,22 +56,23 @@ async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
 
 ```typescript
 // modules/presentation/users.controller.ts
-async createUser(body: CreateUserDto) {
-  const result = await this.userService.createUser(body);
+// constructor(private readonly createUserCommand: CreateUserCommand) {}
 
-  if (result.isErr()) {
-    switch (result.error.type) {
-      case "EMAIL_TAKEN":
-        return { status: 409, body: { message: "Email already taken" } };
+  @Post()
+  async create(@Body() body: any) {
+    const result = await this.createUserCommand.execute(body);
+
+    if (result.isErr()) {
+      // TypeScript knows result.error is UserError
+      if (result.error.type === "EMAIL_TAKEN") {
+        throw new ConflictException("Email is already taken");
+      }
       case "INVALID_USER_DATA":
         return { status: 400, body: { message: result.error.reason } };
       default:
         return { status: 500, body: { message: "Internal error" } };
     }
   }
-
-  return { status: 201, body: result.value };
-}
 ```
 
 ### Error Mapping
@@ -147,7 +149,7 @@ export class UserCreatedEvent {
 ```
 
 ```typescript
-// modules/users/application/users.service.ts
+// modules/users/application/commands/create-user.command.ts
 async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
   // ... create user ...
   this.eventEmitter.emit("user.created", new UserCreatedEvent(user.id, user.email, user.name));
@@ -158,11 +160,11 @@ async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
 ### Level 2: Reliable Async Work (BullMQ)
 
 - When you need retries, persistence, backoff, or multi-instance safety.
-- Application service publishes a job via BullMQ.
+- Application command/query publishes a job via BullMQ.
 - Workers live in `infrastructure/queue/` or module-specific processors.
 
 ```typescript
-// modules/users/application/users.service.ts
+// modules/users/application/commands/create-user.command.ts
 async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
   // ... create user ...
   await this.queue.add("send-welcome-email", { userId: user.id, email: user.email });

@@ -138,7 +138,7 @@ modules/users/
 ├── application/ # Use cases / services
 │ ├── commands/
 │ ├── queries/
-│ └── users.service.ts
+│ └── listeners/
 ├── domain/ # Pure business rules
 │ ├── entities/
 │ ├── value-objects/
@@ -169,7 +169,7 @@ We use **two clear levels**:
 2. **Reliable async work**  
    - BullMQ  
    - When we need retries, persistence, backoff, or multi-instance safety  
-   - Application service publishes a job; workers live in `infrastructure/queue` or module-specific processors
+   - Application layer commands/queries publish a job; workers live in `infrastructure/queue` or module-specific processors
 
 Rule: Prefer in-process events. Promote to BullMQ only when reliability requirements demand it.
 

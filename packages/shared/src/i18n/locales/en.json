@@ -62,6 +62,27 @@
     "serverError": "Server error. Please try again later.",
     "networkError": "Network error. Check your connection."
   },
+  "auth": {
+    "login": "Log In",
+    "register": "Sign Up",
+    "logout": "Log Out",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginSuccess": "Logged in successfully",
+    "registerSuccess": "Account created successfully",
+    "logoutSuccess": "Logged out",
+    "invalidCredentials": "Invalid email or password",
+    "emailTaken": "Email already registered",
+    "userNotFound": "User not found",
+    "invalidToken": "Invalid or expired token",
+    "emailNotFound": "Email not found",
+    "resetLinkSent": "If the email exists, a reset link has been sent",
+    "passwordResetSuccess": "Password has been reset successfully"
+  },
   "api": {
     "error": {
       "internal": "Internal server error",

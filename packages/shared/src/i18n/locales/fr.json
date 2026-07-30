@@ -27,7 +27,14 @@
     "hasAccount": "Déjà un compte ?",
     "loginSuccess": "Connexion réussie",
     "registerSuccess": "Compte créé avec succès",
-    "logoutSuccess": "Déconnecté"
+    "logoutSuccess": "Déconnecté",
+    "invalidCredentials": "E-mail ou mot de passe invalide",
+    "emailTaken": "L'e-mail est déjà enregistré",
+    "userNotFound": "Utilisateur non trouvé",
+    "invalidToken": "Jeton invalide ou expiré",
+    "emailNotFound": "E-mail non trouvé",
+    "resetLinkSent": "Si l'e-mail existe, un lien de réinitialisation a été envoyé",
+    "passwordResetSuccess": "Le mot de passe a été réinitialisé avec succès"
   },
   "dashboard": {
     "title": "Tableau de bord",

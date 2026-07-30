@@ -16,8 +16,7 @@ modules/[domain]/
 ├── application/
 │   ├── commands/
 │   ├── queries/
-│   ├── listeners/
-│   └── [domain].service.ts
+│   └── listeners/
 ├── domain/
 │   ├── entities/
 │   ├── value-objects/
@@ -40,12 +39,12 @@ Do not skip folders. Do not add extra folders beyond this structure.
 - Controllers only.
 - Extremely thin.
 - Validate input via Zod / ts-rest.
-- Call application services.
+- Call application commands/queries.
 - Map `Result` → HTTP response.
 - No business logic. No database access. No state.
 
 ### `application/`
-- Business use cases / services.
+- Business use cases (Commands and Queries).
 - Orchestrates domain logic.
 - Returns `Result<T, E>` or `ResultAsync<T, E>` from neverthrow.
 - `commands/` for write operations (create, update, delete).
@@ -53,15 +52,17 @@ Do not skip folders. Do not add extra folders beyond this structure.
 - `listeners/` for domain event handlers (welcome email, analytics, notifications).
 - Never directly accesses Mongoose. Goes through repository.
 
-### When to Use commands/ vs queries/ vs Flat Service
+### Strict CQRS (Command Query Responsibility Segregation)
+
+Every domain module **must** implement a strict CQRS architecture. We do not use flat services.
 
 | Pattern | When to Use |
 |---------|-------------|
-| **Flat service** | Module has ≤5 operations. All in one file. Simple and clear. |
-| **commands/ + queries/** | Module has 6+ operations, or write operations are complex enough to warrant separate files. |
+| **commands/** | Isolated write operations (create, update, delete). |
+| **queries/** | Isolated read operations (list, getById, search). |
 | **listeners/** | Module emits domain events that trigger side effects. |
 
-**Start flat. Split when the file exceeds 100 lines or when operations have distinct concerns.**
+**There are absolutely no exceptions. Flat god-services are banned. Every use case gets its own class.**
 
 ### `domain/`
 - Pure business rules. No framework dependencies.
@@ -111,9 +112,9 @@ Never put business logic in either infrastructure folder.
 
 | Metric | Limit | Action if Exceeded |
 |--------|-------|-------------------|
-| Module files | 15 | Split into sub-domains or extract a new module |
-| Service methods | 10 | Extract use cases into separate files |
-| Repository methods | 8 | Consider if the module is doing too much |
+| Module files | 25 | Split into sub-domains or extract a new module |
+| Command/Query | 250 lines | Extract helper methods or split |
+| Repository methods | 15 | Consider if the module is doing too much |
 
 If a module exceeds these limits, ask: "Is this actually two modules?" Split by subdomain, not by technical layer.
 
@@ -139,9 +140,9 @@ export class AppModule {}
 3. Define ts-rest contract in `packages/shared/src/contracts/`.
 4. Implement domain entities in `domain/entities/`.
 5. Implement repository in `infrastructure/`.
-6. Implement service in `application/`.
+6. Implement use-cases in `application/commands/` and `application/queries/`.
 7. Implement controller in `presentation/`.
-8. Register module in `app.module.ts`.
+8. Register module, controllers, queries, and commands in `app.module.ts`.
 9. Write tests at the correct layers.
 10. Add migration if schema changes affect existing data.
 
@@ -150,7 +151,7 @@ export class AppModule {}
 ## Controller Rules
 
 - Validate input with Zod / ts-rest.
-- Call exactly one application service method per route.
+- Call exactly one application command/query per route.
 - Map Result to HTTP:
   - `ok(value)` → 200/201 with value
   - `err(error)` → appropriate 4xx/5xx
@@ -163,7 +164,7 @@ export class AppModule {}
 
 ## Cross-Module Communication
 
-1. **Preferred:** Application service calls another module's service.
+1. **Preferred:** Application command/query calls another module's command/query.
 2. **Allowed:** Domain events (in-process via EventEmitter2).
 3. **Never:** Direct import of another module's repository or Mongoose model.
 4. **Never:** Shared mutable state between modules.

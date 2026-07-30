@@ -8,7 +8,7 @@ export function createApiClient(baseUrl: string, getToken?: () => string | null)
       baseHeaders: {
         get Authorization() {
           const token = getToken?.();
-          return token ? { Authorization: `Bearer ${token}` } : {};
+          return token ? `Bearer ${token}` : "";
         },
       },
     }),

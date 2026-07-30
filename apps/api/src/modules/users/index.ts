@@ -1,3 +1,9 @@
 export { UsersModule } from "./users.module";
-export { UsersService } from "./application/users.service";
+export { GetUsersQuery } from "./application/queries/get-users.query";
+export { GetUserByIdQuery } from "./application/queries/get-user-by-id.query";
+export { GetUserByEmailQuery } from "./application/queries/get-user-by-email.query";
+export { VerifyUserCredentialsQuery } from "./application/queries/verify-user-credentials.query";
+export { CreateUserCommand } from "./application/commands/create-user.command";
+export { UpdateUserCommand } from "./application/commands/update-user.command";
+export { DeleteUserCommand } from "./application/commands/delete-user.command";
 export { UsersController } from "./presentation/users.controller";

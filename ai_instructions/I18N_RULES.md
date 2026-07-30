@@ -40,10 +40,10 @@ packages/shared/src/i18n/
 
 ```typescript
 // Good
-async createUser(body: CreateUserDto, req: FastifyRequest) {
-  const acceptLanguage = req.headers["accept-language"];
-  const result = await this.userService.createUser(body);
-  
+@Post()
+async create(@Body() body: any) {
+  const result = await this.createUserCommand.execute(body);
+
   if (result.isErr()) {
     const message = this.i18n.t("api.user.emailTaken", acceptLanguage);
     return { status: 409, body: { message } };
@@ -144,7 +144,7 @@ return <h1>Dashboard</h1>;
 |-----------|------------------|
 | Hardcoded string in component | Use `t("key")` |
 | Hardcoded error in controller | Use `I18nService.t("api.error.*")` |
-| Translations in service file | Use files in `packages/shared` |
+| Translations in command/query file | Use files in `packages/shared` |
 | Missing locale file | Add to all supported locales |
 | Console.log for debugging | Use logger, never expose to users |
 | Translation key typo | Keys are type-checked via TypeScript |

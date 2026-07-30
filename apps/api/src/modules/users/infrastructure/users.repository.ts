@@ -7,6 +7,7 @@ import { UserNotFound } from "../domain/errors/user.errors";
 import { UserMongooseSchema } from "./schemas/user.mongoose.schema";
 
 const USER_SELECT_FIELDS = "email name role createdAt updatedAt";
+const USER_SELECT_WITH_PASSWORD = "email name passwordHash role createdAt updatedAt";
 
 type LeanUserDocument = FlattenMaps<UserMongooseSchema> & {
   _id: { toString(): string };
@@ -43,6 +44,12 @@ export class UsersRepository {
     return ok(this.toDomain(doc));
   }
 
+  async findByEmailWithPassword(email: string): Promise<Result<(LeanUserDocument & { passwordHash: string }) | null, never>> {
+    const doc = await this.model.findOne({ email }).select(USER_SELECT_WITH_PASSWORD).lean().exec();
+    if (!doc) return ok(null);
+    return ok(doc as LeanUserDocument & { passwordHash: string });
+  }
+
   async findAll(options: { skip: number; limit: number }): Promise<Result<{ users: User[]; total: number }, never>> {
     const [docs, total] = await Promise.all([
       this.model.find().select(USER_SELECT_FIELDS).lean().skip(options.skip).limit(options.limit).sort({ createdAt: -1 }).exec(),
@@ -53,11 +60,12 @@ export class UsersRepository {
     return ok({ users, total });
   }
 
-  async save(user: User): Promise<Result<User, never>> {
+  async save(data: { email: string; name: string; passwordHash: string; role?: string }): Promise<Result<User, never>> {
     const doc = await this.model.create({
-      email: user.email,
-      name: user.name,
-      role: user.role,
+      email: data.email,
+      name: data.name,
+      passwordHash: data.passwordHash,
+      role: data.role ?? "user",
     });
 
     return ok(this.toDomain(doc));

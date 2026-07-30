@@ -1,29 +1,61 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { User } from "@repo/shared";
+
+
+interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
 
 interface AuthState {
-  token: string | null;
-  user: User | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (data: { accessToken: string; refreshToken: string; user: AuthUser }) => void;
   logout: () => void;
-  getToken: () => string | null;
+  setTokens: (accessToken: string, refreshToken: string) => void;
+  getAccessToken: () => string | null;
 }
+
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      token: null,
+      accessToken: null,
+      refreshToken: null,
       user: null,
       isAuthenticated: false,
-      login: (token, user) => set({ token, user, isAuthenticated: true }),
-      logout: () => set({ token: null, user: null, isAuthenticated: false }),
-      getToken: () => get().token,
+
+      login: (data) =>
+        set({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          user: data.user,
+          isAuthenticated: true,
+        }),
+
+      logout: () => {
+        set({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false });
+      },
+
+      setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
+
+      getAccessToken: () => {
+        const state = get();
+        return state.accessToken;
+      },
     }),
     {
       name: "auth-storage",
-      partialize: (state) => ({ token: state.token, user: state.user }),
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     },
   ),
 );

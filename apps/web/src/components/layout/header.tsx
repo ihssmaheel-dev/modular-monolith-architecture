@@ -1,11 +1,12 @@
-import { Link } from "@tanstack/react-router";
 import { useAuthStore } from "@/stores/auth.store";
 import { useUIStore } from "@/stores/ui.store";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@repo/ui";
 import { Menu, LogOut } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function Header() {
+  const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const { toggleSidebar } = useUIStore();
 
@@ -20,14 +21,14 @@ export function Header() {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Dashboard</h1>
+        <h1 className="text-lg font-semibold">{t("dashboard.title")}</h1>
       </div>
       <div className="flex items-center gap-4">
         <ThemeToggle />
         <span className="text-sm text-muted-foreground">{user?.email}</span>
         <Button variant="ghost" size="sm" onClick={logout}>
           <LogOut className="mr-2 h-4 w-4" />
-          Logout
+          {t("auth.logout")}
         </Button>
       </div>
     </header>

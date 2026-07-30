@@ -13,8 +13,8 @@ function getStoredLocale(): Locale {
 }
 
 function getBrowserLocale(): Locale {
-  const browserLang = navigator.language.split("-")[0];
-  if (browserLang in locales) return browserLang as Locale;
+  const browserLang = navigator?.language?.split("-")[0];
+  if (browserLang && browserLang in locales) return browserLang as Locale;
   return DEFAULT_LOCALE;
 }
 

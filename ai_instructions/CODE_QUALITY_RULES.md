@@ -8,13 +8,13 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 
 | File Type | Max Lines | Action if Exceeded |
 |-----------|-----------|-------------------|
-| Component | 150 | Extract sub-components or hooks |
-| Service / Use Case | 100 | Split into smaller use cases |
-| Controller | 80 | Extract route handlers into services |
-| Utility / Helper | 60 | Split by concern |
-| Type / Schema | 80 | Split into separate files by domain |
-| Test file | 200 | Split by describe block |
-| Config file | 40 | Split into per-concern configs |
+| Component | 300 | Extract sub-components or hooks |
+| Command / Query | 250 | Extract helper methods or split |
+| Controller | 200 | Extract route handlers into commands/queries |
+| Utility / Helper | 150 | Split by concern |
+| Type / Schema | 200 | Split into separate files by domain |
+| Test file | 500 | Split by describe block |
+| Entity | 300 | Very rare to exceed. Re-evaluate domain boundaries |
 
 **If a file feels hard to read, it is too big.** Split it.
 
@@ -75,7 +75,9 @@ function processOrder(order: Order): Result<Order, OrderError> {
 - Booleans: `is`, `has`, `can`, `should` — `isLoading`, `hasPermission`, `canEdit`.
 - Components: `Noun` — `UserProfile`, `OrderCard`, `PaymentForm`.
 - Events: `past-tense noun` — `UserCreated`, `OrderPlaced`.
-- Files: match the export name — `users.service.ts` exports `UsersService`.
+- Kebab-case everywhere: `create-user.command.ts`, `users.controller.ts`, `welcome-email.listener.ts`.
+- Suffixes: `.controller.ts`, `.command.ts`, `.query.ts`, `.repository.ts`, `.entity.ts`.
+- Files: match the export name — `create-user.command.ts` exports `CreateUserCommand`.
 
 ### No Magic
 - No magic numbers. Use named constants.

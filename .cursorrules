@@ -1,0 +1,29 @@
+# SUPREME LAWS (AI Coding Guidelines)
+
+You are operating within a Strict Modular Monolith Architecture. 
+Any code you generate MUST adhere to the following rules, without exception.
+
+## 1. Zero Tolerance Boundary Rules
+- **NEVER** import anything from `src/modules/*/infrastructure/**` into `src/modules/*/presentation/**`.
+- **NEVER** write Mongoose/Database logic in a Controller.
+- Controllers must ONLY call Application Services.
+
+## 2. Neverthrow & Error Handling
+- **ALWAYS** use `Result<T, E>` or `ResultAsync<T, E>` from `neverthrow` in Application and Domain layers.
+- **NEVER** use `throw new Error()` for business logic. Return an `err({ type: "...", message: "..." })`.
+- Controllers must map the `Result` to the appropriate HTTP response.
+
+## 3. Shared Library ONLY
+- All Zod schemas, types, DTOs, translations, and permissions MUST live in `packages/shared`.
+- **NEVER** define a Zod schema in `apps/api`. Always import it from `@repo/shared`.
+
+## 4. I18n Strictness
+- **NEVER** hardcode user-facing strings or error messages in the backend or frontend.
+- Backend: Use `I18nService.t()` for API errors.
+- Frontend: Use `react-i18next` `useTranslation().t()` for UI text.
+
+## 5. File Size Limits
+- Keep files under 150 lines. Split them if they get too large.
+- If a service has more than 5 methods, split it into `commands/` and `queries/`.
+
+Violating these rules will cause CI/CD to fail immediately.

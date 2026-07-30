@@ -10,7 +10,7 @@ function UsersPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["users", { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT }],
     queryFn: async () => {
-      const result = await api.users.list({ query: { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT } });
+      const result = await (api.users.list as any)({ query: { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT } });
       return result.body;
     },
     staleTime: 5 * 60 * 1000,
@@ -48,7 +48,7 @@ function UsersPage() {
       </div>
 
       <div className="space-y-3">
-        {data?.users.map((user) => (
+        {data?.users.map((user: any) => (
           <div
             key={user.id}
             className="flex items-center justify-between rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-accent/50"

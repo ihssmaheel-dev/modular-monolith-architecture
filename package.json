@@ -19,14 +19,23 @@
     "db:seed": "pnpm --filter api db:seed",
     "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
     "docker:down": "docker-compose -f docker/docker-compose.yml down",
-    "clean": "turbo clean && rm -rf node_modules"
+    "clean": "turbo clean && rm -rf node_modules",
+    "prepare": "husky",
+    "generate:module": "node scripts/generate-module.js"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.2.0",
     "turbo": "^2.0.0",
     "typescript": "^5.5.0"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=20.0.0"
+  },
+  "lint-staged": {
+    "apps/api/src/**/*.ts": [
+      "pnpm --filter api lint"
+    ]
   }
 }

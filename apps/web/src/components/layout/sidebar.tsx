@@ -23,7 +23,7 @@ export function Sidebar() {
   return (
     <aside className="hidden w-64 flex-col border-r bg-card lg:flex">
       <div className="flex h-14 items-center border-b px-4">
-        <Link to="/dashboard" className="text-lg font-semibold">
+        <Link to={"/dashboard" as any} className="text-lg font-semibold">
           Logo
         </Link>
       </div>

@@ -80,9 +80,9 @@ Request → Controller → Service → Repository → MongoDB
               └── Maps Result → HTTP status + body
 ```
 
-**The controller does almost nothing.** It validates via ts-rest, calls the service, and translates the Result into an HTTP response.
+**The controller does almost nothing.** It validates via ts-rest, calls the specific Command or Query, and translates the Result into an HTTP response.
 
-**The service contains the business logic.** It returns `Result<T, E>` — never throws for expected failures.
+**The Application Command/Query contains the business logic.** It returns `Result<T, E>` — never throws for expected failures.
 
 **The repository talks to MongoDB.** It's the only layer that touches Mongoose.
 
@@ -117,7 +117,8 @@ modules/users/
 ├── presentation/                ← HTTP layer (thin)
 │   └── users.controller.ts      ← Receives request, returns response
 ├── application/                 ← Business logic
-│   ├── users.service.ts         ← Use cases, returns Result<T, E>
+│   ├── commands/                ← Write use-cases (e.g. create-user.command.ts)
+│   ├── queries/                 ← Read use-cases (e.g. get-user.query.ts)
 │   └── listeners/
 │       └── welcome-email.listener.ts  ← Reacts to domain events
 ├── domain/                      ← Pure business rules (no framework)
@@ -177,8 +178,8 @@ If you change `CreateUserSchema` to add a required field, TypeScript immediately
 We never throw for expected business failures. We return `Result<T, E>`:
 
 ```typescript
-// Service returns Result
-async create(data: CreateUserInput): Promise<Result<User, EmailTaken>> {
+// CreateUserCommand returns Result
+async execute(data: CreateUserInput): Promise<Result<User, EmailTaken>> {
   const existing = await this.repository.findByEmail(data.email);
   if (existing) return err({ type: "EMAIL_TAKEN", email: data.email });
 
@@ -188,7 +189,7 @@ async create(data: CreateUserInput): Promise<Result<User, EmailTaken>> {
 }
 
 // Controller translates Result → HTTP
-const result = await this.userService.create(body);
+const result = await this.createUserCommand.execute(body);
 if (result.isErr()) {
   return { status: 409, body: { message: "Email already taken" } };
 }
@@ -211,7 +212,7 @@ return { status: 201, body: result.value };
 When something important happens, the service emits an event:
 
 ```typescript
-// Service emits event
+// Command emits event
 this.eventEmitter.emit("user.created", new UserCreatedEvent(user.id, user.email, user.name));
 ```
 

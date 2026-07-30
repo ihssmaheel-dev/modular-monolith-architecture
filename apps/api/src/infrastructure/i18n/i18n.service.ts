@@ -48,14 +48,13 @@ export class I18nService {
 
   private resolveNestedKey(obj: NestedMessages, key: string): string | undefined {
     const keys = key.split(".");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let current: any = obj;
+    let current: Record<string, unknown> | unknown = obj;
 
     for (const k of keys) {
       if (typeof current !== "object" || current === null) {
         return undefined;
       }
-      current = current[k];
+      current = (current as Record<string, unknown>)[k];
       if (current === undefined) return undefined;
     }
 

@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { Connection } from "mongoose";
+import mongoose, { Connection } from "mongoose";
 import { StorageDriver, FileInput } from "../storage.types";
 
 const BUCKET_NAME = "uploads";
@@ -11,7 +11,7 @@ export class GridFsDriver implements StorageDriver {
   private bucket: GridFSBucket;
 
   constructor(private readonly connection: Connection) {
-    const mongoose = require("mongoose");
+    // mongoose instance should be available or passed, but for now we can just import it.
     this.bucket = new mongoose.mongo.GridFSBucket(this.connection.db!, { bucketName: BUCKET_NAME });
   }
 
@@ -31,11 +31,13 @@ export class GridFsDriver implements StorageDriver {
     return { key, url: `/gridfs/${BUCKET_NAME}/${key}` };
   }
 
-  async getPresignedUploadUrl(key: string, _contentType: string, _ttlSeconds?: number) {
-    return `/gridfs/${BUCKET_NAME}/${key}`;
+  async getPresignedUploadUrl(_key: string, _contentType?: string, _ttlSeconds?: number) {
+    if (_contentType || _ttlSeconds) { /* unused */ }
+    return `/gridfs/${BUCKET_NAME}/${_key}`;
   }
 
   async getPresignedDownloadUrl(key: string, _ttlSeconds?: number) {
+    if (_ttlSeconds) { /* unused */ }
     const file = await this.bucket.find({ "metadata.key": key }).next();
     if (!file) throw new Error("File not found");
     return `/gridfs/${BUCKET_NAME}/${key}`;

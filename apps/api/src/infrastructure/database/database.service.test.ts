@@ -23,13 +23,17 @@ describe("DatabaseService", () => {
       abortTransaction: mockAbortTransaction,
       endSession: mockEndSession,
     });
+    const mockLogger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } as any;
+    mockLogger.child = () => mockLogger;
+
     service = new DatabaseService(
       {
         startSession: mockStartSession,
         readyState: 1,
         close: mockClose,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
-      { child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn() }) } as any,
+      mockLogger,
     );
   });
 

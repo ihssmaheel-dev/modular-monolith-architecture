@@ -27,7 +27,14 @@
     "hasAccount": "¿Ya tienes cuenta?",
     "loginSuccess": "Sesión iniciada correctamente",
     "registerSuccess": "Cuenta creada correctamente",
-    "logoutSuccess": "Sesión cerrada"
+    "logoutSuccess": "Sesión cerrada",
+    "invalidCredentials": "Correo electrónico o contraseña inválidos",
+    "emailTaken": "El correo electrónico ya está registrado",
+    "userNotFound": "Usuario no encontrado",
+    "invalidToken": "Token inválido o expirado",
+    "emailNotFound": "Correo electrónico no encontrado",
+    "resetLinkSent": "Si el correo existe, se ha enviado un enlace de restablecimiento",
+    "passwordResetSuccess": "La contraseña se ha restablecido correctamente"
   },
   "dashboard": {
     "title": "Panel",

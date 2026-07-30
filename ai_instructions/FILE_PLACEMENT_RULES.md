@@ -216,7 +216,6 @@ apps/api/src/modules/
     │   ├── [domain].controller.ts
     │   └── index.ts
     ├── application/
-    │   ├── [domain].service.ts
     │   ├── commands/           ← Optional: split when 6+ operations
     │   │   ├── create-[domain].ts
     │   │   └── index.ts
@@ -249,10 +248,9 @@ apps/api/src/modules/
 
 ### Rules
 - Start flat (no commands/queries/ folders) until 6+ operations.
-- Test files co-locate with source: `users.service.test.ts` next to `users.service.ts`.
-- Domain layer has zero framework dependencies.
-- Infrastructure layer has Mongoose/framework dependencies.
-- Controller is thin: validate → call service → map Result to HTTP.
+- Test files co-locate with source: `create-user.command.test.ts` next to `create-user.command.ts`.
+- Sub-folders by layer are mandatory (presentation, application, domain, infrastructure).
+- Controller is thin: validate → call command/query → map Result to HTTP.
 - One module per domain. Don't mix concerns.
 
 ---
@@ -341,9 +339,10 @@ Co-locate with source:
 
 ```
 users/
-├── users.service.ts
-├── users.service.test.ts        ← Unit test
-├── users.service.integration.test.ts  ← Integration test
+├── commands/
+│   ├── create-user.command.ts
+│   ├── create-user.command.test.ts        ← Unit test
+│   └── create-user.command.integration.test.ts  ← Integration test
 ├── users.controller.ts
 ├── users.controller.e2e.test.ts ← E2E test
 ```
@@ -407,7 +406,7 @@ docs/
 | Type definition in component file | `packages/shared/src/types/` or nearest `types/` folder |
 | API call with `fetch()` | `packages/api-client` |
 | `process.env` outside `config/env.ts` | `config/env.ts` only |
-| Business logic in controller | `application/` service layer |
+| Business logic in controller | `application/` command/query layer |
 | Business logic in repository | `domain/` entity or value object |
 | Mongoose import in domain layer | `infrastructure/` layer only |
 | Test file far from source | Co-locate with source file |
@@ -451,7 +450,7 @@ docs/
 | i18n service | `apps/api/src/infrastructure/i18n/` |
 | Backend module | `apps/api/src/modules/[domain]/` |
 | Module controller | `apps/api/src/modules/[domain]/presentation/` |
-| Module service | `apps/api/src/modules/[domain]/application/` |
+| Module Command/Query | `apps/api/src/modules/[domain]/application/` |
 | Domain entity | `apps/api/src/modules/[domain]/domain/entities/` |
 | Value object | `apps/api/src/modules/[domain]/domain/value-objects/` |
 | Domain event | `apps/api/src/modules/[domain]/domain/events/` |

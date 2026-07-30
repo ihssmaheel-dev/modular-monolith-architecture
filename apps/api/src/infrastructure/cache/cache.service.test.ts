@@ -32,7 +32,9 @@ describe("CacheService", () => {
           del: mockDel,
           keys: mockKeys,
         }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn() }) } as any,
     );
   });

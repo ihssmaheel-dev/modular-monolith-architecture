@@ -1,15 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 
 function DashboardPage() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ["users", { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT }],
     queryFn: async () => {
-      const result = await api.users.list({ query: { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT } });
+      const result = await (api.users.list as any)({ query: { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT } });
       return result.body;
     },
     staleTime: 5 * 60 * 1000,
@@ -18,8 +20,8 @@ function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Dashboard</h2>
-        <p className="text-muted-foreground">Welcome to your dashboard</p>
+        <h2 className="text-2xl font-bold">{t("dashboard.title")}</h2>
+        <p className="text-muted-foreground">{t("dashboard.welcome")}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

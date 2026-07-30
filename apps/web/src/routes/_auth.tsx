@@ -5,7 +5,7 @@ function AuthLayout() {
   const { isAuthenticated } = useAuthStore();
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to={"/dashboard" as any} replace />;
   }
 
   return (
