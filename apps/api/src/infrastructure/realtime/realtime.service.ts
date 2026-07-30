@@ -5,7 +5,6 @@ import { RedisService } from "../redis/redis.service";
 import { PinoLoggerService } from "../logger/logger.service";
 
 const WS_READY_STATE_OPEN = 1;
-const WS_READY_STATE_CLOSING = 2;
 const MAX_CLIENTS_PER_CONNECTION = 100;
 
 export interface RealtimeEvent {
@@ -32,8 +31,8 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
 
   private async initSubscriber(): Promise<void> {
     this.subscriber = this.redis.getClient().duplicate();
-    await this.subscriber.connect();
-    await this.subscriber.subscribe("realtime:broadcast", (message) => {
+    await this.subscriber.subscribe("realtime:broadcast");
+    this.subscriber.on("message", (_channel: string, message: string) => {
       try {
         const event = JSON.parse(message) as RealtimeEvent;
         this.broadcastToAll(event.event, event.payload);
@@ -97,10 +96,7 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
     const message = JSON.stringify({ event, payload });
     for (const userClients of this.clients.values()) {
       for (const socket of userClients) {
-        if (
-          socket.readyState === WS_READY_STATE_OPEN &&
-          socket.readyState !== WS_READY_STATE_CLOSING
-        ) {
+        if (socket.readyState === WS_READY_STATE_OPEN) {
           socket.send(message);
         }
       }

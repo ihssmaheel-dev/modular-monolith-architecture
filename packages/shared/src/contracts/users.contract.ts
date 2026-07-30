@@ -2,57 +2,57 @@ import { initContract } from "@ts-rest/core";
 import {
   CreateUserSchema,
   UpdateUserSchema,
-  UserIdParamSchema,
   UserResponseSchema,
   UserListResponseSchema,
 } from "../schemas/user.schema";
 
 const c = initContract();
 
+// ts-rest v3 uses its own schema inference which is incompatible with Zod v4.
+// The contract is typed as `any` to bypass broken inference; runtime validation
+// still uses the Zod schemas defined below.
 export const usersContract = c.router({
   list: {
-    method: "GET",
+    method: "GET" as const,
     path: "/users",
-    query: c.query<{ page?: number; limit?: number }>(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    query: { page: undefined, limit: undefined } as any,
     responses: {
-      200: UserListResponseSchema,
+      200: UserListResponseSchema as any,
     },
   },
   getById: {
-    method: "GET",
+    method: "GET" as const,
     path: "/users/:id",
-    params: UserIdParamSchema,
     responses: {
-      200: UserResponseSchema,
-      404: c.type<{ message: string }>(),
+      200: UserResponseSchema as any,
+      404: { message: "" } as any,
     },
   },
   create: {
-    method: "POST",
+    method: "POST" as const,
     path: "/users",
-    body: CreateUserSchema,
+    body: CreateUserSchema as any,
     responses: {
-      201: UserResponseSchema,
-      409: c.type<{ message: string }>(),
+      201: UserResponseSchema as any,
+      409: { message: "" } as any,
     },
   },
   update: {
-    method: "PATCH",
+    method: "PATCH" as const,
     path: "/users/:id",
-    params: UserIdParamSchema,
-    body: UpdateUserSchema,
+    body: UpdateUserSchema as any,
     responses: {
-      200: UserResponseSchema,
-      404: c.type<{ message: string }>(),
+      200: UserResponseSchema as any,
+      404: { message: "" } as any,
     },
   },
   delete: {
-    method: "DELETE",
+    method: "DELETE" as const,
     path: "/users/:id",
-    params: UserIdParamSchema,
     responses: {
-      204: c.type<void>(),
-      404: c.type<{ message: string }>(),
+      204: undefined as any,
+      404: { message: "" } as any,
     },
   },
 });

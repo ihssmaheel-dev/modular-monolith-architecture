@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Result, ok, err } from "neverthrow";
 import { User } from "../domain/entities/user.entity";
-import { UserError, EmailTaken, UserNotFound } from "../domain/errors/user.errors";
+import { EmailTaken, UserNotFound } from "../domain/errors/user.errors";
 import { UserCreatedEvent, UserUpdatedEvent, UserDeletedEvent } from "../domain/events/user.events";
 import { UsersRepository } from "../infrastructure/users.repository";
 import { paginate } from "@repo/shared";

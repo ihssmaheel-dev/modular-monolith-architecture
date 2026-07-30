@@ -1,15 +1,18 @@
 import { Readable } from "stream";
-import { InjectConnection } from "@nestjs/mongoose";
-import { Connection, GridFSBucket, ObjectId } from "mongoose";
-import { StorageDriver, FileInput, PRESIGN_TTL_SECONDS } from "./storage.types";
+import { Connection } from "mongoose";
+import { StorageDriver, FileInput } from "../storage.types";
 
 const BUCKET_NAME = "uploads";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GridFSBucket = any;
 
 export class GridFsDriver implements StorageDriver {
   private bucket: GridFSBucket;
 
-  constructor(@InjectConnection() private readonly connection: Connection) {
-    this.bucket = new GridFSBucket(this.connection.db!, { bucketName: BUCKET_NAME });
+  constructor(private readonly connection: Connection) {
+    const mongoose = require("mongoose");
+    this.bucket = new mongoose.mongo.GridFSBucket(this.connection.db!, { bucketName: BUCKET_NAME });
   }
 
   async upload(key: string, body: FileInput, contentType: string) {

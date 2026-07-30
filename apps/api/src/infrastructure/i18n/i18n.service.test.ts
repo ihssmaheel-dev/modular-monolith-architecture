@@ -1,13 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { I18nService } from "./i18n.service";
 
 describe("I18nService", () => {
   let service: I18nService;
 
   beforeEach(() => {
-    service = new I18nService({
-      child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() }),
-    } as any);
+    service = new I18nService();
   });
 
   it("should return default locale when no accept-language header", () => {

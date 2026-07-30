@@ -1,4 +1,4 @@
-import { Result } from "neverthrow";
+import { ok, err, Result } from "neverthrow";
 import { Resend } from "resend";
 import { EmailDriver, EmailError, SendEmailParams, SendEmailResult } from "../email.service";
 import { env } from "../../../config/env";
@@ -25,20 +25,20 @@ export class ResendDriver implements EmailDriver {
 
       if (response.error) {
         this.logger.error({ error: response.error }, "Resend send failed");
-        return Result.err({
+        return err({
           code: "SEND_FAILED",
           message: response.error.message ?? "Resend send failed",
         });
       }
 
       this.logger.info({ id: response.data?.id, to: recipients }, "Email sent via Resend");
-      return Result.ok({
+      return ok({
         id: response.data?.id ?? "",
         provider: "resend",
       });
     } catch (error) {
       this.logger.error({ error }, "Resend send failed");
-      return Result.err({
+      return err({
         code: "SEND_FAILED",
         message: error instanceof Error ? error.message : "Resend send failed",
       });

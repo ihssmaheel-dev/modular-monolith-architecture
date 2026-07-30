@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import { WsAdapter } from "@nestjs/platform-ws";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { PinoLoggerService } from "./infrastructure/logger/logger.service";
@@ -17,6 +18,8 @@ async function bootstrap() {
       trustProxy: true,
     }),
   );
+
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   const logger = app.get(PinoLoggerService);
   const i18n = app.get(I18nService);

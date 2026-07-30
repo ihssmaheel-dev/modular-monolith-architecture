@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Result } from "neverthrow";
+import { err, Result } from "neverthrow";
 import { env } from "../../config/env";
 import { PinoLoggerService } from "../logger/logger.service";
 import { ResendDriver } from "./drivers/resend.driver";
@@ -50,13 +50,13 @@ export class EmailService {
     const recipients = Array.isArray(params.to) ? params.to : [params.to];
 
     if (recipients.length === 0) {
-      return Result.err({ code: "INVALID_ADDRESS", message: "No recipients provided" });
+      return err({ code: "INVALID_ADDRESS", message: "No recipients provided" });
     }
 
     if (this.driver) {
       return this.driver.send(recipients, params);
     }
 
-    return Result.err({ code: "CONFIG_ERROR", message: "No email driver configured" });
+    return err({ code: "CONFIG_ERROR", message: "No email driver configured" });
   }
 }

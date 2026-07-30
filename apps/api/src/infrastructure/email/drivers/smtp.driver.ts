@@ -1,4 +1,4 @@
-import { Result } from "neverthrow";
+import { ok, err, Result } from "neverthrow";
 import nodemailer from "nodemailer";
 import { EmailDriver, EmailError, SendEmailParams, SendEmailResult } from "../email.service";
 import { env } from "../../../config/env";
@@ -30,13 +30,13 @@ export class SmtpDriver implements EmailDriver {
       });
 
       this.logger.info({ messageId: info.messageId, to: recipients }, "Email sent via SMTP");
-      return Result.ok({
+      return ok({
         id: info.messageId,
         provider: "smtp",
       });
     } catch (error) {
       this.logger.error({ error }, "SMTP send failed");
-      return Result.err({
+      return err({
         code: "SEND_FAILED",
         message: error instanceof Error ? error.message : "SMTP send failed",
       });

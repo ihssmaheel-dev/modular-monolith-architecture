@@ -46,7 +46,7 @@ describe("EmailService", () => {
     vi.clearAllMocks();
     service = new EmailService({
       child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn() }),
-    } as any);
+    } as never);
   });
 
   it("should send email via SMTP", async () => {
@@ -70,7 +70,7 @@ describe("EmailService", () => {
     });
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.value.code).toBe("INVALID_ADDRESS");
+      expect(result.error.code).toBe("INVALID_ADDRESS");
     }
   });
 
@@ -83,7 +83,7 @@ describe("EmailService", () => {
     });
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.value.code).toBe("SEND_FAILED");
+      expect(result.error.code).toBe("SEND_FAILED");
     }
   });
 });

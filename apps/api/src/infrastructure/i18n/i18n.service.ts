@@ -1,25 +1,19 @@
 import { Injectable } from "@nestjs/common";
 import { locales, DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "@repo/shared";
-import { PinoLoggerService } from "../logger/logger.service";
 
-type NestedMessages = Record<string, string | NestedMessages>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type NestedMessages = Record<string, string | any>;
 
 const INTERPOLATION_PATTERN = /\{\{\s*(\w+)\s*\}\}/g;
 
 @Injectable()
 export class I18nService {
-  private logger: PinoLoggerService;
-
-  constructor(logger: PinoLoggerService) {
-    this.logger = logger.child({ module: "I18nService" });
-  }
-
   getLocale(acceptLanguage?: string): Locale {
     if (!acceptLanguage) return DEFAULT_LOCALE;
 
     const preferred = acceptLanguage
       .split(",")
-      .map((lang) => lang.split(";")[0].trim().substring(0, 2).toLowerCase())
+      .map((lang) => lang.split(";")[0]?.trim().substring(0, 2).toLowerCase() ?? "")
       .find((lang) => SUPPORTED_LOCALES.includes(lang as Locale));
 
     return (preferred as Locale) ?? DEFAULT_LOCALE;
@@ -54,13 +48,14 @@ export class I18nService {
 
   private resolveNestedKey(obj: NestedMessages, key: string): string | undefined {
     const keys = key.split(".");
-    let current: string | NestedMessages = obj;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let current: any = obj;
 
     for (const k of keys) {
       if (typeof current !== "object" || current === null) {
         return undefined;
       }
-      current = (current as Record<string, NestedMessages>)[k];
+      current = current[k];
       if (current === undefined) return undefined;
     }
 

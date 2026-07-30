@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Result } from "neverthrow";
+import { ok, err, Result } from "neverthrow";
 import { env } from "../../config/env";
 import { PinoLoggerService } from "../logger/logger.service";
 import { StorageDriver, StorageError, UploadResult, FileInput, PRESIGN_TTL_SECONDS } from "./storage.types";
@@ -36,30 +36,30 @@ export class StorageService {
     try {
       const result = await this.driver.upload(key, body, contentType);
       this.logger.info({ key, contentType }, "File uploaded");
-      return Result.ok(result);
+      return ok(result);
     } catch (error) {
       this.logger.error({ key, error }, "Upload failed");
-      return Result.err({ code: "UPLOAD_FAILED", message: error instanceof Error ? error.message : "Upload failed" });
+      return err({ code: "UPLOAD_FAILED", message: error instanceof Error ? error.message : "Upload failed" });
     }
   }
 
   async getPresignedUploadUrl(key: string, contentType: string, ttlSeconds = PRESIGN_TTL_SECONDS): Promise<Result<string, StorageError>> {
     try {
       const url = await this.driver.getPresignedUploadUrl(key, contentType, ttlSeconds);
-      return Result.ok(url);
+      return ok(url);
     } catch (error) {
       this.logger.error({ key, error }, "Presign upload failed");
-      return Result.err({ code: "PRESIGN_FAILED", message: error instanceof Error ? error.message : "Presign failed" });
+      return err({ code: "PRESIGN_FAILED", message: error instanceof Error ? error.message : "Presign failed" });
     }
   }
 
   async getPresignedDownloadUrl(key: string, ttlSeconds = PRESIGN_TTL_SECONDS): Promise<Result<string, StorageError>> {
     try {
       const url = await this.driver.getPresignedDownloadUrl(key, ttlSeconds);
-      return Result.ok(url);
+      return ok(url);
     } catch (error) {
       this.logger.error({ key, error }, "Presign download failed");
-      return Result.err({ code: "NOT_FOUND", message: error instanceof Error ? error.message : "File not found" });
+      return err({ code: "NOT_FOUND", message: error instanceof Error ? error.message : "File not found" });
     }
   }
 
@@ -67,10 +67,10 @@ export class StorageService {
     try {
       await this.driver.delete(key);
       this.logger.info({ key }, "File deleted");
-      return Result.ok(undefined);
+      return ok(undefined);
     } catch (error) {
       this.logger.error({ key, error }, "Delete failed");
-      return Result.err({ code: "DELETE_FAILED", message: error instanceof Error ? error.message : "Delete failed" });
+      return err({ code: "DELETE_FAILED", message: error instanceof Error ? error.message : "Delete failed" });
     }
   }
 }

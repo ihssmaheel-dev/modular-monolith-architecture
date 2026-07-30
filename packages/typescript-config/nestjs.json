@@ -3,7 +3,7 @@
   "extends": "./base.json",
   "compilerOptions": {
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
     "target": "ES2022",
     "declaration": true,
     "emitDecoratorMetadata": true,
@@ -11,6 +11,6 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "ignoreDeprecations": "6.0"
+    "ignoreDeprecations": "5.0"
   }
 }

@@ -2,8 +2,6 @@ import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
 import { createHmac } from "crypto";
 import { env } from "../../config/env";
 
-const ALGORITHM = "HS256";
-
 @Injectable()
 export class AuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
@@ -35,7 +33,7 @@ export class AuthGuard implements CanActivate {
       if (signature !== expectedSig) return null;
       
       const decoded = JSON.parse(
-        Buffer.from(payload, 'base64url').toString(),
+        Buffer.from(payload!, 'base64url').toString(),
       ) as Record<string, unknown>;
       
       if (typeof decoded.exp === 'number' && decoded.exp * 1000 < Date.now()) {

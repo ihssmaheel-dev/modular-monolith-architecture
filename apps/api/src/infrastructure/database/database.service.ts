@@ -1,7 +1,7 @@
 import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { Connection } from "mongoose";
-import { Result } from "neverthrow";
+import { ok, err, Result } from "neverthrow";
 import { PinoLoggerService } from "../logger/logger.service";
 
 export interface TransactionError {
@@ -32,14 +32,14 @@ export class DatabaseService implements OnModuleDestroy {
       session.startTransaction();
       const result = await fn();
       await session.commitTransaction();
-      return Result.ok(result);
+      return ok(result);
     } catch (error) {
       await session.abortTransaction();
       this.logger.error(
         { error: error instanceof Error ? error.message : String(error) },
         "Transaction failed",
       );
-      return Result.err({
+      return err({
         code: "TRANSACTION_FAILED",
         message: error instanceof Error ? error.message : "Transaction failed",
       });

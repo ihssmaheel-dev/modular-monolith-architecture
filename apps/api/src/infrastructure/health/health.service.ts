@@ -9,8 +9,6 @@ import {
 import { InjectConnection } from "@nestjs/mongoose";
 import { Connection } from "mongoose";
 import { RedisService } from "../redis/redis.service";
-import { StorageService } from "../storage/storage.service";
-import { QueueService } from "../queue/queue.service";
 
 @Injectable()
 export class MongoHealthIndicator extends HealthIndicator {

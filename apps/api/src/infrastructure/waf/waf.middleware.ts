@@ -47,7 +47,7 @@ export class WafMiddleware implements NestMiddleware {
       }
     }
 
-    for (const [key, value] of Object.entries(req.headers)) {
+    for (const [, value] of Object.entries(req.headers)) {
       if (typeof value === "string" && containsPattern(value, HEADER_INJECTION_PATTERNS)) {
         res.status(HttpStatus.BAD_REQUEST).send({
           statusCode: HttpStatus.BAD_REQUEST,

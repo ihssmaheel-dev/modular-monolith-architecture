@@ -3,7 +3,7 @@ import { UsersService } from "./users.service";
 import { UsersRepository } from "../infrastructure/users.repository";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { User } from "../domain/entities/user.entity";
-import { ok, err } from "neverthrow";
+import { ok } from "neverthrow";
 
 describe("UsersService", () => {
   let service: UsersService;
@@ -19,9 +19,11 @@ describe("UsersService", () => {
       update: vi.fn(),
       delete: vi.fn(),
       count: vi.fn(),
-    } as UsersRepository;
+      model: {} as never,
+      toDomain: {} as never,
+    } as unknown as UsersRepository;
 
-    eventEmitter = { emit: vi.fn() } as EventEmitter2;
+    eventEmitter = { emit: vi.fn() } as unknown as EventEmitter2;
 
     service = new UsersService(repository, eventEmitter);
   });

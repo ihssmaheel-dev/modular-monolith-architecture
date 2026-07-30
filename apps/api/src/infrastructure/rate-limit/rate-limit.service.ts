@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "../redis/redis.service";
-import { PinoLoggerService } from "../logger/logger.service";
 
 const SLIDING_WINDOW_LOG_PREFIX = "ratelimit:";
 const DEFAULT_MAX_REQUESTS = 100;
@@ -20,14 +19,9 @@ export interface RateLimitResult {
 
 @Injectable()
 export class RateLimitService {
-  private logger: PinoLoggerService;
-
   constructor(
     private readonly redis: RedisService,
-    logger: PinoLoggerService,
-  ) {
-    this.logger = logger.child({ module: "RateLimitService" });
-  }
+  ) {}
 
   async check(
     key: string,

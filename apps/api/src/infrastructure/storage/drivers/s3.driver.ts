@@ -6,8 +6,8 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { env } from "../../config/env";
-import { StorageDriver, FileInput, PRESIGN_TTL_SECONDS } from "./storage.types";
+import { env } from "../../../config/env";
+import { StorageDriver, FileInput, PRESIGN_TTL_SECONDS } from "../storage.types";
 
 export class S3Driver implements StorageDriver {
   private client: S3Client;

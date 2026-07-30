@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { envSchema, type Env } from "@repo/shared";
 
 function loadEnv(): Env {

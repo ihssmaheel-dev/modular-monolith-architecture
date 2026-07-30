@@ -2,8 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, FlattenMaps } from "mongoose";
 import { ok, err, Result } from "neverthrow";
-import { User, UserRole } from "../domain/entities/user.entity";
-import { UserNotFound, EmailTaken } from "../domain/errors/user.errors";
+import { User } from "../domain/entities/user.entity";
+import { UserNotFound } from "../domain/errors/user.errors";
 import { UserMongooseSchema } from "./schemas/user.mongoose.schema";
 
 const USER_SELECT_FIELDS = "email name role createdAt updatedAt";
@@ -25,7 +25,7 @@ export class UsersRepository {
       id: doc._id.toString(),
       email: doc.email,
       name: doc.name,
-      role: doc.role as UserRole,
+      role: doc.role as "user" | "admin",
       createdAt: doc.createdAt ?? new Date(),
       updatedAt: doc.updatedAt ?? new Date(),
     });

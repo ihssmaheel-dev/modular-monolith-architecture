@@ -5,7 +5,6 @@ const mockGet = vi.fn();
 const mockSetex = vi.fn();
 const mockDel = vi.fn();
 const mockKeys = vi.fn();
-const mockQuit = vi.fn();
 
 vi.mock("../../config/env", () => ({
   env: {

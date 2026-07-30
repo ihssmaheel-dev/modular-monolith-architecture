@@ -55,7 +55,6 @@ export class PiscinaService implements OnModuleDestroy {
     if (!pool) return null;
     return {
       completed: pool.completed,
-      ratio: pool.ratio,
       threads: pool.threads.length,
       queueSize: pool.queueSize,
     };

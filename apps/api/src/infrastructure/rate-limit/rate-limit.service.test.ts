@@ -36,8 +36,7 @@ describe("RateLimitService", () => {
         getClient: () => ({
           pipeline: mockPipeline,
         }),
-      } as any,
-      { child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() }) } as any,
+      } as never,
     );
   });
 
