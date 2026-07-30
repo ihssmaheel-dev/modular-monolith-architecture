@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "@/lib/api";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter, Button, Spinner } from "@repo/ui";
 import { NoteResponseDto } from "@repo/shared";
 
 export function NotesList() {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState<NoteResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +20,7 @@ export function NotesList() {
       setNotes(body.items);
       setError(null);
     } else {
-      setError("Failed to load notes");
+      setError(t("api.note.fetchFailed"));
     }
     setLoading(false);
   };
@@ -40,7 +42,7 @@ export function NotesList() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
       {notes.length === 0 ? (
-        <p className="text-muted-foreground col-span-full text-center py-8">No notes yet. Create one above!</p>
+        <p className="text-muted-foreground col-span-full text-center py-8">{t("notes.noNotes")}</p>
       ) : (
         notes.map((note) => (
           <Card key={note.id} className="transition-all hover:shadow-md">
@@ -53,7 +55,7 @@ export function NotesList() {
             </CardContent>
             <CardFooter className="flex justify-end">
               <Button variant="destructive" size="sm" onClick={() => handleDelete(note.id)}>
-                Delete
+                {t("common.delete")}
               </Button>
             </CardFooter>
           </Card>

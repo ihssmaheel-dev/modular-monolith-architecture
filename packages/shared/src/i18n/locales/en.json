@@ -102,6 +102,30 @@
       "deleted": "User deleted successfully",
       "notFound": "User not found",
       "emailTaken": "Email is already taken"
+    },
+    "note": {
+      "created": "Note created successfully",
+      "updated": "Note updated successfully",
+      "deleted": "Note deleted successfully",
+      "notFound": "Note not found",
+      "fetchFailed": "Failed to fetch notes",
+      "createFailed": "Failed to create note",
+      "updateFailed": "Failed to update note",
+      "deleteFailed": "Failed to delete note"
     }
+  },
+  "notes": {
+    "title": "Notes",
+    "description": "Manage your end-to-end template notes here.",
+    "newNote": "New Note",
+    "cancel": "Cancel",
+    "createNote": "Create a Note",
+    "noteTitle": "Title",
+    "noteTitlePlaceholder": "Note title",
+    "content": "Content",
+    "contentPlaceholder": "What's on your mind?",
+    "creating": "Creating...",
+    "createButton": "Create Note",
+    "noNotes": "No notes yet. Create one above!"
   }
 }

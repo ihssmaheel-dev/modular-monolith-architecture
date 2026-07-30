@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "@/lib/api";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, Button, Input, Label } from "@repo/ui";
 
 export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,7 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
       setContent("");
       onSuccess?.();
     } else {
-      setError(body.message || "Failed to create note");
+      setError(body.message || t("api.note.createFailed"));
     }
     
     setLoading(false);
@@ -31,28 +33,27 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create a Note</CardTitle>
+        <CardTitle>{t("notes.createNote")}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">{t("notes.noteTitle")}</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Note title"
+              placeholder={t("notes.noteTitlePlaceholder")}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
-            {/* Using a simple textarea with basic styling since we don't have a Textarea component in @repo/ui yet */}
+            <Label htmlFor="content">{t("notes.content")}</Label>
             <textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="What's on your mind?"
+              placeholder={t("notes.contentPlaceholder")}
               required
               className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
@@ -61,7 +62,7 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Creating..." : "Create Note"}
+            {loading ? t("notes.creating") : t("notes.createButton")}
           </Button>
         </CardFooter>
       </form>
