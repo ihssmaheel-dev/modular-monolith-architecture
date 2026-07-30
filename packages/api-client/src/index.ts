@@ -1,9 +1,18 @@
 import { initClient } from "@ts-rest/core";
-import { usersContract } from "@repo/shared";
+import { usersContract, notesContract } from "@repo/shared";
 
 export function createApiClient(baseUrl: string, getToken?: () => string | null) {
   return {
     users: initClient(usersContract, {
+      baseUrl,
+      baseHeaders: {
+        get Authorization() {
+          const token = getToken?.();
+          return token ? `Bearer ${token}` : "";
+        },
+      },
+    }),
+    notes: initClient(notesContract, {
       baseUrl,
       baseHeaders: {
         get Authorization() {

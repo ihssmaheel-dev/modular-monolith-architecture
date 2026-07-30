@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useUIStore } from "@/stores/ui.store";
-import { LayoutDashboard, Users, Settings, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Users, Settings, FileText, type LucideIcon } from "lucide-react";
 
 interface NavItem {
   to: string;
@@ -11,6 +11,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/dashboard/users", label: "Users", icon: Users },
+  { to: "/dashboard/notes", label: "Notes", icon: FileText },
   { to: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 

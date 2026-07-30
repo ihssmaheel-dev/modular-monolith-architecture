@@ -1,0 +1,12 @@
+import { NoteResponseDto } from "@repo/shared";
+import { Note } from "../domain/entities/note.entity";
+
+export function toNoteResponse(note: Note): NoteResponseDto {
+  return {
+    id: note.id,
+    title: note.title,
+    content: note.content,
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+  };
+}

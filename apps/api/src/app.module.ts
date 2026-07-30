@@ -4,6 +4,7 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ClsModule } from "nestjs-cls";
 import { UsersModule } from "./modules/users/users.module";
 import { AuthModule } from "./modules/auth/auth.module";
+import { NotesModule } from "./modules/notes/notes.module";
 import { RedisModule } from "./infrastructure/redis/redis.module";
 import { QueueModule } from "./infrastructure/queue/queue.module";
 import { LoggerModule } from "./infrastructure/logger/logger.module";
@@ -41,6 +42,7 @@ import { env } from "./config/env";
     I18nModule,
     UsersModule,
     AuthModule,
+    NotesModule,
   ],
 })
 export class AppModule {}

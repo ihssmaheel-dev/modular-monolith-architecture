@@ -1,1 +1,2 @@
-export { usersContract } from "./users.contract";
+export * from "./users.contract";
+export * from "./notes.contract";
