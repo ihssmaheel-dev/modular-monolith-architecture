@@ -13,23 +13,43 @@ import { ok, err, Result } from 'neverthrow';
 
 export type Id = string | Types.ObjectId;
 
+/**
+ * Common options for find and read operations.
+ */
 export interface BaseFindOptions {
+  /** Fields to include or exclude */
   select?: string | string[];
+  /** Fields to populate from other collections */
   populate?: string | PopulateOptions | Array<string | PopulateOptions>;
+  /** Sort order */
   sort?: string | Record<string, 1 | -1>;
+  /** Whether to return plain JS objects (lean). Defaults to true. */
   lean?: boolean;
+  /** Maximum number of documents to return */
   limit?: number;
+  /** Number of documents to skip */
   skip?: number;
+  /** Active client session for transactions */
   session?: ClientSession;
+  /** Whether to include soft-deleted documents */
   includeDeleted?: boolean;
+  /** Whether to exclusively return soft-deleted documents */
   onlyDeleted?: boolean;
 }
 
+/**
+ * Options for offset-based pagination.
+ */
 export interface PaginationOptions extends BaseFindOptions {
+  /** Page number, 1-indexed */
   page?: number;
+  /** Number of items per page */
   limit?: number;
 }
 
+/**
+ * Options for cursor-based pagination.
+ */
 export interface CursorPaginationOptions extends BaseFindOptions {
   limit?: number;
   cursor?: string;
@@ -37,6 +57,9 @@ export interface CursorPaginationOptions extends BaseFindOptions {
   direction?: 'asc' | 'desc';
 }
 
+/**
+ * Result structure for offset-based pagination.
+ */
 export interface PaginatedResult<T> {
   items: T[];
   total: number;
@@ -47,6 +70,9 @@ export interface PaginatedResult<T> {
   hasPrevPage: boolean;
 }
 
+/**
+ * Result structure for cursor-based pagination.
+ */
 export interface CursorPaginatedResult<T> {
   items: T[];
   nextCursor: string | null;
@@ -54,19 +80,35 @@ export interface CursorPaginatedResult<T> {
   limit: number;
 }
 
+/**
+ * Options for document creation.
+ */
 export interface CreateOptions {
+  /** Active client session for transactions */
   session?: ClientSession;
+  /** Whether to automatically set createdBy/updatedBy fields from CLS */
   audit?: boolean;
 }
 
+/**
+ * Options for document updates.
+ */
 export interface UpdateOptions extends BaseFindOptions {
+  /** Return the modified document rather than the original */
   new?: boolean;
+  /** Create the document if it doesn't exist */
   upsert?: boolean;
+  /** Run schema validators on the update operation */
   runValidators?: boolean;
+  /** Whether to automatically set updatedBy field from CLS */
   audit?: boolean;
+  /** Optimistic locking version number */
   version?: number;
 }
 
+/**
+ * Options for text-based search.
+ */
 export interface SearchOptions extends BaseFindOptions {
   fields?: string[];
   minScore?: number;
@@ -76,16 +118,42 @@ export interface SearchOptions extends BaseFindOptions {
 /*                         Ultimate Base Repository                           */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Abstract generic Base Repository enforcing CQRS and Clean Architecture principles.
+ * 
+ * Responsibilities:
+ * - Encapsulate all database infrastructure logic (Mongoose/MongoDB).
+ * - Enforce neverthrow `Result` returns to prevent throwing errors in application code.
+ * - Require domain mapping via `toDomain()` so commands and queries only interact with Domain Entities.
+ * - Seamlessly integrate with `nestjs-cls` for auditing and transactions.
+ * 
+ * @template TEntity The pure Domain Entity returned to the application layer.
+ * @template TDocument The Mongoose Document interface defining the database schema.
+ */
 export abstract class BaseRepository<TEntity, TDocument> {
   constructor(
     protected readonly model: Model<TDocument>,
     protected readonly cls?: ClsService,
   ) {}
 
+  /**
+   * Maps a raw database document or lean object to a pure Domain Entity.
+   * This MUST be implemented by subclasses to enforce boundary separation.
+   * 
+   * @param doc Raw database document or lean object
+   * @returns Pure Domain Entity
+   */
   protected abstract toDomain(doc: any): TEntity;
 
   /* ============================== CREATE ============================== */
 
+  /**
+   * Creates a new document and returns the corresponding domain entity.
+   * 
+   * @param data The data to insert
+   * @param options Creation options (session, auditing)
+   * @returns Result containing the created Domain Entity
+   */
   async create(data: Record<string, any>, options: CreateOptions = {}): Promise<Result<TEntity, never>> {
     const payload = this.applyAuditOnCreate(data, options.audit !== false);
 
@@ -96,6 +164,13 @@ export abstract class BaseRepository<TEntity, TDocument> {
     return ok(this.toDomain(doc));
   }
 
+  /**
+   * Creates multiple documents in a single operation.
+   * 
+   * @param data Array of data to insert
+   * @param options Creation options (session, auditing)
+   * @returns Result containing an array of the created Domain Entities
+   */
   async createMany(
     data: Record<string, any>[],
     options: CreateOptions = {},
@@ -113,6 +188,13 @@ export abstract class BaseRepository<TEntity, TDocument> {
 
   /* =============================== READ =============================== */
 
+  /**
+   * Finds a single document by its ObjectId.
+   * 
+   * @param id The ObjectId string to search for
+   * @param options Query and projection options
+   * @returns Result containing the Domain Entity, or null if not found
+   */
   async findById(id: Id, options: BaseFindOptions = {}): Promise<Result<TEntity | null, never>> {
     let query = this.model.findById(id);
     query = this.applyOptions(query, options);
@@ -121,6 +203,13 @@ export abstract class BaseRepository<TEntity, TDocument> {
     return ok(this.toDomain(doc));
   }
 
+  /**
+   * Finds a single document matching the given filter criteria.
+   * 
+   * @param filter Filter criteria
+   * @param options Query and projection options
+   * @returns Result containing the Domain Entity, or null if not found
+   */
   async findOne(
     filter: Record<string, any>,
     options: BaseFindOptions = {},
@@ -132,6 +221,13 @@ export abstract class BaseRepository<TEntity, TDocument> {
     return ok(this.toDomain(doc));
   }
 
+  /**
+   * Finds all documents matching the given filter criteria.
+   * 
+   * @param filter Filter criteria
+   * @param options Query and projection options
+   * @returns Result containing an array of Domain Entities
+   */
   async find(
     filter: Record<string, any> = {},
     options: BaseFindOptions = {},
@@ -142,10 +238,23 @@ export abstract class BaseRepository<TEntity, TDocument> {
     return ok(docs.map((doc) => this.toDomain(doc)));
   }
 
+  /**
+   * Finds all documents in the collection (subject to soft deletes).
+   * 
+   * @param options Query and projection options
+   * @returns Result containing an array of Domain Entities
+   */
   async findAll(options: BaseFindOptions = {}): Promise<Result<TEntity[], never>> {
     return this.find({}, options);
   }
 
+  /**
+   * Checks if at least one document matches the criteria.
+   * 
+   * @param filter Filter criteria
+   * @param options Query options
+   * @returns Result containing a boolean indicating existence
+   */
   async exists(
     filter: Record<string, any>,
     options: Pick<BaseFindOptions, 'includeDeleted' | 'onlyDeleted' | 'session'> = {},
@@ -156,6 +265,13 @@ export abstract class BaseRepository<TEntity, TDocument> {
     return ok(!!result);
   }
 
+  /**
+   * Counts the number of documents matching the criteria.
+   * 
+   * @param filter Filter criteria
+   * @param options Query options
+   * @returns Result containing the count
+   */
   async count(
     filter: Record<string, any> = {},
     options: Pick<BaseFindOptions, 'includeDeleted' | 'onlyDeleted' | 'session'> = {},
@@ -169,6 +285,13 @@ export abstract class BaseRepository<TEntity, TDocument> {
 
   /* ============================ PAGINATION ============================ */
 
+  /**
+   * Retrieves a paginated list of documents with metadata.
+   * 
+   * @param filter Filter criteria
+   * @param options Offset-based pagination options
+   * @returns Result containing the paginated response with Domain Entities
+   */
   async paginate(
     filter: Record<string, any> = {},
     options: PaginationOptions = {},
@@ -202,6 +325,15 @@ export abstract class BaseRepository<TEntity, TDocument> {
 
   /* ============================== UPDATE ============================== */
 
+  /**
+   * Updates a single document by its ObjectId.
+   * Supports optimistic locking via the `version` option.
+   * 
+   * @param id The ObjectId string
+   * @param update The update payload
+   * @param options Update options (auditing, versioning)
+   * @returns Result containing the updated Domain Entity, null if not found, or CONFLICT error if version mismatched
+   */
   async updateById(
     id: Id,
     update: Record<string, any>,
@@ -217,8 +349,7 @@ export abstract class BaseRepository<TEntity, TDocument> {
       ...rest
     } = options;
 
-    let finalUpdate = this.applyAuditOnUpdate(update, audit);
-
+    const finalUpdate = this.applyAuditOnUpdate(update, audit);
     const filter: any = { _id: id };
     if (typeof version === 'number') {
       filter.__v = version;
@@ -234,6 +365,7 @@ export abstract class BaseRepository<TEntity, TDocument> {
     query = this.applyOptions(query, rest);
     const result = await query.exec();
 
+    // Optimistic lock failure check
     if (typeof version === 'number' && !result) {
       return err({ type: 'CONFLICT' });
     }
@@ -242,6 +374,15 @@ export abstract class BaseRepository<TEntity, TDocument> {
     return ok(this.toDomain(result));
   }
 
+  /**
+   * Updates a single document matching the filter criteria.
+   * Supports optimistic locking via the `version` option.
+   * 
+   * @param filter Filter criteria
+   * @param update The update payload
+   * @param options Update options
+   * @returns Result containing the updated Domain Entity, null if not found, or CONFLICT error if version mismatched
+   */
   async updateOne(
     filter: Record<string, any>,
     update: Record<string, any>,
@@ -257,12 +398,12 @@ export abstract class BaseRepository<TEntity, TDocument> {
       ...rest
     } = options;
 
-    let finalFilter = this.applySoftDelete(filter, options) as any;
+    const finalFilter = this.applySoftDelete(filter, options) as any;
     if (typeof version === 'number') {
       finalFilter.__v = version;
     }
 
-    let finalUpdate = this.applyAuditOnUpdate(update, audit);
+    const finalUpdate = this.applyAuditOnUpdate(update, audit);
 
     let query = this.model.findOneAndUpdate(finalFilter, finalUpdate, {
       new: returnNew,
@@ -284,6 +425,13 @@ export abstract class BaseRepository<TEntity, TDocument> {
 
   /* ============================== DELETE ============================== */
 
+  /**
+   * Soft-deletes a document by its ObjectId, populating `deletedAt`.
+   * 
+   * @param id The ObjectId string
+   * @param options Update options for the soft delete
+   * @returns Result containing the soft-deleted Domain Entity
+   */
   async softDeleteById(
     id: Id,
     options: { session?: ClientSession; audit?: boolean } = {},
@@ -293,11 +441,19 @@ export abstract class BaseRepository<TEntity, TDocument> {
       { deletedAt: new Date() },
       { session: options.session, audit: options.audit },
     );
-    // Ignore conflict error mapping for soft delete here, assume basic flow
+    // Discard optimistic lock conflicts on soft-deletes
     if (result.isErr()) return ok(null);
     return ok(result.value);
   }
 
+  /**
+   * Permanently deletes a document from the collection by its ObjectId.
+   * Use with caution. Prefer `softDeleteById` for most entities.
+   * 
+   * @param id The ObjectId string
+   * @param options Query options
+   * @returns Result containing a boolean indicating if deletion was successful
+   */
   async deleteById(
     id: Id,
     options: { session?: ClientSession } = {},
@@ -312,6 +468,9 @@ export abstract class BaseRepository<TEntity, TDocument> {
 
   /* ============================== HELPERS ============================= */
 
+  /**
+   * Applies soft-delete filters based on query options.
+   */
   protected applySoftDelete(
     filter: Record<string, any>,
     options: Pick<BaseFindOptions, 'includeDeleted' | 'onlyDeleted'> = {},
@@ -331,11 +490,14 @@ export abstract class BaseRepository<TEntity, TDocument> {
     };
   }
 
+  /**
+   * Applies projection, population, sorting, and pagination logic to a query.
+   */
   protected applyOptions(query: any, options: BaseFindOptions) {
     if (options.select) query = query.select(options.select);
     if (options.populate) query = query.populate(options.populate);
     if (options.sort) query = query.sort(options.sort);
-    if (options.lean !== false) query = query.lean(); // Default to lean for domains
+    if (options.lean !== false) query = query.lean(); // Default to lean for performance
     if (typeof options.limit === 'number') query = query.limit(options.limit);
     if (typeof options.skip === 'number') query = query.skip(options.skip);
     if (options.session) query = query.session(options.session);
@@ -344,6 +506,9 @@ export abstract class BaseRepository<TEntity, TDocument> {
     return query;
   }
 
+  /**
+   * Automatically sets `createdBy` and `updatedBy` properties from the CLS context.
+   */
   protected applyAuditOnCreate(data: Record<string, any>, enabled: boolean): Record<string, any> {
     if (!enabled || !this.cls) return data;
 
@@ -357,6 +522,9 @@ export abstract class BaseRepository<TEntity, TDocument> {
     };
   }
 
+  /**
+   * Automatically sets `updatedBy` property from the CLS context on updates.
+   */
   protected applyAuditOnUpdate(
     update: Record<string, any>,
     enabled: boolean,
@@ -375,6 +543,9 @@ export abstract class BaseRepository<TEntity, TDocument> {
     return update;
   }
 
+  /**
+   * Extracts the current MongoDB session from the CLS context for global transaction boundaries.
+   */
   protected getSession(): ClientSession | undefined {
     return this.cls?.get('mongoSession') ?? undefined;
   }
