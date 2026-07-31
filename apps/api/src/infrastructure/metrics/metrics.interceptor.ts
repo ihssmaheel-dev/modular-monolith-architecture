@@ -1,0 +1,69 @@
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { tap, catchError } from "rxjs/operators";
+import { MetricsService } from "./metrics.service";
+import { FastifyRequest, FastifyReply } from "fastify";
+
+@Injectable()
+export class MetricsInterceptor implements NestInterceptor {
+  constructor(private readonly metricsService: MetricsService) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const ctx = context.switchToHttp();
+    const req = ctx.getRequest<FastifyRequest>();
+    const res = ctx.getResponse<FastifyReply>();
+
+    const method = req.method;
+    // We use routeOptions.url if available, falling back to req.url
+    // This prevents high cardinality if URL contains IDs (e.g. /users/123 -> /users/:id)
+    const route = req.routeOptions?.url ?? req.url;
+
+    const startTime = process.hrtime();
+
+    return next.handle().pipe(
+      tap(() => {
+        this.recordMetrics(startTime, method, route, res.statusCode);
+      }),
+      catchError((error) => {
+        // If an exception is thrown, it typically results in a 500 or is handled by an exception filter.
+        // We record the status from the exception if available, else 500.
+        const status = error?.status || error?.statusCode || 500;
+        this.recordMetrics(startTime, method, route, status);
+        throw error;
+      })
+    );
+  }
+
+  private recordMetrics(startTime: [number, number], method: string, route: string, statusCode: number) {
+    const diff = process.hrtime(startTime);
+    const durationInSeconds = diff[0] + diff[1] / 1e9;
+
+    this.metricsService.recordHistogram(
+      "http_request_duration_seconds",
+      "Duration of HTTP requests in seconds",
+      durationInSeconds,
+      {
+        method,
+        route,
+        status_code: statusCode,
+      },
+      [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+    );
+
+    this.metricsService.incrementCounter(
+      "http_requests_total",
+      "Total number of HTTP requests",
+      1,
+      {
+        method,
+        route,
+        status_code: statusCode,
+      }
+    );
+  }
+}

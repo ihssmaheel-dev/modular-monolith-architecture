@@ -21,6 +21,10 @@ import { WafModule } from "./infrastructure/waf/waf.module";
 import { I18nModule } from "./infrastructure/i18n/i18n.module";
 import { env } from "./config/env";
 
+import { APP_INTERCEPTOR } from "@nestjs/core";
+import { MetricsModule } from "./infrastructure/metrics/metrics.module";
+import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor";
+
 @Module({
   imports: [
     ClsModule.forRoot({ global: true, middleware: { mount: true } }),
@@ -40,9 +44,16 @@ import { env } from "./config/env";
     RateLimitModule,
     WafModule,
     I18nModule,
+    MetricsModule,
     UsersModule,
     AuthModule,
     NotesModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
+    },
   ],
 })
 export class AppModule {}
