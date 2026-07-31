@@ -38,7 +38,7 @@ export class SmtpDriver implements EmailDriver {
       this.logger.error({ error }, "SMTP send failed");
       return err({
         code: "SEND_FAILED",
-        message: error instanceof Error ? error.message : "SMTP send failed",
+        message: "api.error.sendFailed",
       });
     }
   }

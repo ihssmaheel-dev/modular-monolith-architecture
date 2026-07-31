@@ -50,13 +50,13 @@ export class EmailService {
     const recipients = Array.isArray(params.to) ? params.to : [params.to];
 
     if (recipients.length === 0) {
-      return err({ code: "INVALID_ADDRESS", message: "No recipients provided" });
+      return err({ code: "INVALID_ADDRESS", message: "api.error.invalidAddress" });
     }
 
     if (this.driver) {
       return this.driver.send(recipients, params);
     }
 
-    return err({ code: "CONFIG_ERROR", message: "No email driver configured" });
+    return err({ code: "CONFIG_ERROR", message: "api.error.configError" });
   }
 }

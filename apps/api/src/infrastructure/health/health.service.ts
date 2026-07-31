@@ -40,7 +40,7 @@ export class RedisHealthIndicator extends HealthIndicator {
         : this.getStatus(key, false, { pong });
     } catch (error) {
       return this.getStatus(key, false, {
-        message: error instanceof Error ? error.message : "Redis unreachable",
+        message: "api.error.internal",
       });
     }
   }

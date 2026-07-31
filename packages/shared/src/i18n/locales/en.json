@@ -94,7 +94,18 @@
       "validationFailed": "Validation failed",
       "rateLimited": "Too many requests",
       "sessionExpired": "Session expired",
-      "invalidToken": "Invalid token"
+      "invalidToken": "Invalid token",
+      "urlTooLong": "URL too long",
+      "invalidRequest": "Invalid request",
+      "blockedContent": "Request body contains blocked content",
+      "invalidHeader": "Invalid header value",
+      "transactionFailed": "Transaction failed",
+      "uploadFailed": "Upload failed",
+      "presignFailed": "Presign failed",
+      "deleteFailed": "Delete failed",
+      "invalidAddress": "No recipients provided",
+      "configError": "Configuration error",
+      "sendFailed": "Failed to send email"
     },
     "user": {
       "created": "User created successfully",

@@ -41,7 +41,7 @@ export class DatabaseService implements OnModuleDestroy {
       );
       return err({
         code: "TRANSACTION_FAILED",
-        message: error instanceof Error ? error.message : "Transaction failed",
+        message: "api.error.transactionFailed",
       });
     } finally {
       session.endSession();

@@ -27,7 +27,7 @@ export class ResendDriver implements EmailDriver {
         this.logger.error({ error: response.error }, "Resend send failed");
         return err({
           code: "SEND_FAILED",
-          message: response.error.message ?? "Resend send failed",
+          message: "api.error.sendFailed",
         });
       }
 
@@ -40,7 +40,7 @@ export class ResendDriver implements EmailDriver {
       this.logger.error({ error }, "Resend send failed");
       return err({
         code: "SEND_FAILED",
-        message: error instanceof Error ? error.message : "Resend send failed",
+        message: "api.error.sendFailed",
       });
     }
   }

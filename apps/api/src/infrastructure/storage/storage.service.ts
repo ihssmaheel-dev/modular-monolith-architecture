@@ -39,7 +39,7 @@ export class StorageService {
       return ok(result);
     } catch (error) {
       this.logger.error({ key, error }, "Upload failed");
-      return err({ code: "UPLOAD_FAILED", message: error instanceof Error ? error.message : "Upload failed" });
+      return err({ code: "UPLOAD_FAILED", message: "api.error.uploadFailed" });
     }
   }
 
@@ -49,7 +49,7 @@ export class StorageService {
       return ok(url);
     } catch (error) {
       this.logger.error({ key, error }, "Presign upload failed");
-      return err({ code: "PRESIGN_FAILED", message: error instanceof Error ? error.message : "Presign failed" });
+      return err({ code: "PRESIGN_FAILED", message: "api.error.presignFailed" });
     }
   }
 
@@ -59,7 +59,7 @@ export class StorageService {
       return ok(url);
     } catch (error) {
       this.logger.error({ key, error }, "Presign download failed");
-      return err({ code: "NOT_FOUND", message: error instanceof Error ? error.message : "File not found" });
+      return err({ code: "NOT_FOUND", message: "api.error.notFound" });
     }
   }
 
@@ -70,7 +70,7 @@ export class StorageService {
       return ok(undefined);
     } catch (error) {
       this.logger.error({ key, error }, "Delete failed");
-      return err({ code: "DELETE_FAILED", message: error instanceof Error ? error.message : "Delete failed" });
+      return err({ code: "DELETE_FAILED", message: "api.error.deleteFailed" });
     }
   }
 }
