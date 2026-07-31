@@ -8,6 +8,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@repo/shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@repo/api-client": path.resolve(__dirname, "../../packages/api-client/src"),
     },
   },
   server: {
