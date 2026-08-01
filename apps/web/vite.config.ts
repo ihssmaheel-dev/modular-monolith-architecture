@@ -21,4 +21,7 @@ export default defineConfig({
       },
     },
   },
+  optimizeDeps: {
+    exclude: ["@repo/shared", "@repo/api-client"],
+  },
 });
