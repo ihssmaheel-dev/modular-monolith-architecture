@@ -1,0 +1,34 @@
+import { INestApplication } from "@nestjs/common";
+import boxen from "boxen";
+import { blue, green, yellow, bold, cyan, dim } from "colorette";
+import { env } from "../../config/env";
+import { RedisService } from "../../infrastructure/redis/redis.service";
+
+export function printStartupBanner(app: INestApplication): void {
+  const redisService = app.get(RedisService);
+  const redisConnected = !!redisService.getClient();
+  const redisStatus = redisConnected ? green("[OK] Connected") : yellow("[!] Disabled (Optional)");
+  const mongoStatus = green("[OK] Connected"); // Mongoose throws if offline
+
+  const bannerContent = `
+${bold(blue("API SERVER IS RUNNING"))}
+${dim("----------------------------")}
+${bold("Environment")} : ${cyan(env.NODE_ENV)}
+${bold("Port")}        : ${cyan(env.PORT.toString())}
+${bold("MongoDB")}     : ${mongoStatus}
+${bold("Redis")}       : ${redisStatus}
+${bold("Storage")}     : ${cyan(env.STORAGE_DRIVER.toUpperCase())}
+${bold("Email")}       : ${cyan(env.EMAIL_DRIVER.toUpperCase())}
+  `.trim();
+
+  const banner = boxen(bannerContent, {
+    padding: 1,
+    margin: 1,
+    borderStyle: "round",
+    borderColor: "blue",
+    title: "Server Status",
+    titleAlignment: "center",
+  });
+
+  console.log(banner);
+}

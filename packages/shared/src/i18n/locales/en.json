@@ -107,6 +107,10 @@
       "configError": "Configuration error",
       "sendFailed": "Failed to send email"
     },
+    "health": {
+      "redisUnconfigured": "Redis unconfigured but optional",
+      "redisDown": "Redis down but optional"
+    },
     "user": {
       "created": "User created successfully",
       "updated": "User updated successfully",

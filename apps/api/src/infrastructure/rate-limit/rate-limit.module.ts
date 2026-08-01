@@ -9,6 +9,6 @@ import { RateLimitMiddleware } from "./rate-limit.middleware";
 })
 export class RateLimitModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RateLimitMiddleware).forRoutes("*");
+    consumer.apply(RateLimitMiddleware).forRoutes("{*path}");
   }
 }

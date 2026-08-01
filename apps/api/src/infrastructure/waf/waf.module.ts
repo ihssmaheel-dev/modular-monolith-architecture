@@ -5,6 +5,6 @@ import { WafMiddleware } from "./waf.middleware";
 @Module({})
 export class WafModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(WafMiddleware).forRoutes("*");
+    consumer.apply(WafMiddleware).forRoutes("{*path}");
   }
 }

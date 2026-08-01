@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { I18nService } from "../i18n/i18n.service";
 import {
   HealthCheckService,
   HealthCheck,
@@ -27,7 +28,10 @@ export class MongoHealthIndicator extends HealthIndicator {
 
 @Injectable()
 export class RedisHealthIndicator extends HealthIndicator {
-  constructor(private readonly redis: RedisService) {
+  constructor(
+    private readonly redis: RedisService,
+    private readonly i18n: I18nService,
+  ) {
     super();
   }
 
@@ -35,7 +39,7 @@ export class RedisHealthIndicator extends HealthIndicator {
     try {
       const client = this.redis.getClient();
       if (!client) {
-        return this.getStatus(key, true, { message: "Redis unconfigured but optional" });
+        return this.getStatus(key, true, { message: this.i18n.t("api.health.redisUnconfigured") });
       }
       const pong = await client.ping();
       return pong === "PONG"
@@ -44,7 +48,7 @@ export class RedisHealthIndicator extends HealthIndicator {
     } catch (error) {
       // Return healthy but degraded so K8s doesn't kill the pod
       return this.getStatus(key, true, {
-        message: "Redis down but optional",
+        message: this.i18n.t("api.health.redisDown"),
       });
     }
   }
