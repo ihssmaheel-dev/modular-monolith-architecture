@@ -34,6 +34,11 @@ export class RateLimitService {
     const redisKey = `${SLIDING_WINDOW_LOG_PREFIX}${key}`;
 
     const client = this.redis.getClient();
+    if (!client) {
+      // If Redis is down, gracefully bypass rate limiting
+      return { allowed: true, remaining: maxRequests, resetAt: Math.ceil((now + windowSeconds * MS_PER_SECOND) / MS_PER_SECOND) };
+    }
+
     const pipeline = client.pipeline();
     pipeline.zremrangebyscore(redisKey, 0, windowStart);
     pipeline.zadd(redisKey, now.toString(), `${now}:${crypto.randomUUID()}`);

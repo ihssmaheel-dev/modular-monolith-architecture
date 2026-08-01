@@ -16,8 +16,11 @@ export class CacheService {
   }
 
   async get<T>(key: string): Promise<T | null> {
+    const client = this.redis.getClient();
+    if (!client) return null;
+
     try {
-      const raw = await this.redis.getClient().get(key);
+      const raw = await client.get(key);
       if (!raw) return null;
       return JSON.parse(raw) as T;
     } catch (error) {
@@ -26,45 +29,53 @@ export class CacheService {
     }
   }
 
-  async set(key: string, value: unknown, ttlSeconds = DEFAULT_TTL_SECONDS): Promise<void> {
+  async set<T>(key: string, value: T, ttlSeconds: number = DEFAULT_TTL_SECONDS): Promise<void> {
+    const client = this.redis.getClient();
+    if (!client) return;
+
     try {
-      await this.redis.getClient().setex(key, ttlSeconds, JSON.stringify(value));
+      await client.setex(key, ttlSeconds, JSON.stringify(value));
     } catch (error) {
       this.logger.error({ key, error }, "Cache set failed");
     }
   }
 
-  async getOrSet<T>(
-    key: string,
-    fetcher: () => Promise<T>,
-    ttlSeconds = DEFAULT_TTL_SECONDS,
-  ): Promise<T> {
+  async getOrSet<T>(key: string, fetcher: () => Promise<T>, ttlSeconds?: number): Promise<T> {
     const cached = await this.get<T>(key);
-    if (cached !== null) return cached;
+    if (cached !== null) {
+      this.logger.debug({ key }, "Cache hit");
+      return cached;
+    }
 
-    const value = await fetcher();
-    await this.set(key, value, ttlSeconds);
-    return value;
+    this.logger.debug({ key }, "Cache miss");
+    const fresh = await fetcher();
+    await this.set(key, fresh, ttlSeconds);
+    return fresh;
   }
 
   async del(key: string): Promise<void> {
+    const client = this.redis.getClient();
+    if (!client) return;
+
     try {
-      await this.redis.getClient().del(key);
+      await client.del(key);
     } catch (error) {
       this.logger.error({ key, error }, "Cache delete failed");
     }
   }
 
   async delPattern(pattern: string): Promise<void> {
+    const client = this.redis.getClient();
+    if (!client) return;
+
     try {
-      const client = this.redis.getClient();
       const keys = await client.keys(pattern);
       if (keys.length > 0) {
         await client.del(...keys);
         this.logger.debug({ pattern, count: keys.length }, "Cache pattern deleted");
       }
     } catch (error) {
-      this.logger.error({ pattern, error }, "Cache pattern delete failed");
+      this.logger.error({ pattern, error }, "Cache deletePattern failed");
     }
   }
 }

@@ -30,7 +30,13 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async initSubscriber(): Promise<void> {
-    this.subscriber = this.redis.getClient().duplicate();
+    const client = this.redis.getClient();
+    if (!client) {
+      this.logger.warn({}, "Redis client not available, pub/sub realtime features disabled");
+      return;
+    }
+
+    this.subscriber = client.duplicate();
     await this.subscriber.subscribe("realtime:broadcast");
     this.subscriber.on("message", (_channel: string, message: string) => {
       try {
@@ -67,7 +73,10 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
   }
 
   broadcast(event: string, payload: unknown): void {
-    this.redis.getClient().publish(
+    const client = this.redis.getClient();
+    if (!client) return;
+
+    client.publish(
       "realtime:broadcast",
       JSON.stringify({ event, payload } satisfies RealtimeEvent),
     );
@@ -86,7 +95,10 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
   }
 
   sendToRoom(room: string, event: string, payload: unknown): void {
-    this.redis.getClient().publish(
+    const client = this.redis.getClient();
+    if (!client) return;
+
+    client.publish(
       `realtime:room:${room}`,
       JSON.stringify({ event, payload } satisfies RealtimeEvent),
     );

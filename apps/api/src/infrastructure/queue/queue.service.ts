@@ -7,7 +7,9 @@ export class QueueService implements OnModuleDestroy {
   private queues = new Map<string, Queue>();
   private workers = new Map<string, Worker>();
 
-  getQueue<T = unknown>(name: string): Queue<T> {
+  getQueue<T = unknown>(name: string): Queue<T> | null {
+    if (!env.REDIS_URL) return null;
+
     if (!this.queues.has(name)) {
       const queue = new Queue<T>(name, {
         connection: { url: env.REDIS_URL },
@@ -20,7 +22,9 @@ export class QueueService implements OnModuleDestroy {
   addWorker<T = unknown>(
     name: string,
     handler: (job: Job<T>) => Promise<void>,
-  ): Worker<T> {
+  ): Worker<T> | null {
+    if (!env.REDIS_URL) return null;
+
     const worker = new Worker<T>(
       name,
       async (job) => {

@@ -21,6 +21,8 @@ export class SessionService {
   }
 
   async create(input: CreateSessionInput): Promise<SessionData> {
+    const client = this.redis.getClient();
+
     const sessionId = generateSessionId();
     const now = Date.now();
 
@@ -34,21 +36,30 @@ export class SessionService {
       lastAccessedAt: now,
     };
 
-    const key = sessionKey(sessionId);
-    await this.redis.getClient().setex(key, SESSION_TTL_SECONDS, JSON.stringify(session));
-    await this.redis.getClient().sadd(`user:${input.userId}:sessions`, sessionId);
+    if (client) {
+      const key = sessionKey(sessionId);
+      await client.setex(key, SESSION_TTL_SECONDS, JSON.stringify(session));
+      await client.sadd(`user:${input.userId}:sessions`, sessionId);
+      this.logger.info({ sessionId, userId: input.userId }, "Session created");
+    } else {
+      this.logger.warn({ userId: input.userId }, "Session generated but not persisted (Redis offline)");
+    }
 
-    this.logger.info({ sessionId, userId: input.userId }, "Session created");
     return session;
   }
 
   async getById(sessionId: string): Promise<SessionData | null> {
-    const raw = await this.redis.getClient().get(sessionKey(sessionId));
+    const client = this.redis.getClient();
+    if (!client) return null;
+    const raw = await client.get(sessionKey(sessionId));
     if (!raw) return null;
     return JSON.parse(raw) as SessionData;
   }
 
   async validate(sessionId: string, ip: string): Promise<SessionData | null> {
+    const client = this.redis.getClient();
+    if (!client) return null;
+
     if (await isRevoked(this.redis, sessionId)) {
       return null;
     }
@@ -62,7 +73,7 @@ export class SessionService {
     }
 
     session.lastAccessedAt = Date.now();
-    await this.redis.getClient().setex(
+    await client.setex(
       sessionKey(sessionId),
       SESSION_TTL_SECONDS,
       JSON.stringify(session),
@@ -72,12 +83,15 @@ export class SessionService {
   }
 
   async revoke(sessionId: string): Promise<void> {
+    const client = this.redis.getClient();
+    if (!client) return;
+
     const session = await this.getById(sessionId);
     if (!session) return;
 
-    await this.redis.getClient().del(sessionKey(sessionId));
-    await this.redis.getClient().srem(`user:${session.userId}:sessions`, sessionId);
-    await this.redis.getClient().setex(
+    await client.del(sessionKey(sessionId));
+    await client.srem(`user:${session.userId}:sessions`, sessionId);
+    await client.setex(
       tokenRevocationKey(sessionId),
       TOKEN_REVOCATION_TTL_SECONDS,
       "1",
@@ -87,10 +101,13 @@ export class SessionService {
   }
 
   async revokeAllForUser(userId: string): Promise<void> {
-    const sessionIds = await this.redis.getClient().smembers(`user:${userId}:sessions`);
+    const client = this.redis.getClient();
+    if (!client) return;
+
+    const sessionIds = await client.smembers(`user:${userId}:sessions`);
     
     if (sessionIds.length > 0) {
-      const pipeline = this.redis.getClient().pipeline();
+      const pipeline = client.pipeline();
       for (const sid of sessionIds) {
         pipeline.del(sessionKey(sid));
         pipeline.setex(tokenRevocationKey(sid), TOKEN_REVOCATION_TTL_SECONDS, "1");
@@ -98,16 +115,19 @@ export class SessionService {
       await pipeline.exec();
     }
 
-    await this.redis.getClient().del(`user:${userId}:sessions`);
+    await client.del(`user:${userId}:sessions`);
     this.logger.info({ userId, count: sessionIds.length }, "All sessions revoked for user");
   }
 
   async getActiveSessions(userId: string): Promise<SessionData[]> {
-    const sessionIds = await this.redis.getClient().smembers(`user:${userId}:sessions`);
+    const client = this.redis.getClient();
+    if (!client) return [];
+
+    const sessionIds = await client.smembers(`user:${userId}:sessions`);
     if (sessionIds.length === 0) return [];
 
     const keys = sessionIds.map((sid) => sessionKey(sid));
-    const rawSessions = await this.redis.getClient().mget(keys);
+    const rawSessions = await client.mget(keys);
 
     return rawSessions
       .filter((raw): raw is string => raw !== null)

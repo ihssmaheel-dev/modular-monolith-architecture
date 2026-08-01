@@ -16,6 +16,8 @@ export function generateSessionId(): string {
 }
 
 export async function isRevoked(redis: RedisService, sessionId: string): Promise<boolean> {
-  const result = await redis.getClient().get(tokenRevocationKey(sessionId));
+  const client = redis.getClient();
+  if (!client) return false;
+  const result = await client.get(tokenRevocationKey(sessionId));
   return result === "1";
 }

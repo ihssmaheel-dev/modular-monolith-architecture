@@ -34,13 +34,17 @@ export class RedisHealthIndicator extends HealthIndicator {
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     try {
       const client = this.redis.getClient();
+      if (!client) {
+        return this.getStatus(key, true, { message: "Redis unconfigured but optional" });
+      }
       const pong = await client.ping();
       return pong === "PONG"
         ? this.getStatus(key, true)
         : this.getStatus(key, false, { pong });
     } catch (error) {
-      return this.getStatus(key, false, {
-        message: "api.error.internal",
+      // Return healthy but degraded so K8s doesn't kill the pod
+      return this.getStatus(key, true, {
+        message: "Redis down but optional",
       });
     }
   }
