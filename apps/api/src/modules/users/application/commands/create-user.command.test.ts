@@ -1,0 +1,85 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { CreateUserCommand } from "./create-user.command";
+import { UsersRepository } from "../../infrastructure/users.repository";
+import { GetUserByEmailQuery } from "../queries/get-user-by-email.query";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { ok } from "neverthrow";
+import { User } from "../../domain/entities/user.entity";
+import { UserCreatedEvent } from "../../domain/events/user.events";
+import bcrypt from "bcryptjs";
+
+vi.mock("bcryptjs", () => ({
+  default: {
+    hash: vi.fn(),
+  },
+}));
+
+describe("CreateUserCommand", () => {
+  let command: CreateUserCommand;
+  let repository: UsersRepository;
+  let getUserByEmail: GetUserByEmailQuery;
+  let eventEmitter: EventEmitter2;
+
+  beforeEach(() => {
+    repository = {
+      create: vi.fn(),
+    } as unknown as UsersRepository;
+
+    getUserByEmail = {
+      execute: vi.fn(),
+    } as unknown as GetUserByEmailQuery;
+
+    eventEmitter = {
+      emit: vi.fn(),
+    } as unknown as EventEmitter2;
+    
+    command = new CreateUserCommand(repository, getUserByEmail, eventEmitter);
+  });
+
+  it("should return EMAIL_TAKEN if email exists", async () => {
+    // Arrange
+    const existingUser = User.fromPersistence({ id: "123", email: "test@example.com", name: "Test", role: "user", createdAt: new Date(), updatedAt: new Date() });
+    vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(existingUser));
+
+    // Act
+    const result = await command.execute({ email: "test@example.com", name: "Test", password: "pwd" });
+
+    // Assert
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error).toEqual({ type: "EMAIL_TAKEN", email: "test@example.com" });
+    }
+  });
+
+  it("should create user, emit event, and return ok", async () => {
+    // Arrange
+    vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(null));
+    vi.mocked(bcrypt.hash).mockResolvedValue("hashed_pwd" as never);
+    
+    const newUser = User.fromPersistence({
+      id: "user-123",
+      email: "test@example.com",
+      name: "Test",
+      role: "user" as any,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    vi.mocked(repository.create).mockResolvedValue(ok(newUser));
+
+    // Act
+    const result = await command.execute({ email: "test@example.com", name: "Test", password: "pwd" });
+
+    // Assert
+    expect(result.isOk()).toBe(true);
+    expect(repository.create).toHaveBeenCalledWith({
+      email: "test@example.com",
+      name: "Test",
+      passwordHash: "hashed_pwd",
+      role: "user",
+    });
+    expect(eventEmitter.emit).toHaveBeenCalledWith(
+      "user.created",
+      expect.any(UserCreatedEvent)
+    );
+  });
+});

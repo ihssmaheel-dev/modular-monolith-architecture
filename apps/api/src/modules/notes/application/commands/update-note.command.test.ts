@@ -1,0 +1,83 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { UpdateNoteCommand } from "./update-note.command";
+import { NotesRepository } from "../../infrastructure/notes.repository";
+import { GetNoteByIdQuery } from "../queries/get-note-by-id.query";
+import { Note } from "../../domain/entities/note.entity";
+import { ok, err } from "neverthrow";
+
+describe("UpdateNoteCommand", () => {
+  let command: UpdateNoteCommand;
+  let repository: NotesRepository;
+  let getNoteById: GetNoteByIdQuery;
+
+  beforeEach(() => {
+    repository = {
+      updateById: vi.fn(),
+    } as unknown as NotesRepository;
+
+    getNoteById = {
+      execute: vi.fn(),
+    } as unknown as GetNoteByIdQuery;
+    
+    command = new UpdateNoteCommand(repository, getNoteById);
+  });
+
+  it("should return err NOTE_NOT_FOUND if query returns err", async () => {
+    // Arrange
+    vi.mocked(getNoteById.execute).mockResolvedValue(err({ type: "NOTE_NOT_FOUND", noteId: "123" }));
+
+    // Act
+    const result = await command.execute("123", { title: "New Title" });
+
+    // Assert
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error).toEqual({ type: "NOTE_NOT_FOUND", noteId: "123" });
+    }
+  });
+
+  it("should update note and return ok", async () => {
+    // Arrange
+    const note = Note.fromPersistence({
+      id: "123",
+      title: "Old Title",
+      content: "Old Content",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    vi.mocked(getNoteById.execute).mockResolvedValue(ok(note));
+    vi.mocked(repository.updateById).mockResolvedValue(ok(note));
+
+    // Act
+    const result = await command.execute("123", { title: "New Title" });
+
+    // Assert
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value.title).toBe("New Title");
+    }
+    expect(repository.updateById).toHaveBeenCalledWith("123", { title: "New Title", content: "Old Content" });
+  });
+
+  it("should return err if repository update fails", async () => {
+    // Arrange
+    const note = Note.fromPersistence({
+      id: "123",
+      title: "Old Title",
+      content: "Old Content",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    vi.mocked(getNoteById.execute).mockResolvedValue(ok(note));
+    vi.mocked(repository.updateById).mockResolvedValue(err({} as any));
+
+    // Act
+    const result = await command.execute("123", { title: "New Title" });
+
+    // Assert
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error).toEqual({ type: "NOTE_NOT_FOUND", noteId: "123" });
+    }
+  });
+});
