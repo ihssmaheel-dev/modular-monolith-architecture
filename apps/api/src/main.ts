@@ -34,6 +34,8 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.enableShutdownHooks();
+
   await app.listen(env.PORT, "0.0.0.0");
   
   printStartupBanner(app);

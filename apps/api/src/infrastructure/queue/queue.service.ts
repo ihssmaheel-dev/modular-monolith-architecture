@@ -1,9 +1,9 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { Injectable, BeforeApplicationShutdown } from "@nestjs/common";
 import { Queue, Worker, Job } from "bullmq";
 import { env } from "../../config/env";
 
 @Injectable()
-export class QueueService implements OnModuleDestroy {
+export class QueueService implements BeforeApplicationShutdown {
   private queues = new Map<string, Queue>();
   private workers = new Map<string, Worker>();
 
@@ -36,7 +36,7 @@ export class QueueService implements OnModuleDestroy {
     return worker;
   }
 
-  async onModuleDestroy() {
+  async beforeApplicationShutdown() {
     for (const queue of this.queues.values()) {
       await queue.close();
     }

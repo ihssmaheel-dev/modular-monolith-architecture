@@ -63,8 +63,8 @@ describe("DatabaseService", () => {
     expect(mockEndSession).toHaveBeenCalled();
   });
 
-  it("should close connection on destroy", async () => {
-    await service.onModuleDestroy();
+  it("should close connection on application shutdown", async () => {
+    await service.onApplicationShutdown();
     expect(mockClose).toHaveBeenCalled();
   });
 });

@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { Injectable, OnApplicationShutdown } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { Connection } from "mongoose";
 import { ok, err, Result } from "neverthrow";
@@ -10,7 +10,7 @@ export interface TransactionError {
 }
 
 @Injectable()
-export class DatabaseService implements OnModuleDestroy {
+export class DatabaseService implements OnApplicationShutdown {
   constructor(
     @InjectConnection() private readonly connection: Connection,
     private readonly logger: PinoLoggerService,
@@ -48,7 +48,7 @@ export class DatabaseService implements OnModuleDestroy {
     }
   }
 
-  async onModuleDestroy() {
+  async onApplicationShutdown() {
     if (this.isConnected()) {
       await this.connection.close();
       this.logger.info({}, "MongoDB connection closed");

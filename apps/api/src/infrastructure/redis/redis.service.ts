@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { Injectable, OnApplicationShutdown, OnModuleInit } from "@nestjs/common";
 import Redis from "ioredis";
 import { env } from "../../config/env";
 import { PinoLoggerService } from "../logger/logger.service";
@@ -8,7 +8,7 @@ const RETRY_DELAY_MULTIPLIER = 200;
 const MAX_RETRY_DELAY = 2000;
 
 @Injectable()
-export class RedisService implements OnModuleInit, OnModuleDestroy {
+export class RedisService implements OnModuleInit, OnApplicationShutdown {
   private client: Redis | null = null;
   private logger: PinoLoggerService;
 
@@ -52,7 +52,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return this.client;
   }
 
-  async onModuleDestroy() {
+  async onApplicationShutdown() {
     if (this.client) {
       await this.client.quit();
     }
