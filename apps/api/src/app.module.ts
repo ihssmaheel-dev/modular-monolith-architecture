@@ -24,6 +24,7 @@ import { env } from "./config/env";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { MetricsModule } from "./infrastructure/metrics/metrics.module";
 import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor";
+import { TracingInterceptor } from "./infrastructure/tracing/tracing.interceptor";
 
 @Module({
   imports: [
@@ -53,6 +54,10 @@ import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor
     {
       provide: APP_INTERCEPTOR,
       useClass: MetricsInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TracingInterceptor,
     },
   ],
 })
