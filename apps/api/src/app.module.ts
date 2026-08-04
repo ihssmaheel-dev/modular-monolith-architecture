@@ -27,7 +27,7 @@ import { APP_INTERCEPTOR, APP_GUARD } from "@nestjs/core";
 import { MetricsModule } from "./infrastructure/metrics/metrics.module";
 import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor";
 import { TracingInterceptor } from "./infrastructure/tracing/tracing.interceptor";
-import { AuthGuard, PermissionsGuard } from "./common";
+import { AuthGuard, PermissionsGuard, IdempotencyInterceptor } from "./common";
 
 @Module({
   imports: [
@@ -80,6 +80,10 @@ import { AuthGuard, PermissionsGuard } from "./common";
     {
       provide: APP_INTERCEPTOR,
       useClass: TracingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: IdempotencyInterceptor,
     },
   ],
 })

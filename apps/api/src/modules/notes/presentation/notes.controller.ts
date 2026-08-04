@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus, Req } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
-import { RequirePermissions } from "../../../common";
+import { RequirePermissions, Idempotent } from "../../../common";
 import { CreateNoteSchema, UpdateNoteSchema } from "@repo/shared";
 import { CreateNoteCommand } from "../application/commands/create-note.command";
 import { UpdateNoteCommand } from "../application/commands/update-note.command";
@@ -57,6 +57,7 @@ export class NotesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @Idempotent()
   @RequirePermissions("notes:write")
   async createNote(@Body() body: unknown, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
