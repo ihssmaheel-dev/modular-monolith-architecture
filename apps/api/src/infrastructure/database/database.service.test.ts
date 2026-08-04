@@ -26,6 +26,12 @@ describe("DatabaseService", () => {
     const mockLogger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } as any;
     mockLogger.child = () => mockLogger;
 
+    const mockCls = {
+      isActive: vi.fn().mockReturnValue(false),
+      get: vi.fn().mockReturnValue({}),
+      runWith: vi.fn().mockImplementation(async (_ctx, cb) => await cb()),
+    } as any;
+
     service = new DatabaseService(
       {
         startSession: mockStartSession,
@@ -34,6 +40,7 @@ describe("DatabaseService", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
       mockLogger,
+      mockCls,
     );
   });
 

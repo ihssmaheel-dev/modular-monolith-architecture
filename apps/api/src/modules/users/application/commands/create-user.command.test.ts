@@ -2,11 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CreateUserCommand } from "./create-user.command";
 import { UsersRepository } from "../../infrastructure/users.repository";
 import { GetUserByEmailQuery } from "../queries/get-user-by-email.query";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { ok } from "neverthrow";
 import { User } from "../../domain/entities/user.entity";
 import { UserCreatedEvent } from "../../domain/events/user.events";
 import bcrypt from "bcryptjs";
+import { DatabaseService } from "../../../../infrastructure/database/database.service";
+import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 vi.mock("bcryptjs", () => ({
   default: {
@@ -18,7 +19,8 @@ describe("CreateUserCommand", () => {
   let command: CreateUserCommand;
   let repository: UsersRepository;
   let getUserByEmail: GetUserByEmailQuery;
-  let eventEmitter: EventEmitter2;
+  let databaseService: DatabaseService;
+  let outboxService: OutboxService;
 
   beforeEach(() => {
     repository = {
@@ -29,11 +31,21 @@ describe("CreateUserCommand", () => {
       execute: vi.fn(),
     } as unknown as GetUserByEmailQuery;
 
-    eventEmitter = {
-      emit: vi.fn(),
-    } as unknown as EventEmitter2;
+    databaseService = {
+      withTransaction: vi.fn().mockImplementation(async (cb) => {
+        try {
+          return ok(await cb());
+        } catch (e) {
+          throw e;
+        }
+      }),
+    } as unknown as DatabaseService;
+
+    outboxService = {
+      dispatch: vi.fn().mockResolvedValue(ok(undefined)),
+    } as unknown as OutboxService;
     
-    command = new CreateUserCommand(repository, getUserByEmail, eventEmitter);
+    command = new CreateUserCommand(repository, getUserByEmail, databaseService, outboxService);
   });
 
   it("should return EMAIL_TAKEN if email exists", async () => {
@@ -77,7 +89,7 @@ describe("CreateUserCommand", () => {
       passwordHash: "hashed_pwd",
       role: "user",
     });
-    expect(eventEmitter.emit).toHaveBeenCalledWith(
+    expect(outboxService.dispatch).toHaveBeenCalledWith(
       "user.created",
       expect.any(UserCreatedEvent)
     );

@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EventEmitterModule, EventEmitter2 } from "@nestjs/event-emitter";
+import { ScheduleModule } from "@nestjs/schedule";
 import { ClsModule } from "nestjs-cls";
 import { UsersModule } from "./modules/users/users.module";
 import { AuthModule } from "./modules/auth/auth.module";
@@ -20,6 +21,7 @@ import { RateLimitModule } from "./infrastructure/rate-limit/rate-limit.module";
 import { WafModule } from "./infrastructure/waf/waf.module";
 import { I18nModule } from "./infrastructure/i18n/i18n.module";
 import { AuditModule } from "./infrastructure/audit/audit.module";
+import { OutboxModule } from "./infrastructure/outbox/outbox.module";
 import { auditPlugin } from "./infrastructure/database/plugins/audit.plugin";
 import { env } from "./config/env";
 
@@ -33,6 +35,7 @@ import { AuthGuard, PermissionsGuard, IdempotencyInterceptor } from "./common";
   imports: [
     ClsModule.forRoot({ global: true, middleware: { mount: true } }),
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     MongooseModule.forRootAsync({
       imports: [EventEmitterModule],
       inject: [EventEmitter2],
@@ -60,6 +63,7 @@ import { AuthGuard, PermissionsGuard, IdempotencyInterceptor } from "./common";
     I18nModule,
     MetricsModule,
     AuditModule,
+    OutboxModule,
     UsersModule,
     AuthModule,
     NotesModule,

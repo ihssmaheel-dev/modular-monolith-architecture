@@ -2,6 +2,7 @@ import { Injectable, OnApplicationShutdown } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { Connection } from "mongoose";
 import { ok, err, Result } from "neverthrow";
+import { ClsService } from "nestjs-cls";
 import { PinoLoggerService } from "../logger/logger.service";
 
 export interface TransactionError {
@@ -14,6 +15,7 @@ export class DatabaseService implements OnApplicationShutdown {
   constructor(
     @InjectConnection() private readonly connection: Connection,
     private readonly logger: PinoLoggerService,
+    private readonly cls: ClsService,
   ) {}
 
   getConnection(): Connection {
@@ -28,6 +30,18 @@ export class DatabaseService implements OnApplicationShutdown {
     fn: () => Promise<T>,
   ): Promise<Result<T, TransactionError>> {
     const session = await this.connection.startSession();
+    
+    // Check if we are inside a CLS context (e.g., HTTP request or worker job)
+    if (!this.cls.isActive()) {
+      return this.runTransaction(session, fn);
+    }
+
+    // Clone the current context so concurrent transactions in the same request don't collide
+    const context = { ...this.cls.get(), mongoSession: session };
+    return this.cls.runWith(context, () => this.runTransaction(session, fn));
+  }
+
+  private async runTransaction<T>(session: any, fn: () => Promise<T>): Promise<Result<T, TransactionError>> {
     try {
       session.startTransaction();
       const result = await fn();
