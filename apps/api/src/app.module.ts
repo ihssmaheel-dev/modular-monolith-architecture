@@ -21,10 +21,11 @@ import { WafModule } from "./infrastructure/waf/waf.module";
 import { I18nModule } from "./infrastructure/i18n/i18n.module";
 import { env } from "./config/env";
 
-import { APP_INTERCEPTOR } from "@nestjs/core";
+import { APP_INTERCEPTOR, APP_GUARD } from "@nestjs/core";
 import { MetricsModule } from "./infrastructure/metrics/metrics.module";
 import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor";
 import { TracingInterceptor } from "./infrastructure/tracing/tracing.interceptor";
+import { AuthGuard, PermissionsGuard } from "./common";
 
 @Module({
   imports: [
@@ -51,6 +52,14 @@ import { TracingInterceptor } from "./infrastructure/tracing/tracing.interceptor
     NotesModule,
   ],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: MetricsInterceptor,

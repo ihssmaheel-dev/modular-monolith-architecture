@@ -1,4 +1,5 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Headers } from "@nestjs/common";
+import { Public } from "../../../common";
 import { RegisterCommand } from "../application/commands/register.command";
 import { LoginCommand } from "../application/commands/login.command";
 import { RefreshTokensCommand } from "../application/commands/refresh-tokens.command";
@@ -15,6 +16,7 @@ const ERROR_MESSAGE_MAP: Record<AuthError["type"], string> = {
   EMAIL_NOT_FOUND: "auth.userNotFound",
 };
 
+@Public()
 @Controller("auth")
 export class AuthController {
   constructor(

@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus, Req } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
+import { RequirePermissions } from "../../../common";
 import { CreateNoteSchema, UpdateNoteSchema } from "@repo/shared";
 import { CreateNoteCommand } from "../application/commands/create-note.command";
 import { UpdateNoteCommand } from "../application/commands/update-note.command";
@@ -21,6 +22,7 @@ export class NotesController {
   ) {}
 
   @Get()
+  @RequirePermissions("notes:read")
   async getNotes(
     @Query("page") page?: string,
     @Query("limit") limit?: string,
@@ -43,6 +45,7 @@ export class NotesController {
   }
 
   @Get(":id")
+  @RequirePermissions("notes:read")
   async getNoteById(@Param("id") id: string, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const result = await this.getNoteByIdQuery.execute(id);
@@ -54,6 +57,7 @@ export class NotesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermissions("notes:write")
   async createNote(@Body() body: unknown, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const parsed = CreateNoteSchema.safeParse(body);
@@ -68,6 +72,7 @@ export class NotesController {
   }
 
   @Patch(":id")
+  @RequirePermissions("notes:write")
   async updateNote(@Param("id") id: string, @Body() body: unknown, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const parsed = UpdateNoteSchema.safeParse(body);
@@ -83,6 +88,7 @@ export class NotesController {
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermissions("notes:write")
   async deleteNote(@Param("id") id: string, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const result = await this.deleteNoteCommand.execute(id);

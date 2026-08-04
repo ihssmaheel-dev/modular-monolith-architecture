@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, HttpCode, HttpStatus } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
+import { RequirePermissions } from "../../../common";
 import { CreateUserSchema, UpdateUserSchema } from "@repo/shared";
 import { GetUsersQuery } from "../application/queries/get-users.query";
 import { GetUserByIdQuery } from "../application/queries/get-user-by-id.query";
@@ -22,6 +23,7 @@ export class UsersController {
   ) {}
 
   @Get()
+  @RequirePermissions("users:read")
   async list(
     @Query("page") page?: string,
     @Query("limit") limit?: string,
@@ -40,6 +42,7 @@ export class UsersController {
   }
 
   @Get(":id")
+  @RequirePermissions("users:read")
   async getById(@Param("id") id: string, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const result = await this.getUserByIdQuery.execute(id);
@@ -51,6 +54,7 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @RequirePermissions("users:write")
   async create(@Body() body: unknown, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const parsed = CreateUserSchema.safeParse(body);
@@ -65,6 +69,7 @@ export class UsersController {
   }
 
   @Patch(":id")
+  @RequirePermissions("users:write")
   async update(@Param("id") id: string, @Body() body: unknown, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const parsed = UpdateUserSchema.safeParse(body);
@@ -82,6 +87,7 @@ export class UsersController {
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermissions("users:write")
   async delete(@Param("id") id: string, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const result = await this.deleteUserCommand.execute(id);
