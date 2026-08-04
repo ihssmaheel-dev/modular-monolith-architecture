@@ -23,10 +23,12 @@ import { I18nModule } from "./infrastructure/i18n/i18n.module";
 import { AuditModule } from "./infrastructure/audit/audit.module";
 import { OutboxModule } from "./infrastructure/outbox/outbox.module";
 import { auditPlugin } from "./infrastructure/database/plugins/audit.plugin";
+import { metricsPlugin } from "./infrastructure/database/plugins/metrics.plugin";
 import { env } from "./config/env";
 
 import { APP_INTERCEPTOR, APP_GUARD } from "@nestjs/core";
 import { MetricsModule } from "./infrastructure/metrics/metrics.module";
+import { MetricsService } from "./infrastructure/metrics/metrics.service";
 import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor";
 import { TracingInterceptor } from "./infrastructure/tracing/tracing.interceptor";
 import { AuthGuard, PermissionsGuard, IdempotencyInterceptor } from "./common";
@@ -37,12 +39,13 @@ import { AuthGuard, PermissionsGuard, IdempotencyInterceptor } from "./common";
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     MongooseModule.forRootAsync({
-      imports: [EventEmitterModule],
-      inject: [EventEmitter2],
-      useFactory: (eventEmitter: EventEmitter2) => ({
+      imports: [EventEmitterModule, MetricsModule],
+      inject: [EventEmitter2, MetricsService],
+      useFactory: (eventEmitter: EventEmitter2, metricsService: MetricsService) => ({
         uri: env.MONGODB_URI,
         connectionFactory: (connection) => {
           connection.plugin(auditPlugin, { eventEmitter });
+          connection.plugin(metricsPlugin, { metricsService });
           return connection;
         },
       }),

@@ -25,6 +25,11 @@ export class MetricsInterceptor implements NestInterceptor {
 
     const startTime = process.hrtime();
 
+    this.metricsService.incrementGauge("http_active_connections", "Number of active HTTP connections", 1, {
+      method,
+      route,
+    });
+
     return next.handle().pipe(
       tap(() => {
         this.recordMetrics(startTime, method, route, res.statusCode);
@@ -40,6 +45,11 @@ export class MetricsInterceptor implements NestInterceptor {
   }
 
   private recordMetrics(startTime: [number, number], method: string, route: string, statusCode: number) {
+    this.metricsService.decrementGauge("http_active_connections", "Number of active HTTP connections", 1, {
+      method,
+      route,
+    });
+
     const diff = process.hrtime(startTime);
     const durationInSeconds = diff[0] + diff[1] / 1e9;
 
