@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { EventEmitterModule } from "@nestjs/event-emitter";
+import { EventEmitterModule, EventEmitter2 } from "@nestjs/event-emitter";
 import { ClsModule } from "nestjs-cls";
 import { UsersModule } from "./modules/users/users.module";
 import { AuthModule } from "./modules/auth/auth.module";
@@ -19,6 +19,8 @@ import { HealthModule } from "./infrastructure/health/health.module";
 import { RateLimitModule } from "./infrastructure/rate-limit/rate-limit.module";
 import { WafModule } from "./infrastructure/waf/waf.module";
 import { I18nModule } from "./infrastructure/i18n/i18n.module";
+import { AuditModule } from "./infrastructure/audit/audit.module";
+import { auditPlugin } from "./infrastructure/database/plugins/audit.plugin";
 import { env } from "./config/env";
 
 import { APP_INTERCEPTOR, APP_GUARD } from "@nestjs/core";
@@ -31,7 +33,17 @@ import { AuthGuard, PermissionsGuard } from "./common";
   imports: [
     ClsModule.forRoot({ global: true, middleware: { mount: true } }),
     EventEmitterModule.forRoot(),
-    MongooseModule.forRoot(env.MONGODB_URI),
+    MongooseModule.forRootAsync({
+      imports: [EventEmitterModule],
+      inject: [EventEmitter2],
+      useFactory: (eventEmitter: EventEmitter2) => ({
+        uri: env.MONGODB_URI,
+        connectionFactory: (connection) => {
+          connection.plugin(auditPlugin, { eventEmitter });
+          return connection;
+        },
+      }),
+    }),
     RedisModule,
     QueueModule,
     LoggerModule,
@@ -47,6 +59,7 @@ import { AuthGuard, PermissionsGuard } from "./common";
     WafModule,
     I18nModule,
     MetricsModule,
+    AuditModule,
     UsersModule,
     AuthModule,
     NotesModule,

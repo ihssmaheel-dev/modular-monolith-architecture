@@ -1,11 +1,15 @@
 import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { ClsService } from "nestjs-cls";
 import { createHmac } from "crypto";
 import { env } from "../../config/env";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private cls: ClsService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const isPublic = this.reflector.getAllAndOverride<boolean>("isPublic", [
@@ -29,6 +33,9 @@ export class AuthGuard implements CanActivate {
     if (!decoded) return false;
     
     request.user = decoded;
+    if (typeof decoded.sub === "string") {
+      this.cls.set("userId", decoded.sub);
+    }
     return true;
   }
 
