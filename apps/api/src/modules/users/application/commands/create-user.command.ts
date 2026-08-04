@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { err, Result } from "neverthrow";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
+import { CreateUserSchema } from "@repo/shared";
 import { User } from "../../domain/entities/user.entity";
 import { EmailTaken } from "../../domain/errors/user.errors";
 import { UserCreatedEvent } from "../../domain/events/user.events";
@@ -20,7 +22,7 @@ export class CreateUserCommand {
     private readonly outboxService: OutboxService,
   ) {}
 
-  async execute(data: { email: string; name: string; password: string }): Promise<Result<User, EmailTaken | TransactionError>> {
+  async execute(data: z.infer<typeof CreateUserSchema>): Promise<Result<User, EmailTaken | TransactionError>> {
     const existing = await this.getUserByEmail.execute(data.email);
     if (existing.isErr()) return err(existing.error);
     if (existing.value) return err({ type: "EMAIL_TAKEN", email: data.email });

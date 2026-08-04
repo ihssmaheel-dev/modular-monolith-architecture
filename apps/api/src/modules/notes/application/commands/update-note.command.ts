@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
+import { z } from "zod";
+import { UpdateNoteSchema } from "@repo/shared";
 import { Note } from "../../domain/entities/note.entity";
 import { NoteNotFound } from "../../domain/errors/note.errors";
 import { NotesRepository } from "../../infrastructure/notes.repository";
@@ -12,7 +14,7 @@ export class UpdateNoteCommand {
     private readonly getNoteById: GetNoteByIdQuery,
   ) {}
 
-  async execute(id: string, data: { title?: string; content?: string }): Promise<Result<Note, NoteNotFound>> {
+  async execute(id: string, data: z.infer<typeof UpdateNoteSchema>): Promise<Result<Note, NoteNotFound>> {
     const existing = await this.getNoteById.execute(id);
     if (existing.isErr()) return err(existing.error);
 

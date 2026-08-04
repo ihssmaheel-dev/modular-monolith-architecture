@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { ok, err, Result } from "neverthrow";
+import { z } from "zod";
+import { UpdateUserSchema } from "@repo/shared";
 import { User } from "../../domain/entities/user.entity";
 import { EmailTaken, UserNotFound } from "../../domain/errors/user.errors";
 import { UserUpdatedEvent } from "../../domain/events/user.events";
@@ -17,7 +19,7 @@ export class UpdateUserCommand {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(id: string, data: { email?: string; name?: string }): Promise<Result<User, UserNotFound | EmailTaken>> {
+  async execute(id: string, data: z.infer<typeof UpdateUserSchema>): Promise<Result<User, UserNotFound | EmailTaken>> {
     const existing = await this.getUserById.execute(id);
     if (existing.isErr()) return err(existing.error);
 

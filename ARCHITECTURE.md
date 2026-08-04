@@ -76,6 +76,46 @@ We deploy as a single, easily hosted Node.js process using **NestJS 11**. Howeve
 
 Every domain module strictly separates our codebase into 4 Clean Architecture layers, enforcing the Dependency Rule (inner layers cannot know about outer layers).
 
+### Module Boundaries
+
+```mermaid
+graph TD
+    subgraph Presentation ["Presentation Layer (Controllers / WebSockets)"]
+        direction TB
+        C1[HTTP Controllers]
+        W1[WebSocket Gateways]
+    end
+
+    subgraph Application ["Application Layer (Use Cases)"]
+        direction TB
+        CQRS[Commands & Queries]
+        Services[Application Services]
+    end
+
+    subgraph Domain ["Domain Layer (Core Logic)"]
+        direction TB
+        Entities[Entities & Aggregates]
+        Errors[Domain Errors]
+        Events[Domain Events]
+    end
+
+    subgraph Infrastructure ["Infrastructure Layer (External Concerns)"]
+        direction TB
+        DB[Database Repositories]
+        Ext[External Services - Email, Redis, Outbox]
+        Framework[NestJS Specifics]
+    end
+
+    Presentation -->|Dispatches| Application
+    Application -->|Uses| Domain
+    Application -->|Interfaces with| Infrastructure
+    Infrastructure -->|Implements Repositories| Domain
+
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef domain fill:#d4edda,stroke:#28a745,stroke-width:2px;
+    class Domain domain;
+```
+
 ### The Request Flow Map
 
 Here is exactly how a request travels through the 4 layers when a user tries to create a Note:

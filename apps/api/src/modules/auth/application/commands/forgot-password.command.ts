@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ok, Result } from "neverthrow";
-import { randomBytes } from "crypto";
+import { generateSecureToken } from "../utils/password.utils";
 import type { AuthError } from "../../domain/errors/auth.errors";
 import { GetUserByEmailQuery } from "../../../users/application/queries/get-user-by-email.query";
 import { EmailService } from "../../../../infrastructure/email/email.service";
@@ -20,8 +20,7 @@ export class ForgotPasswordCommand {
       return ok(undefined);
     }
 
-    const tokenBytes = randomBytes(32);
-    const resetToken = tokenBytes.toString("hex");
+    const resetToken = generateSecureToken();
 
     await this.emailService.send({
       to: email,

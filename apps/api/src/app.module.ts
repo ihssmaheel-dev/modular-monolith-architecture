@@ -31,7 +31,7 @@ import { MetricsModule } from "./infrastructure/metrics/metrics.module";
 import { MetricsService } from "./infrastructure/metrics/metrics.service";
 import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor";
 import { TracingInterceptor } from "./infrastructure/tracing/tracing.interceptor";
-import { AuthGuard, PermissionsGuard, IdempotencyInterceptor } from "./common";
+import { AuthGuard, PermissionsGuard, IdempotencyInterceptor, RateLimitGuard } from "./common";
 
 @Module({
   imports: [
@@ -79,6 +79,10 @@ import { AuthGuard, PermissionsGuard, IdempotencyInterceptor } from "./common";
     {
       provide: APP_GUARD,
       useClass: PermissionsGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RateLimitGuard,
     },
     {
       provide: APP_INTERCEPTOR,

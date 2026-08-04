@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
+import { z } from "zod";
+import { LoginSchema } from "@repo/shared";
 import type { AuthResponse } from "@repo/shared";
 import type { AuthError } from "../../domain/errors/auth.errors";
 import { VerifyUserCredentialsQuery } from "../../../users/application/queries/verify-user-credentials.query";
@@ -14,7 +16,7 @@ export class LoginCommand {
   ) {}
 
   async execute(
-    data: { email: string; password: string },
+    data: z.infer<typeof LoginSchema>,
   ): Promise<Result<AuthResponse, AuthError>> {
     const result = await this.verifyCredentials.execute(data.email, data.password);
     if (result.isErr() || !result.value) {

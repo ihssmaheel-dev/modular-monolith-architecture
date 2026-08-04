@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
+import { z } from "zod";
+import { RegisterSchema } from "@repo/shared";
 import type { AuthResponse } from "@repo/shared";
 import type { AuthError } from "../../domain/errors/auth.errors";
 import { GetUserByEmailQuery } from "../../../users/application/queries/get-user-by-email.query";
@@ -14,7 +16,7 @@ export class RegisterCommand {
   ) {}
 
   async execute(
-    data: { name: string; email: string; password: string },
+    data: z.infer<typeof RegisterSchema>,
   ): Promise<Result<AuthResponse, AuthError>> {
     const existing = await this.getUserByEmail.execute(data.email);
     if (existing.isErr() || existing.value) {

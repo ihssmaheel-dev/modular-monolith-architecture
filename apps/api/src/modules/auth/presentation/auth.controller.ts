@@ -5,16 +5,9 @@ import { LoginCommand } from "../application/commands/login.command";
 import { RefreshTokensCommand } from "../application/commands/refresh-tokens.command";
 import { ForgotPasswordCommand } from "../application/commands/forgot-password.command";
 import { ResetPasswordCommand } from "../application/commands/reset-password.command";
+import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
-import type { AuthError } from "../domain/errors/auth.errors";
 
-const ERROR_MESSAGE_MAP: Record<AuthError["type"], string> = {
-  INVALID_CREDENTIALS: "auth.invalidCredentials",
-  EMAIL_TAKEN: "auth.emailTaken",
-  USER_NOT_FOUND: "auth.userNotFound",
-  INVALID_TOKEN: "auth.invalidToken",
-  EMAIL_NOT_FOUND: "auth.userNotFound",
-};
 
 @Public()
 @Controller("auth")
@@ -35,12 +28,9 @@ export class AuthController {
     @Headers("accept-language") acceptLanguage?: string,
   ) {
     const result = await this.registerCmd.execute(body);
-    if (result.isErr()) {
-      const status = result.error.type === "EMAIL_TAKEN" ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
-      const message = this.i18n.t(ERROR_MESSAGE_MAP[result.error.type], acceptLanguage);
-      return { statusCode: status, message };
-    }
-    return result.value;
+    return handleResult(result, {
+      EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "auth.emailTaken" },
+    }, this.i18n, acceptLanguage);
   }
 
   @Post("login")
@@ -50,11 +40,9 @@ export class AuthController {
     @Headers("accept-language") acceptLanguage?: string,
   ) {
     const result = await this.loginCmd.execute(body);
-    if (result.isErr()) {
-      const message = this.i18n.t(ERROR_MESSAGE_MAP[result.error.type], acceptLanguage);
-      return { statusCode: HttpStatus.UNAUTHORIZED, message };
-    }
-    return result.value;
+    return handleResult(result, {
+      INVALID_CREDENTIALS: { status: HttpStatus.UNAUTHORIZED, i18nKey: "auth.invalidCredentials" },
+    }, this.i18n, acceptLanguage);
   }
 
   @Post("refresh")
@@ -64,11 +52,9 @@ export class AuthController {
     @Headers("accept-language") acceptLanguage?: string,
   ) {
     const result = await this.refreshCmd.execute(body.refreshToken);
-    if (result.isErr()) {
-      const message = this.i18n.t(ERROR_MESSAGE_MAP[result.error.type], acceptLanguage);
-      return { statusCode: HttpStatus.UNAUTHORIZED, message };
-    }
-    return result.value;
+    return handleResult(result, {
+      INVALID_TOKEN: { status: HttpStatus.UNAUTHORIZED, i18nKey: "auth.invalidToken" },
+    }, this.i18n, acceptLanguage);
   }
 
   @Post("forgot-password")

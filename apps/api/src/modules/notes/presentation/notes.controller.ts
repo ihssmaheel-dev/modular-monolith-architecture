@@ -9,6 +9,7 @@ import { GetNotesQuery } from "../application/queries/get-notes.query";
 import { GetNoteByIdQuery } from "../application/queries/get-note-by-id.query";
 import { toNoteResponse } from "./notes.mapper";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
+import { handleResult } from "../../../common/utils/presentation.utils";
 
 @Controller("notes")
 export class NotesController {
@@ -33,14 +34,12 @@ export class NotesController {
       page: page ? parseInt(page) : 1,
       limit: limit ? parseInt(limit) : 20,
     });
-    if (result.isErr()) {
-      return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: this.i18n.t("api.note.fetchFailed", lang) };
-    }
+    const val = handleResult(result, {}, this.i18n, lang);
     return {
-      items: result.value.items.map(toNoteResponse),
-      total: result.value.total,
-      page: result.value.page,
-      totalPages: result.value.totalPages,
+      items: val.items.map(toNoteResponse),
+      total: val.total,
+      page: val.page,
+      totalPages: val.totalPages,
     };
   }
 
@@ -49,10 +48,10 @@ export class NotesController {
   async getNoteById(@Param("id") id: string, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const result = await this.getNoteByIdQuery.execute(id);
-    if (result.isErr()) {
-      return { statusCode: HttpStatus.NOT_FOUND, message: this.i18n.t("api.note.notFound", lang) };
-    }
-    return toNoteResponse(result.value);
+    const note = handleResult(result, {
+      NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+    }, this.i18n, lang);
+    return toNoteResponse(note);
   }
 
   @Post()
@@ -66,10 +65,8 @@ export class NotesController {
       return { statusCode: HttpStatus.BAD_REQUEST, message: this.i18n.t("api.error.badRequest", lang), errors: parsed.error.flatten() };
     }
     const result = await this.createNoteCommand.execute(parsed.data);
-    if (result.isErr()) {
-      return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: this.i18n.t("api.note.createFailed", lang) };
-    }
-    return toNoteResponse(result.value);
+    const note = handleResult(result, {}, this.i18n, lang);
+    return toNoteResponse(note);
   }
 
   @Patch(":id")
@@ -81,10 +78,10 @@ export class NotesController {
       return { statusCode: HttpStatus.BAD_REQUEST, message: this.i18n.t("api.error.badRequest", lang), errors: parsed.error.flatten() };
     }
     const result = await this.updateNoteCommand.execute(id, parsed.data);
-    if (result.isErr()) {
-      return { statusCode: HttpStatus.NOT_FOUND, message: this.i18n.t("api.note.notFound", lang) };
-    }
-    return toNoteResponse(result.value);
+    const note = handleResult(result, {
+      NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+    }, this.i18n, lang);
+    return toNoteResponse(note);
   }
 
   @Delete(":id")
@@ -93,9 +90,9 @@ export class NotesController {
   async deleteNote(@Param("id") id: string, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
     const result = await this.deleteNoteCommand.execute(id);
-    if (result.isErr()) {
-      return { statusCode: HttpStatus.NOT_FOUND, message: this.i18n.t("api.note.notFound", lang) };
-    }
+    handleResult(result, {
+      NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+    }, this.i18n, lang);
     return;
   }
 }

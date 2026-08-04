@@ -40,7 +40,7 @@ module.exports = {
                 message: 'Application services must NEVER import Mongoose schemas directly. Use repositories.',
               },
               {
-                group: ['../../*/infrastructure/*'],
+                group: ['../../*/infrastructure/**'],
                 message: 'Cross-module infrastructure imports are strictly forbidden.',
               }
             ]
@@ -56,7 +56,7 @@ module.exports = {
           {
             patterns: [
               {
-                group: ['*infrastructure/*'],
+                group: ['*modules/*/infrastructure/**'],
                 message: 'Controllers must NEVER import anything from the infrastructure layer.',
               }
             ]
