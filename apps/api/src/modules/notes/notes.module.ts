@@ -7,6 +7,7 @@ import { UpdateNoteCommand } from "./application/commands/update-note.command";
 import { DeleteNoteCommand } from "./application/commands/delete-note.command";
 import { GetNotesQuery } from "./application/queries/get-notes.query";
 import { GetNoteByIdQuery } from "./application/queries/get-note-by-id.query";
+import { NotesRealtimeListener } from "./application/listeners/notes-realtime.listener";
 import { NotesController } from "./presentation/notes.controller";
 
 @Module({
@@ -21,6 +22,7 @@ import { NotesController } from "./presentation/notes.controller";
     DeleteNoteCommand,
     GetNotesQuery,
     GetNoteByIdQuery,
+    NotesRealtimeListener,
   ],
   exports: [NotesRepository],
 })

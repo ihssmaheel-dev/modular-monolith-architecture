@@ -1,19 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CreateNoteCommand } from "./create-note.command";
 import { NotesRepository } from "../../infrastructure/notes.repository";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Note } from "../../domain/entities/note.entity";
 import { ok } from "neverthrow";
 
 describe("CreateNoteCommand", () => {
   let command: CreateNoteCommand;
   let repository: NotesRepository;
+  let eventEmitter: EventEmitter2;
 
   beforeEach(() => {
     repository = {
       create: vi.fn(),
     } as unknown as NotesRepository;
     
-    command = new CreateNoteCommand(repository);
+    eventEmitter = {
+      emit: vi.fn(),
+    } as unknown as EventEmitter2;
+
+    command = new CreateNoteCommand(repository, eventEmitter);
   });
 
   it("should create a note and return ok", async () => {

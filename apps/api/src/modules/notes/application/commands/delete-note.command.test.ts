@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DeleteNoteCommand } from "./delete-note.command";
 import { NotesRepository } from "../../infrastructure/notes.repository";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { GetNoteByIdQuery } from "../queries/get-note-by-id.query";
 import { Note } from "../../domain/entities/note.entity";
 import { ok, err } from "neverthrow";
@@ -9,6 +10,7 @@ describe("DeleteNoteCommand", () => {
   let command: DeleteNoteCommand;
   let repository: NotesRepository;
   let getNoteById: GetNoteByIdQuery;
+  let eventEmitter: EventEmitter2;
 
   beforeEach(() => {
     repository = {
@@ -18,8 +20,12 @@ describe("DeleteNoteCommand", () => {
     getNoteById = {
       execute: vi.fn(),
     } as unknown as GetNoteByIdQuery;
+
+    eventEmitter = {
+      emit: vi.fn(),
+    } as unknown as EventEmitter2;
     
-    command = new DeleteNoteCommand(repository, getNoteById);
+    command = new DeleteNoteCommand(repository, getNoteById, eventEmitter);
   });
 
   it("should return err NOTE_NOT_FOUND if query returns err", async () => {
