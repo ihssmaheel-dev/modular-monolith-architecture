@@ -9,6 +9,7 @@ import { UserUpdatedEvent } from "../../domain/events/user.events";
 import { UsersRepository } from "../../infrastructure/users.repository";
 import { GetUserByIdQuery } from "../queries/get-user-by-id.query";
 import { GetUserByEmailQuery } from "../queries/get-user-by-email.query";
+import { CacheEvict } from "../../../../infrastructure/cache/cache.decorators";
 
 @Injectable()
 export class UpdateUserCommand {
@@ -19,6 +20,7 @@ export class UpdateUserCommand {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  @CacheEvict((id: string) => `user:${id}`)
   async execute(id: string, data: z.infer<typeof UpdateUserSchema>): Promise<Result<User, UserNotFound | EmailTaken>> {
     const existing = await this.getUserById.execute(id);
     if (existing.isErr()) return err(existing.error);
