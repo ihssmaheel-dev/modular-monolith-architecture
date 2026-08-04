@@ -4,9 +4,11 @@ import { env } from "../../config/env";
 import { PinoLoggerService } from "../logger/logger.service";
 import { ResendDriver } from "./drivers/resend.driver";
 import { SmtpDriver } from "./drivers/smtp.driver";
+import { CircuitBreaker } from "../../common/utils/circuit-breaker";
+import { Bulkhead } from "../../common/utils/bulkhead";
 
 export interface EmailError {
-  code: "SEND_FAILED" | "INVALID_ADDRESS" | "CONFIG_ERROR";
+  code: "SEND_FAILED" | "INVALID_ADDRESS" | "CONFIG_ERROR" | "CIRCUIT_OPEN" | "BULKHEAD_REJECTED";
   message: string;
 }
 
@@ -30,9 +32,22 @@ export interface EmailDriver {
 export class EmailService {
   private driver: EmailDriver | null = null;
   private logger: PinoLoggerService;
+  private circuitBreaker: CircuitBreaker<EmailError>;
+  private bulkhead: Bulkhead<EmailError>;
 
   constructor(logger: PinoLoggerService) {
     this.logger = logger.child({ module: "EmailService" });
+    
+    this.circuitBreaker = new CircuitBreaker(
+      { failureThreshold: 3, resetTimeoutMs: 15000 },
+      { code: "CIRCUIT_OPEN", message: "api.error.emailCircuitOpen" }
+    );
+
+    this.bulkhead = new Bulkhead(
+      { maxConcurrent: 10 },
+      { code: "BULKHEAD_REJECTED", message: "api.error.emailBulkheadRejected" }
+    );
+
     this.init();
   }
 
@@ -54,7 +69,9 @@ export class EmailService {
     }
 
     if (this.driver) {
-      return this.driver.send(recipients, params);
+      return this.bulkhead.execute(() =>
+        this.circuitBreaker.execute(() => this.driver!.send(recipients, params))
+      );
     }
 
     return err({ code: "CONFIG_ERROR", message: "api.error.configError" });

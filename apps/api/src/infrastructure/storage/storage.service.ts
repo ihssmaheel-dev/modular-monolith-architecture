@@ -7,10 +7,14 @@ import { S3Driver } from "./drivers/s3.driver";
 import { GridFsDriver } from "./drivers/gridfs.driver";
 import { InjectConnection } from "@nestjs/mongoose";
 import { Connection } from "mongoose";
+import { CircuitBreaker } from "../../common/utils/circuit-breaker";
+import { Bulkhead } from "../../common/utils/bulkhead";
 
 @Injectable()
 export class StorageService {
   private driver: StorageDriver;
+  private circuitBreaker: CircuitBreaker<StorageError>;
+  private bulkhead: Bulkhead<StorageError>;
 
   constructor(
     private logger: PinoLoggerService,
@@ -18,6 +22,16 @@ export class StorageService {
   ) {
     this.logger = logger.child({ module: "StorageService" });
     this.driver = this.createDriver(connection);
+    
+    this.circuitBreaker = new CircuitBreaker(
+      { failureThreshold: 5, resetTimeoutMs: 10000 },
+      { code: "CIRCUIT_OPEN", message: "api.error.circuitOpen" }
+    );
+
+    this.bulkhead = new Bulkhead(
+      { maxConcurrent: 20 },
+      { code: "BULKHEAD_REJECTED", message: "api.error.bulkheadRejected" }
+    );
   }
 
   private createDriver(connection: Connection): StorageDriver {
@@ -33,44 +47,60 @@ export class StorageService {
   }
 
   async upload(key: string, body: FileInput, contentType: string): Promise<Result<UploadResult, StorageError>> {
-    try {
-      const result = await this.driver.upload(key, body, contentType);
-      this.logger.info({ key, contentType }, "File uploaded");
-      return ok(result);
-    } catch (error) {
-      this.logger.error({ key, error }, "Upload failed");
-      return err({ code: "UPLOAD_FAILED", message: "api.error.uploadFailed" });
-    }
+    return this.bulkhead.execute(() =>
+      this.circuitBreaker.execute(async () => {
+        try {
+          const result = await this.driver.upload(key, body, contentType);
+          this.logger.info({ key, contentType }, "File uploaded");
+          return ok(result);
+        } catch (error) {
+          this.logger.error({ key, error }, "Upload failed");
+          return err({ code: "UPLOAD_FAILED", message: "api.error.uploadFailed" });
+        }
+      })
+    );
   }
 
   async getPresignedUploadUrl(key: string, contentType: string, ttlSeconds = PRESIGN_TTL_SECONDS): Promise<Result<string, StorageError>> {
-    try {
-      const url = await this.driver.getPresignedUploadUrl(key, contentType, ttlSeconds);
-      return ok(url);
-    } catch (error) {
-      this.logger.error({ key, error }, "Presign upload failed");
-      return err({ code: "PRESIGN_FAILED", message: "api.error.presignFailed" });
-    }
+    return this.bulkhead.execute(() =>
+      this.circuitBreaker.execute(async () => {
+        try {
+          const url = await this.driver.getPresignedUploadUrl(key, contentType, ttlSeconds);
+          return ok(url);
+        } catch (error) {
+          this.logger.error({ key, error }, "Presign upload failed");
+          return err({ code: "PRESIGN_FAILED", message: "api.error.presignFailed" });
+        }
+      })
+    );
   }
 
   async getPresignedDownloadUrl(key: string, ttlSeconds = PRESIGN_TTL_SECONDS): Promise<Result<string, StorageError>> {
-    try {
-      const url = await this.driver.getPresignedDownloadUrl(key, ttlSeconds);
-      return ok(url);
-    } catch (error) {
-      this.logger.error({ key, error }, "Presign download failed");
-      return err({ code: "NOT_FOUND", message: "api.error.notFound" });
-    }
+    return this.bulkhead.execute(() =>
+      this.circuitBreaker.execute(async () => {
+        try {
+          const url = await this.driver.getPresignedDownloadUrl(key, ttlSeconds);
+          return ok(url);
+        } catch (error) {
+          this.logger.error({ key, error }, "Presign download failed");
+          return err({ code: "NOT_FOUND", message: "api.error.notFound" });
+        }
+      })
+    );
   }
 
   async delete(key: string): Promise<Result<void, StorageError>> {
-    try {
-      await this.driver.delete(key);
-      this.logger.info({ key }, "File deleted");
-      return ok(undefined);
-    } catch (error) {
-      this.logger.error({ key, error }, "Delete failed");
-      return err({ code: "DELETE_FAILED", message: "api.error.deleteFailed" });
-    }
+    return this.bulkhead.execute(() =>
+      this.circuitBreaker.execute(async () => {
+        try {
+          await this.driver.delete(key);
+          this.logger.info({ key }, "File deleted");
+          return ok(undefined);
+        } catch (error) {
+          this.logger.error({ key, error }, "Delete failed");
+          return err({ code: "DELETE_FAILED", message: "api.error.deleteFailed" });
+        }
+      })
+    );
   }
 }

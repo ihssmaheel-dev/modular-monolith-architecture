@@ -3,7 +3,7 @@ import { Readable } from "stream";
 export const PRESIGN_TTL_SECONDS = 3600; // 1 hour
 
 export interface StorageError {
-  code: "UPLOAD_FAILED" | "DELETE_FAILED" | "PRESIGN_FAILED" | "NOT_FOUND";
+  code: "UPLOAD_FAILED" | "DELETE_FAILED" | "PRESIGN_FAILED" | "NOT_FOUND" | "CIRCUIT_OPEN" | "BULKHEAD_REJECTED";
   message: string;
 }
 
