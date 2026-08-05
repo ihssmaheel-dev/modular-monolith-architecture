@@ -1,26 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GetUserByIdQuery } from "./get-user-by-id.query";
-import { UsersRepository } from "../../infrastructure/users.repository";
-import { User } from "../../domain/entities/user.entity";
 import { ok } from "neverthrow";
+import { GetUserByIdQuery } from "./get-user-by-id.query";
+import { User } from "../../domain/entities/user.entity";
 
 describe("GetUserByIdQuery", () => {
   let query: GetUserByIdQuery;
-  let repository: UsersRepository;
+  const mockFindById = vi.fn();
+  const mockCacheGetOrSet = vi.fn((_key, _ttl, fetcher) => fetcher());
 
   beforeEach(() => {
-    repository = {
-      findById: vi.fn(),
-    } as unknown as UsersRepository;
-    
-    query = new GetUserByIdQuery(repository);
+    vi.clearAllMocks();
+    query = new GetUserByIdQuery(
+      { findById: mockFindById } as any,
+      { getOrSet: mockCacheGetOrSet } as any
+    );
   });
 
 
 
   it("should return USER_NOT_FOUND if user not found", async () => {
     // Arrange
-    vi.mocked(repository.findById).mockResolvedValue(ok(null));
+    vi.mocked(mockFindById).mockResolvedValue(ok(null));
 
     // Act
     const result = await query.execute("123");
@@ -35,7 +35,7 @@ describe("GetUserByIdQuery", () => {
   it("should return ok(user) if found", async () => {
     // Arrange
     const user = User.fromPersistence({ id: "123", email: "test@example.com", name: "Test", role: "user", createdAt: new Date(), updatedAt: new Date() });
-    vi.mocked(repository.findById).mockResolvedValue(ok(user));
+    vi.mocked(mockFindById).mockResolvedValue(ok(user));
 
     // Act
     const result = await query.execute("123");
@@ -45,6 +45,6 @@ describe("GetUserByIdQuery", () => {
     if (result.isOk()) {
       expect(result.value).toBe(user);
     }
-    expect(repository.findById).toHaveBeenCalledWith("123");
+    expect(mockFindById).toHaveBeenCalledWith("123");
   });
 });

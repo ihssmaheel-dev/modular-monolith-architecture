@@ -34,6 +34,13 @@ describe("CacheService", () => {
         }),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
+      {
+        recordHit: vi.fn(),
+        recordMiss: vi.fn(),
+        recordSet: vi.fn(),
+        recordEvict: vi.fn(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn() }) } as any,
     );

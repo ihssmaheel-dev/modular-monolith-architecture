@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "../redis/redis.service";
 import { PinoLoggerService } from "../logger/logger.service";
+import { CacheMetricsService } from "./cache-metrics.service";
 
 const DEFAULT_TTL_SECONDS = 300; // 5 minutes
 
@@ -10,6 +11,7 @@ export class CacheService {
 
   constructor(
     private readonly redis: RedisService,
+    private readonly cacheMetrics: CacheMetricsService,
     logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "CacheService" });
@@ -21,7 +23,11 @@ export class CacheService {
 
     try {
       const raw = await client.get(key);
-      if (!raw) return null;
+      if (!raw) {
+        this.cacheMetrics.recordMiss("redis");
+        return null;
+      }
+      this.cacheMetrics.recordHit("redis");
       return JSON.parse(raw) as T;
     } catch (error) {
       this.logger.error({ key, error }, "Cache get failed");
@@ -35,6 +41,7 @@ export class CacheService {
 
     try {
       await client.setex(key, ttlSeconds, JSON.stringify(value));
+      this.cacheMetrics.recordSet("redis");
     } catch (error) {
       this.logger.error({ key, error }, "Cache set failed");
     }
@@ -59,6 +66,7 @@ export class CacheService {
 
     try {
       await client.del(key);
+      this.cacheMetrics.recordEvict("redis");
     } catch (error) {
       this.logger.error({ key, error }, "Cache delete failed");
     }
@@ -72,6 +80,7 @@ export class CacheService {
       const keys = await client.keys(pattern);
       if (keys.length > 0) {
         await client.del(...keys);
+        this.cacheMetrics.recordEvict("redis", keys.length);
         this.logger.debug({ pattern, count: keys.length }, "Cache pattern deleted");
       }
     } catch (error) {

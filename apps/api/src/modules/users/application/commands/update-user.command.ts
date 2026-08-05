@@ -9,7 +9,7 @@ import { UserUpdatedEvent } from "../../domain/events/user.events";
 import { UsersRepository } from "../../infrastructure/users.repository";
 import { GetUserByIdQuery } from "../queries/get-user-by-id.query";
 import { GetUserByEmailQuery } from "../queries/get-user-by-email.query";
-import { CacheEvict } from "../../../../infrastructure/cache/cache.decorators";
+import { DistributedCacheService } from "../../../../infrastructure/cache/distributed-cache.service";
 
 @Injectable()
 export class UpdateUserCommand {
@@ -18,9 +18,9 @@ export class UpdateUserCommand {
     private readonly getUserById: GetUserByIdQuery,
     private readonly getUserByEmail: GetUserByEmailQuery,
     private readonly eventEmitter: EventEmitter2,
+    private readonly cacheService: DistributedCacheService,
   ) {}
 
-  @CacheEvict((id: string) => `user:${id}`)
   async execute(id: string, data: z.infer<typeof UpdateUserSchema>): Promise<Result<User, UserNotFound | EmailTaken>> {
     const existing = await this.getUserById.execute(id);
     if (existing.isErr()) return err(existing.error);
@@ -39,6 +39,9 @@ export class UpdateUserCommand {
     });
     if (saved.isErr()) return err({ type: "USER_NOT_FOUND", userId: existing.value.id });
     if (!saved.value) return err({ type: "USER_NOT_FOUND", userId: existing.value.id });
+
+    // Explicit Cache Invalidation
+    await this.cacheService.invalidateGlobal(`user:${id}`);
 
     this.eventEmitter.emit("user.updated", new UserUpdatedEvent(saved.value.id, data));
 

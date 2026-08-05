@@ -7,6 +7,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { User } from "../../domain/entities/user.entity";
 import { ok, err } from "neverthrow";
 import { UserUpdatedEvent } from "../../domain/events/user.events";
+import { DistributedCacheService } from "../../../../infrastructure/cache/distributed-cache.service";
 
 describe("UpdateUserCommand", () => {
   let command: UpdateUserCommand;
@@ -14,6 +15,7 @@ describe("UpdateUserCommand", () => {
   let getUserById: GetUserByIdQuery;
   let getUserByEmail: GetUserByEmailQuery;
   let eventEmitter: EventEmitter2;
+  let distributedCacheService: DistributedCacheService;
 
   beforeEach(() => {
     repository = {
@@ -31,8 +33,12 @@ describe("UpdateUserCommand", () => {
     eventEmitter = {
       emit: vi.fn(),
     } as unknown as EventEmitter2;
+
+    distributedCacheService = {
+      invalidateGlobal: vi.fn(),
+    } as unknown as DistributedCacheService;
     
-    command = new UpdateUserCommand(repository, getUserById, getUserByEmail, eventEmitter);
+    command = new UpdateUserCommand(repository, getUserById, getUserByEmail, eventEmitter, distributedCacheService);
   });
 
   it("should return USER_NOT_FOUND if user does not exist", async () => {
