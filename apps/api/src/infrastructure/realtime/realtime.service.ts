@@ -1,11 +1,12 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
-import { WebSocket } from "ws";
-import { Redis } from "ioredis";
+import { Injectable, MessageEvent as NestMessageEvent } from "@nestjs/common";
 import { RedisService } from "../redis/redis.service";
 import { PinoLoggerService } from "../logger/logger.service";
+import { RealtimeConnectionRegistry } from "./realtime-connection.registry";
+import { WebSocket } from "ws";
+import { Subject } from "rxjs";
 
-const WS_READY_STATE_OPEN = 1;
-const MAX_CLIENTS_PER_CONNECTION = 100;
+const STREAM_KEY = "realtime:events";
+const MAX_STREAM_LENGTH = 10000;
 
 export interface RealtimeEvent {
   event: string;
@@ -13,115 +14,70 @@ export interface RealtimeEvent {
 }
 
 @Injectable()
-export class RealtimeService implements OnModuleInit, OnModuleDestroy {
-  private clients = new Map<string, Set<WebSocket>>();
-  private subscriber: Redis | null = null;
+export class RealtimeService {
   private logger: PinoLoggerService;
 
   constructor(
     private readonly redis: RedisService,
+    private readonly registry: RealtimeConnectionRegistry,
     logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "RealtimeService" });
   }
 
-  async onModuleInit(): Promise<void> {
-    await this.initSubscriber();
+  // --- WS Methods (Facade) ---
+  addWsClient(userId: string, socket: WebSocket): void {
+    this.registry.addWsClient(userId, socket);
   }
 
-  private async initSubscriber(): Promise<void> {
-    const client = this.redis.getClient();
-    if (!client) {
-      this.logger.warn({}, "Redis client not available, pub/sub realtime features disabled");
-      return;
-    }
-
-    this.subscriber = client.duplicate();
-    await this.subscriber.subscribe("realtime:broadcast");
-    this.subscriber.on("message", (_channel: string, message: string) => {
-      try {
-        const event = JSON.parse(message) as RealtimeEvent;
-        this.broadcastToAll(event.event, event.payload);
-      } catch {
-        // Ignore invalid messages
-      }
-    });
+  removeWsClient(userId: string, socket: WebSocket): void {
+    this.registry.removeWsClient(userId, socket);
   }
 
-  addClient(userId: string, socket: WebSocket): void {
-    if (!this.clients.has(userId)) {
-      this.clients.set(userId, new Set());
-    }
-    const userClients = this.clients.get(userId)!;
-    if (userClients.size >= MAX_CLIENTS_PER_CONNECTION) {
-      this.logger.warn({ userId }, "Max WebSocket connections reached");
-      socket.close();
-      return;
-    }
-    userClients.add(socket);
-    this.logger.debug({ userId, total: userClients.size }, "Client connected");
+  // --- SSE Methods (Facade) ---
+  addSseClient(userId: string, subject: Subject<NestMessageEvent>): void {
+    this.registry.addSseClient(userId, subject);
   }
 
-  removeClient(userId: string, socket: WebSocket): void {
-    const userClients = this.clients.get(userId);
-    if (userClients) {
-      userClients.delete(socket);
-      if (userClients.size === 0) {
-        this.clients.delete(userId);
-      }
-    }
+  removeSseClient(userId: string, subject: Subject<NestMessageEvent>): void {
+    this.registry.removeSseClient(userId, subject);
   }
 
+  // --- Publishing ---
   broadcast(event: string, payload: unknown): void {
-    const client = this.redis.getClient();
-    if (!client) return;
-
-    client.publish(
-      "realtime:broadcast",
-      JSON.stringify({ event, payload } satisfies RealtimeEvent),
-    );
+    this.publishToStream("broadcast", event, payload);
   }
 
   sendToUser(userId: string, event: string, payload: unknown): void {
-    const userClients = this.clients.get(userId);
-    if (!userClients) return;
-
-    const message = JSON.stringify({ event, payload });
-    for (const socket of userClients) {
-      if (socket.readyState === WS_READY_STATE_OPEN) {
-        socket.send(message);
-      }
-    }
+    this.publishToStream(`user:${userId}`, event, payload);
   }
 
   sendToRoom(room: string, event: string, payload: unknown): void {
+    this.publishToStream(`room:${room}`, event, payload);
+  }
+
+  private publishToStream(target: string, event: string, payload: unknown) {
     const client = this.redis.getClient();
     if (!client) return;
 
-    client.publish(
-      `realtime:room:${room}`,
-      JSON.stringify({ event, payload } satisfies RealtimeEvent),
-    );
-  }
-
-  private broadcastToAll(event: string, payload: unknown): void {
-    const message = JSON.stringify({ event, payload });
-    for (const userClients of this.clients.values()) {
-      for (const socket of userClients) {
-        if (socket.readyState === WS_READY_STATE_OPEN) {
-          socket.send(message);
-        }
-      }
-    }
+    client.xadd(
+      STREAM_KEY,
+      "MAXLEN",
+      "~",
+      MAX_STREAM_LENGTH,
+      "*",
+      "target",
+      target,
+      "event",
+      event,
+      "payload",
+      JSON.stringify(payload)
+    ).catch(err => {
+      this.logger.error({ err, target, event }, "Failed to publish to stream");
+    });
   }
 
   getUserCount(): number {
-    return this.clients.size;
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    if (this.subscriber) {
-      await this.subscriber.disconnect();
-    }
+    return this.registry.getUserCount();
   }
 }

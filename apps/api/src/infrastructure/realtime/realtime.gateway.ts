@@ -38,14 +38,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     this.socketToUser.set(client, userId);
-    this.realtime.addClient(userId, client);
+    this.realtime.addWsClient(userId, client);
     this.logger.debug({ userId }, "WS connected");
   }
 
   handleDisconnect(@ConnectedSocket() client: WebSocket): void {
     const userId = this.socketToUser.get(client);
     if (userId) {
-      this.realtime.removeClient(userId, client);
+      this.realtime.removeWsClient(userId, client);
       this.socketToUser.delete(client);
       this.logger.debug({ userId }, "WS disconnected");
     }
