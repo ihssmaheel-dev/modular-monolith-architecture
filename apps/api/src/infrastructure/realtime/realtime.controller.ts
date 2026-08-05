@@ -10,7 +10,7 @@ export class RealtimeController {
   @Sse("events")
   sse(@Query("userId") userId: string): Observable<NestMessageEvent> {
     if (!userId) {
-      throw new UnauthorizedException("User ID is required for SSE connections");
+      throw new UnauthorizedException();
     }
 
     const subject = new Subject<NestMessageEvent>();

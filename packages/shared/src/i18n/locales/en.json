@@ -142,5 +142,14 @@
     "creating": "Creating...",
     "createButton": "Create Note",
     "noNotes": "No notes yet. Create one above!"
+  },
+  "zod": {
+    "errors": {
+      "invalid_type": "Expected {{expected}}, received {{received}}",
+      "invalid_string": "Invalid {{validation}}",
+      "too_small": "String must contain at least {{minimum}} character(s)",
+      "too_big": "String must contain at most {{maximum}} character(s)",
+      "custom": "Validation failed"
+    }
   }
 }

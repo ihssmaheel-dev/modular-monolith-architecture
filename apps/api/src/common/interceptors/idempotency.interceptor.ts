@@ -36,7 +36,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const idempotencyKey = request.headers["idempotency-key"];
 
     if (!idempotencyKey || typeof idempotencyKey !== "string") {
-      throw new BadRequestException("Idempotency-Key header is required for this endpoint");
+      throw new BadRequestException();
     }
 
     const redis = this.redisService.getClient();
@@ -57,7 +57,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
       const value = await redis.get(cacheKey);
 
       if (value === "PROCESSING") {
-        throw new ConflictException("Duplicate request is currently processing");
+        throw new ConflictException();
       }
 
       if (value) {

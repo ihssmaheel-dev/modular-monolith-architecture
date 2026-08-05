@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, HttpCode, HttpStatus } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
 import { RequirePermissions } from "../../../common";
-import { CreateUserSchema, UpdateUserSchema } from "@repo/shared";
+import { CreateUserSchema, UpdateUserSchema, CreateUserInput, UpdateUserInput } from "@repo/shared";
+import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import { GetUsersQuery } from "../application/queries/get-users.query";
 import { GetUserByIdQuery } from "../application/queries/get-user-by-id.query";
 import { CreateUserCommand } from "../application/commands/create-user.command";
@@ -54,13 +55,9 @@ export class UsersController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @RequirePermissions("users:write")
-  async create(@Body() body: unknown, @Req() req?: FastifyRequest) {
+  async create(@Body(new ZodValidationPipe(CreateUserSchema)) body: CreateUserInput, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
-    const parsed = CreateUserSchema.safeParse(body);
-    if (!parsed.success) {
-      return { statusCode: HttpStatus.BAD_REQUEST, message: this.i18n.t("api.error.badRequest", lang), errors: parsed.error.flatten() };
-    }
-    const result = await this.createUserCommand.execute(parsed.data);
+    const result = await this.createUserCommand.execute(body);
     const user = handleResult(result, {
       EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
     }, this.i18n, lang);
@@ -69,13 +66,9 @@ export class UsersController {
 
   @Patch(":id")
   @RequirePermissions("users:write")
-  async update(@Param("id") id: string, @Body() body: unknown, @Req() req?: FastifyRequest) {
+  async update(@Param("id") id: string, @Body(new ZodValidationPipe(UpdateUserSchema)) body: UpdateUserInput, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
-    const parsed = UpdateUserSchema.safeParse(body);
-    if (!parsed.success) {
-      return { statusCode: HttpStatus.BAD_REQUEST, message: this.i18n.t("api.error.badRequest", lang), errors: parsed.error.flatten() };
-    }
-    const result = await this.updateUserCommand.execute(id, parsed.data);
+    const result = await this.updateUserCommand.execute(id, body);
     const user = handleResult(result, {
       USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
       EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },

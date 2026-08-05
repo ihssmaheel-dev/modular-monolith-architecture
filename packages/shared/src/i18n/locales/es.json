@@ -89,5 +89,14 @@
       "notFound": "Usuario no encontrado",
       "emailTaken": "El correo electrónico ya está en uso"
     }
+  },
+  "zod": {
+    "errors": {
+      "invalid_type": "Se esperaba {{expected}}, se recibió {{received}}",
+      "invalid_string": "{{validation}} inválido",
+      "too_small": "La cadena debe contener al menos {{minimum}} carácter(es)",
+      "too_big": "La cadena debe contener como máximo {{maximum}} carácter(es)",
+      "custom": "Falló la validación"
+    }
   }
 }

@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus, Req } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
 import { RequirePermissions, Idempotent } from "../../../common";
-import { CreateNoteSchema, UpdateNoteSchema } from "@repo/shared";
+import { CreateNoteSchema, UpdateNoteSchema, CreateNoteDto, UpdateNoteDto } from "@repo/shared";
+import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import { CreateNoteCommand } from "../application/commands/create-note.command";
 import { UpdateNoteCommand } from "../application/commands/update-note.command";
 import { DeleteNoteCommand } from "../application/commands/delete-note.command";
@@ -58,26 +59,18 @@ export class NotesController {
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
   @RequirePermissions("notes:write")
-  async createNote(@Body() body: unknown, @Req() req?: FastifyRequest) {
+  async create(@Body(new ZodValidationPipe(CreateNoteSchema)) body: CreateNoteDto, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
-    const parsed = CreateNoteSchema.safeParse(body);
-    if (!parsed.success) {
-      return { statusCode: HttpStatus.BAD_REQUEST, message: this.i18n.t("api.error.badRequest", lang), errors: parsed.error.flatten() };
-    }
-    const result = await this.createNoteCommand.execute(parsed.data);
+    const result = await this.createNoteCommand.execute(body);
     const note = handleResult(result, {}, this.i18n, lang);
     return toNoteResponse(note);
   }
 
   @Patch(":id")
   @RequirePermissions("notes:write")
-  async updateNote(@Param("id") id: string, @Body() body: unknown, @Req() req?: FastifyRequest) {
+  async update(@Param("id") id: string, @Body(new ZodValidationPipe(UpdateNoteSchema)) body: UpdateNoteDto, @Req() req?: FastifyRequest) {
     const lang = req?.headers["accept-language"];
-    const parsed = UpdateNoteSchema.safeParse(body);
-    if (!parsed.success) {
-      return { statusCode: HttpStatus.BAD_REQUEST, message: this.i18n.t("api.error.badRequest", lang), errors: parsed.error.flatten() };
-    }
-    const result = await this.updateNoteCommand.execute(id, parsed.data);
+    const result = await this.updateNoteCommand.execute(id, body);
     const note = handleResult(result, {
       NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
     }, this.i18n, lang);

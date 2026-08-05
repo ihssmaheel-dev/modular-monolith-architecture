@@ -1,4 +1,5 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from "@nestjs/common";
+import { ZodValidationException } from "../exceptions/zod-validation.exception";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 import { I18nService } from "../../infrastructure/i18n/i18n.service";
@@ -31,6 +32,32 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const acceptLanguage = request.headers["accept-language"];
+
+    if (exception instanceof ZodValidationException) {
+      const errors: Record<string, string[]> = {};
+      for (const issue of exception.zodError.issues) {
+        const path = issue.path.join(".") || "root";
+        if (!errors[path]) errors[path] = [];
+        
+        // Zod issues contain dynamic properties like 'expected', 'received', 'minimum', etc.
+        const key = `zod.errors.${issue.code}`;
+        // We pass the issue as params so `{{expected}}` interpolates properly
+        const params = issue as unknown as Record<string, string | number>;
+        const translation = this.i18n.t(key, acceptLanguage, params);
+        
+        // If the translation returns the raw key, it wasn't found, so fallback to Zod's default message
+        const msg = translation !== key ? translation : issue.message;
+        errors[path].push(msg);
+      }
+
+      response.status(HttpStatus.BAD_REQUEST).send({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: this.i18n.t("api.error.validationFailed", acceptLanguage),
+        errors,
+      });
+      return;
+    }
+
     const messageKey = ERROR_MESSAGE_MAP[status] ?? "api.error.internal";
     const message = this.i18n.t(messageKey, acceptLanguage);
 
@@ -38,12 +65,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.logger.error({ err: exception }, "Unhandled exception");
     }
 
+    const errorDetails = exception instanceof HttpException ? exception.getResponse() : null;
+    
+    // If the response is an object with a message, check if it's the default string we want to hide.
+    // By passing an empty exception e.g. `new ForbiddenException()`, nestjs sets the response to just "Forbidden".
+    // We already have our localized message at the root, so we don't need to append the english error string unless it's structured data.
+    const isBasicHttpError = errorDetails && typeof errorDetails === 'object' && 'statusCode' in errorDetails && 'message' in errorDetails;
+
     response.status(status).send({
       statusCode: status,
       message,
-      ...(exception instanceof HttpException
-        ? { error: exception.getResponse() }
-        : {}),
+      ...(errorDetails && !isBasicHttpError ? { error: errorDetails } : {}),
     });
   }
 }

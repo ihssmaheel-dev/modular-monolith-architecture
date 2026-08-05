@@ -21,7 +21,7 @@ export class PermissionsGuard implements CanActivate {
     const user = request.user;
 
     if (!user || !user.role) {
-      throw new ForbiddenException("No role assigned");
+      throw new ForbiddenException();
     }
 
     const userPermissions = RolePermissions[user.role as UserRole] || [];
@@ -31,7 +31,7 @@ export class PermissionsGuard implements CanActivate {
     );
 
     if (!hasPermission) {
-      throw new ForbiddenException("Insufficient permissions");
+      throw new ForbiddenException();
     }
 
     return true;
