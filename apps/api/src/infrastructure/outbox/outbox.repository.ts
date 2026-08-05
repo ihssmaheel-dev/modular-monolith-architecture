@@ -60,4 +60,11 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxEventMon
     }
     return events;
   }
+
+  /**
+   * Counts the total number of pending outbox events.
+   */
+  async countPendingEvents(): Promise<number> {
+    return this.model.countDocuments({ status: "PENDING" }).exec();
+  }
 }

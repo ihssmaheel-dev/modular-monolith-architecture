@@ -2,6 +2,7 @@ import { Injectable, MessageEvent as NestMessageEvent } from "@nestjs/common";
 import { WebSocket } from "ws";
 import { Subject } from "rxjs";
 import { PinoLoggerService } from "../logger/logger.service";
+import { MetricsService } from "../metrics/metrics.service";
 
 const WS_READY_STATE_OPEN = 1;
 const MAX_CLIENTS_PER_CONNECTION = 100;
@@ -12,7 +13,10 @@ export class RealtimeConnectionRegistry {
   private sseClients = new Map<string, Set<Subject<NestMessageEvent>>>();
   private logger: PinoLoggerService;
 
-  constructor(logger: PinoLoggerService) {
+  constructor(
+    private readonly metrics: MetricsService,
+    logger: PinoLoggerService
+  ) {
     this.logger = logger.child({ module: "RealtimeConnectionRegistry" });
   }
 
@@ -28,13 +32,17 @@ export class RealtimeConnectionRegistry {
       return;
     }
     userClients.add(socket);
+    this.metrics.incrementGauge("realtime_active_connections_total", "Total active realtime connections", 1, { type: "ws" });
     this.logger.debug({ userId, total: userClients.size }, "WS Client connected");
   }
 
   removeWsClient(userId: string, socket: WebSocket): void {
     const userClients = this.wsClients.get(userId);
     if (userClients) {
-      userClients.delete(socket);
+      if (userClients.has(socket)) {
+        userClients.delete(socket);
+        this.metrics.decrementGauge("realtime_active_connections_total", "Total active realtime connections", 1, { type: "ws" });
+      }
       if (userClients.size === 0) {
         this.wsClients.delete(userId);
       }
@@ -53,13 +61,17 @@ export class RealtimeConnectionRegistry {
       return;
     }
     userClients.add(subject);
+    this.metrics.incrementGauge("realtime_active_connections_total", "Total active realtime connections", 1, { type: "sse" });
     this.logger.debug({ userId, total: userClients.size }, "SSE Client connected");
   }
 
   removeSseClient(userId: string, subject: Subject<NestMessageEvent>): void {
     const userClients = this.sseClients.get(userId);
     if (userClients) {
-      userClients.delete(subject);
+      if (userClients.has(subject)) {
+        userClients.delete(subject);
+        this.metrics.decrementGauge("realtime_active_connections_total", "Total active realtime connections", 1, { type: "sse" });
+      }
       if (userClients.size === 0) {
         this.sseClients.delete(userId);
       }

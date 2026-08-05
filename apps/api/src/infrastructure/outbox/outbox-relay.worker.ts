@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { OutboxRepository } from "./outbox.repository";
+import { MetricsService } from "../metrics/metrics.service";
 
 @Injectable()
 export class OutboxRelayWorker {
@@ -11,6 +12,7 @@ export class OutboxRelayWorker {
   constructor(
     private readonly repository: OutboxRepository,
     private readonly eventEmitter: EventEmitter2,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Cron(CronExpression.EVERY_5_SECONDS)
@@ -20,6 +22,10 @@ export class OutboxRelayWorker {
     this.isProcessing = true;
 
     try {
+      // Record pending depth metric
+      const pendingCount = await this.repository.countPendingEvents();
+      this.metrics.setGauge("outbox_pending_events_depth", "Number of pending outbox events", pendingCount);
+
       // Lock up to 10 pending events per tick
       const events = await this.repository.lockPendingEvents(10);
       if (events.length === 0) return;
@@ -33,6 +39,10 @@ export class OutboxRelayWorker {
           
           // Mark as PUBLISHED
           await this.repository.updateById(event.id, { status: "PUBLISHED" });
+          
+          // Record latency
+          const latency = Date.now() - event.createdAt.getTime();
+          this.metrics.recordHistogram("outbox_processing_latency_ms", "Latency between outbox event creation and processing", latency);
         } catch (error) {
           this.logger.error(`Failed to relay event ${event.id}`, error instanceof Error ? error.stack : String(error));
           // Mark as FAILED

@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import { Redis } from "ioredis";
 import { RedisService } from "../redis/redis.service";
 import { PinoLoggerService } from "../logger/logger.service";
+import { MetricsService } from "../metrics/metrics.service";
 import { RealtimeConnectionRegistry } from "./realtime-connection.registry";
 
 const STREAM_KEY = "realtime:events";
@@ -16,6 +17,7 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly redis: RedisService,
     private readonly registry: RealtimeConnectionRegistry,
+    private readonly metrics: MetricsService,
     logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "RealtimeStreamConsumer" });
@@ -50,6 +52,21 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
 
         for (const message of messages) {
           this.lastId = message[0];
+          
+          // Calculate consumer lag
+          try {
+            const timestampStr = this.lastId.split("-")[0];
+            if (timestampStr) {
+              const timestamp = parseInt(timestampStr, 10);
+              const lag = Date.now() - timestamp;
+              if (!isNaN(lag) && lag >= 0) {
+                this.metrics.recordHistogram("realtime_consumer_lag_ms", "Lag between event generation and stream consumption", lag);
+              }
+            }
+          } catch (e) {
+            // Ignore parse errors for lag
+          }
+
           const fields = message[1];
           
           let target = "broadcast";

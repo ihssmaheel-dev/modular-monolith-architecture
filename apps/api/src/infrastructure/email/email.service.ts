@@ -6,6 +6,7 @@ import { ResendDriver } from "./drivers/resend.driver";
 import { SmtpDriver } from "./drivers/smtp.driver";
 import { CircuitBreaker } from "../../common/utils/circuit-breaker";
 import { Bulkhead } from "../../common/utils/bulkhead";
+import { MetricsService } from "../metrics/metrics.service";
 
 export interface EmailError {
   code: "SEND_FAILED" | "INVALID_ADDRESS" | "CONFIG_ERROR" | "CIRCUIT_OPEN" | "BULKHEAD_REJECTED";
@@ -35,11 +36,24 @@ export class EmailService {
   private circuitBreaker: CircuitBreaker<EmailError>;
   private bulkhead: Bulkhead<EmailError>;
 
-  constructor(logger: PinoLoggerService) {
+  constructor(
+    logger: PinoLoggerService,
+    private readonly metricsService: MetricsService
+  ) {
     this.logger = logger.child({ module: "EmailService" });
     
     this.circuitBreaker = new CircuitBreaker(
-      { failureThreshold: 3, resetTimeoutMs: 15000 },
+      { 
+        failureThreshold: 3, 
+        resetTimeoutMs: 15000,
+        onStateChange: (state) => {
+          const val = state === "CLOSED" ? 0 : state === "HALF_OPEN" ? 1 : 2;
+          this.metricsService.setGauge("circuit_breaker_state", "Circuit breaker state (0=closed, 1=half, 2=open)", val, { name: "email" });
+          if (state === "OPEN") {
+             this.metricsService.incrementCounter("circuit_breaker_trips_total", "Total circuit breaker trips", 1, { name: "email" });
+          }
+        }
+      },
       { code: "CIRCUIT_OPEN", message: "api.error.emailCircuitOpen" }
     );
 

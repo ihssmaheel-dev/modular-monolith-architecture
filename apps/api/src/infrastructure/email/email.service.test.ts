@@ -46,7 +46,11 @@ describe("EmailService", () => {
     vi.clearAllMocks();
     const mockLogger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } as any;
     mockLogger.child = () => mockLogger;
-    service = new EmailService(mockLogger);
+    const mockMetrics = {
+      setGauge: vi.fn(),
+      incrementCounter: vi.fn(),
+    } as any;
+    service = new EmailService(mockLogger, mockMetrics);
   });
 
   it("should send email via SMTP", async () => {
