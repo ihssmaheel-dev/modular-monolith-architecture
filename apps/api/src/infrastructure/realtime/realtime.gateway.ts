@@ -15,7 +15,7 @@ import { env } from "../../config/env";
 const WS_READY_STATE_OPEN = 1;
 const USER_ID_QUERY_PARAM = "userId";
 
-@WebSocketGateway({ cors: { origin: env.WS_CORS_ORIGINS.split(",") } })
+@WebSocketGateway({ cors: { origin: env.CLIENT_URL.split(",") } })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;

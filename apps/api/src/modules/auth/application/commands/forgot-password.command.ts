@@ -24,7 +24,7 @@ export class ForgotPasswordCommand {
     }
 
     const resetToken = generateSecureToken();
-    const resetLink = `http://localhost:${env.PORT}/reset-password?token=${resetToken}`;
+    const resetLink = `${env.CLIENT_URL}/reset-password?token=${resetToken}`;
     
     const html = await render(React.createElement(PasswordResetEmail, { resetLink }));
 

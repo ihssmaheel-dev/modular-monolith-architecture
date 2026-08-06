@@ -1,13 +1,27 @@
 import { z } from "zod";
 
 export const envSchema = z.object({
+  // Core
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(3000),
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
-  MONGODB_URI: z.string().url(),
+  // URLs
+  CLIENT_URL: z.string().url().default("http://localhost:5173"),
+  API_URL: z.string().url().default("http://localhost:3000"),
+
+  // Database & Cache
+  MONGODB_URI: z.string().url().default("mongodb://localhost:27017/monorepo"),
   REDIS_URL: z.string().url().optional(),
 
-  JWT_SECRET: z.string().min(32),
+  // Auth & Security
+  JWT_SECRET: z.string().min(32).default("your-super-secret-jwt-key-change-in-prod"),
+  JWT_EXPIRES_IN: z.string().default("15m"),
+  JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
+
+  // Rate Limiting
+  RATE_LIMIT_MAX: z.coerce.number().default(100),
+  RATE_LIMIT_TTL: z.coerce.number().default(60),
 
   // Storage
   STORAGE_DRIVER: z.enum(["s3", "gridfs"]).default("gridfs"),
@@ -26,9 +40,6 @@ export const envSchema = z.object({
   SMTP_PORT: z.coerce.number().default(1025),
   SMTP_USER: z.string().default(""),
   SMTP_PASS: z.string().default(""),
-
-  // WebSocket
-  WS_CORS_ORIGINS: z.string().default("http://localhost:5173"),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -17,7 +17,7 @@ export function setupSwagger(app: NestFastifyApplication) {
         version: "1.0.0",
         description: "Auto-generated API Documentation via ts-rest and Zod schemas.",
       },
-      servers: [{ url: `http://localhost:${env.PORT}/api` }],
+      servers: [{ url: `${env.API_URL}/api` }],
     },
     { setOperationId: true }
   );
