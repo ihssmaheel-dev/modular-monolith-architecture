@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, HttpCode, HttpStatus } from "@nestjs/common";
+import { Controller, Req, HttpStatus } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
 import { RequirePermissions } from "../../../common";
-import { CreateUserSchema, UpdateUserSchema, CreateUserInput, UpdateUserInput } from "@repo/shared";
-import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
+import { CreateUserInput, UpdateUserInput, usersContract } from "@repo/shared";
+import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import { GetUsersQuery } from "../application/queries/get-users.query";
 import { GetUserByIdQuery } from "../application/queries/get-user-by-id.query";
 import { CreateUserCommand } from "../application/commands/create-user.command";
@@ -24,67 +24,94 @@ export class UsersController {
     private readonly i18n: I18nService,
   ) {}
 
-  @Get()
+  @TsRestHandler(usersContract.list)
   @RequirePermissions("users:read")
   async list(
-    @Query("page") page?: string,
-    @Query("limit") limit?: string,
     @Req() req?: FastifyRequest,
   ) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.getUsersQuery.execute(
-      page ? Number(page) : undefined,
-      limit ? Number(limit) : undefined,
-    );
-    const val = handleResult(result, {}, this.i18n, lang);
-    const { users, total, page: p, limit: l } = val;
-    return { users: users.map(toUserResponse), total, page: p, limit: l };
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(usersContract.list, async ({ query }: any) => {
+      const { page, limit } = query;
+      const lang = req?.headers["accept-language"];
+      const result = await this.getUsersQuery.execute(
+        page ? Number(page) : undefined,
+        limit ? Number(limit) : undefined,
+      );
+      const val = handleResult(result, {}, this.i18n, lang);
+      const { users, total, page: p, limit: l } = val;
+      return { 
+        status: 200, 
+        body: { users: users.map(toUserResponse), total, page: p, limit: l } 
+      };
+    });
   }
 
-  @Get(":id")
+  @TsRestHandler(usersContract.getById)
   @RequirePermissions("users:read")
-  async getById(@Param("id") id: string, @Req() req?: FastifyRequest) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.getUserByIdQuery.execute(id);
-    const user = handleResult(result, {
-      USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
-    }, this.i18n, lang);
-    return toUserResponse(user);
+  async getById(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(usersContract.getById, async ({ params: { id } }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.getUserByIdQuery.execute(id);
+      const user = handleResult(result, {
+        USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+      }, this.i18n, lang);
+      return {
+        status: 200,
+        body: toUserResponse(user)
+      };
+    });
   }
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
+  @TsRestHandler(usersContract.create)
   @RequirePermissions("users:write")
-  async create(@Body(new ZodValidationPipe(CreateUserSchema)) body: CreateUserInput, @Req() req?: FastifyRequest) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.createUserCommand.execute(body);
-    const user = handleResult(result, {
-      EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
-    }, this.i18n, lang);
-    return toUserResponse(user);
+  async create(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(usersContract.create, async ({ body }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.createUserCommand.execute(body as CreateUserInput);
+      const user = handleResult(result, {
+        EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
+      }, this.i18n, lang);
+      return {
+        status: 201,
+        body: toUserResponse(user)
+      };
+    });
   }
 
-  @Patch(":id")
+  @TsRestHandler(usersContract.update)
   @RequirePermissions("users:write")
-  async update(@Param("id") id: string, @Body(new ZodValidationPipe(UpdateUserSchema)) body: UpdateUserInput, @Req() req?: FastifyRequest) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.updateUserCommand.execute(id, body);
-    const user = handleResult(result, {
-      USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
-      EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
-    }, this.i18n, lang);
-    return toUserResponse(user);
+  async update(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(usersContract.update, async ({ params: { id }, body }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.updateUserCommand.execute(id, body as UpdateUserInput);
+      const user = handleResult(result, {
+        USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+        EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
+      }, this.i18n, lang);
+      return {
+        status: 200,
+        body: toUserResponse(user)
+      };
+    });
   }
 
-  @Delete(":id")
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @TsRestHandler(usersContract.delete)
   @RequirePermissions("users:write")
-  async delete(@Param("id") id: string, @Req() req?: FastifyRequest) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.deleteUserCommand.execute(id);
-    handleResult(result, {
-      USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
-    }, this.i18n, lang);
-    return;
+  async delete(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(usersContract.delete, async ({ params: { id } }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.deleteUserCommand.execute(id);
+      handleResult(result, {
+        USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+      }, this.i18n, lang);
+      return {
+        status: 204,
+        body: undefined as any
+      };
+    });
   }
 }

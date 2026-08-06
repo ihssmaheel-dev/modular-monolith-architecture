@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus, Req } from "@nestjs/common";
+import { Controller, HttpStatus, Req } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
 import { RequirePermissions, Idempotent } from "../../../common";
-import { CreateNoteSchema, UpdateNoteSchema, CreateNoteDto, UpdateNoteDto } from "@repo/shared";
-import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
+import { CreateNoteDto, UpdateNoteDto, notesContract } from "@repo/shared";
+import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import { CreateNoteCommand } from "../application/commands/create-note.command";
 import { UpdateNoteCommand } from "../application/commands/update-note.command";
 import { DeleteNoteCommand } from "../application/commands/delete-note.command";
@@ -23,69 +23,96 @@ export class NotesController {
     private readonly i18n: I18nService,
   ) {}
 
-  @Get()
+  @TsRestHandler(notesContract.getNotes)
   @RequirePermissions("notes:read")
-  async getNotes(
-    @Query("page") page?: string,
-    @Query("limit") limit?: string,
+  async list(
     @Req() req?: FastifyRequest,
   ) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.getNotesQuery.execute({
-      page: page ? parseInt(page) : 1,
-      limit: limit ? parseInt(limit) : 20,
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(notesContract.getNotes, async ({ query }: any) => {
+      const { page, limit } = query;
+      const lang = req?.headers["accept-language"];
+      const result = await this.getNotesQuery.execute({
+        page: page ? Number(page) : 1,
+        limit: limit ? Number(limit) : 20,
+      });
+      const val = handleResult(result, {}, this.i18n, lang);
+      return {
+        status: 200,
+        body: { 
+          items: val.items.map(toNoteResponse), 
+          total: val.total, 
+          page: val.page, 
+          totalPages: val.totalPages 
+        },
+      };
     });
-    const val = handleResult(result, {}, this.i18n, lang);
-    return {
-      items: val.items.map(toNoteResponse),
-      total: val.total,
-      page: val.page,
-      totalPages: val.totalPages,
-    };
   }
 
-  @Get(":id")
+  @TsRestHandler(notesContract.getNoteById)
   @RequirePermissions("notes:read")
-  async getNoteById(@Param("id") id: string, @Req() req?: FastifyRequest) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.getNoteByIdQuery.execute(id);
-    const note = handleResult(result, {
-      NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-    }, this.i18n, lang);
-    return toNoteResponse(note);
+  async getById(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(notesContract.getNoteById, async ({ params: { id } }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.getNoteByIdQuery.execute(id);
+      const note = handleResult(result, {
+        NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+      }, this.i18n, lang);
+      return {
+        status: 200,
+        body: toNoteResponse(note),
+      };
+    });
   }
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
+  @TsRestHandler(notesContract.createNote)
   @Idempotent()
   @RequirePermissions("notes:write")
-  async create(@Body(new ZodValidationPipe(CreateNoteSchema)) body: CreateNoteDto, @Req() req?: FastifyRequest) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.createNoteCommand.execute(body);
-    const note = handleResult(result, {}, this.i18n, lang);
-    return toNoteResponse(note);
+  async create(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(notesContract.createNote, async ({ body }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.createNoteCommand.execute(body as CreateNoteDto);
+      const note = handleResult(result, {}, this.i18n, lang);
+      return {
+        status: 201,
+        body: toNoteResponse(note),
+      };
+    });
   }
 
-  @Patch(":id")
+  @TsRestHandler(notesContract.updateNote)
   @RequirePermissions("notes:write")
-  async update(@Param("id") id: string, @Body(new ZodValidationPipe(UpdateNoteSchema)) body: UpdateNoteDto, @Req() req?: FastifyRequest) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.updateNoteCommand.execute(id, body);
-    const note = handleResult(result, {
-      NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-    }, this.i18n, lang);
-    return toNoteResponse(note);
+  async update(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(notesContract.updateNote, async ({ params: { id }, body }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.updateNoteCommand.execute(id, body as UpdateNoteDto);
+      const note = handleResult(result, {
+        NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+      }, this.i18n, lang);
+      return {
+        status: 200,
+        body: toNoteResponse(note),
+      };
+    });
   }
 
-  @Delete(":id")
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @TsRestHandler(notesContract.deleteNote)
   @RequirePermissions("notes:write")
-  async deleteNote(@Param("id") id: string, @Req() req?: FastifyRequest) {
-    const lang = req?.headers["accept-language"];
-    const result = await this.deleteNoteCommand.execute(id);
-    handleResult(result, {
-      NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-    }, this.i18n, lang);
-    return;
+  async delete(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(notesContract.deleteNote, async ({ params: { id } }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.deleteNoteCommand.execute(id);
+      handleResult(result, {
+        NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+      }, this.i18n, lang);
+      return {
+        status: 204,
+        body: undefined as any,
+      };
+    });
   }
 }

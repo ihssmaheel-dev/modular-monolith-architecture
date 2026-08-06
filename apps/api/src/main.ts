@@ -7,6 +7,7 @@ import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { PinoLoggerService } from "./infrastructure/logger/logger.service";
 import { I18nService } from "./infrastructure/i18n/i18n.service";
 import { env } from "./config/env";
+import { setupSwagger } from "./config/swagger";
 import { printStartupBanner } from "./common/utils/startup-banner.util";
 
 const MAX_BODY_SIZE_BYTES = 1048576; // 1MB
@@ -36,6 +37,8 @@ async function bootstrap() {
   });
 
   app.enableShutdownHooks();
+
+  setupSwagger(app);
 
   await app.listen(env.PORT, "0.0.0.0");
   
