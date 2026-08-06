@@ -25,12 +25,12 @@ describe("WelcomeEmailListener", () => {
     listener = new WelcomeEmailListener(logger, queueService);
   });
 
-  it("should log info when user.created event is received", () => {
+  it("should log info when user.created event is received", async () => {
     // Arrange
     const event = new UserCreatedEvent("user-123", "test@example.com", "Test");
 
     // Act
-    listener.handle(event);
+    await listener.handle(event);
 
     // Assert
     expect(logger.info).toHaveBeenCalledWith(
@@ -38,6 +38,6 @@ describe("WelcomeEmailListener", () => {
       "User created — queuing welcome email via BullMQ",
     );
     expect(queueService.getQueue).toHaveBeenCalledWith("email");
-    expect(queue.add).toHaveBeenCalledWith("welcome", { to: "test@example.com", name: "Test" });
+    expect(queue.add).toHaveBeenCalledWith("welcome", { to: "test@example.com", name: "Test", html: expect.any(String) });
   });
 });

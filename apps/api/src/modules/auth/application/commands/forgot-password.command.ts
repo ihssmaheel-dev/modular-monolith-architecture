@@ -4,6 +4,9 @@ import { generateSecureToken } from "../utils/password.utils";
 import type { AuthError } from "../../domain/errors/auth.errors";
 import { GetUserByEmailQuery } from "../../../users/application/queries/get-user-by-email.query";
 import { EmailService } from "../../../../infrastructure/email/email.service";
+import { PasswordResetEmail, render } from "@repo/email";
+import { env } from "../../../../config/env";
+import * as React from "react";
 
 @Injectable()
 export class ForgotPasswordCommand {
@@ -21,11 +24,14 @@ export class ForgotPasswordCommand {
     }
 
     const resetToken = generateSecureToken();
+    const resetLink = `http://localhost:${env.PORT}/reset-password?token=${resetToken}`;
+    
+    const html = await render(React.createElement(PasswordResetEmail, { resetLink }));
 
     await this.emailService.send({
       to: email,
       subject: "Password Reset Request",
-      html: `<p>You requested a password reset. Use this token to reset your password:</p><p><strong>${resetToken}</strong></p><p>This token expires in 1 hour.</p>`,
+      html,
     });
 
     return ok(undefined);
