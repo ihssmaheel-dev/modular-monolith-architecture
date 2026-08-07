@@ -219,13 +219,23 @@ export class ImportService {
 
 ---
 
-## Monitoring
+## Observability & Metrics
 
-- Log slow queries (>100ms).
-- Log cache hit/miss ratios.
-- Track API response times.
+- Inject the `MetricsService` and record business-critical actions.
+- **Counters**: Use for cumulative counts (e.g., `incrementCounter("orders_placed_total")`).
+- **Gauges**: Use for point-in-time values (e.g., `setGauge("active_users", count)`).
+- **Histograms**: Use for durations and sizes (e.g., `startTimer("api_request_duration_seconds")`).
+- Log slow queries (>100ms) via Pino.
 - Alert on memory usage spikes.
-- Monitor Piscina pool stats: `completed`, `ratio`, `queueSize`.
+
+---
+
+## External Resilience (Circuit Breakers)
+
+- **NEVER** call 3rd-party services (like Email Providers, Payment Gateways) directly.
+- Wrap external calls in a `CircuitBreaker`.
+- Use the `MetricsService` inside the Circuit Breaker callback (`onStateChange`) to emit `circuit_breaker_state` gauge metrics and trip counters.
+- This prevents cascading failures from taking down the monolith when external services degrade.
 
 ---
 

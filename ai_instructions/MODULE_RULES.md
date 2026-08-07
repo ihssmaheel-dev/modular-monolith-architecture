@@ -150,11 +150,14 @@ export class AppModule {}
 
 ## Controller Rules
 
-- Validate input with Zod / ts-rest.
+- **Use ts-rest strictly**: Controllers must use `@Controller()` and `@TsRestHandler(contract)` from `@ts-rest/nest`.
+- **Never use standard decorators**: Do NOT use `@Get()`, `@Post()`, `@Body()`, or `@Query()`. The ts-rest contract handles all routing and validation.
+- Validate input automatically via the ts-rest Zod contract definitions.
+- **Protect mutations with Idempotency**: All critical POST, PUT, or DELETE endpoints (e.g., payments, resource creation) MUST be protected using the `@Idempotent()` decorator. The client is required to send an `idempotency-key` header to prevent duplicate processing.
 - Call exactly one application command/query per route.
 - Map Result to HTTP:
-  - `ok(value)` → 200/201 with value
-  - `err(error)` → appropriate 4xx/5xx
+  - `ok(value)` → Return `{ status: 200, body: value }`
+  - `err(error)` → Return `{ status: 4xx/5xx, body: { message: ... } }`
 - Never contain business logic.
 - Never access database or repositories.
 - Never modify state directly.

@@ -11,7 +11,7 @@ Every environment variable must be validated with Zod at startup. No `process.en
 
 ### Implementation
 
-Create `apps/api/src/config/env.ts`:
+Create `apps/api/src/config/env.ts` loading a strictly-typed schema:
 
 ```typescript
 import { envSchema, type Env } from "@repo/shared";
@@ -20,8 +20,7 @@ function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error("Invalid environment variables:");
-    console.error(result.error.flatten().fieldErrors);
+    console.error("Invalid environment variables:", result.error.flatten().fieldErrors);
     process.exit(1);
   }
 
@@ -32,11 +31,12 @@ export const env = loadEnv();
 ```
 
 ### Rules
+- **Schema first**: Define all environment variables in `packages/shared/src/schemas/env.schema.ts`.
+- **Provide safe defaults** for local development (e.g., `PORT: z.coerce.number().default(3000)`).
+- **Never hardcode URLs or TTLs**: Dynamically consume `env.CLIENT_URL`, `env.API_URL`, and `env.JWT_EXPIRES_IN`.
 - Validate once at startup, use `env` everywhere.
 - Never access `process.env` directly outside `config/env.ts`.
-- Add new env vars to the schema in `packages/shared/src/schemas/env.schema.ts` FIRST, then use them.
 - No secrets in code, no secrets in git, no `.env` in version control.
-- The schema lives in `packages/shared` so both API and client can share env types.
 
 ---
 
@@ -134,42 +134,34 @@ collection.createIndex({ deletedAt: 1 }, { sparse: true });
 
 ---
 
-## Logging
+## Observability, Tracing, and Logging
 
-### Tool
-Pino (locked stack). Fast, structured, JSON output.
+### OpenTelemetry (Distributed Tracing)
+- The monolithic backend exports distributed traces via the `TracingModule`.
+- HTTP endpoints and Database queries are automatically instrumented.
+- For extremely heavy backend workflows (like large batch processing), wrap the logic in a custom trace span using standard OpenTelemetry SDKs.
 
-### What to Log
+### Standard Application Logging
+Tool: Pino (locked stack). Fast, structured, JSON output.
 
 | Level | When | Example |
 |-------|------|---------|
-| `info` | Important business events | User created, order placed, payment received |
+| `info` | Important application events | Order placed, payment received |
 | `warn` | Recoverable issues | Rate limit hit, retry attempted, deprecated API used |
-| `error` | Failures requiring attention | Database connection failed, external API error, unhandled exception |
-| `debug` | Development troubleshooting | Request/response details, cache hits/misses |
+| `error` | Failures requiring attention | Database connection failed, external API error |
+| `debug` | Development troubleshooting | Request/response details |
+
+### Audit Logging (Compliance)
+- **Do NOT** use Pino for compliance or security tracking (e.g., password changes, permission grants, data exports).
+- Inject the `AuditService` and save structured audit logs directly to the database.
+- Audit logs must be immutable and queryable by security teams.
 
 ### Rules
 - Never log passwords, tokens, or secrets.
 - Never log full request bodies for endpoints that handle sensitive data.
 - Use structured logging: `logger.info({ userId, action }, "User created")`.
 - Log with context: request ID, user ID, correlation ID.
-- Log errors with stack traces.
 - No `console.log` in production code. Use Pino.
-
-### Example
-
-```typescript
-import { logger } from "../infrastructure/logger/logger.service";
-
-// Good
-logger.info({ userId: user.id, email: user.email }, "User registered");
-logger.error({ err: error, orderId }, "Failed to process order");
-logger.warn({ rateLimitKey: key }, "Rate limit exceeded");
-
-// Bad
-console.log("User created");
-logger.info(`User ${user.email} created`);
-```
 
 ---
 

@@ -13,9 +13,10 @@ Supreme laws of this codebase. These are never negotiable.
 | Monorepo | Turborepo + pnpm |
 | Backend | NestJS 11 + Fastify 5 |
 | Validation | Zod 4 |
-| API Contract | ts-rest |
+| API Contract | ts-rest + Swagger UI |
 | Database | MongoDB + Mongoose 9 |
 | Cache & Queues | Redis (ioredis) + BullMQ |
+| Email Templating | React Email |
 | Worker Threads | Piscina 5 |
 | Result Type | neverthrow 8 |
 | Web | React 19 + Vite + TanStack Router + TanStack Query + Zustand + shadcn/ui + Tailwind 4 |

@@ -129,31 +129,25 @@ Repositories should return `Result` for operations that can fail meaningfully:
 
 Two clear levels. No fuzzy hand-waving.
 
-### Level 1: In-Process Events (Default)
+### Level 1: Transactional Outbox (Default for Critical Events)
 
-- Use NestJS `EventEmitter2` (or a tiny internal EventBus).
-- For consistency inside the monolith.
-- Example: `UserCreated` → welcome email listener.
-- Synchronous or async in-process only.
-- Defined as plain classes in `domain/events/`.
-
-```typescript
-// modules/users/domain/events/user-created.event.ts
-export class UserCreatedEvent {
-  constructor(
-    public readonly userId: string,
-    public readonly email: string,
-    public readonly name: string,
-  ) {}
-}
-```
+- Use the `OutboxService` combined with `DatabaseService` transactions.
+- **NEVER** emit events directly in-memory if the event dropping would cause data inconsistency.
+- Example: `UserCreated` → saving the user and dispatching the event to the outbox atomically.
+- The outbox processor will reliably deliver the event to the queue or in-memory listeners safely.
 
 ```typescript
 // modules/users/application/commands/create-user.command.ts
 async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
-  // ... create user ...
-  this.eventEmitter.emit("user.created", new UserCreatedEvent(user.id, user.email, user.name));
-  return ok(user);
+  return await this.databaseService.transaction(async (session) => {
+    // 1. Create user in the database
+    const user = await this.userRepository.save(data, { session });
+    
+    // 2. Dispatch event to the outbox (saved atomically in the same session)
+    await this.outboxService.dispatch("user.created", { userId: user.id, email: user.email }, { session });
+    
+    return ok(user);
+  });
 }
 ```
 

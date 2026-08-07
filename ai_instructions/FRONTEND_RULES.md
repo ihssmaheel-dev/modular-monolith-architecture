@@ -119,6 +119,20 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 
 ---
 
+## packages/email (Backend/Email-Only)
+
+### Purpose
+- Dedicated React Email component library used to generate HTML strings for the backend.
+- Not a frontend application. It is exclusively for sending emails.
+
+### Rules
+1. **Never import UI components** from `packages/ui`. Email clients do not support standard web CSS.
+2. **Use `@react-email/components`** primitives (Html, Head, Body, Container, Tailwind).
+3. **Use the `npm run dev` server** within `packages/email` to preview templates locally.
+4. **Export templates** and a `render` function wrapper so the backend can consume them securely.
+
+---
+
 ## Shared Visual Language
 
 - Colors, spacing, radius, typography can be shared via `packages/shared` or `tailwind-config`.
