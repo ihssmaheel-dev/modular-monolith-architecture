@@ -32,6 +32,11 @@ export const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().default("minioadmin"),
   S3_FORCE_PATH_STYLE: z.coerce.boolean().default(true),
 
+  // CDN
+  CDN_ENABLED: z.coerce.boolean().default(false),
+  CDN_DOMAIN: z.string().optional(),
+  CDN_BUCKET_PATH: z.string().default("uploads"),
+
   // Email
   EMAIL_DRIVER: z.enum(["resend", "smtp"]).default("smtp"),
   RESEND_API_KEY: z.string().default(""),

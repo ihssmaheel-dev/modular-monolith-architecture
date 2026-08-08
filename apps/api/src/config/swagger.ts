@@ -1,7 +1,7 @@
 import { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { SwaggerModule } from "@nestjs/swagger";
 import { generateOpenApi } from "@ts-rest/open-api";
-import { usersContract, notesContract, authContract } from "@repo/shared";
+import { usersContract, notesContract, authContract, filesContract } from "@repo/shared";
 import { env } from "./env";
 
 export function setupSwagger(app: NestFastifyApplication) {
@@ -11,6 +11,7 @@ export function setupSwagger(app: NestFastifyApplication) {
       users: usersContract,
       notes: notesContract,
       auth: authContract,
+      files: filesContract,
     },
     {
       info: {

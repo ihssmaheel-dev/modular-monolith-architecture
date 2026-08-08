@@ -28,6 +28,7 @@ export class NotesController {
   async list(
     @Req() req?: FastifyRequest,
   ) {
+    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
     return tsRestHandler(notesContract.getNotes, async ({ query }: any) => {
       const { page, limit } = query;
       const lang = req?.headers["accept-language"];
@@ -51,6 +52,7 @@ export class NotesController {
   @TsRestHandler(notesContract.getNoteById)
   @RequirePermissions("notes:read")
   async getById(@Req() req?: FastifyRequest) {
+    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
     return tsRestHandler(notesContract.getNoteById, async ({ params: { id } }: any) => {
       const lang = req?.headers["accept-language"];
       const result = await this.getNoteByIdQuery.execute(id);
@@ -68,6 +70,7 @@ export class NotesController {
   @Idempotent()
   @RequirePermissions("notes:write")
   async create(@Req() req?: FastifyRequest) {
+    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
     return tsRestHandler(notesContract.createNote, async ({ body }: any) => {
       const lang = req?.headers["accept-language"];
       const result = await this.createNoteCommand.execute(body as CreateNoteDto);
@@ -82,6 +85,7 @@ export class NotesController {
   @TsRestHandler(notesContract.updateNote)
   @RequirePermissions("notes:write")
   async update(@Req() req?: FastifyRequest) {
+    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
     return tsRestHandler(notesContract.updateNote, async ({ params: { id }, body }: any) => {
       const lang = req?.headers["accept-language"];
       const result = await this.updateNoteCommand.execute(id, body as UpdateNoteDto);
@@ -98,6 +102,7 @@ export class NotesController {
   @TsRestHandler(notesContract.deleteNote)
   @RequirePermissions("notes:write")
   async delete(@Req() req?: FastifyRequest) {
+    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
     return tsRestHandler(notesContract.deleteNote, async ({ params: { id } }: any) => {
       const lang = req?.headers["accept-language"];
       const result = await this.deleteNoteCommand.execute(id);

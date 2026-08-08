@@ -5,3 +5,5 @@ export type { CreateUserInput, UpdateUserInput, UserIdParam, UserResponse, UserL
 export * from "./auth.schema";
 export type { RegisterInput, LoginInput, ForgotPasswordInput, ResetPasswordInput, RefreshTokenInput, AuthResponse, MessageResponse } from "./auth.schema";
 export * from "./note.schema";
+export * from "./file.schema";
+export type { RequestUploadInput, ConfirmUploadInput, FileMetadataResponse, PresignedUrlResponse, FileListResponse } from "./file.schema";

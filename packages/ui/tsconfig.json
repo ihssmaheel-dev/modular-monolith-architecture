@@ -3,8 +3,13 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "outDir": "./dist",
-    "rootDir": "./src",
-    "noEmit": true
+    "noEmit": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    "paths": {
+      "@repo/shared": ["../shared/src/index.ts"],
+      "@repo/api-client": ["../api-client/src/index.ts"]
+    }
   },
   "include": ["src"]
 }

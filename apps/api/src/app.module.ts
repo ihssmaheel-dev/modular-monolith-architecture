@@ -6,6 +6,7 @@ import { ClsModule } from "nestjs-cls";
 import { UsersModule } from "./modules/users/users.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { NotesModule } from "./modules/notes/notes.module";
+import { FilesModule } from "./modules/files/files.module";
 import { RedisModule } from "./infrastructure/redis/redis.module";
 import { QueueModule } from "./infrastructure/queue/queue.module";
 import { LoggerModule } from "./infrastructure/logger/logger.module";
@@ -70,6 +71,7 @@ import { AuthGuard, PermissionsGuard, IdempotencyInterceptor, RateLimitGuard } f
     UsersModule,
     AuthModule,
     NotesModule,
+    FilesModule,
   ],
   providers: [
     {
