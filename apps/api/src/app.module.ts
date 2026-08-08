@@ -51,6 +51,10 @@ import {
       inject: [EventEmitter2, MetricsService],
       useFactory: (eventEmitter: EventEmitter2, metricsService: MetricsService) => ({
         uri: env.MONGODB_URI,
+        maxPoolSize: env.MONGODB_MAX_POOL_SIZE,
+        minPoolSize: env.MONGODB_MIN_POOL_SIZE,
+        serverSelectionTimeoutMS: env.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
+        heartbeatFrequencyMS: env.MONGODB_HEARTBEAT_FREQUENCY_MS,
         connectionFactory: (connection) => {
           connection.plugin(auditPlugin, { eventEmitter });
           connection.plugin(metricsPlugin, { metricsService });

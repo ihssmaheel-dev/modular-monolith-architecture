@@ -12,6 +12,10 @@ export const envSchema = z.object({
 
   // Database & Cache
   MONGODB_URI: z.string().url().default("mongodb://localhost:27017/monorepo"),
+  MONGODB_MAX_POOL_SIZE: z.coerce.number().default(10),
+  MONGODB_MIN_POOL_SIZE: z.coerce.number().default(2),
+  MONGODB_SERVER_SELECTION_TIMEOUT_MS: z.coerce.number().default(5000),
+  MONGODB_HEARTBEAT_FREQUENCY_MS: z.coerce.number().default(10000),
   REDIS_URL: z.string().url().optional(),
 
   // Auth & Security
