@@ -1,5 +1,8 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Headers } from "@nestjs/common";
+import { Controller, Req, HttpStatus } from "@nestjs/common";
+import { FastifyRequest } from "fastify";
 import { Public } from "../../../common";
+import { authContract, RegisterInput, LoginInput } from "@repo/shared";
+import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import { RegisterCommand } from "../application/commands/register.command";
 import { LoginCommand } from "../application/commands/login.command";
 import { RefreshTokensCommand } from "../application/commands/refresh-tokens.command";
@@ -7,7 +10,6 @@ import { ForgotPasswordCommand } from "../application/commands/forgot-password.c
 import { ResetPasswordCommand } from "../application/commands/reset-password.command";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
-
 
 @Public()
 @Controller("auth")
@@ -21,59 +23,62 @@ export class AuthController {
     private readonly i18n: I18nService,
   ) {}
 
-  @Post("register")
-  @HttpCode(HttpStatus.CREATED)
-  async register(
-    @Body() body: { name: string; email: string; password: string },
-    @Headers("accept-language") acceptLanguage?: string,
-  ) {
-    const result = await this.registerCmd.execute(body);
-    return handleResult(result, {
-      EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "auth.emailTaken" },
-    }, this.i18n, acceptLanguage);
+  @TsRestHandler(authContract.register)
+  async register(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(authContract.register, async ({ body }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.registerCmd.execute(body as RegisterInput);
+      const response = handleResult(result, {
+        EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "auth.emailTaken" },
+      }, this.i18n, lang);
+      return { status: 201, body: response };
+    });
   }
 
-  @Post("login")
-  @HttpCode(HttpStatus.OK)
-  async login(
-    @Body() body: { email: string; password: string },
-    @Headers("accept-language") acceptLanguage?: string,
-  ) {
-    const result = await this.loginCmd.execute(body);
-    return handleResult(result, {
-      INVALID_CREDENTIALS: { status: HttpStatus.UNAUTHORIZED, i18nKey: "auth.invalidCredentials" },
-    }, this.i18n, acceptLanguage);
+  @TsRestHandler(authContract.login)
+  async login(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(authContract.login, async ({ body }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.loginCmd.execute(body as LoginInput);
+      const response = handleResult(result, {
+        INVALID_CREDENTIALS: { status: HttpStatus.UNAUTHORIZED, i18nKey: "auth.invalidCredentials" },
+      }, this.i18n, lang);
+      return { status: 200, body: response };
+    });
   }
 
-  @Post("refresh")
-  @HttpCode(HttpStatus.OK)
-  async refresh(
-    @Body() body: { refreshToken: string },
-    @Headers("accept-language") acceptLanguage?: string,
-  ) {
-    const result = await this.refreshCmd.execute(body.refreshToken);
-    return handleResult(result, {
-      INVALID_TOKEN: { status: HttpStatus.UNAUTHORIZED, i18nKey: "auth.invalidToken" },
-    }, this.i18n, acceptLanguage);
+  @TsRestHandler(authContract.refresh)
+  async refresh(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(authContract.refresh, async ({ body }: any) => {
+      const lang = req?.headers["accept-language"];
+      const result = await this.refreshCmd.execute(body.refreshToken);
+      const response = handleResult(result, {
+        INVALID_TOKEN: { status: HttpStatus.UNAUTHORIZED, i18nKey: "auth.invalidToken" },
+      }, this.i18n, lang);
+      return { status: 200, body: response };
+    });
   }
 
-  @Post("forgot-password")
-  @HttpCode(HttpStatus.OK)
-  async forgotPassword(
-    @Body() body: { email: string },
-    @Headers("accept-language") acceptLanguage?: string,
-  ) {
-    await this.forgotPasswordCmd.execute(body.email);
-    return { message: this.i18n.t("auth.resetLinkSent", acceptLanguage) };
+  @TsRestHandler(authContract.forgotPassword)
+  async forgotPassword(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(authContract.forgotPassword, async ({ body }: any) => {
+      const lang = req?.headers["accept-language"];
+      await this.forgotPasswordCmd.execute(body.email);
+      return { status: 200, body: { message: this.i18n.t("auth.resetLinkSent", lang) } };
+    });
   }
 
-  @Post("reset-password")
-  @HttpCode(HttpStatus.OK)
-  async resetPassword(
-    @Body() body: { token: string; password: string },
-    @Headers("accept-language") acceptLanguage?: string,
-  ) {
-    await this.resetPasswordCmd.execute(body.token, body.password);
-    return { message: this.i18n.t("auth.passwordResetSuccess", acceptLanguage) };
+  @TsRestHandler(authContract.resetPassword)
+  async resetPassword(@Req() req?: FastifyRequest) {
+    // @ts-ignore: ts-rest inference is broken with Zod 4
+    return tsRestHandler(authContract.resetPassword, async ({ body }: any) => {
+      const lang = req?.headers["accept-language"];
+      await this.resetPasswordCmd.execute(body.token, body.password);
+      return { status: 200, body: { message: this.i18n.t("auth.passwordResetSuccess", lang) } };
+    });
   }
 }

@@ -15,20 +15,6 @@
     "next": "Next",
     "submit": "Submit"
   },
-  "auth": {
-    "login": "Log In",
-    "register": "Sign Up",
-    "logout": "Log Out",
-    "email": "Email",
-    "password": "Password",
-    "name": "Name",
-    "forgotPassword": "Forgot password?",
-    "noAccount": "Don't have an account?",
-    "hasAccount": "Already have an account?",
-    "loginSuccess": "Logged in successfully",
-    "registerSuccess": "Account created successfully",
-    "logoutSuccess": "Logged out"
-  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome, {{name}}!",

@@ -29,7 +29,6 @@ export class UsersController {
   async list(
     @Req() req?: FastifyRequest,
   ) {
-    // @ts-ignore: ts-rest inference is broken with Zod 4
     return tsRestHandler(usersContract.list, async ({ query }: any) => {
       const { page, limit } = query;
       const lang = req?.headers["accept-language"];
@@ -49,7 +48,6 @@ export class UsersController {
   @TsRestHandler(usersContract.getById)
   @RequirePermissions("users:read")
   async getById(@Req() req?: FastifyRequest) {
-    // @ts-ignore: ts-rest inference is broken with Zod 4
     return tsRestHandler(usersContract.getById, async ({ params: { id } }: any) => {
       const lang = req?.headers["accept-language"];
       const result = await this.getUserByIdQuery.execute(id);
@@ -66,7 +64,6 @@ export class UsersController {
   @TsRestHandler(usersContract.create)
   @RequirePermissions("users:write")
   async create(@Req() req?: FastifyRequest) {
-    // @ts-ignore: ts-rest inference is broken with Zod 4
     return tsRestHandler(usersContract.create, async ({ body }: any) => {
       const lang = req?.headers["accept-language"];
       const result = await this.createUserCommand.execute(body as CreateUserInput);
@@ -83,7 +80,6 @@ export class UsersController {
   @TsRestHandler(usersContract.update)
   @RequirePermissions("users:write")
   async update(@Req() req?: FastifyRequest) {
-    // @ts-ignore: ts-rest inference is broken with Zod 4
     return tsRestHandler(usersContract.update, async ({ params: { id }, body }: any) => {
       const lang = req?.headers["accept-language"];
       const result = await this.updateUserCommand.execute(id, body as UpdateUserInput);
@@ -101,7 +97,6 @@ export class UsersController {
   @TsRestHandler(usersContract.delete)
   @RequirePermissions("users:write")
   async delete(@Req() req?: FastifyRequest) {
-    // @ts-ignore: ts-rest inference is broken with Zod 4
     return tsRestHandler(usersContract.delete, async ({ params: { id } }: any) => {
       const lang = req?.headers["accept-language"];
       const result = await this.deleteUserCommand.execute(id);
