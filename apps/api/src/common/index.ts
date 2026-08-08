@@ -8,5 +8,7 @@ export * from "./guards/permissions.guard";
 export * from "./guards/rate-limit.guard";
 export * from "./interceptors/logging.interceptor";
 export * from "./interceptors/idempotency.interceptor";
+export * from "./interceptors/origin-validation.interceptor";
+export * from "./interceptors/request-id.interceptor";
 export { Public, IS_PUBLIC_KEY } from "./decorators/public.decorator";
 export { RequirePermissions, PERMISSIONS_KEY } from "./decorators/permissions.decorator";

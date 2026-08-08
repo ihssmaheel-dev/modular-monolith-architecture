@@ -1,4 +1,5 @@
 import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { ClsService } from "nestjs-cls";
 import pino from "pino";
 import { trace } from "@opentelemetry/api";
 import { env } from "../../config/env";
@@ -15,7 +16,7 @@ export interface LogContext {
 export class PinoLoggerService implements OnModuleDestroy {
   private logger: pino.Logger;
 
-  constructor() {
+  constructor(private readonly cls: ClsService) {
     this.logger = pino({
       level: env.NODE_ENV === "production" ? "info" : "debug",
       transport:
@@ -26,16 +27,21 @@ export class PinoLoggerService implements OnModuleDestroy {
   }
 
   private enrichContext(context: LogContext): LogContext {
+    const requestId = this.cls.get("requestId");
+    const enriched = { ...context };
+
+    if (requestId && !enriched.requestId) {
+      enriched.requestId = requestId;
+    }
+
     const span = trace.getActiveSpan();
     if (span) {
       const spanContext = span.spanContext();
-      return {
-        ...context,
-        trace_id: spanContext.traceId,
-        span_id: spanContext.spanId,
-      };
+      enriched.trace_id = spanContext.traceId;
+      enriched.span_id = spanContext.spanId;
     }
-    return context;
+
+    return enriched;
   }
 
   info(context: LogContext, message: string) {
@@ -55,7 +61,7 @@ export class PinoLoggerService implements OnModuleDestroy {
   }
 
   child(bindings: Record<string, unknown>): PinoLoggerService {
-    const child = new PinoLoggerService();
+    const child = new PinoLoggerService(this.cls);
     child.logger = this.logger.child(bindings);
     return child;
   }
