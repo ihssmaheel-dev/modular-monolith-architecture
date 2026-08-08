@@ -2,6 +2,7 @@ import "./tracing";
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import { WsAdapter } from "@nestjs/platform-ws";
+import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { PinoLoggerService } from "./infrastructure/logger/logger.service";
@@ -20,6 +21,11 @@ async function bootstrap() {
       trustProxy: true,
     }),
   );
+
+  await app.register(helmet, {
+    contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false,
+    crossOriginEmbedderPolicy: false,
+  });
 
   app.useWebSocketAdapter(new WsAdapter(app));
 

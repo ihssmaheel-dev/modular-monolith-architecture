@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+.turbo/
+coverage/
+pnpm-lock.yaml
+*.min.js
+*.min.css
+docker/data/
