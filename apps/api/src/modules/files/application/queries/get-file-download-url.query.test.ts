@@ -1,0 +1,79 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { GetFileDownloadUrlQuery } from "./get-file-download-url.query";
+import { StorageService } from "../../../../infrastructure/storage/storage.service";
+import { FilesRepository } from "../../infrastructure/files.repository";
+import { FileEntity } from "../../domain/entities/file.entity";
+import { ok, err } from "neverthrow";
+
+describe("GetFileDownloadUrlQuery", () => {
+  let query: GetFileDownloadUrlQuery;
+  let storage: StorageService;
+  let filesRepo: FilesRepository;
+
+  const mockFile: FileEntity = {
+    id: "file-1",
+    key: "note/note-1/user-1/abc-test.pdf",
+    fileName: "test.pdf",
+    contentType: "application/pdf",
+    fileSize: 1024,
+    bucket: "uploads",
+    parentId: "note-1",
+    parentType: "note",
+    uploadedBy: "user-1",
+    status: "uploaded",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  beforeEach(() => {
+    storage = {
+      getPresignedDownloadUrl: vi.fn(),
+    } as unknown as StorageService;
+
+    filesRepo = {
+      findById: vi.fn(),
+    } as unknown as FilesRepository;
+
+    query = new GetFileDownloadUrlQuery(storage, filesRepo);
+  });
+
+  it("should return FILE_NOT_FOUND when file does not exist", async () => {
+    vi.mocked(filesRepo.findById).mockResolvedValue(ok(null));
+
+    const result = await query.execute("file-1");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.type).toBe("FILE_NOT_FOUND");
+    }
+  });
+
+  it("should return PRESIGN_FAILED when presign fails", async () => {
+    vi.mocked(filesRepo.findById).mockResolvedValue(ok(mockFile));
+    vi.mocked(storage.getPresignedDownloadUrl).mockResolvedValue(
+      err({ code: "PRESIGN_ERROR", message: "S3 unavailable" } as never)
+    );
+
+    const result = await query.execute("file-1");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.type).toBe("PRESIGN_FAILED");
+    }
+  });
+
+  it("should return download URL on success", async () => {
+    vi.mocked(filesRepo.findById).mockResolvedValue(ok(mockFile));
+    vi.mocked(storage.getPresignedDownloadUrl).mockResolvedValue(
+      ok("https://s3.example.com/download")
+    );
+
+    const result = await query.execute("file-1");
+
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value.downloadUrl).toBe("https://s3.example.com/download");
+    }
+    expect(storage.getPresignedDownloadUrl).toHaveBeenCalledWith(mockFile.key);
+  });
+});
