@@ -67,7 +67,8 @@
     "invalidToken": "Invalid or expired token",
     "emailNotFound": "Email not found",
     "resetLinkSent": "If the email exists, a reset link has been sent",
-    "passwordResetSuccess": "Password has been reset successfully"
+    "passwordResetSuccess": "Password has been reset successfully",
+    "accountLocked": "Account temporarily locked due to too many failed attempts. Please try again later."
   },
   "api": {
     "error": {

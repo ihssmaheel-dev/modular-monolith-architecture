@@ -1,4 +1,5 @@
 import { initContract } from "@ts-rest/core";
+import { z } from "zod";
 import {
   RegisterSchema,
   LoginSchema,
@@ -28,6 +29,14 @@ export const authContract = c.router({
     responses: {
       200: AuthResponseSchema as any,
       401: { message: "" } as any,
+    },
+  },
+  logout: {
+    method: "POST" as const,
+    path: "/auth/logout",
+    body: z.object({}) as any,
+    responses: {
+      200: MessageResponseSchema as any,
     },
   },
   refresh: {

@@ -22,13 +22,10 @@ export class AuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const authorization = request.headers["authorization"];
+    const token = this.extractToken(request);
 
-    if (!authorization?.startsWith("Bearer ")) {
-      return false;
-    }
+    if (!token) return false;
 
-    const token = authorization.slice(7);
     const decoded = this.verifyToken(token);
     if (!decoded) return false;
     
@@ -37,6 +34,21 @@ export class AuthGuard implements CanActivate {
       this.cls.set("userId", decoded.sub);
     }
     return true;
+  }
+
+  private extractToken(request: Record<string, unknown>): string | null {
+    const headers = request.headers as Record<string, string> | undefined;
+    const auth = headers?.authorization;
+    if (auth?.startsWith("Bearer ")) {
+      return auth.slice(7);
+    }
+
+    const cookies = request.cookies as Record<string, string> | undefined;
+    if (cookies?.access_token) {
+      return cookies.access_token;
+    }
+
+    return null;
   }
 
   private verifyToken(token: string): Record<string, unknown> | null {

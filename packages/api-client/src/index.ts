@@ -2,18 +2,11 @@
 import { initClient } from "@ts-rest/core";
 import { usersContract, notesContract, filesContract } from "@repo/shared";
 
-export function createApiClient(baseUrl: string, getToken?: () => string | null): any {
-  const baseHeaders = {
-    get Authorization() {
-      const token = getToken?.();
-      return token ? `Bearer ${token}` : "";
-    },
-  };
-
+export function createApiClient(baseUrl: string): any {
   return {
-    users: initClient(usersContract, { baseUrl, baseHeaders }),
-    notes: initClient(notesContract, { baseUrl, baseHeaders }),
-    files: initClient(filesContract, { baseUrl, baseHeaders }),
+    users: initClient(usersContract, { baseUrl }),
+    notes: initClient(notesContract, { baseUrl }),
+    files: initClient(filesContract, { baseUrl }),
   };
 }
 

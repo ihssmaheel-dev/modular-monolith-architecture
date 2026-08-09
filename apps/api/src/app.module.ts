@@ -20,6 +20,7 @@ import { SessionModule } from "./infrastructure/session/session.module";
 import { HealthModule } from "./infrastructure/health/health.module";
 import { RateLimitModule } from "./infrastructure/rate-limit/rate-limit.module";
 import { WafModule } from "./infrastructure/waf/waf.module";
+import { SecurityModule } from "./infrastructure/security/security.module";
 import { I18nModule } from "./infrastructure/i18n/i18n.module";
 import { AuditModule } from "./infrastructure/audit/audit.module";
 import { OutboxModule } from "./infrastructure/outbox/outbox.module";
@@ -75,6 +76,7 @@ import {
     HealthModule,
     RateLimitModule,
     WafModule,
+    SecurityModule,
     I18nModule,
     MetricsModule,
     AuditModule,

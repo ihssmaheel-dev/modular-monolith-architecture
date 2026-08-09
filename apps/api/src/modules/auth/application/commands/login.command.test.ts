@@ -5,6 +5,7 @@ import { ok } from "neverthrow";
 import * as jwtUtils from "../utils/jwt.utils";
 import { User } from "../../../users/domain/entities/user.entity";
 import { MetricsService } from "../../../../infrastructure/metrics/metrics.service";
+import { AccountLockoutService } from "../../../../infrastructure/security/account-lockout.service";
 
 vi.mock("../utils/jwt.utils", () => ({
   signAccessToken: vi.fn(),
@@ -15,6 +16,7 @@ describe("LoginCommand", () => {
   let command: LoginCommand;
   let verifyCredentials: VerifyUserCredentialsQuery;
   let metricsService: MetricsService;
+  let lockoutService: AccountLockoutService;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -26,8 +28,14 @@ describe("LoginCommand", () => {
     metricsService = {
       incrementCounter: vi.fn(),
     } as unknown as MetricsService;
+
+    lockoutService = {
+      isLockedOut: vi.fn().mockResolvedValue(false),
+      recordFailedAttempt: vi.fn(),
+      resetAttempts: vi.fn(),
+    } as unknown as AccountLockoutService;
     
-    command = new LoginCommand(verifyCredentials, metricsService);
+    command = new LoginCommand(verifyCredentials, metricsService, lockoutService);
   });
 
   it("should return ok with tokens and user data when credentials are valid", async () => {
@@ -67,6 +75,7 @@ describe("LoginCommand", () => {
     expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "USER");
     expect(jwtUtils.signRefreshToken).toHaveBeenCalledWith("user-123");
     expect(metricsService.incrementCounter).toHaveBeenCalledWith("auth_successful_logins_total", "Total number of successful logins");
+    expect(lockoutService.resetAttempts).toHaveBeenCalledWith("test@example.com");
   });
 
   it("should return err INVALID_CREDENTIALS when credentials are invalid", async () => {
@@ -83,5 +92,18 @@ describe("LoginCommand", () => {
     }
     expect(jwtUtils.signAccessToken).not.toHaveBeenCalled();
     expect(metricsService.incrementCounter).toHaveBeenCalledWith("auth_failed_logins_total", "Total number of failed logins");
+    expect(lockoutService.recordFailedAttempt).toHaveBeenCalledWith("test@example.com");
+  });
+
+  it("should return err ACCOUNT_LOCKED when account is locked out", async () => {
+    vi.mocked(lockoutService.isLockedOut).mockResolvedValue(true);
+
+    const result = await command.execute({ email: "test@example.com", password: "password123" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error).toEqual({ type: "ACCOUNT_LOCKED" });
+    }
+    expect(verifyCredentials.execute).not.toHaveBeenCalled();
   });
 });

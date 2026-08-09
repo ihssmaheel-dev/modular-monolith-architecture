@@ -7,22 +7,32 @@ import type { AuthError } from "../../domain/errors/auth.errors";
 import { VerifyUserCredentialsQuery } from "../../../users/application/queries/verify-user-credentials.query";
 import { signAccessToken, signRefreshToken } from "../utils/jwt.utils";
 import { MetricsService } from "../../../../infrastructure/metrics/metrics.service";
+import { AccountLockoutService } from "../../../../infrastructure/security/account-lockout.service";
 
 @Injectable()
 export class LoginCommand {
   constructor(
     private readonly verifyCredentials: VerifyUserCredentialsQuery,
     private readonly metricsService: MetricsService,
+    private readonly lockoutService: AccountLockoutService,
   ) {}
 
   async execute(
     data: z.infer<typeof LoginSchema>,
   ): Promise<Result<AuthResponse, AuthError>> {
+    if (await this.lockoutService.isLockedOut(data.email)) {
+      this.metricsService.incrementCounter("auth_lockout_rejected_total", "Rejected logins due to lockout");
+      return err({ type: "ACCOUNT_LOCKED" });
+    }
+
     const result = await this.verifyCredentials.execute(data.email, data.password);
     if (result.isErr() || !result.value) {
+      await this.lockoutService.recordFailedAttempt(data.email);
       this.metricsService.incrementCounter("auth_failed_logins_total", "Total number of failed logins");
       return err({ type: "INVALID_CREDENTIALS" });
     }
+
+    await this.lockoutService.resetAttempts(data.email);
 
     const user = result.value;
     const accessToken = signAccessToken(user.id, user.email, user.role);

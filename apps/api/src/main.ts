@@ -4,6 +4,7 @@ import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify
 import { WsAdapter } from "@nestjs/platform-ws";
 import helmet from "@fastify/helmet";
 import compress from "@fastify/compress";
+import cookie from "@fastify/cookie";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { PinoLoggerService } from "./infrastructure/logger/logger.service";
@@ -33,13 +34,18 @@ async function bootstrap() {
     encodings: ["gzip", "deflate", "br"],
   });
 
+  await app.register(cookie, {
+    secret: env.JWT_SECRET,
+    hook: "onRequest",
+  });
+
   app.useWebSocketAdapter(new WsAdapter(app));
 
   const logger = app.get(PinoLoggerService);
   const i18n = app.get(I18nService);
   app.useGlobalFilters(new AllExceptionsFilter(logger, i18n));
 
-  app.setGlobalPrefix("api");
+  app.setGlobalPrefix("api", { exclude: ["metrics"] });
   app.enableCors({
     origin: env.NODE_ENV === "production"
       ? [env.CLIENT_URL]

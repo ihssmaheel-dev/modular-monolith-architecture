@@ -20,12 +20,17 @@ export const envSchema = z.object({
 
   // Auth & Security
   JWT_SECRET: z.string().min(32).default("your-super-secret-jwt-key-change-in-prod"),
+  JWT_REFRESH_SECRET: z.string().min(32).default("your-super-secret-refresh-key-change-in-prod"),
   JWT_EXPIRES_IN: z.string().default("15m"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
 
   // Rate Limiting
   RATE_LIMIT_MAX: z.coerce.number().default(100),
   RATE_LIMIT_TTL: z.coerce.number().default(60),
+
+  // Account Lockout
+  LOCKOUT_MAX_ATTEMPTS: z.coerce.number().default(5),
+  LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
 
   // Storage
   STORAGE_DRIVER: z.enum(["s3", "gridfs"]).default("gridfs"),

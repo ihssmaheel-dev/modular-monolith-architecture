@@ -34,7 +34,8 @@
     "invalidToken": "Token inválido o expirado",
     "emailNotFound": "Correo electrónico no encontrado",
     "resetLinkSent": "Si el correo existe, se ha enviado un enlace de restablecimiento",
-    "passwordResetSuccess": "La contraseña se ha restablecido correctamente"
+    "passwordResetSuccess": "La contraseña se ha restablecido correctamente",
+    "accountLocked": "Cuenta bloqueada temporalmente por demasiados intentos fallidos. Inténtelo de nuevo más tarde."
   },
   "dashboard": {
     "title": "Panel",

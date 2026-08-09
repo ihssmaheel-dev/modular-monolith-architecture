@@ -34,7 +34,8 @@
     "invalidToken": "Jeton invalide ou expiré",
     "emailNotFound": "E-mail non trouvé",
     "resetLinkSent": "Si l'e-mail existe, un lien de réinitialisation a été envoyé",
-    "passwordResetSuccess": "Le mot de passe a été réinitialisé avec succès"
+    "passwordResetSuccess": "Le mot de passe a été réinitialisé avec succès",
+    "accountLocked": "Compte temporairement bloqué en raison de trop de tentatives échouées. Veuillez réessayer plus tard."
   },
   "dashboard": {
     "title": "Tableau de bord",

@@ -4,11 +4,24 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@repo/ui";
 import { Menu, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/api";
 
 export function Header() {
   const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const { toggleSidebar } = useUIStore();
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // Ignore network errors — clear local state regardless
+    }
+    logout();
+  };
 
   return (
     <header className="flex h-14 items-center justify-between border-b bg-card px-4">
@@ -26,7 +39,7 @@ export function Header() {
       <div className="flex items-center gap-4">
         <ThemeToggle />
         <span className="text-sm text-muted-foreground">{user?.email}</span>
-        <Button variant="ghost" size="sm" onClick={logout}>
+        <Button variant="ghost" size="sm" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           {t("auth.logout")}
         </Button>

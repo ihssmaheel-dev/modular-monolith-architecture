@@ -23,6 +23,7 @@ function LoginPage() {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -33,7 +34,7 @@ function LoginPage() {
         return;
       }
 
-      login(data);
+      login({ user: data.user });
     } catch {
       setError("Network error. Please try again.");
     } finally {
