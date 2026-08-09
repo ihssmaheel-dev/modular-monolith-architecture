@@ -50,10 +50,16 @@ export const env = loadEnv();
 - Rotate secrets if they are ever exposed.
 
 ### Authentication
-- Use Better Auth or pure JWT from the locked stack.
+- Use pure JWT from the locked stack.
 - Tokens expire. Short-lived access tokens + refresh tokens.
+- Access tokens signed with `JWT_SECRET`, refresh tokens with separate `JWT_REFRESH_SECRET`.
+- Store tokens in httpOnly cookies (not localStorage). Set `httpOnly: true`, `secure: true`, `sameSite: "strict"`.
+- Auth guard reads tokens from both Bearer header and cookies.
+- Logout clears cookies on the server via `POST /auth/logout`.
 - Never store passwords in plaintext. Hash with bcrypt or argon2.
 - Validate auth on every protected route via guard.
+- Apply account lockout after configurable failed attempts (default: 5 attempts, 15-minute lockout).
+- Use `SecurityModule` (global) for cross-cutting security concerns (rate limiting, WAF, session, lockout).
 
 ### Input
 - Validate all input with Zod at the API boundary.
@@ -81,6 +87,7 @@ export const env = loadEnv();
   });
   ```
 - In development, allow `localhost` on standard ports.
+- Use `OriginValidationInterceptor` as a defense-in-depth layer beyond CORS.
 
 ### Request Limits
 - Set maximum request body size (e.g., 1MB for JSON, 10MB for file uploads).

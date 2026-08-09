@@ -8,15 +8,15 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 
 | File Type | Max Lines | Action if Exceeded |
 |-----------|-----------|-------------------|
-| Component | 300 | Extract sub-components or hooks |
-| Command / Query | 250 | Extract helper methods or split |
-| Controller | 200 | Extract route handlers into commands/queries |
+| Any file | 150 | Split by responsibility |
+| Command / Query | 150 | Extract helper methods or split |
+| Controller | 150 | Extract route handlers into commands/queries |
+| Component | 150 | Extract sub-components or hooks |
 | Utility / Helper | 150 | Split by concern |
-| Type / Schema | 200 | Split into separate files by domain |
-| Test file | 500 | Split by describe block |
-| Entity | 300 | Very rare to exceed. Re-evaluate domain boundaries |
+| Type / Schema | 150 | Split into separate files by domain |
+| Test file | 300 | Split by describe block |
 
-**If a file feels hard to read, it is too big.** Split it.
+**If a file feels hard to read, it is too big.** Split it. The hard limit is 150 lines for all non-test files.
 
 ---
 

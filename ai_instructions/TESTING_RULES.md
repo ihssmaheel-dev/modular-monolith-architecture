@@ -208,9 +208,11 @@ describe("UsersService", () => {
 ```json
 {
   "test": "vitest run",
-  "test:unit": "vitest run --exclude '**/*.e2e.test.ts' --exclude '**/*.integration.test.ts'",
+  "test:unit": "vitest run --config vitest.config.ts",
   "test:integration": "vitest run --config vitest.integration.config.ts",
-  "test:e2e": "vitest run --include '**/*.e2e.test.ts'",
+  "test:e2e": "vitest run --config vitest.config.ts --include '**/*.e2e.test.ts'",
   "test:watch": "vitest watch"
 }
 ```
+
+**Note:** vitest 4.x deprecated the `--dir` flag. Always use `--config vitest.config.ts` instead.

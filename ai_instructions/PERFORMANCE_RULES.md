@@ -170,7 +170,7 @@ export class ImportService {
 - Use `useCallback()` for callbacks passed to memoized children.
 - Lazy-load routes with `React.lazy()` + Suspense.
 - Don't re-render the entire tree for local state changes.
-- Use TanStack Query's `staleTime` and `cacheTime` to avoid unnecessary refetches.
+- Use TanStack Query's `staleTime` and `gcTime` to avoid unnecessary refetches.
 
 ### Mobile (React Native)
 - Use `FlatList` instead of `ScrollView` for long lists.

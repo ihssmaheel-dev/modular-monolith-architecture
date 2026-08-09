@@ -28,6 +28,20 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 10. **All user-facing text** must use i18n via `useTranslation()` hook. Never hardcode strings.
 11. **Translation keys** follow the structure in `I18N_RULES.md`. Import from `@repo/shared`.
 
+### File Locations
+
+| What | Where |
+|------|-------|
+| API client instance | `apps/web/src/lib/api.ts` |
+| S3 presigned upload utility | `apps/web/src/lib/upload.ts` |
+| TanStack Query client | `apps/web/src/lib/query-client.ts` |
+| i18n initialization | `apps/web/src/lib/i18n/index.ts` |
+| File upload hook | `apps/web/src/hooks/use-file-upload.ts` |
+| TanStack Query hooks | `apps/web/src/hooks/use-*.ts` |
+| Auth store | `apps/web/src/stores/auth.store.ts` |
+| UI store | `apps/web/src/stores/ui.store.ts` |
+| Upload components | `apps/web/src/components/features/` (not `packages/ui`) |
+
 ### Performance
 
 - **Lazy-load routes** with `React.lazy()` + Suspense:
@@ -116,6 +130,8 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 5. **All components** use Tailwind for styling.
 6. **Extend shadcn/ui.** Do not replace it.
 7. **Exports** go through `packages/ui/src/index.ts`.
+8. **Flat file structure** — one component per file in `components/`, no sub-folders.
+9. **No upload utilities, hooks, or stores** — those belong in `apps/web/src/`.
 
 ---
 

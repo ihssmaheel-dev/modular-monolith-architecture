@@ -87,25 +87,26 @@ Web-only UI components. Never used by mobile.
 ```
 packages/ui/src/
 ├── components/
-│   ├── Button/
-│   │   ├── Button.tsx
-│   │   ├── Button.test.tsx
-│   │   └── index.ts
-│   ├── Card/
-│   │   ├── Card.tsx
-│   │   └── index.ts
-│   └── index.ts              ← Main barrel export
+│   ├── button.tsx
+│   ├── card.tsx
+│   ├── input.tsx
+│   ├── label.tsx
+│   ├── badge.tsx
+│   ├── separator.tsx
+│   ├── avatar.tsx
+│   ├── skeleton.tsx
+│   └── spinner.tsx
 ├── lib/
 │   └── utils.ts              ← cn() helper, etc.
-└── index.ts
+└── index.ts                  ← Main barrel export
 ```
 
 ### Rules
-- One component per folder.
-- Component file matches folder name: `Button/Button.tsx`.
-- Co-locate tests with component.
+- One component per file. Flat structure (no folders per component).
+- File name is kebab-case matching the component.
 - Export through `packages/ui/src/index.ts`.
 - No business logic, no API calls, no state management.
+- No upload utilities, hooks, or stores — those belong in `apps/web/src/`.
 
 ---
 
@@ -274,39 +275,51 @@ apps/web/src/
 ├── main.tsx                   ← App entry point
 ├── index.css                  ← Global styles + Tailwind
 ├── lib/
-│   └── utils.ts               ← cn() helper, etc.
+│   ├── api.ts                 ← createApiClient() instance
+│   ├── upload.ts              ← S3 presigned upload utility
+│   ├── query-client.ts        ← TanStack Query client
+│   └── i18n/
+│       └── index.ts           ← i18n initialization
 ├── routes/
 │   ├── __root.tsx             ← Root layout (TanStack Router)
 │   ├── index.tsx              ← Home page
-│   ├── users/
-│   │   ├── index.tsx          ← Users list page
-│   │   └── $userId.tsx        ← User detail page
-│   └── _authenticated.tsx     ← Layout wrapper for auth
+│   ├── _auth.login.tsx        ← Login page
+│   ├── _auth.register.tsx     ← Register page
+│   ├── _auth.forgot-password.tsx
+│   ├── _dashboard.tsx         ← Dashboard layout wrapper
+│   ├── _dashboard.index.tsx   ← Dashboard home
+│   ├── _dashboard.users.tsx   ← Users list page
+│   ├── _dashboard.notes.tsx   ← Notes list page
+│   └── _dashboard.settings.tsx
 ├── components/
 │   ├── layout/
-│   │   ├── Header.tsx
-│   │   ├── Sidebar.tsx
-│   │   └── index.ts
-│   └── features/
-│       ├── users/
-│       │   ├── UserCard.tsx
-│       │   └── index.ts
-│       └── index.ts
+│   │   ├── header.tsx
+│   │   ├── sidebar.tsx
+│   │   └── page-container.tsx
+│   ├── features/
+│   │   ├── notes/
+│   │   │   ├── CreateNoteForm.tsx
+│   │   │   └── NotesList.tsx
+│   │   └── users/
+│   │       └── UserCard.tsx
+│   └── shared/
+│       ├── theme-toggle.tsx
+│       └── error-boundary.tsx
 ├── hooks/
-│   ├── useUsers.ts            ← TanStack Query hooks
-│   └── index.ts
-├── stores/
-│   ├── auth.store.ts          ← Zustand stores
-│   └── index.ts
-└── types/
-    └── index.ts
+│   ├── use-file-upload.ts     ← File upload hook
+│   └── use-theme.ts           ← Theme hook
+└── stores/
+    ├── auth.store.ts          ← Auth Zustand store
+    └── ui.store.ts            ← UI Zustand store
 ```
 
 ### Rules
 - Routes follow TanStack Router file conventions.
 - Components are presentational or container (thin).
-- Hooks wrap TanStack Query for server state.
-- Zustand stores for client state only.
+- `lib/` contains framework utilities (api client, upload, query client, i18n init).
+- `hooks/` contains React hooks (TanStack Query wrappers, custom hooks).
+- `stores/` contains Zustand stores for client state.
+- Upload utilities (`upload.ts`) and hooks (`use-file-upload.ts`) live in `apps/web/src/`, not `packages/ui`.
 - No direct `fetch`/`axios` — use `packages/api-client`.
 
 ---

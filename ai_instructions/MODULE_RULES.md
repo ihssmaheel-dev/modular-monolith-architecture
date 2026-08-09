@@ -93,10 +93,35 @@ Every domain module **must** implement a strict CQRS architecture. We do not use
 Cross-cutting infrastructure modules follow a simple structure:
 
 ```
-src/infrastructure/redis/
-├── redis.module.ts      ← NestJS @Module
-└── redis.service.ts     ← Injectable service
+src/infrastructure/[name]/
+├── [name].module.ts      ← NestJS @Module
+└── [name].service.ts     ← Injectable service
 ```
+
+All shared infrastructure modules:
+
+| Module | Responsibility |
+|--------|---------------|
+| `database/` | Mongoose connection, base repository, plugins |
+| `logger/` | Pino logger with CLS enrichment |
+| `redis/` | ioredis connection |
+| `queue/` | BullMQ root config |
+| `workers/` | Piscina worker pools |
+| `cache/` | Redis caching (cache-aside pattern) |
+| `storage/` | S3/GridFS file storage |
+| `email/` | SMTP/Resend email transport |
+| `realtime/` | WebSocket gateway and streams |
+| `session/` | Session management |
+| `rate-limit/` | Redis-backed rate limiting |
+| `waf/` | Web Application Firewall middleware |
+| `health/` | Health probes, shutdown, readiness |
+| `i18n/` | Internationalization service |
+| `metrics/` | Prometheus metrics (counters, gauges, histograms) |
+| `tracing/` | OpenTelemetry distributed tracing |
+| `audit/` | Audit logging to database |
+| `outbox/` | Transactional outbox for reliable events |
+| `security/` | Account lockout, cross-cutting security |
+| `swagger/` | OpenAPI/Swagger setup |
 
 Rules for shared infrastructure:
 - Must be `@Global()` if used across multiple modules.

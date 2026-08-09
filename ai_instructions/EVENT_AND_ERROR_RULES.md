@@ -58,20 +58,23 @@ export class CreateUserCommand {
 // modules/presentation/users.controller.ts
 // constructor(private readonly createUserCommand: CreateUserCommand) {}
 
-  @Post()
-  async create(@Body() body: any) {
+  // ts-rest handler — no @Post(), @Body(), etc.
+  async create(body: any) {
     const result = await this.createUserCommand.execute(body);
 
     if (result.isErr()) {
       // TypeScript knows result.error is UserError
-      if (result.error.type === "EMAIL_TAKEN") {
-        throw new ConflictException("Email is already taken");
+      switch (result.error.type) {
+        case "EMAIL_TAKEN":
+          return { status: 409, body: { message: "Email is already taken" } };
+        case "INVALID_USER_DATA":
+          return { status: 400, body: { message: result.error.reason } };
+        default:
+          return { status: 500, body: { message: "Internal error" } };
       }
-      case "INVALID_USER_DATA":
-        return { status: 400, body: { message: result.error.reason } };
-      default:
-        return { status: 500, body: { message: "Internal error" } };
     }
+
+    return { status: 201, body: result.value };
   }
 ```
 
@@ -144,7 +147,7 @@ async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
     const user = await this.userRepository.save(data, { session });
     
     // 2. Dispatch event to the outbox (saved atomically in the same session)
-    await this.outboxService.dispatch("user.created", { userId: user.id, email: user.email }, { session });
+    await this.outboxService.dispatch({ type: "user.created", payload: { userId: user.id, email: user.email } }, { session });
     
     return ok(user);
   });

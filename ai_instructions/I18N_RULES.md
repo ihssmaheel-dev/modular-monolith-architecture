@@ -93,15 +93,15 @@ return <h1>Dashboard</h1>;
 
 ```json
 {
-  "common": { "loading", "error", "retry", "save", "cancel" },
-  "auth": { "login", "register", "logout", "email", "password" },
-  "dashboard": { "title", "welcome", "stats" },
-  "users": { "title", "list", "create", "edit", "delete" },
-  "settings": { "title", "language", "theme" },
-  "errors": { "notFound", "unauthorized", "forbidden", "serverError" },
+  "common": { "loading": "...", "error": "...", "retry": "...", "save": "...", "cancel": "..." },
+  "auth": { "login": "...", "register": "...", "logout": "...", "email": "...", "password": "..." },
+  "dashboard": { "title": "...", "welcome": "...", "stats": "..." },
+  "users": { "title": "...", "list": "...", "create": "...", "edit": "...", "delete": "..." },
+  "settings": { "title": "...", "language": "...", "theme": "..." },
+  "errors": { "notFound": "...", "unauthorized": "...", "forbidden": "...", "serverError": "..." },
   "api": {
-    "error": { "internal", "notFound", "unauthorized", "badRequest", "conflict" },
-    "user": { "created", "updated", "deleted", "notFound", "emailTaken" }
+    "error": { "internal": "...", "notFound": "...", "unauthorized": "...", "badRequest": "...", "conflict": "..." },
+    "user": { "created": "...", "updated": "...", "deleted": "...", "notFound": "...", "emailTaken": "..." }
   }
 }
 ```
