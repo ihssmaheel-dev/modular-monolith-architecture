@@ -2,12 +2,11 @@ import { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { SwaggerModule } from "@nestjs/swagger";
 import { generateOpenApi } from "@ts-rest/open-api";
 import { usersContract, notesContract, authContract, filesContract } from "@repo/shared";
-import { env } from "./env";
+import { env } from "../../config/env";
 
 export function setupSwagger(app: NestFastifyApplication) {
   const document = generateOpenApi(
     {
-      // Add all new route contracts here as the architecture grows
       users: usersContract,
       notes: notesContract,
       auth: authContract,

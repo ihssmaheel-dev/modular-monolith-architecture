@@ -8,9 +8,10 @@ import { TsRestModule } from "@ts-rest/nest";
 import { FilesModule } from "./files.module";
 import { StorageService } from "../../infrastructure/storage/storage.service";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
+import { env } from "../../config/env";
 import { ok } from "neverthrow";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://admin:password@localhost:27017/app?authSource=admin";
+const MONGODB_URI = env.MONGODB_URI;
 
 describe("FilesController E2E", () => {
   let app: INestApplication;

@@ -10,7 +10,3 @@ export { Spinner } from "./components/spinner";
 export { FileUpload } from "./components/file-upload";
 export { FileList } from "./components/file-list";
 export { cn } from "./lib/utils";
-export { uploadFile } from "./lib/upload";
-export type { UploadProgress, UploadFileParams } from "./lib/upload";
-export { useFileUpload } from "./hooks/use-file-upload";
-export type { UseFileUploadReturn } from "./hooks/use-file-upload";

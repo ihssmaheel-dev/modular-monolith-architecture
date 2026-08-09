@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { uploadFile, type UploadProgress } from "../lib/upload";
+import { uploadFile, type UploadProgress } from "@/lib/upload";
 import type { ApiClient } from "@repo/api-client";
 import type { FileMetadataResponse } from "@repo/shared";
 

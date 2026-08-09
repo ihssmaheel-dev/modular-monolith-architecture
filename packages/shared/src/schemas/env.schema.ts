@@ -32,6 +32,9 @@ export const envSchema = z.object({
   LOCKOUT_MAX_ATTEMPTS: z.coerce.number().default(5),
   LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
 
+  // Tracing
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default("http://localhost:4318/v1/traces"),
+
   // Storage
   STORAGE_DRIVER: z.enum(["s3", "gridfs"]).default("gridfs"),
   S3_ENDPOINT: z.string().default("localhost"),

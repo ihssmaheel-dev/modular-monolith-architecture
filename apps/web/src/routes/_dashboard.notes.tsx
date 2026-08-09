@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NotesList } from "../features/notes/NotesList";
-import { CreateNoteForm } from "../features/notes/CreateNoteForm";
+import { NotesList } from "../components/features/notes/NotesList";
+import { CreateNoteForm } from "../components/features/notes/CreateNoteForm";
 import { Button } from "@repo/ui";
 
 export const Route = createFileRoute("/_dashboard/notes")({

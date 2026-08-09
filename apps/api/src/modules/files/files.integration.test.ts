@@ -15,9 +15,10 @@ import { FileMongooseSchema } from "./infrastructure/schemas/file.mongoose.schem
 import { StorageService } from "../../infrastructure/storage/storage.service";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 import { I18nService } from "../../infrastructure/i18n/i18n.service";
+import { env } from "../../config/env";
 import { ok } from "neverthrow";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://admin:password@localhost:27017/app?authSource=admin";
+const MONGODB_URI = env.MONGODB_URI;
 
 describe("FilesModule Integration", () => {
   let module: TestingModule;

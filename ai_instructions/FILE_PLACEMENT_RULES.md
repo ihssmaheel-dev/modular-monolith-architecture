@@ -156,8 +156,19 @@ apps/api/src/common/
 ├── interceptors/
 │   ├── logging.interceptor.ts ← Request/response logging
 │   └── index.ts
-└── pipes/
-    ├── validation.pipe.ts     ← Zod validation pipe
+├── pipes/
+│   ├── validation.pipe.ts     ← Zod validation pipe
+│   └── index.ts
+├── decorators/
+│   ├── public.decorator.ts    ← @Public() decorator
+│   └── index.ts
+├── exceptions/
+│   ├── zod-validation.exception.ts ← Zod validation exception
+│   └── index.ts
+└── utils/
+    ├── presentation.utils.ts  ← Result-to-HTTP mapper
+    ├── circuit-breaker.ts     ← Circuit breaker pattern
+    ├── bulkhead.ts            ← Bulkhead pattern
     └── index.ts
 ```
 
@@ -203,6 +214,7 @@ apps/api/src/infrastructure/
 - Must implement `OnModuleDestroy` for cleanup.
 - No business logic. Pure technical concern.
 - Worker tasks are pure functions. No NestJS imports.
+- Swagger/OpenAPI setup goes in `infrastructure/swagger/`.
 
 ---
 
@@ -414,6 +426,7 @@ docs/
 | Component in routes folder | `components/` folder |
 | Store in components folder | `stores/` folder |
 | Hook in components folder | `hooks/` folder |
+| Swagger in config folder | `infrastructure/swagger/` |
 
 ---
 
@@ -431,6 +444,7 @@ docs/
 | UI component | `packages/ui/src/components/[Name]/[Name].tsx` |
 | API client helper | `packages/api-client/src/` |
 | Env config | `apps/api/src/config/env.ts` |
+| Swagger setup | `apps/api/src/infrastructure/swagger/` |
 | Exception filter | `apps/api/src/common/filters/` |
 | Auth guard | `apps/api/src/common/guards/` |
 | Validation pipe | `apps/api/src/common/pipes/` |
