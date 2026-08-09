@@ -1,13 +1,11 @@
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
 import { api } from "../../lib/api";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 
 export default function UsersTab() {
-  const router = useRouter();
   const { data, isLoading, error } = useQuery({
     queryKey: ["users", { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT }],
     queryFn: async () => {

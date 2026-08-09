@@ -7,7 +7,7 @@
     "dev": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint \"app/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"hooks/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"stores/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.24.0",

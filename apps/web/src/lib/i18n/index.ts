@@ -8,7 +8,9 @@ function getStoredLocale(): Locale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && stored in locales) return stored as Locale;
-  } catch {}
+  } catch {
+    // ignore storage errors
+  }
   return DEFAULT_LOCALE;
 }
 

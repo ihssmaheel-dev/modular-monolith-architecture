@@ -9,7 +9,9 @@ async function getStoredLocale(): Promise<Locale> {
   try {
     const stored = await AsyncStorage.getItem(STORAGE_KEY);
     if (stored && stored in locales) return stored as Locale;
-  } catch {}
+  } catch {
+    // ignore storage errors
+  }
   return DEFAULT_LOCALE;
 }
 

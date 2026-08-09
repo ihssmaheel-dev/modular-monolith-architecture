@@ -2,7 +2,7 @@ import { View, Text } from "react-native";
 import { useAuthStore } from "../../stores/auth.store";
 
 export default function SettingsTab() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
 
   return (
     <View className="flex-1 bg-background p-4">
