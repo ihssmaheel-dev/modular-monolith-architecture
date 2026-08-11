@@ -21,15 +21,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
     private readonly i18n: I18nService,
   ) {}
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<FastifyReply>();
     const request = ctx.getRequest<FastifyRequest>();
 
     const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+      exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const acceptLanguage = request.headers["accept-language"];
 
@@ -38,13 +36,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
       for (const issue of exception.zodError.issues) {
         const path = issue.path.join(".") || "root";
         if (!errors[path]) errors[path] = [];
-        
+
         // Zod issues contain dynamic properties like 'expected', 'received', 'minimum', etc.
         const key = `zod.errors.${issue.code}`;
         // We pass the issue as params so `{{expected}}` interpolates properly
         const params = issue as unknown as Record<string, string | number>;
         const translation = this.i18n.t(key, acceptLanguage, params);
-        
+
         // If the translation returns the raw key, it wasn't found, so fallback to Zod's default message
         const msg = translation !== key ? translation : issue.message;
         errors[path].push(msg);
@@ -58,24 +56,26 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return;
     }
 
+    const errorDetails = exception instanceof HttpException ? exception.getResponse() : null;
+    const customError = this.getCustomError(errorDetails);
     const messageKey = ERROR_MESSAGE_MAP[status] ?? "api.error.internal";
-    const message = this.i18n.t(messageKey, acceptLanguage);
+    const message = customError?.message ?? this.i18n.t(messageKey, acceptLanguage);
 
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error({ err: exception }, "Unhandled exception");
     }
 
-    const errorDetails = exception instanceof HttpException ? exception.getResponse() : null;
-    
-    // If the response is an object with a message, check if it's the default string we want to hide.
-    // By passing an empty exception e.g. `new ForbiddenException()`, nestjs sets the response to just "Forbidden".
-    // We already have our localized message at the root, so we don't need to append the english error string unless it's structured data.
-    const isBasicHttpError = errorDetails && typeof errorDetails === 'object' && 'statusCode' in errorDetails && 'message' in errorDetails;
-
     response.status(status).send({
       statusCode: status,
       message,
-      ...(errorDetails && !isBasicHttpError ? { error: errorDetails } : {}),
+      ...(customError ? { error: customError.code } : {}),
     });
+  }
+
+  private getCustomError(value: string | object | null): { message: string; code: string } | null {
+    if (typeof value !== "object" || value === null) return null;
+    if (!("message" in value) || !("error" in value)) return null;
+    if (typeof value.message !== "string" || typeof value.error !== "string") return null;
+    return { message: value.message, code: value.error };
   }
 }

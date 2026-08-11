@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@repo/ui";
 import { Menu, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { API_BASE_URL } from "@/lib/api";
+import { api } from "@/lib/api";
 
 export function Header() {
   const { t } = useTranslation();
@@ -13,10 +13,7 @@ export function Header() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await api.auth.logout({});
     } catch {
       // Ignore network errors — clear local state regardless
     }
@@ -26,12 +23,7 @@ export function Header() {
   return (
     <header className="flex h-14 items-center justify-between border-b bg-card px-4">
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          className="lg:hidden"
-        >
+        <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
           <Menu className="h-5 w-5" />
         </Button>
         <h1 className="text-lg font-semibold">{t("dashboard.title")}</h1>

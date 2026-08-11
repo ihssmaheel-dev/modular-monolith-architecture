@@ -10,5 +10,7 @@ export * from "./interceptors/logging.interceptor";
 export * from "./interceptors/idempotency.interceptor";
 export * from "./interceptors/origin-validation.interceptor";
 export * from "./interceptors/request-id.interceptor";
+export * from "./utils/request-user.utils";
+export * from "./utils/access-token.utils";
 export { Public, IS_PUBLIC_KEY } from "./decorators/public.decorator";
 export { RequirePermissions, PERMISSIONS_KEY } from "./decorators/permissions.decorator";

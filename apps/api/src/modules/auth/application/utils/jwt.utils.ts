@@ -1,20 +1,45 @@
-import jwt from "jsonwebtoken";
+import type { UserRole } from "@repo/shared";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import { env } from "../../../../config/env";
 
-export function signAccessToken(userId: string, email: string, role: string): string {
-  return jwt.sign({ sub: userId, email, role }, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN as any });
+interface RefreshTokenPayload {
+  sub: string;
+  type: "refresh";
+  version: number;
 }
 
-export function signRefreshToken(userId: string): string {
-  return jwt.sign({ sub: userId, type: "refresh" }, env.JWT_REFRESH_SECRET, { expiresIn: env.JWT_REFRESH_EXPIRES_IN as any });
+export function signAccessToken(userId: string, email: string, role: UserRole): string {
+  return jwt.sign({ sub: userId, email, role }, env.JWT_SECRET, tokenOptions(env.JWT_EXPIRES_IN));
 }
 
-export function verifyRefreshToken(token: string): { sub: string; type: string } | null {
+export function signRefreshToken(userId: string, version: number): string {
+  return jwt.sign(
+    { sub: userId, type: "refresh", version },
+    env.JWT_REFRESH_SECRET,
+    tokenOptions(env.JWT_REFRESH_EXPIRES_IN),
+  );
+}
+
+export function verifyRefreshToken(token: string): RefreshTokenPayload | null {
   try {
-    const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET) as { sub: string; type: string };
-    if (decoded.type !== "refresh") return null;
-    return decoded;
+    const value = jwt.verify(token, env.JWT_REFRESH_SECRET, { algorithms: ["HS256"] });
+    if (!isRefreshTokenPayload(value)) return null;
+    return value;
   } catch {
     return null;
   }
+}
+
+function tokenOptions(expiresIn: string): SignOptions {
+  return { algorithm: "HS256", expiresIn: expiresIn as SignOptions["expiresIn"] };
+}
+
+function isRefreshTokenPayload(value: unknown): value is RefreshTokenPayload {
+  if (typeof value !== "object" || value === null) return false;
+  const payload = value as Record<string, unknown>;
+  return (
+    payload.type === "refresh" &&
+    typeof payload.sub === "string" &&
+    typeof payload.version === "number"
+  );
 }

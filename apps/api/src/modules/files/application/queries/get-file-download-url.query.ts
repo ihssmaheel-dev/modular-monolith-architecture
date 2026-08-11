@@ -3,6 +3,7 @@ import { ok, err, Result } from "neverthrow";
 import { StorageService } from "../../../../infrastructure/storage/storage.service";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
+import type { AuthenticatedUser } from "@repo/shared";
 
 interface DownloadUrlResult {
   downloadUrl: string;
@@ -15,7 +16,10 @@ export class GetFileDownloadUrlQuery {
     private readonly filesRepo: FilesRepository,
   ) {}
 
-  async execute(fileId: string): Promise<Result<DownloadUrlResult, FileError>> {
+  async execute(
+    fileId: string,
+    actor: AuthenticatedUser,
+  ): Promise<Result<DownloadUrlResult, FileError>> {
     const findResult = await this.filesRepo.findById(fileId);
 
     if (findResult.isErr() || !findResult.value) {
@@ -26,6 +30,9 @@ export class GetFileDownloadUrlQuery {
     }
 
     const file = findResult.value;
+    if (actor.role !== "admin" && file.uploadedBy !== actor.sub) {
+      return err({ type: "FILE_NOT_FOUND", message: "api.file.notFound" });
+    }
     const urlResult = await this.storage.getPresignedDownloadUrl(file.key);
 
     if (urlResult.isErr()) {

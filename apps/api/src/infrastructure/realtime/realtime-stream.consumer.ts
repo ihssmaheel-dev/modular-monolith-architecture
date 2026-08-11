@@ -38,13 +38,7 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
     if (!this.subscriber || this.isShuttingDown) return;
 
     try {
-      const result = await this.subscriber.xread(
-        "BLOCK",
-        5000,
-        "STREAMS",
-        STREAM_KEY,
-        this.lastId
-      );
+      const result = await this.subscriber.xread("BLOCK", 5000, "STREAMS", STREAM_KEY, this.lastId);
 
       if (result && result.length > 0 && result[0]) {
         const stream = result[0];
@@ -52,7 +46,7 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
 
         for (const message of messages) {
           this.lastId = message[0];
-          
+
           // Calculate consumer lag
           try {
             const timestampStr = this.lastId.split("-")[0];
@@ -60,7 +54,11 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
               const timestamp = parseInt(timestampStr, 10);
               const lag = Date.now() - timestamp;
               if (!isNaN(lag) && lag >= 0) {
-                this.metrics.recordHistogram("realtime_consumer_lag_ms", "Lag between event generation and stream consumption", lag);
+                this.metrics.recordHistogram(
+                  "realtime_consumer_lag_ms",
+                  "Lag between event generation and stream consumption",
+                  lag,
+                );
               }
             }
           } catch (e) {
@@ -68,7 +66,7 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
           }
 
           const fields = message[1];
-          
+
           let target = "broadcast";
           let event = "";
           let payloadStr = "null";
@@ -98,7 +96,7 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
       }
     } catch (err) {
       this.logger.error({ err }, "Redis XREAD error");
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
 
     if (!this.isShuttingDown) {

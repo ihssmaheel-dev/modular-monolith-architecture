@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAuthStore } from "../../stores/auth.store";
 import { colors } from "@repo/shared";
+import { useTranslation } from "react-i18next";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -28,6 +29,7 @@ function getTabColors(theme: "light" | "dark") {
 }
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated) {
@@ -54,7 +56,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("home.title"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name={tabIcons.index} size={size} color={color} />
           ),
@@ -63,7 +65,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="users"
         options={{
-          title: "Users",
+          title: t("users.title"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name={tabIcons.users} size={size} color={color} />
           ),
@@ -72,7 +74,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: t("settings.title"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name={tabIcons.settings} size={size} color={color} />
           ),

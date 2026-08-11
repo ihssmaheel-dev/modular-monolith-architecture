@@ -29,7 +29,7 @@ export class CacheMetricsService {
       "cache_operations_total",
       "Total number of cache operations",
       count,
-      { operation: event, layer }
+      { operation: event, layer },
     );
   }
 }

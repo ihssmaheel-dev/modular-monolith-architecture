@@ -38,28 +38,38 @@ export class EmailService {
 
   constructor(
     logger: PinoLoggerService,
-    private readonly metricsService: MetricsService
+    private readonly metricsService: MetricsService,
   ) {
     this.logger = logger.child({ module: "EmailService" });
-    
+
     this.circuitBreaker = new CircuitBreaker(
-      { 
-        failureThreshold: 3, 
+      {
+        failureThreshold: 3,
         resetTimeoutMs: 15000,
         onStateChange: (state) => {
           const val = state === "CLOSED" ? 0 : state === "HALF_OPEN" ? 1 : 2;
-          this.metricsService.setGauge("circuit_breaker_state", "Circuit breaker state (0=closed, 1=half, 2=open)", val, { name: "email" });
+          this.metricsService.setGauge(
+            "circuit_breaker_state",
+            "Circuit breaker state (0=closed, 1=half, 2=open)",
+            val,
+            { name: "email" },
+          );
           if (state === "OPEN") {
-             this.metricsService.incrementCounter("circuit_breaker_trips_total", "Total circuit breaker trips", 1, { name: "email" });
+            this.metricsService.incrementCounter(
+              "circuit_breaker_trips_total",
+              "Total circuit breaker trips",
+              1,
+              { name: "email" },
+            );
           }
-        }
+        },
       },
-      { code: "CIRCUIT_OPEN", message: "api.error.emailCircuitOpen" }
+      { code: "CIRCUIT_OPEN", message: "api.error.emailCircuitOpen" },
     );
 
     this.bulkhead = new Bulkhead(
       { maxConcurrent: 10 },
-      { code: "BULKHEAD_REJECTED", message: "api.error.emailBulkheadRejected" }
+      { code: "BULKHEAD_REJECTED", message: "api.error.emailBulkheadRejected" },
     );
 
     this.init();
@@ -71,7 +81,10 @@ export class EmailService {
       this.logger.info({}, "Email: Resend driver initialized");
     } else {
       this.driver = new SmtpDriver(this.logger);
-      this.logger.info({ host: env.SMTP_HOST, port: env.SMTP_PORT }, "Email: SMTP driver initialized");
+      this.logger.info(
+        { host: env.SMTP_HOST, port: env.SMTP_PORT },
+        "Email: SMTP driver initialized",
+      );
     }
   }
 
@@ -84,7 +97,7 @@ export class EmailService {
 
     if (this.driver) {
       return this.bulkhead.execute(() =>
-        this.circuitBreaker.execute(() => this.driver!.send(recipients, params))
+        this.circuitBreaker.execute(() => this.driver!.send(recipients, params)),
       );
     }
 

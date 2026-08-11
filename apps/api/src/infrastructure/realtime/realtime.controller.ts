@@ -1,31 +1,27 @@
-import { Controller, Sse, Query, UnauthorizedException, MessageEvent as NestMessageEvent } from "@nestjs/common";
+import { Controller, Sse, Req, MessageEvent as NestMessageEvent } from "@nestjs/common";
+import type { FastifyRequest } from "fastify";
 import { RealtimeService } from "./realtime.service";
 import { Subject, Observable } from "rxjs";
 import { finalize } from "rxjs/operators";
+import { requireAuthenticatedUser } from "../../common/utils/request-user.utils";
 
 @Controller("realtime")
 export class RealtimeController {
   constructor(private readonly realtimeService: RealtimeService) {}
 
   @Sse("events")
-  sse(@Query("userId") userId: string): Observable<NestMessageEvent> {
-    if (!userId) {
-      throw new UnauthorizedException();
-    }
+  sse(@Req() request: FastifyRequest): Observable<NestMessageEvent> {
+    const user = requireAuthenticatedUser(request);
 
     const subject = new Subject<NestMessageEvent>();
-    
-    // Register the SSE client connection
-    this.realtimeService.addSseClient(userId, subject);
+    this.realtimeService.addSseClient(user.sub, subject);
 
-    // Send an initial connected event
-    subject.next({ data: { status: "connected", userId } } as NestMessageEvent);
+    subject.next({ data: { status: "connected" } } as NestMessageEvent);
 
-    // When the HTTP connection drops, this finalize block fires
     return subject.asObservable().pipe(
       finalize(() => {
-        this.realtimeService.removeSseClient(userId, subject);
-      })
+        this.realtimeService.removeSseClient(user.sub, subject);
+      }),
     );
   }
 }

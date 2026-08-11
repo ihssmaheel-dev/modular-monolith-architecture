@@ -8,9 +8,12 @@ import { BaseRepository } from "../database/base.repository";
 export interface OutboxEvent {
   id: string;
   topic: string;
-  payload: any;
+  payload: unknown;
   status: "PENDING" | "PROCESSING" | "PUBLISHED" | "FAILED";
   error?: string;
+  attempts: number;
+  nextAttemptAt?: Date;
+  lockedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,13 +33,17 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxEventMon
     super(model, cls);
   }
 
-  protected toDomain(doc: LeanOutboxDocument): OutboxEvent {
+  protected toDomain(value: unknown): OutboxEvent {
+    const doc = value as LeanOutboxDocument;
     return {
       id: doc._id.toString(),
       topic: doc.topic,
       payload: doc.payload,
       status: doc.status as OutboxEvent["status"],
       error: doc.error,
+      attempts: doc.attempts ?? 0,
+      nextAttemptAt: doc.nextAttemptAt,
+      lockedAt: doc.lockedAt,
       createdAt: doc.createdAt ?? new Date(),
       updatedAt: doc.updatedAt ?? new Date(),
     };
@@ -49,11 +56,17 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxEventMon
     // In multi-node setups, findOneAndUpdate is safe
     const events: OutboxEvent[] = [];
     for (let i = 0; i < limit; i++) {
-      const doc = await this.model.findOneAndUpdate(
-        { status: "PENDING" },
-        { $set: { status: "PROCESSING" } },
-        { sort: { createdAt: 1 }, new: true }
-      ).lean().exec();
+      const doc = await this.model
+        .findOneAndUpdate(
+          {
+            status: "PENDING",
+            $or: [{ nextAttemptAt: { $exists: false } }, { nextAttemptAt: { $lte: new Date() } }],
+          },
+          { $set: { status: "PROCESSING", lockedAt: new Date() } },
+          { sort: { createdAt: 1 }, new: true },
+        )
+        .lean()
+        .exec();
 
       if (!doc) break; // No more pending events
       events.push(this.toDomain(doc as LeanOutboxDocument));
@@ -66,5 +79,15 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxEventMon
    */
   async countPendingEvents(): Promise<number> {
     return this.model.countDocuments({ status: "PENDING" }).exec();
+  }
+
+  async recoverStaleLocks(lockedBefore: Date): Promise<number> {
+    const result = await this.model
+      .updateMany(
+        { status: "PROCESSING", lockedAt: { $lt: lockedBefore } },
+        { $set: { status: "PENDING" }, $unset: { lockedAt: "" } },
+      )
+      .exec();
+    return result.modifiedCount;
   }
 }

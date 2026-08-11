@@ -8,6 +8,9 @@ import { VerifyUserCredentialsQuery } from "./application/queries/verify-user-cr
 import { CreateUserCommand } from "./application/commands/create-user.command";
 import { UpdateUserCommand } from "./application/commands/update-user.command";
 import { DeleteUserCommand } from "./application/commands/delete-user.command";
+import { ResetUserPasswordCommand } from "./application/commands/reset-user-password.command";
+import { SetPasswordResetTokenCommand } from "./application/commands/set-password-reset-token.command";
+import { IncrementAuthVersionCommand } from "./application/commands/increment-auth-version.command";
 import { UsersRepository } from "./infrastructure/users.repository";
 import { UserMongooseSchema, UserSchema } from "./infrastructure/schemas/user.mongoose.schema";
 import { EventEmitterModule } from "@nestjs/event-emitter";
@@ -27,6 +30,9 @@ import { WelcomeEmailListener } from "./application/listeners/welcome-email.list
     CreateUserCommand,
     UpdateUserCommand,
     DeleteUserCommand,
+    ResetUserPasswordCommand,
+    SetPasswordResetTokenCommand,
+    IncrementAuthVersionCommand,
     UsersRepository,
     WelcomeEmailListener,
   ],
@@ -38,7 +44,9 @@ import { WelcomeEmailListener } from "./application/listeners/welcome-email.list
     CreateUserCommand,
     UpdateUserCommand,
     DeleteUserCommand,
-    UsersRepository,
+    ResetUserPasswordCommand,
+    SetPasswordResetTokenCommand,
+    IncrementAuthVersionCommand,
   ],
 })
 export class UsersModule {}

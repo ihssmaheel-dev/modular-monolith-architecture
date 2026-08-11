@@ -1,70 +1,62 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ForgotPasswordCommand } from "./forgot-password.command";
-import { GetUserByEmailQuery } from "../../../users/application/queries/get-user-by-email.query";
-import { EmailService } from "../../../../infrastructure/email/email.service";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ok } from "neverthrow";
 import { User } from "../../../users/domain/entities/user.entity";
-import crypto from "crypto";
+import { GetUserByEmailQuery } from "../../../users/application/queries/get-user-by-email.query";
+import { SetPasswordResetTokenCommand } from "../../../users/application/commands/set-password-reset-token.command";
+import { EmailService } from "../../../../infrastructure/email/email.service";
+import { I18nService } from "../../../../infrastructure/i18n/i18n.service";
+import { ForgotPasswordCommand } from "./forgot-password.command";
 
-vi.mock("crypto", () => {
-  const mockRandomBytes = vi.fn();
-  return {
-    default: {
-      randomBytes: mockRandomBytes as any,
-    },
-    randomBytes: mockRandomBytes as any,
-  };
+const USER = User.fromPersistence({
+  id: "user-123",
+  email: "test@example.com",
+  name: "Test",
+  role: "user",
+  createdAt: new Date(),
+  updatedAt: new Date(),
 });
 
 describe("ForgotPasswordCommand", () => {
   let command: ForgotPasswordCommand;
   let getUserByEmail: GetUserByEmailQuery;
+  let setResetToken: SetPasswordResetTokenCommand;
   let emailService: EmailService;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    
-    getUserByEmail = {
-      execute: vi.fn(),
-    } as unknown as GetUserByEmailQuery;
-    
-    emailService = {
-      send: vi.fn(),
-    } as unknown as EmailService;
-    
-    command = new ForgotPasswordCommand(getUserByEmail, emailService);
+    getUserByEmail = { execute: vi.fn() } as unknown as GetUserByEmailQuery;
+    setResetToken = { execute: vi.fn() } as unknown as SetPasswordResetTokenCommand;
+    emailService = { send: vi.fn() } as unknown as EmailService;
+    const i18n = { t: vi.fn((key: string) => key) } as unknown as I18nService;
+    command = new ForgotPasswordCommand(getUserByEmail, setResetToken, emailService, i18n);
   });
 
-  it("should return ok and NOT send email if user does not exist (prevent enumeration)", async () => {
-    // Arrange
+  it("does not reveal that an account is missing", async () => {
     vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(null));
 
-    // Act
-    const result = await command.execute("nonexistent@example.com");
+    const result = await command.execute("missing@example.com");
 
-    // Assert
     expect(result.isOk()).toBe(true);
+    expect(setResetToken.execute).not.toHaveBeenCalled();
     expect(emailService.send).not.toHaveBeenCalled();
   });
 
+  it("stores a token hash before sending a localized reset email", async () => {
+    vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(USER));
+    vi.mocked(setResetToken.execute).mockResolvedValue(ok(undefined));
+    vi.mocked(emailService.send).mockResolvedValue(ok({ id: "email-1", provider: "smtp" }));
 
+    const result = await command.execute(USER.email, "fr");
 
-  it("should send reset email and return ok if user exists", async () => {
-    // Arrange
-    const user = User.fromPersistence({ id: "123", email: "test@example.com", name: "Test", role: "user", createdAt: new Date(), updatedAt: new Date() });
-    vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(user));
-    vi.mocked(crypto.randomBytes).mockReturnValue(Buffer.from("mocktokenbytes") as any);
-    vi.mocked(emailService.send).mockResolvedValue(ok(undefined as any));
-
-    // Act
-    const result = await command.execute("test@example.com");
-
-    // Assert
     expect(result.isOk()).toBe(true);
+    expect(setResetToken.execute).toHaveBeenCalledWith(
+      USER.id,
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+      expect.any(Date),
+    );
     expect(emailService.send).toHaveBeenCalledWith({
-      to: "test@example.com",
-      subject: "Password Reset Request",
-      html: expect.stringContaining("6d6f636b746f6b656e6279746573"), // hex of "mocktokenbytes"
+      to: USER.email,
+      subject: "email.passwordReset.subject",
+      html: expect.stringContaining("/reset-password?token="),
     });
   });
 });

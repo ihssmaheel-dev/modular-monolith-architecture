@@ -1,8 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { locales, DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "@repo/shared";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type NestedMessages = Record<string, string | any>;
+type NestedMessages = Record<string, unknown>;
 
 const INTERPOLATION_PATTERN = /\{\{\s*(\w+)\s*\}\}/g;
 
@@ -21,7 +20,11 @@ export class I18nService {
 
   translate(key: string, locale: Locale = DEFAULT_LOCALE): string {
     const messages = locales[locale] ?? locales[DEFAULT_LOCALE];
-    return this.resolveNestedKey(messages, key) ?? this.resolveNestedKey(locales[DEFAULT_LOCALE], key) ?? key;
+    return (
+      this.resolveNestedKey(messages, key) ??
+      this.resolveNestedKey(locales[DEFAULT_LOCALE], key) ??
+      key
+    );
   }
 
   t(key: string, acceptLanguage?: string, params?: Record<string, string | number>): string {

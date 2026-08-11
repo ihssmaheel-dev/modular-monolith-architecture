@@ -13,7 +13,10 @@ export class ResendDriver implements EmailDriver {
     this.logger = logger.child({ module: "ResendDriver" });
   }
 
-  async send(recipients: string[], params: SendEmailParams): Promise<Result<SendEmailResult, EmailError>> {
+  async send(
+    recipients: string[],
+    params: SendEmailParams,
+  ): Promise<Result<SendEmailResult, EmailError>> {
     try {
       const response = await this.client.emails.send({
         from: env.EMAIL_FROM,

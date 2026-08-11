@@ -24,7 +24,8 @@
     "docker:prod": "docker-compose -f docker/docker-compose.prod.yml up -d",
     "clean": "turbo clean && rm -rf node_modules",
     "prepare": "husky",
-    "generate:module": "node scripts/generate-module.js"
+    "generate:module": "node scripts/generate-module.js",
+    "rules:check": "node scripts/check-rules.js"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",

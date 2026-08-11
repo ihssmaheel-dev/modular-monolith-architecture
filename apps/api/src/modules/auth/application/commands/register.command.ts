@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
 import { z } from "zod";
-import { RegisterSchema } from "@repo/shared";
+import { DEFAULT_LOCALE, RegisterSchema, type Locale } from "@repo/shared";
 import type { AuthResponse } from "@repo/shared";
 import type { AuthError } from "../../domain/errors/auth.errors";
 import { GetUserByEmailQuery } from "../../../users/application/queries/get-user-by-email.query";
@@ -17,22 +17,26 @@ export class RegisterCommand {
 
   async execute(
     data: z.infer<typeof RegisterSchema>,
+    locale: Locale = DEFAULT_LOCALE,
   ): Promise<Result<AuthResponse, AuthError>> {
     const existing = await this.getUserByEmail.execute(data.email);
     if (existing.isErr() || existing.value) {
       return err({ type: "EMAIL_TAKEN" });
     }
 
-    const result = await this.createUser.execute({
-      email: data.email,
-      name: data.name,
-      password: data.password,
-    });
+    const result = await this.createUser.execute(
+      {
+        email: data.email,
+        name: data.name,
+        password: data.password,
+      },
+      locale,
+    );
     if (result.isErr()) return err({ type: "EMAIL_TAKEN" });
 
     const user = result.value;
     const accessToken = signAccessToken(user.id, user.email, user.role);
-    const refreshToken = signRefreshToken(user.id);
+    const refreshToken = signRefreshToken(user.id, user.authVersion);
 
     return ok({
       accessToken,

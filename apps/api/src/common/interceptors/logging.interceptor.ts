@@ -1,6 +1,6 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
-import { Observable, tap } from 'rxjs';
-import { PinoLoggerService } from '../../infrastructure/logger/logger.service';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from "@nestjs/common";
+import { Observable, tap } from "rxjs";
+import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -14,7 +14,7 @@ export class LoggingInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         const duration = Date.now() - start;
-        this.logger.info({ method, url, duration }, 'Request completed');
+        this.logger.info({ method, url, duration }, "Request completed");
       }),
     );
   }

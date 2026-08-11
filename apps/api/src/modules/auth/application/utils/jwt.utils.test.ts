@@ -18,32 +18,32 @@ describe("jwt.utils", () => {
     it("should sign a JWT with the correct payload and expiry", () => {
       const userId = "user-123";
       const email = "test@example.com";
-      const role = "USER";
-      vi.mocked(jwt.sign).mockReturnValue("mock-access-token" as any);
+      const role = "user" as const;
+      vi.mocked(jwt.sign).mockImplementation(() => "mock-access-token");
 
       const token = signAccessToken(userId, email, role);
 
       expect(token).toBe("mock-access-token");
-      expect(jwt.sign).toHaveBeenCalledWith(
-        { sub: userId, email, role },
-        env.JWT_SECRET,
-        { expiresIn: "15m" }
-      );
+      expect(jwt.sign).toHaveBeenCalledWith({ sub: userId, email, role }, env.JWT_SECRET, {
+        algorithm: "HS256",
+        expiresIn: "15m",
+      });
     });
   });
 
   describe("signRefreshToken", () => {
     it("should sign a refresh token with the correct payload and expiry", () => {
       const userId = "user-123";
-      vi.mocked(jwt.sign).mockReturnValue("mock-refresh-token" as any);
+      const version = 2;
+      vi.mocked(jwt.sign).mockImplementation(() => "mock-refresh-token");
 
-      const token = signRefreshToken(userId);
+      const token = signRefreshToken(userId, version);
 
       expect(token).toBe("mock-refresh-token");
       expect(jwt.sign).toHaveBeenCalledWith(
-        { sub: userId, type: "refresh" },
+        { sub: userId, type: "refresh", version },
         env.JWT_REFRESH_SECRET,
-        { expiresIn: "7d" }
+        { algorithm: "HS256", expiresIn: "7d" },
       );
     });
   });

@@ -5,6 +5,7 @@ import { UserNotFound } from "../../domain/errors/user.errors";
 import { UserDeletedEvent } from "../../domain/events/user.events";
 import { UsersRepository } from "../../infrastructure/users.repository";
 import { GetUserByIdQuery } from "../queries/get-user-by-id.query";
+import { DistributedCacheService } from "../../../../infrastructure/cache/distributed-cache.service";
 
 @Injectable()
 export class DeleteUserCommand {
@@ -12,6 +13,7 @@ export class DeleteUserCommand {
     private readonly repository: UsersRepository,
     private readonly getUserById: GetUserByIdQuery,
     private readonly eventEmitter: EventEmitter2,
+    private readonly cacheService: DistributedCacheService,
   ) {}
 
   async execute(id: string): Promise<Result<void, UserNotFound>> {
@@ -22,6 +24,7 @@ export class DeleteUserCommand {
     if (deleted.isErr()) return err({ type: "USER_NOT_FOUND", userId: id });
     if (!deleted.value) return err({ type: "USER_NOT_FOUND", userId: id });
 
+    await this.cacheService.invalidateGlobal(`user:${id}`);
     this.eventEmitter.emit("user.deleted", new UserDeletedEvent(id));
 
     return ok(undefined);

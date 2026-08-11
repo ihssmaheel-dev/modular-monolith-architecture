@@ -1,16 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Button } from "@repo/ui";
+import { useTranslation } from "react-i18next";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 
 function UsersPage() {
+  const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({
     queryKey: ["users", { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT }],
     queryFn: async () => {
-      const result = await (api.users.list as any)({ query: { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT } });
+      const result = await api.users.list({
+        query: { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT },
+      });
+      if (result.status !== 200) throw new Error("USERS_FETCH_FAILED");
       return result.body;
     },
     staleTime: 5 * 60 * 1000,
@@ -32,23 +36,20 @@ function UsersPage() {
   if (error) {
     return (
       <div className="rounded-lg border bg-destructive/10 p-4 text-destructive">
-        Failed to load users. Please try again.
+        {t("users.loadFailed")}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Users</h2>
-          <p className="text-muted-foreground">Manage your users</p>
-        </div>
-        <Button>Add User</Button>
+      <div>
+        <h2 className="text-2xl font-bold">{t("users.title")}</h2>
+        <p className="text-muted-foreground">{t("users.manage")}</p>
       </div>
 
       <div className="space-y-3">
-        {data?.users.map((user: any) => (
+        {data?.users.map((user) => (
           <div
             key={user.id}
             className="flex items-center justify-between rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-accent/50"
@@ -56,14 +57,6 @@ function UsersPage() {
             <div>
               <p className="font-medium">{user.name}</p>
               <p className="text-sm text-muted-foreground">{user.email}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                Edit
-              </Button>
-              <Button variant="destructive" size="sm">
-                Delete
-              </Button>
             </div>
           </div>
         ))}

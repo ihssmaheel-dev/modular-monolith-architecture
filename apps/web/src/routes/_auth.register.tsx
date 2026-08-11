@@ -1,43 +1,42 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@repo/ui";
+import { api } from "@/lib/api";
+import { getResponseMessage } from "@/lib/api-response";
 import { useAuthStore } from "@/stores/auth.store";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@repo/ui";
-import { Input } from "@repo/ui";
-import { Label } from "@repo/ui";
-import { Button } from "@repo/ui";
-import { API_BASE_URL } from "@/lib/api";
 
 function RegisterPage() {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError("");
     setLoading(true);
-
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message ?? "Registration failed");
+      const result = await api.auth.register({ body: { name, email, password } });
+      if (result.status !== 201) {
+        setError(getResponseMessage(result.body) ?? t("auth.registrationFailed"));
         return;
       }
-
-      login({ user: data.user });
+      login({ user: result.body.user });
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("errors.networkError"));
     } finally {
       setLoading(false);
     }
@@ -46,61 +45,55 @@ function RegisterPage() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Create an account</CardTitle>
-        <CardDescription>Enter your details to get started</CardDescription>
+        <CardTitle className="text-2xl">{t("auth.createAccountTitle")}</CardTitle>
+        <CardDescription>{t("auth.registerDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
           )}
-
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t("auth.name")}</Label>
             <Input
               id="name"
-              type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="John Doe"
+              onChange={(event) => setName(event.target.value)}
+              placeholder={t("auth.namePlaceholder")}
               required
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("auth.email")}</Label>
             <Input
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder={t("auth.emailPlaceholder")}
               required
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("auth.password")}</Label>
             <Input
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Create a password"
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder={t("auth.createPasswordPlaceholder")}
               minLength={8}
               required
             />
           </div>
-
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Create account"}
+            {loading ? t("auth.creatingAccount") : t("auth.createAccount")}
           </Button>
         </form>
-
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          {t("auth.hasAccount")}{" "}
           <Link to="/login" className="text-primary hover:underline">
-            Sign in
+            {t("auth.signIn")}
           </Link>
         </div>
       </CardContent>
@@ -108,6 +101,4 @@ function RegisterPage() {
   );
 }
 
-export const Route = createFileRoute("/_auth/register")({
-  component: RegisterPage,
-});
+export const Route = createFileRoute("/_auth/register")({ component: RegisterPage });

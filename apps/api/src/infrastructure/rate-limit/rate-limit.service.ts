@@ -19,14 +19,9 @@ export interface RateLimitResult {
 
 @Injectable()
 export class RateLimitService {
-  constructor(
-    private readonly redis: RedisService,
-  ) {}
+  constructor(private readonly redis: RedisService) {}
 
-  async check(
-    key: string,
-    config: RateLimitConfig = {},
-  ): Promise<RateLimitResult> {
+  async check(key: string, config: RateLimitConfig = {}): Promise<RateLimitResult> {
     const windowSeconds = config.windowSeconds ?? DEFAULT_WINDOW_SECONDS;
     const maxRequests = config.maxRequests ?? DEFAULT_MAX_REQUESTS;
     const now = Date.now();
@@ -36,7 +31,11 @@ export class RateLimitService {
     const client = this.redis.getClient();
     if (!client) {
       // If Redis is down, gracefully bypass rate limiting
-      return { allowed: true, remaining: maxRequests, resetAt: Math.ceil((now + windowSeconds * MS_PER_SECOND) / MS_PER_SECOND) };
+      return {
+        allowed: true,
+        remaining: maxRequests,
+        resetAt: Math.ceil((now + windowSeconds * MS_PER_SECOND) / MS_PER_SECOND),
+      };
     }
 
     const pipeline = client.pipeline();

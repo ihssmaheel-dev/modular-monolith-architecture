@@ -1,41 +1,42 @@
-import { initContract } from "@ts-rest/core";
-import { z } from "zod";
-import { CreateNoteSchema, UpdateNoteSchema, NoteResponseSchema } from "../schemas/note.schema";
+import { initContract, type AppRouter } from "@ts-rest/core";
+import {
+  CreateNoteSchema,
+  NoteListResponseSchema,
+  NoteResponseSchema,
+  UpdateNoteSchema,
+} from "../schemas/note.schema";
+import { MessageResponseSchema } from "../schemas/auth.schema";
+import { PaginationQuerySchema } from "../schemas/pagination.schema";
+import { contractSchema } from "./contract-schema";
 
 const c = initContract();
 
-export const notesContract = c.router({
+export const notesContract = {
   createNote: {
     method: "POST" as const,
     path: "/notes",
     responses: {
-      201: NoteResponseSchema as any,
-      400: { message: "" } as any,
+      201: contractSchema(NoteResponseSchema),
+      400: contractSchema(MessageResponseSchema),
     },
-    body: CreateNoteSchema as any,
+    body: contractSchema(CreateNoteSchema),
     summary: "Create a new note",
   },
   getNotes: {
     method: "GET" as const,
     path: "/notes",
     responses: {
-      200: z.object({
-        items: z.array(NoteResponseSchema),
-        total: z.number(),
-        page: z.number(),
-        totalPages: z.number(),
-      }) as any,
+      200: contractSchema(NoteListResponseSchema),
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    query: { page: undefined, limit: undefined } as any,
+    query: contractSchema(PaginationQuerySchema),
     summary: "Get paginated notes",
   },
   getNoteById: {
     method: "GET" as const,
     path: "/notes/:id",
     responses: {
-      200: NoteResponseSchema as any,
-      404: { message: "" } as any,
+      200: contractSchema(NoteResponseSchema),
+      404: contractSchema(MessageResponseSchema),
     },
     summary: "Get a note by ID",
   },
@@ -43,20 +44,19 @@ export const notesContract = c.router({
     method: "PATCH" as const,
     path: "/notes/:id",
     responses: {
-      200: NoteResponseSchema as any,
-      404: { message: "" } as any,
+      200: contractSchema(NoteResponseSchema),
+      404: contractSchema(MessageResponseSchema),
     },
-    body: UpdateNoteSchema as any,
+    body: contractSchema(UpdateNoteSchema),
     summary: "Update a note",
   },
   deleteNote: {
     method: "DELETE" as const,
     path: "/notes/:id",
     responses: {
-      204: undefined as any,
-      404: { message: "" } as any,
+      204: c.noBody(),
+      404: contractSchema(MessageResponseSchema),
     },
-    body: undefined as any,
     summary: "Delete a note",
   },
-});
+} as const satisfies AppRouter;

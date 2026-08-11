@@ -6,6 +6,8 @@ import { GetNoteByIdQuery } from "../queries/get-note-by-id.query";
 import { Note } from "../../domain/entities/note.entity";
 import { ok, err } from "neverthrow";
 
+const ACTOR = { sub: "admin-1", email: "admin@example.com", role: "admin" } as const;
+
 describe("DeleteNoteCommand", () => {
   let command: DeleteNoteCommand;
   let repository: NotesRepository;
@@ -24,16 +26,18 @@ describe("DeleteNoteCommand", () => {
     eventEmitter = {
       emit: vi.fn(),
     } as unknown as EventEmitter2;
-    
+
     command = new DeleteNoteCommand(repository, getNoteById, eventEmitter);
   });
 
   it("should return err NOTE_NOT_FOUND if query returns err", async () => {
     // Arrange
-    vi.mocked(getNoteById.execute).mockResolvedValue(err({ type: "NOTE_NOT_FOUND", noteId: "123" }));
+    vi.mocked(getNoteById.execute).mockResolvedValue(
+      err({ type: "NOTE_NOT_FOUND", noteId: "123" }),
+    );
 
     // Act
-    const result = await command.execute("123");
+    const result = await command.execute("123", ACTOR);
 
     // Assert
     expect(result.isErr()).toBe(true);
@@ -55,7 +59,7 @@ describe("DeleteNoteCommand", () => {
     vi.mocked(repository.deleteById).mockResolvedValue(ok(true));
 
     // Act
-    const result = await command.execute("123");
+    const result = await command.execute("123", ACTOR);
 
     // Assert
     expect(result.isOk()).toBe(true);
@@ -75,7 +79,7 @@ describe("DeleteNoteCommand", () => {
     vi.mocked(repository.deleteById).mockResolvedValue(ok(false));
 
     // Act
-    const result = await command.execute("123");
+    const result = await command.execute("123", ACTOR);
 
     // Assert
     expect(result.isErr()).toBe(true);

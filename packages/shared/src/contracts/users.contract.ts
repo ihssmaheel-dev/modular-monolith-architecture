@@ -1,58 +1,57 @@
-import { initContract } from "@ts-rest/core";
+import { initContract, type AppRouter } from "@ts-rest/core";
 import {
   CreateUserSchema,
   UpdateUserSchema,
   UserResponseSchema,
   UserListResponseSchema,
 } from "../schemas/user.schema";
+import { MessageResponseSchema } from "../schemas/auth.schema";
+import { PaginationQuerySchema } from "../schemas/pagination.schema";
+import { contractSchema } from "./contract-schema";
 
 const c = initContract();
 
-// ts-rest v3 uses its own schema inference which is incompatible with Zod v4.
-// The contract is typed as `any` to bypass broken inference; runtime validation
-// still uses the Zod schemas defined below.
-export const usersContract = c.router({
+export const usersContract = {
   list: {
     method: "GET" as const,
     path: "/users",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    query: { page: undefined, limit: undefined } as any,
+    query: contractSchema(PaginationQuerySchema),
     responses: {
-      200: UserListResponseSchema as any,
+      200: contractSchema(UserListResponseSchema),
     },
   },
   getById: {
     method: "GET" as const,
     path: "/users/:id",
     responses: {
-      200: UserResponseSchema as any,
-      404: { message: "" } as any,
+      200: contractSchema(UserResponseSchema),
+      404: contractSchema(MessageResponseSchema),
     },
   },
   create: {
     method: "POST" as const,
     path: "/users",
-    body: CreateUserSchema as any,
+    body: contractSchema(CreateUserSchema),
     responses: {
-      201: UserResponseSchema as any,
-      409: { message: "" } as any,
+      201: contractSchema(UserResponseSchema),
+      409: contractSchema(MessageResponseSchema),
     },
   },
   update: {
     method: "PATCH" as const,
     path: "/users/:id",
-    body: UpdateUserSchema as any,
+    body: contractSchema(UpdateUserSchema),
     responses: {
-      200: UserResponseSchema as any,
-      404: { message: "" } as any,
+      200: contractSchema(UserResponseSchema),
+      404: contractSchema(MessageResponseSchema),
     },
   },
   delete: {
     method: "DELETE" as const,
     path: "/users/:id",
     responses: {
-      204: undefined as any,
-      404: { message: "" } as any,
+      204: c.noBody(),
+      404: contractSchema(MessageResponseSchema),
     },
   },
-});
+} as const satisfies AppRouter;

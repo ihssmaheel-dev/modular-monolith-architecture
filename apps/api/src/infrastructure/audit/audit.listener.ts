@@ -1,8 +1,9 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { AuditLogMongooseSchema } from "./schemas/audit-log.mongoose.schema";
+import { PinoLoggerService } from "../logger/logger.service";
 
 export class DatabaseMutatedEvent {
   constructor(
@@ -10,22 +11,25 @@ export class DatabaseMutatedEvent {
     public readonly documentId: string,
     public readonly action: "CREATE" | "UPDATE" | "DELETE",
     public readonly actorId: string | undefined,
-    public readonly before: any,
-    public readonly after: any,
+    public readonly before: unknown,
+    public readonly after: unknown,
   ) {}
 }
 
 @Injectable()
 export class AuditListener {
-  private readonly logger = new Logger(AuditListener.name);
+  private readonly logger: PinoLoggerService;
 
   constructor(
     @InjectModel(AuditLogMongooseSchema.name)
     private readonly auditLogModel: Model<AuditLogMongooseSchema>,
-  ) {}
+    logger: PinoLoggerService,
+  ) {
+    this.logger = logger.child({ module: "AuditListener" });
+  }
 
   @OnEvent("database.mutated", { async: true })
-  async handleDatabaseMutatedEvent(event: DatabaseMutatedEvent) {
+  async handleDatabaseMutatedEvent(event: DatabaseMutatedEvent): Promise<void> {
     try {
       await this.auditLogModel.create({
         collectionName: event.collectionName,
@@ -38,8 +42,12 @@ export class AuditListener {
     } catch (error) {
       // Audit failures must not crash the application, but should be heavily alerted
       this.logger.error(
-        `Failed to save audit log for ${event.collectionName}:${event.documentId}`,
-        error instanceof Error ? error.stack : String(error),
+        {
+          error,
+          collectionName: event.collectionName,
+          documentId: event.documentId,
+        },
+        "Failed to save audit log",
       );
     }
   }

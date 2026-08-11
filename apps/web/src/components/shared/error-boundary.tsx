@@ -1,47 +1,43 @@
-import { Component } from "react";
+import { Component, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Button } from "@repo/ui";
-import { withTranslation, WithTranslation } from "react-i18next";
 
-interface ErrorBoundaryProps extends WithTranslation {
-  children: React.ReactNode;
+interface BoundaryProps {
+  children: ReactNode;
+  t: TFunction;
 }
 
-interface ErrorBoundaryState {
+interface BoundaryState {
   hasError: boolean;
-  error: Error | null;
 }
 
-class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+class Boundary extends Component<BoundaryProps, BoundaryState> {
+  state: BoundaryState = { hasError: false };
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error): BoundaryState {
+    void error;
+    return { hasError: true };
   }
 
   render() {
-    if (this.state.hasError) {
-      const { t } = this.props;
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-background p-4">
-          <div className="max-w-md text-center">
-            <h2 className="text-2xl font-bold text-foreground">{t("errors.serverError")}</h2>
-            <p className="mt-2 text-muted-foreground">{this.state.error?.message}</p>
-            <Button
-              onClick={() => this.setState({ hasError: false, error: null })}
-              className="mt-4"
-            >
-              {t("common.retry")}
-            </Button>
-          </div>
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md text-center">
+          <h2 className="text-2xl font-bold text-foreground">
+            {this.props.t("errors.serverError")}
+          </h2>
+          <Button onClick={() => this.setState({ hasError: false })} className="mt-4">
+            {this.props.t("common.retry")}
+          </Button>
         </div>
-      );
-    }
-
-    return this.props.children;
+      </div>
+    );
   }
 }
 
-export const ErrorBoundary = withTranslation()(ErrorBoundaryComponent as any) as any;
+export function ErrorBoundary({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+  return <Boundary t={t}>{children}</Boundary>;
+}

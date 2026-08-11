@@ -4,6 +4,8 @@ import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import { ok } from "neverthrow";
 
+const ACTOR = { sub: "user-1", email: "user@example.com", role: "user" } as const;
+
 describe("ListFilesByParentQuery", () => {
   let query: ListFilesByParentQuery;
   let filesRepo: FilesRepository;
@@ -41,45 +43,78 @@ describe("ListFilesByParentQuery", () => {
 
   beforeEach(() => {
     filesRepo = {
-      find: vi.fn(),
-      findByParent: vi.fn(),
+      paginate: vi.fn(),
     } as unknown as FilesRepository;
 
     query = new ListFilesByParentQuery(filesRepo);
   });
 
   it("should return files by parentId", async () => {
-    vi.mocked(filesRepo.findByParent).mockResolvedValue(mockFiles);
+    vi.mocked(filesRepo.paginate).mockResolvedValue(
+      ok({
+        items: mockFiles,
+        total: 2,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      }),
+    );
 
-    const result = await query.execute("note", "note-1");
+    const result = await query.execute("note", ACTOR, "note-1");
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       expect(result.value.items).toEqual(mockFiles);
       expect(result.value.total).toBe(2);
     }
-    expect(filesRepo.findByParent).toHaveBeenCalledWith("note", "note-1");
-    expect(filesRepo.find).not.toHaveBeenCalled();
+    expect(filesRepo.paginate).toHaveBeenCalledWith(
+      { parentType: "note", parentId: "note-1", uploadedBy: ACTOR.sub },
+      { page: 1, limit: 20, sort: { createdAt: -1 } },
+    );
   });
 
   it("should return all files by parentType when parentId is absent", async () => {
-    vi.mocked(filesRepo.find).mockResolvedValue(ok(mockFiles));
+    vi.mocked(filesRepo.paginate).mockResolvedValue(
+      ok({
+        items: mockFiles,
+        total: 2,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      }),
+    );
 
-    const result = await query.execute("note");
+    const result = await query.execute("note", ACTOR);
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       expect(result.value.items).toEqual(mockFiles);
       expect(result.value.total).toBe(2);
     }
-    expect(filesRepo.find).toHaveBeenCalledWith({ parentType: "note" });
-    expect(filesRepo.findByParent).not.toHaveBeenCalled();
+    expect(filesRepo.paginate).toHaveBeenCalledWith(
+      { parentType: "note", uploadedBy: ACTOR.sub },
+      { page: 1, limit: 20, sort: { createdAt: -1 } },
+    );
   });
 
   it("should return empty list when no files exist", async () => {
-    vi.mocked(filesRepo.findByParent).mockResolvedValue([]);
+    vi.mocked(filesRepo.paginate).mockResolvedValue(
+      ok({
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      }),
+    );
 
-    const result = await query.execute("note", "note-999");
+    const result = await query.execute("note", ACTOR, "note-999");
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {

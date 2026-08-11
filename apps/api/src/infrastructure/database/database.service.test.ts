@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DatabaseService } from "./database.service";
+import type { Connection } from "mongoose";
+import type { ClsService } from "nestjs-cls";
+import type { PinoLoggerService } from "../logger/logger.service";
 
 const mockStartSession = vi.fn();
 const mockStartTransaction = vi.fn();
@@ -23,22 +26,26 @@ describe("DatabaseService", () => {
       abortTransaction: mockAbortTransaction,
       endSession: mockEndSession,
     });
-    const mockLogger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } as any;
+    const mockLogger = {
+      info: vi.fn(),
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+    } as unknown as PinoLoggerService;
     mockLogger.child = () => mockLogger;
 
     const mockCls = {
       isActive: vi.fn().mockReturnValue(false),
       get: vi.fn().mockReturnValue({}),
       runWith: vi.fn().mockImplementation(async (_ctx, cb) => await cb()),
-    } as any;
+    } as unknown as ClsService;
 
     service = new DatabaseService(
       {
         startSession: mockStartSession,
         readyState: 1,
         close: mockClose,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      } as unknown as Connection,
       mockLogger,
       mockCls,
     );

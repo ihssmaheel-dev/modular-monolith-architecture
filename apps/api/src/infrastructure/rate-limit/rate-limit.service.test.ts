@@ -31,13 +31,11 @@ describe("RateLimitService", () => {
       exec: vi.fn().mockResolvedValue([null, null, [null, 5], null]),
     });
 
-    service = new RateLimitService(
-      {
-        getClient: () => ({
-          pipeline: mockPipeline,
-        }),
-      } as never,
-    );
+    service = new RateLimitService({
+      getClient: () => ({
+        pipeline: mockPipeline,
+      }),
+    } as never);
   });
 
   it("should allow request within limit", async () => {

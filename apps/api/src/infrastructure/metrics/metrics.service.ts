@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { Counter, Histogram, Gauge, Summary } from "prom-client";
+import { Counter, Gauge, Histogram, Summary } from "prom-client";
+
+type Labels = Record<string, string | number>;
 
 @Injectable()
 export class MetricsService {
@@ -8,183 +10,91 @@ export class MetricsService {
   private gauges = new Map<string, Gauge<string>>();
   private summaries = new Map<string, Summary<string>>();
 
-  /**
-   * Increments a counter by the given value.
-   * If the counter does not exist, it will be created.
-   * 
-   * @param name Name of the counter
-   * @param help Description of the counter
-   * @param value Value to increment by (default 1)
-   * @param labels Optional labels to attach
-   */
-  incrementCounter(name: string, help: string, value = 1, labels?: Record<string, string | number>) {
-    let counter = this.counters.get(name);
-    if (!counter) {
-      counter = new Counter({
-        name,
-        help,
-        labelNames: labels ? Object.keys(labels) : [],
-      });
-      this.counters.set(name, counter);
-    }
-    if (labels) {
-      counter.inc(labels, value);
-    } else {
-      counter.inc(value);
-    }
+  incrementCounter(name: string, help: string, value = 1, labels?: Labels): void {
+    const counter = this.getCounter(name, help, labels);
+    if (labels) counter.inc(labels, value);
+    else counter.inc(value);
   }
 
-  /**
-   * Records a value in a histogram.
-   * Useful for tracking durations or sizes.
-   * 
-   * @param name Name of the histogram
-   * @param help Description of the histogram
-   * @param value The observed value (e.g., duration in seconds)
-   * @param labels Optional labels to attach
-   * @param buckets Optional custom buckets
-   */
-  recordHistogram(name: string, help: string, value: number, labels?: Record<string, string | number>, buckets?: number[]) {
-    let histogram = this.histograms.get(name);
-    if (!histogram) {
-      histogram = new Histogram({
-        name,
-        help,
-        labelNames: labels ? Object.keys(labels) : [],
-        buckets,
-      });
-      this.histograms.set(name, histogram);
-    }
-    if (labels) {
-      histogram.observe(labels, value);
-    } else {
-      histogram.observe(value);
-    }
+  recordHistogram(
+    name: string,
+    help: string,
+    value: number,
+    labels?: Labels,
+    buckets?: number[],
+  ): void {
+    const histogram = this.getHistogram(name, help, labels, buckets);
+    if (labels) histogram.observe(labels, value);
+    else histogram.observe(value);
   }
 
-  /**
-   * Starts a timer for a histogram and returns a function to call when finished.
-   * Useful for tracking async operation durations.
-   * 
-   * @param name Name of the histogram
-   * @param help Description of the histogram
-   * @param labels Optional labels to attach
-   * @param buckets Optional custom buckets
-   * @returns A function to call when the operation completes
-   */
-  startTimer(name: string, help: string, labels?: Record<string, string | number>, buckets?: number[]) {
-    let histogram = this.histograms.get(name);
-    if (!histogram) {
-      histogram = new Histogram({
-        name,
-        help,
-        labelNames: labels ? Object.keys(labels) : [],
-        buckets,
-      });
-      this.histograms.set(name, histogram);
-    }
-    
-    // Returns a closure that stops the timer and observes the duration
+  startTimer(name: string, help: string, labels?: Labels, buckets?: number[]): () => number {
+    const histogram = this.getHistogram(name, help, labels, buckets);
     return labels ? histogram.startTimer(labels) : histogram.startTimer();
   }
 
-  /**
-   * Sets the value of a gauge.
-   * 
-   * @param name Name of the gauge
-   * @param help Description of the gauge
-   * @param value The value to set
-   * @param labels Optional labels to attach
-   */
-  setGauge(name: string, help: string, value: number, labels?: Record<string, string | number>) {
-    let gauge = this.gauges.get(name);
-    if (!gauge) {
-      gauge = new Gauge({
-        name,
-        help,
-        labelNames: labels ? Object.keys(labels) : [],
-      });
-      this.gauges.set(name, gauge);
-    }
-    if (labels) {
-      gauge.set(labels, value);
-    } else {
-      gauge.set(value);
-    }
+  setGauge(name: string, help: string, value: number, labels?: Labels): void {
+    const gauge = this.getGauge(name, help, labels);
+    if (labels) gauge.set(labels, value);
+    else gauge.set(value);
   }
 
-  /**
-   * Increments a gauge by the given value.
-   * 
-   * @param name Name of the gauge
-   * @param help Description of the gauge
-   * @param value The value to increment by (default 1)
-   * @param labels Optional labels to attach
-   */
-  incrementGauge(name: string, help: string, value = 1, labels?: Record<string, string | number>) {
-    let gauge = this.gauges.get(name);
-    if (!gauge) {
-      gauge = new Gauge({
-        name,
-        help,
-        labelNames: labels ? Object.keys(labels) : [],
-      });
-      this.gauges.set(name, gauge);
-    }
-    if (labels) {
-      gauge.inc(labels, value);
-    } else {
-      gauge.inc(value);
-    }
+  incrementGauge(name: string, help: string, value = 1, labels?: Labels): void {
+    const gauge = this.getGauge(name, help, labels);
+    if (labels) gauge.inc(labels, value);
+    else gauge.inc(value);
   }
 
-  /**
-   * Decrements a gauge by the given value.
-   * 
-   * @param name Name of the gauge
-   * @param help Description of the gauge
-   * @param value The value to decrement by (default 1)
-   * @param labels Optional labels to attach
-   */
-  decrementGauge(name: string, help: string, value = 1, labels?: Record<string, string | number>) {
-    let gauge = this.gauges.get(name);
-    if (!gauge) {
-      gauge = new Gauge({
-        name,
-        help,
-        labelNames: labels ? Object.keys(labels) : [],
-      });
-      this.gauges.set(name, gauge);
-    }
-    if (labels) {
-      gauge.dec(labels, value);
-    } else {
-      gauge.dec(value);
-    }
+  decrementGauge(name: string, help: string, value = 1, labels?: Labels): void {
+    const gauge = this.getGauge(name, help, labels);
+    if (labels) gauge.dec(labels, value);
+    else gauge.dec(value);
   }
 
-  /**
-   * Records a value in a summary.
-   * 
-   * @param name Name of the summary
-   * @param help Description of the summary
-   * @param value The observed value
-   * @param labels Optional labels to attach
-   */
-  recordSummary(name: string, help: string, value: number, labels?: Record<string, string | number>) {
-    let summary = this.summaries.get(name);
-    if (!summary) {
-      summary = new Summary({
-        name,
-        help,
-        labelNames: labels ? Object.keys(labels) : [],
-      });
-      this.summaries.set(name, summary);
+  recordSummary(name: string, help: string, value: number, labels?: Labels): void {
+    const summary = this.getSummary(name, help, labels);
+    if (labels) summary.observe(labels, value);
+    else summary.observe(value);
+  }
+
+  private getCounter(name: string, help: string, labels?: Labels): Counter<string> {
+    let metric = this.counters.get(name);
+    if (!metric) {
+      metric = new Counter({ name, help, labelNames: Object.keys(labels ?? {}) });
+      this.counters.set(name, metric);
     }
-    if (labels) {
-      summary.observe(labels, value);
-    } else {
-      summary.observe(value);
+    return metric;
+  }
+
+  private getHistogram(
+    name: string,
+    help: string,
+    labels?: Labels,
+    buckets?: number[],
+  ): Histogram<string> {
+    let metric = this.histograms.get(name);
+    if (!metric) {
+      metric = new Histogram({ name, help, labelNames: Object.keys(labels ?? {}), buckets });
+      this.histograms.set(name, metric);
     }
+    return metric;
+  }
+
+  private getGauge(name: string, help: string, labels?: Labels): Gauge<string> {
+    let metric = this.gauges.get(name);
+    if (!metric) {
+      metric = new Gauge({ name, help, labelNames: Object.keys(labels ?? {}) });
+      this.gauges.set(name, metric);
+    }
+    return metric;
+  }
+
+  private getSummary(name: string, help: string, labels?: Labels): Summary<string> {
+    let metric = this.summaries.get(name);
+    if (!metric) {
+      metric = new Summary({ name, help, labelNames: Object.keys(labels ?? {}) });
+      this.summaries.set(name, metric);
+    }
+    return metric;
   }
 }

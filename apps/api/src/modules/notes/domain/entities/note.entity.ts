@@ -3,6 +3,7 @@ export class Note {
     public readonly id: string,
     public title: string,
     public content: string,
+    public readonly createdBy: string | undefined,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
   ) {}
@@ -11,10 +12,18 @@ export class Note {
     id: string;
     title: string;
     content: string;
+    createdBy?: string;
     createdAt: Date;
     updatedAt: Date;
   }): Note {
-    return new Note(data.id, data.title, data.content, data.createdAt, data.updatedAt);
+    return new Note(
+      data.id,
+      data.title,
+      data.content,
+      data.createdBy,
+      data.createdAt,
+      data.updatedAt,
+    );
   }
 
   update(data: { title?: string; content?: string }): void {

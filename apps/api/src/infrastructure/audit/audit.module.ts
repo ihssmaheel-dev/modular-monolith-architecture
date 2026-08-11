@@ -5,9 +5,7 @@ import { AuditListener } from "./audit.listener";
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: AuditLogMongooseSchema.name, schema: AuditLogSchema },
-    ]),
+    MongooseModule.forFeature([{ name: AuditLogMongooseSchema.name, schema: AuditLogSchema }]),
   ],
   providers: [AuditListener],
 })

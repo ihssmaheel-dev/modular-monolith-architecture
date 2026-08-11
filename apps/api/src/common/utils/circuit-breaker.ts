@@ -12,7 +12,7 @@ export class CircuitBreaker<E> {
   private state: CircuitBreakerState = "CLOSED";
   private failures = 0;
   private nextAttemptMs = 0;
-  
+
   private readonly threshold: number;
   private readonly timeoutMs: number;
   private readonly fallbackError: E;
@@ -36,13 +36,13 @@ export class CircuitBreaker<E> {
 
     try {
       const result = await action();
-      
+
       if (result.isOk()) {
         this.onSuccess();
       } else {
         this.onFailure();
       }
-      
+
       return result;
     } catch (error) {
       this.onFailure();

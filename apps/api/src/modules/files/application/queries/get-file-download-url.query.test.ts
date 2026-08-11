@@ -5,6 +5,8 @@ import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import { ok, err } from "neverthrow";
 
+const ACTOR = { sub: "user-1", email: "user@example.com", role: "user" } as const;
+
 describe("GetFileDownloadUrlQuery", () => {
   let query: GetFileDownloadUrlQuery;
   let storage: StorageService;
@@ -40,7 +42,7 @@ describe("GetFileDownloadUrlQuery", () => {
   it("should return FILE_NOT_FOUND when file does not exist", async () => {
     vi.mocked(filesRepo.findById).mockResolvedValue(ok(null));
 
-    const result = await query.execute("file-1");
+    const result = await query.execute("file-1", ACTOR);
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -51,10 +53,10 @@ describe("GetFileDownloadUrlQuery", () => {
   it("should return PRESIGN_FAILED when presign fails", async () => {
     vi.mocked(filesRepo.findById).mockResolvedValue(ok(mockFile));
     vi.mocked(storage.getPresignedDownloadUrl).mockResolvedValue(
-      err({ code: "PRESIGN_ERROR", message: "S3 unavailable" } as never)
+      err({ code: "PRESIGN_ERROR", message: "S3 unavailable" } as never),
     );
 
-    const result = await query.execute("file-1");
+    const result = await query.execute("file-1", ACTOR);
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -65,10 +67,10 @@ describe("GetFileDownloadUrlQuery", () => {
   it("should return download URL on success", async () => {
     vi.mocked(filesRepo.findById).mockResolvedValue(ok(mockFile));
     vi.mocked(storage.getPresignedDownloadUrl).mockResolvedValue(
-      ok("https://s3.example.com/download")
+      ok("https://s3.example.com/download"),
     );
 
-    const result = await query.execute("file-1");
+    const result = await query.execute("file-1", ACTOR);
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {

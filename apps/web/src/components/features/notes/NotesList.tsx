@@ -1,7 +1,16 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/lib/api";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter, Button, Spinner } from "@repo/ui";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  Button,
+  Spinner,
+} from "@repo/ui";
 import { NoteResponseDto } from "@repo/shared";
 
 export function NotesList() {
@@ -10,10 +19,10 @@ export function NotesList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     setLoading(true);
-    const { status, body } = await (api.notes.getNotes as any)({
-      query: { page: "1", limit: "50" },
+    const { status, body } = await api.notes.getNotes({
+      query: { page: 1, limit: 50 },
     });
 
     if (status === 200) {
@@ -23,20 +32,25 @@ export function NotesList() {
       setError(t("api.note.fetchFailed"));
     }
     setLoading(false);
-  };
+  }, [t]);
 
   useEffect(() => {
-    fetchNotes();
-  }, []);
+    void fetchNotes();
+  }, [fetchNotes]);
 
   const handleDelete = async (id: string) => {
-    const { status } = await (api.notes.deleteNote as any)({ params: { id } });
+    const { status } = await api.notes.deleteNote({ params: { id } });
     if (status === 204) {
-      setNotes(notes.filter((note) => note.id !== id));
+      setNotes((current) => current.filter((note) => note.id !== id));
     }
   };
 
-  if (loading) return <div className="flex justify-center p-8"><Spinner /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center p-8">
+        <Spinner label={t("common.loading")} />
+      </div>
+    );
   if (error) return <div className="text-destructive text-center p-8">{error}</div>;
 
   return (

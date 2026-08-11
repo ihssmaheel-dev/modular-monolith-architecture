@@ -17,18 +17,22 @@ export class LoginCommand {
     private readonly lockoutService: AccountLockoutService,
   ) {}
 
-  async execute(
-    data: z.infer<typeof LoginSchema>,
-  ): Promise<Result<AuthResponse, AuthError>> {
+  async execute(data: z.infer<typeof LoginSchema>): Promise<Result<AuthResponse, AuthError>> {
     if (await this.lockoutService.isLockedOut(data.email)) {
-      this.metricsService.incrementCounter("auth_lockout_rejected_total", "Rejected logins due to lockout");
+      this.metricsService.incrementCounter(
+        "auth_lockout_rejected_total",
+        "Rejected logins due to lockout",
+      );
       return err({ type: "ACCOUNT_LOCKED" });
     }
 
     const result = await this.verifyCredentials.execute(data.email, data.password);
     if (result.isErr() || !result.value) {
       await this.lockoutService.recordFailedAttempt(data.email);
-      this.metricsService.incrementCounter("auth_failed_logins_total", "Total number of failed logins");
+      this.metricsService.incrementCounter(
+        "auth_failed_logins_total",
+        "Total number of failed logins",
+      );
       return err({ type: "INVALID_CREDENTIALS" });
     }
 
@@ -36,9 +40,12 @@ export class LoginCommand {
 
     const user = result.value;
     const accessToken = signAccessToken(user.id, user.email, user.role);
-    const refreshToken = signRefreshToken(user.id);
+    const refreshToken = signRefreshToken(user.id, user.authVersion);
 
-    this.metricsService.incrementCounter("auth_successful_logins_total", "Total number of successful logins");
+    this.metricsService.incrementCounter(
+      "auth_successful_logins_total",
+      "Total number of successful logins",
+    );
 
     return ok({
       accessToken,

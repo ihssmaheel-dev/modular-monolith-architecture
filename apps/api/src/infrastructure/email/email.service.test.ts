@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { EmailService } from "./email.service";
+import type { PinoLoggerService } from "../logger/logger.service";
+import type { MetricsService } from "../metrics/metrics.service";
 
 const mockSendMail = vi.fn();
 
@@ -44,12 +46,17 @@ describe("EmailService", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const mockLogger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } as any;
+    const mockLogger = {
+      info: vi.fn(),
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+    } as unknown as PinoLoggerService;
     mockLogger.child = () => mockLogger;
     const mockMetrics = {
       setGauge: vi.fn(),
       incrementCounter: vi.fn(),
-    } as any;
+    } as unknown as MetricsService;
     service = new EmailService(mockLogger, mockMetrics);
   });
 

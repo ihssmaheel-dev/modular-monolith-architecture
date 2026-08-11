@@ -60,21 +60,23 @@ export class RealtimeService {
     const client = this.redis.getClient();
     if (!client) return;
 
-    client.xadd(
-      STREAM_KEY,
-      "MAXLEN",
-      "~",
-      MAX_STREAM_LENGTH,
-      "*",
-      "target",
-      target,
-      "event",
-      event,
-      "payload",
-      JSON.stringify(payload)
-    ).catch(err => {
-      this.logger.error({ err, target, event }, "Failed to publish to stream");
-    });
+    client
+      .xadd(
+        STREAM_KEY,
+        "MAXLEN",
+        "~",
+        MAX_STREAM_LENGTH,
+        "*",
+        "target",
+        target,
+        "event",
+        event,
+        "payload",
+        JSON.stringify(payload),
+      )
+      .catch((err) => {
+        this.logger.error({ err, target, event }, "Failed to publish to stream");
+      });
   }
 
   getUserCount(): number {

@@ -1,12 +1,16 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { User } from "@repo/shared";
+import { createJSONStorage, persist } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { AuthResponse } from "@repo/shared";
+
+type AuthUser = AuthResponse["user"];
 
 interface AuthState {
   token: string | null;
-  user: User | null;
+  refreshToken: string | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (response: AuthResponse) => void;
   logout: () => void;
   getToken: () => string | null;
 }
@@ -15,15 +19,28 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       token: null,
+      refreshToken: null,
       user: null,
       isAuthenticated: false,
-      login: (token, user) => set({ token, user, isAuthenticated: true }),
-      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+      login: (response) =>
+        set({
+          token: response.accessToken,
+          refreshToken: response.refreshToken,
+          user: response.user,
+          isAuthenticated: true,
+        }),
+      logout: () => set({ token: null, refreshToken: null, user: null, isAuthenticated: false }),
       getToken: () => get().token,
     }),
     {
       name: "auth-storage",
-      partialize: (state) => ({ token: state.token, user: state.user }),
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        token: state.token,
+        refreshToken: state.refreshToken,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     },
   ),
 );

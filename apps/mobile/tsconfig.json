@@ -6,5 +6,5 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["src", "app", "stores", "hooks", "lib", "components"]
+  "include": ["src", "app", "stores", "hooks", "lib", "components", "*.d.ts"]
 }

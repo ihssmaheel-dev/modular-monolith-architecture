@@ -54,7 +54,7 @@ export class RateLimitGuard implements CanActivate {
         {
           statusCode: HttpStatus.TOO_MANY_REQUESTS,
           message: this.i18n.t("api.error.rateLimited", lang),
-          error: "Rate limit exceeded",
+          error: "RATE_LIMITED",
         },
         HttpStatus.TOO_MANY_REQUESTS,
       );

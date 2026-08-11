@@ -14,8 +14,16 @@ export const NoteResponseSchema = z.object({
   id: z.string(),
   title: z.string(),
   content: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export const NoteListResponseSchema = z.object({
+  items: z.array(NoteResponseSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  totalPages: z.number().int().positive(),
 });
 
 export type CreateNoteDto = z.infer<typeof CreateNoteSchema>;

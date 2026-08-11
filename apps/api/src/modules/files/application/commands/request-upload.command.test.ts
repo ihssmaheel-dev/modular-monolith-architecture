@@ -28,7 +28,7 @@ describe("RequestUploadCommand", () => {
 
   it("should return PRESIGN_FAILED when presign fails", async () => {
     vi.mocked(storage.getPresignedUploadUrl).mockResolvedValue(
-      err({ code: "PRESIGN_ERROR", message: "S3 unavailable" } as never)
+      err({ code: "PRESIGN_ERROR", message: "S3 unavailable" } as never),
     );
 
     const result = await command.execute(
@@ -39,7 +39,7 @@ describe("RequestUploadCommand", () => {
         parentType: "note",
         parentId: "note-1",
       },
-      "user-1"
+      "user-1",
     );
 
     expect(result.isErr()).toBe(true);
@@ -49,12 +49,8 @@ describe("RequestUploadCommand", () => {
   });
 
   it("should return UPLOAD_FAILED when repo create fails", async () => {
-    vi.mocked(storage.getPresignedUploadUrl).mockResolvedValue(
-      ok("https://s3.example.com/upload")
-    );
-    vi.mocked(filesRepo.create).mockResolvedValue(
-      err({ code: "DB_ERROR" } as never)
-    );
+    vi.mocked(storage.getPresignedUploadUrl).mockResolvedValue(ok("https://s3.example.com/upload"));
+    vi.mocked(filesRepo.create).mockResolvedValue(err({ code: "DB_ERROR" } as never));
 
     const result = await command.execute(
       {
@@ -64,7 +60,7 @@ describe("RequestUploadCommand", () => {
         parentType: "note",
         parentId: "note-1",
       },
-      "user-1"
+      "user-1",
     );
 
     expect(result.isErr()).toBe(true);
@@ -74,9 +70,7 @@ describe("RequestUploadCommand", () => {
   });
 
   it("should return upload URL on success", async () => {
-    vi.mocked(storage.getPresignedUploadUrl).mockResolvedValue(
-      ok("https://s3.example.com/upload")
-    );
+    vi.mocked(storage.getPresignedUploadUrl).mockResolvedValue(ok("https://s3.example.com/upload"));
 
     const file: FileEntity = {
       id: "file-1",
@@ -102,21 +96,19 @@ describe("RequestUploadCommand", () => {
         parentType: "note",
         parentId: "note-1",
       },
-      "user-1"
+      "user-1",
     );
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       expect(result.value.uploadUrl).toBe("https://s3.example.com/upload");
       expect(result.value.fileKey).toContain("note/note-1/user-1/");
-      expect(result.value.expiresAt).toBeInstanceOf(Date);
+      expect(Number.isNaN(Date.parse(result.value.expiresAt))).toBe(false);
     }
   });
 
   it("should build key with general prefix when parentId is absent", async () => {
-    vi.mocked(storage.getPresignedUploadUrl).mockResolvedValue(
-      ok("https://s3.example.com/upload")
-    );
+    vi.mocked(storage.getPresignedUploadUrl).mockResolvedValue(ok("https://s3.example.com/upload"));
 
     const file: FileEntity = {
       id: "file-2",
@@ -140,7 +132,7 @@ describe("RequestUploadCommand", () => {
         fileSize: 100,
         parentType: "general",
       },
-      "user-1"
+      "user-1",
     );
 
     expect(result.isOk()).toBe(true);
@@ -150,9 +142,7 @@ describe("RequestUploadCommand", () => {
   });
 
   it("should sanitize file name in key", async () => {
-    vi.mocked(storage.getPresignedUploadUrl).mockResolvedValue(
-      ok("https://s3.example.com/upload")
-    );
+    vi.mocked(storage.getPresignedUploadUrl).mockResolvedValue(ok("https://s3.example.com/upload"));
 
     const file: FileEntity = {
       id: "file-3",
@@ -176,7 +166,7 @@ describe("RequestUploadCommand", () => {
         fileSize: 500,
         parentType: "general",
       },
-      "user-1"
+      "user-1",
     );
 
     expect(result.isOk()).toBe(true);

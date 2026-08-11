@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from "@nestjs/common";
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from "@nestjs/common";
 import { Observable } from "rxjs";
 import { tap, catchError } from "rxjs/operators";
 import { MetricsService } from "./metrics.service";
@@ -13,7 +8,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 export class MetricsInterceptor implements NestInterceptor {
   constructor(private readonly metricsService: MetricsService) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const ctx = context.switchToHttp();
     const req = ctx.getRequest<FastifyRequest>();
     const res = ctx.getResponse<FastifyReply>();
@@ -25,30 +20,52 @@ export class MetricsInterceptor implements NestInterceptor {
 
     const startTime = process.hrtime();
 
-    this.metricsService.incrementGauge("http_active_connections", "Number of active HTTP connections", 1, {
-      method,
-      route,
-    });
+    this.metricsService.incrementGauge(
+      "http_active_connections",
+      "Number of active HTTP connections",
+      1,
+      {
+        method,
+        route,
+      },
+    );
 
     return next.handle().pipe(
       tap(() => {
         this.recordMetrics(startTime, method, route, res.statusCode);
       }),
-      catchError((error) => {
+      catchError((error: unknown) => {
         // If an exception is thrown, it typically results in a 500 or is handled by an exception filter.
         // We record the status from the exception if available, else 500.
-        const status = error?.status || error?.statusCode || 500;
+        const status = this.getErrorStatus(error);
         this.recordMetrics(startTime, method, route, status);
         throw error;
-      })
+      }),
     );
   }
 
-  private recordMetrics(startTime: [number, number], method: string, route: string, statusCode: number) {
-    this.metricsService.decrementGauge("http_active_connections", "Number of active HTTP connections", 1, {
-      method,
-      route,
-    });
+  private getErrorStatus(error: unknown): number {
+    if (typeof error !== "object" || error === null) return 500;
+    const value = error as Record<string, unknown>;
+    if (typeof value.status === "number") return value.status;
+    return typeof value.statusCode === "number" ? value.statusCode : 500;
+  }
+
+  private recordMetrics(
+    startTime: [number, number],
+    method: string,
+    route: string,
+    statusCode: number,
+  ) {
+    this.metricsService.decrementGauge(
+      "http_active_connections",
+      "Number of active HTTP connections",
+      1,
+      {
+        method,
+        route,
+      },
+    );
 
     const diff = process.hrtime(startTime);
     const durationInSeconds = diff[0] + diff[1] / 1e9;
@@ -62,7 +79,7 @@ export class MetricsInterceptor implements NestInterceptor {
         route,
         status_code: statusCode,
       },
-      [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+      [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
     );
 
     this.metricsService.incrementCounter(
@@ -73,7 +90,7 @@ export class MetricsInterceptor implements NestInterceptor {
         method,
         route,
         status_code: statusCode,
-      }
+      },
     );
   }
 }

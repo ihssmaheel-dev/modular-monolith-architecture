@@ -1,7 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { RealtimeService } from "../../../../infrastructure/realtime/realtime.service";
-import { NoteCreatedEvent, NoteUpdatedEvent, NoteDeletedEvent } from "../../domain/events/note.events";
+import {
+  NoteCreatedEvent,
+  NoteUpdatedEvent,
+  NoteDeletedEvent,
+} from "../../domain/events/note.events";
 
 @Injectable()
 export class NotesRealtimeListener {
@@ -9,16 +13,16 @@ export class NotesRealtimeListener {
 
   @OnEvent("note.created")
   handleNoteCreated(event: NoteCreatedEvent) {
-    this.realtimeService.broadcast("note.created", event);
+    this.realtimeService.sendToUser(event.userId, "note.created", event);
   }
 
   @OnEvent("note.updated")
   handleNoteUpdated(event: NoteUpdatedEvent) {
-    this.realtimeService.broadcast("note.updated", event);
+    this.realtimeService.sendToUser(event.userId, "note.updated", event);
   }
 
   @OnEvent("note.deleted")
   handleNoteDeleted(event: NoteDeletedEvent) {
-    this.realtimeService.broadcast("note.deleted", event);
+    this.realtimeService.sendToUser(event.userId, "note.deleted", event);
   }
 }

@@ -3,6 +3,7 @@ import { ok, err, Result } from "neverthrow";
 import { StorageService } from "../../../../infrastructure/storage/storage.service";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
+import type { AuthenticatedUser } from "@repo/shared";
 
 @Injectable()
 export class DeleteFileCommand {
@@ -11,7 +12,7 @@ export class DeleteFileCommand {
     private readonly filesRepo: FilesRepository,
   ) {}
 
-  async execute(fileId: string, userId: string): Promise<Result<void, FileError>> {
+  async execute(fileId: string, actor: AuthenticatedUser): Promise<Result<void, FileError>> {
     const findResult = await this.filesRepo.findById(fileId);
 
     if (findResult.isErr() || !findResult.value) {
@@ -23,7 +24,7 @@ export class DeleteFileCommand {
 
     const file = findResult.value;
 
-    if (file.uploadedBy !== userId) {
+    if (actor.role !== "admin" && file.uploadedBy !== actor.sub) {
       return err({
         type: "UNAUTHORIZED",
         message: "api.error.unauthorized",

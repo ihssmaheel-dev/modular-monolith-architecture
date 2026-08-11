@@ -19,8 +19,7 @@ export function handleResult<T, E>(
     return result.value;
   }
 
-  const error = result.error as any;
-  const errorType = error?.type;
+  const errorType = getErrorType(result.error);
   const mapped = errorType ? errorMap[errorType] : undefined;
 
   if (mapped) {
@@ -28,7 +27,7 @@ export function handleResult<T, E>(
       {
         statusCode: mapped.status,
         message: i18n.t(mapped.i18nKey, lang),
-        error: error.type,
+        error: errorType,
       },
       mapped.status,
     );
@@ -43,4 +42,11 @@ export function handleResult<T, E>(
     },
     HttpStatus.INTERNAL_SERVER_ERROR,
   );
+}
+
+function getErrorType(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null || !("type" in error)) {
+    return undefined;
+  }
+  return typeof error.type === "string" ? error.type : undefined;
 }

@@ -2,21 +2,23 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ok } from "neverthrow";
 import { GetUserByIdQuery } from "./get-user-by-id.query";
 import { User } from "../../domain/entities/user.entity";
+import type { UsersRepository } from "../../infrastructure/users.repository";
+import type { DistributedCacheService } from "../../../../infrastructure/cache/distributed-cache.service";
 
 describe("GetUserByIdQuery", () => {
   let query: GetUserByIdQuery;
   const mockFindById = vi.fn();
-  const mockCacheGetOrSet = vi.fn((_key, _ttl, fetcher) => fetcher());
+  const mockCacheGetOrSet = vi.fn((_key: string, _ttl: number, fetcher: () => Promise<unknown>) =>
+    fetcher(),
+  );
 
   beforeEach(() => {
     vi.clearAllMocks();
     query = new GetUserByIdQuery(
-      { findById: mockFindById } as any,
-      { getOrSet: mockCacheGetOrSet } as any
+      { findById: mockFindById } as unknown as UsersRepository,
+      { getOrSet: mockCacheGetOrSet } as unknown as DistributedCacheService,
     );
   });
-
-
 
   it("should return USER_NOT_FOUND if user not found", async () => {
     // Arrange
@@ -34,7 +36,14 @@ describe("GetUserByIdQuery", () => {
 
   it("should return ok(user) if found", async () => {
     // Arrange
-    const user = User.fromPersistence({ id: "123", email: "test@example.com", name: "Test", role: "user", createdAt: new Date(), updatedAt: new Date() });
+    const user = User.fromPersistence({
+      id: "123",
+      email: "test@example.com",
+      name: "Test",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     vi.mocked(mockFindById).mockResolvedValue(ok(user));
 
     // Act

@@ -42,7 +42,10 @@ export class RedisService implements OnModuleInit, OnApplicationShutdown {
       });
       return this.client;
     } catch (error) {
-      this.logger.error({ error }, "Failed to connect to Redis on startup. Redis dependents will be disabled.");
+      this.logger.error(
+        { error },
+        "Failed to connect to Redis on startup. Redis dependents will be disabled.",
+      );
       this.client = null;
       return null;
     }

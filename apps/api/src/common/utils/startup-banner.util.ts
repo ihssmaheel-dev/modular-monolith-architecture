@@ -3,8 +3,9 @@ import boxen from "boxen";
 import { blue, green, yellow, bold, cyan, dim } from "colorette";
 import { env } from "../../config/env";
 import { RedisService } from "../../infrastructure/redis/redis.service";
+import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 
-export function printStartupBanner(app: INestApplication): void {
+export function printStartupBanner(app: INestApplication, logger: PinoLoggerService): void {
   const redisService = app.get(RedisService);
   const redisConnected = !!redisService.getClient();
   const redisStatus = redisConnected ? green("[OK] Connected") : yellow("[!] Disabled (Optional)");
@@ -30,5 +31,5 @@ ${bold("Email")}       : ${cyan(env.EMAIL_DRIVER.toUpperCase())}
     titleAlignment: "center",
   });
 
-  console.log(banner);
+  logger.info({ banner }, "Server status");
 }

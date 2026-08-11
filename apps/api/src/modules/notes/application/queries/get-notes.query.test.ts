@@ -5,6 +5,8 @@ import { Note } from "../../domain/entities/note.entity";
 import { ok } from "neverthrow";
 import { PaginatedResult } from "../../../../infrastructure/database/base.repository";
 
+const ACTOR = { sub: "admin-1", email: "admin@example.com", role: "admin" } as const;
+
 describe("GetNotesQuery", () => {
   let query: GetNotesQuery;
   let repository: NotesRepository;
@@ -13,7 +15,7 @@ describe("GetNotesQuery", () => {
     repository = {
       paginate: vi.fn(),
     } as unknown as NotesRepository;
-    
+
     query = new GetNotesQuery(repository);
   });
 
@@ -31,18 +33,21 @@ describe("GetNotesQuery", () => {
     vi.mocked(repository.paginate).mockResolvedValue(ok(paginatedResult));
 
     // Act
-    const result = await query.execute({});
+    const result = await query.execute({}, ACTOR);
 
     // Assert
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       expect(result.value).toBe(paginatedResult);
     }
-    expect(repository.paginate).toHaveBeenCalledWith({}, {
-      page: 1,
-      limit: 20,
-      sort: { createdAt: -1 },
-    });
+    expect(repository.paginate).toHaveBeenCalledWith(
+      {},
+      {
+        page: 1,
+        limit: 20,
+        sort: { createdAt: -1 },
+      },
+    );
   });
 
   it("should return paginated notes with custom options", async () => {
@@ -59,14 +64,17 @@ describe("GetNotesQuery", () => {
     vi.mocked(repository.paginate).mockResolvedValue(ok(paginatedResult));
 
     // Act
-    const result = await query.execute({ page: 2, limit: 10 });
+    const result = await query.execute({ page: 2, limit: 10 }, ACTOR);
 
     // Assert
     expect(result.isOk()).toBe(true);
-    expect(repository.paginate).toHaveBeenCalledWith({}, {
-      page: 2,
-      limit: 10,
-      sort: { createdAt: -1 },
-    });
+    expect(repository.paginate).toHaveBeenCalledWith(
+      {},
+      {
+        page: 2,
+        limit: 10,
+        sort: { createdAt: -1 },
+      },
+    );
   });
 });

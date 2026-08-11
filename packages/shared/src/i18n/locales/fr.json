@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "Espace de travail",
     "loading": "Chargement...",
     "error": "Une erreur est survenue",
     "retry": "Réessayer",
@@ -16,6 +17,30 @@
     "submit": "Soumettre"
   },
   "auth": {
+    "welcomeBack": "Bon retour",
+    "loginDescription": "Saisissez vos identifiants pour vous connecter",
+    "emailPlaceholder": "nom@exemple.com",
+    "passwordPlaceholder": "Saisissez votre mot de passe",
+    "createPasswordPlaceholder": "Créez un mot de passe",
+    "namePlaceholder": "Votre nom",
+    "signingIn": "Connexion...",
+    "signIn": "Se connecter",
+    "loginFailed": "La connexion a échoué",
+    "registrationFailed": "L’inscription a échoué",
+    "requiredFields": "Remplissez tous les champs",
+    "createAccountTitle": "Créer un compte",
+    "registerDescription": "Saisissez vos informations pour commencer",
+    "creatingAccount": "Création du compte...",
+    "createAccount": "Créer le compte",
+    "forgotDescription": "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation",
+    "sending": "Envoi...",
+    "sendResetLink": "Envoyer le lien de réinitialisation",
+    "rememberPassword": "Vous vous souvenez de votre mot de passe ?",
+    "resetPasswordTitle": "Réinitialiser le mot de passe",
+    "resetPasswordDescription": "Choisissez un nouveau mot de passe pour votre compte",
+    "newPassword": "Nouveau mot de passe",
+    "resettingPassword": "Réinitialisation du mot de passe...",
+    "backToLogin": "Retour à la connexion",
     "login": "Se connecter",
     "register": "S'inscrire",
     "logout": "Se déconnecter",
@@ -37,6 +62,22 @@
     "passwordResetSuccess": "Le mot de passe a été réinitialisé avec succès",
     "accountLocked": "Compte temporairement bloqué en raison de trop de tentatives échouées. Veuillez réessayer plus tard."
   },
+  "email": {
+    "welcome": {
+      "subject": "Bienvenue dans Espace de travail",
+      "preview": "Bienvenue dans Espace de travail",
+      "greeting": "Bonjour {{name}},",
+      "body": "Nous sommes ravis de vous compter parmi nous.",
+      "buttonText": "Commencer"
+    },
+    "passwordReset": {
+      "subject": "Demande de réinitialisation du mot de passe",
+      "preview": "Réinitialisez votre mot de passe",
+      "requestText": "Nous avons reçu une demande de réinitialisation de votre mot de passe.",
+      "instructionText": "Utilisez le bouton ci-dessous pour choisir un nouveau mot de passe. Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail.",
+      "buttonText": "Réinitialiser le mot de passe"
+    }
+  },
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bienvenue, {{name}} !",
@@ -47,6 +88,10 @@
     }
   },
   "users": {
+    "manage": "Gérez vos utilisateurs",
+    "add": "Ajouter un utilisateur",
+    "loadFailed": "Impossible de charger les utilisateurs. Réessayez.",
+    "userId": "ID utilisateur",
     "title": "Utilisateurs",
     "list": "Liste des utilisateurs",
     "create": "Créer un utilisateur",
@@ -56,12 +101,22 @@
     "noUsers": "Aucun utilisateur trouvé"
   },
   "settings": {
+    "manageAccount": "Gérez votre compte",
+    "description": "Gérez les préférences de votre espace de travail",
+    "loggedInAs": "Connecté en tant que",
+    "appearance": "Apparence",
+    "appearanceDescription": "Choisissez l'apparence de l'espace de travail sur cet appareil.",
+    "notifications": "Notifications",
+    "notificationsDescription": "Contrôlez les actualités de l'espace de travail que vous recevez.",
+    "systemDefault": "Réglage du système",
+    "enabled": "Activées",
     "title": "Paramètres",
     "profile": "Paramètres du profil",
     "language": "Langue",
     "theme": "Thème",
     "darkMode": "Mode sombre",
-    "lightMode": "Mode clair"
+    "lightMode": "Mode clair",
+    "switchTheme": "Passer en {{theme}}"
   },
   "errors": {
     "notFound": "Page non trouvée",
@@ -72,6 +127,17 @@
   },
   "api": {
     "error": {
+      "urlTooLong": "L’URL est trop longue",
+      "invalidRequest": "Requête non valide",
+      "blockedContent": "Le corps de la requête contient du contenu bloqué",
+      "invalidHeader": "Valeur d’en-tête non valide",
+      "transactionFailed": "La transaction a échoué",
+      "uploadFailed": "Le téléversement a échoué",
+      "presignFailed": "Impossible de générer l’URL signée",
+      "deleteFailed": "La suppression a échoué",
+      "invalidAddress": "Aucun destinataire fourni",
+      "configError": "Erreur de configuration",
+      "sendFailed": "Impossible d’envoyer l’e-mail",
       "internal": "Erreur interne du serveur",
       "notFound": "Ressource non trouvée",
       "unauthorized": "Non autorisé",
@@ -83,6 +149,23 @@
       "sessionExpired": "Session expirée",
       "invalidToken": "Token invalide"
     },
+    "health": {
+      "redisUnconfigured": "Redis n’est pas configuré, mais il est facultatif",
+      "redisDown": "Redis est indisponible, mais il est facultatif"
+    },
+    "file": {
+      "notFound": "Fichier introuvable"
+    },
+    "note": {
+      "created": "Note créée avec succès",
+      "updated": "Note mise à jour avec succès",
+      "deleted": "Note supprimée avec succès",
+      "notFound": "Note introuvable",
+      "fetchFailed": "Impossible de récupérer les notes",
+      "createFailed": "Impossible de créer la note",
+      "updateFailed": "Impossible de mettre à jour la note",
+      "deleteFailed": "Impossible de supprimer la note"
+    },
     "user": {
       "created": "Utilisateur créé avec succès",
       "updated": "Utilisateur mis à jour avec succès",
@@ -90,6 +173,24 @@
       "notFound": "Utilisateur non trouvé",
       "emailTaken": "L'e-mail est déjà pris"
     }
+  },
+  "notes": {
+    "title": "Notes",
+    "description": "Gérez vos notes ici.",
+    "newNote": "Nouvelle note",
+    "cancel": "Annuler",
+    "createNote": "Créer une note",
+    "noteTitle": "Titre",
+    "noteTitlePlaceholder": "Titre de la note",
+    "content": "Contenu",
+    "contentPlaceholder": "Qu’avez-vous en tête ?",
+    "creating": "Création...",
+    "createButton": "Créer la note",
+    "noNotes": "Aucune note pour le moment. Créez-en une ci-dessus."
+  },
+  "home": {
+    "title": "Accueil",
+    "description": "Voici votre écran d’accueil"
   },
   "zod": {
     "errors": {

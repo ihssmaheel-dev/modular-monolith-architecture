@@ -20,9 +20,7 @@ export class MongoHealthIndicator extends HealthIndicator {
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     const readyState = this.connection.readyState;
     const isConnected = readyState === 1;
-    return isConnected
-      ? this.getStatus(key, true)
-      : this.getStatus(key, false, { readyState });
+    return isConnected ? this.getStatus(key, true) : this.getStatus(key, false, { readyState });
   }
 }
 
@@ -42,9 +40,7 @@ export class RedisHealthIndicator extends HealthIndicator {
         return this.getStatus(key, true, { message: this.i18n.t("api.health.redisUnconfigured") });
       }
       const pong = await client.ping();
-      return pong === "PONG"
-        ? this.getStatus(key, true)
-        : this.getStatus(key, false, { pong });
+      return pong === "PONG" ? this.getStatus(key, true) : this.getStatus(key, false, { pong });
     } catch (error) {
       // Return healthy but degraded so K8s doesn't kill the pod
       return this.getStatus(key, true, {
@@ -64,7 +60,10 @@ export class AppHealthService {
 
   @HealthCheck()
   check(): Promise<HealthCheckResult> {
-    return this.health.check([() => this.mongo.isHealthy("mongo"), () => this.redis.isHealthy("redis")]);
+    return this.health.check([
+      () => this.mongo.isHealthy("mongo"),
+      () => this.redis.isHealthy("redis"),
+    ]);
   }
 
   @HealthCheck()

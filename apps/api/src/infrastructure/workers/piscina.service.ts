@@ -27,10 +27,7 @@ export class PiscinaService implements OnModuleDestroy {
         maxThreads,
       });
       this.pools.set(config.name, pool);
-      this.logger.info(
-        { pool: config.name, maxThreads },
-        "Worker pool created",
-      );
+      this.logger.info({ pool: config.name, maxThreads }, "Worker pool created");
     }
     return this.pools.get(config.name)!;
   }

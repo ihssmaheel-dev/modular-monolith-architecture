@@ -7,3 +7,7 @@ pnpm-lock.yaml
 *.min.js
 *.min.css
 docker/data/
+AGENTS.md
+ai_instructions/
+file-tree.js
+apps/web/src/routeTree.gen.ts

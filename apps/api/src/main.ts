@@ -47,9 +47,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix("api", { exclude: ["metrics"] });
   app.enableCors({
-    origin: env.NODE_ENV === "production"
-      ? [env.CLIENT_URL]
-      : [env.CLIENT_URL, "http://localhost:3000"],
+    origin:
+      env.NODE_ENV === "production" ? [env.CLIENT_URL] : [env.CLIENT_URL, "http://localhost:3000"],
     credentials: true,
   });
 
@@ -60,8 +59,8 @@ async function bootstrap() {
   }
 
   await app.listen(env.PORT, "0.0.0.0");
-  
-  printStartupBanner(app);
+
+  printStartupBanner(app, logger);
   logger.info({ port: env.PORT }, "API bootstrap complete");
 }
 

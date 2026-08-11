@@ -8,7 +8,7 @@ export class ShutdownService implements BeforeApplicationShutdown {
 
   async beforeApplicationShutdown(signal?: string) {
     this.logger.info({ signal }, "Received shutdown signal. Commencing graceful teardown...");
-    
+
     if (env.NODE_ENV === "production") {
       this.logger.info({}, "Pausing for 5 seconds to allow load balancer to drain HTTP traffic...");
       await new Promise((resolve) => setTimeout(resolve, 5000));

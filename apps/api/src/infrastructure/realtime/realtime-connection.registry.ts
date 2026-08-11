@@ -15,7 +15,7 @@ export class RealtimeConnectionRegistry {
 
   constructor(
     private readonly metrics: MetricsService,
-    logger: PinoLoggerService
+    logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "RealtimeConnectionRegistry" });
   }
@@ -32,7 +32,12 @@ export class RealtimeConnectionRegistry {
       return;
     }
     userClients.add(socket);
-    this.metrics.incrementGauge("realtime_active_connections_total", "Total active realtime connections", 1, { type: "ws" });
+    this.metrics.incrementGauge(
+      "realtime_active_connections_total",
+      "Total active realtime connections",
+      1,
+      { type: "ws" },
+    );
     this.logger.debug({ userId, total: userClients.size }, "WS Client connected");
   }
 
@@ -41,7 +46,12 @@ export class RealtimeConnectionRegistry {
     if (userClients) {
       if (userClients.has(socket)) {
         userClients.delete(socket);
-        this.metrics.decrementGauge("realtime_active_connections_total", "Total active realtime connections", 1, { type: "ws" });
+        this.metrics.decrementGauge(
+          "realtime_active_connections_total",
+          "Total active realtime connections",
+          1,
+          { type: "ws" },
+        );
       }
       if (userClients.size === 0) {
         this.wsClients.delete(userId);
@@ -61,7 +71,12 @@ export class RealtimeConnectionRegistry {
       return;
     }
     userClients.add(subject);
-    this.metrics.incrementGauge("realtime_active_connections_total", "Total active realtime connections", 1, { type: "sse" });
+    this.metrics.incrementGauge(
+      "realtime_active_connections_total",
+      "Total active realtime connections",
+      1,
+      { type: "sse" },
+    );
     this.logger.debug({ userId, total: userClients.size }, "SSE Client connected");
   }
 
@@ -70,7 +85,12 @@ export class RealtimeConnectionRegistry {
     if (userClients) {
       if (userClients.has(subject)) {
         userClients.delete(subject);
-        this.metrics.decrementGauge("realtime_active_connections_total", "Total active realtime connections", 1, { type: "sse" });
+        this.metrics.decrementGauge(
+          "realtime_active_connections_total",
+          "Total active realtime connections",
+          1,
+          { type: "sse" },
+        );
       }
       if (userClients.size === 0) {
         this.sseClients.delete(userId);

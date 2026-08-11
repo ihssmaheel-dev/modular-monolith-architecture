@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 const moduleName = process.argv[2];
 
@@ -8,7 +8,7 @@ if (!moduleName) {
   process.exit(1);
 }
 
-const basePath = path.join(__dirname, '../apps/api/src/modules', moduleName);
+const basePath = path.join(__dirname, "../apps/api/src/modules", moduleName);
 
 if (fs.existsSync(basePath)) {
   console.error(`Module '${moduleName}' already exists.`);
@@ -16,18 +16,18 @@ if (fs.existsSync(basePath)) {
 }
 
 const folders = [
-  'presentation',
-  'application/commands',
-  'application/queries',
-  'application/listeners',
-  'domain/entities',
-  'domain/value-objects',
-  'domain/events',
-  'domain/errors',
-  'infrastructure/schemas'
+  "presentation",
+  "application/commands",
+  "application/queries",
+  "application/listeners",
+  "domain/entities",
+  "domain/value-objects",
+  "domain/events",
+  "domain/errors",
+  "infrastructure/schemas",
 ];
 
-folders.forEach(folder => {
+folders.forEach((folder) => {
   fs.mkdirSync(path.join(basePath, folder), { recursive: true });
 });
 
@@ -71,7 +71,10 @@ export class ${capitalize(moduleName)}Controller {
   ) {}
 }
 `;
-fs.writeFileSync(path.join(basePath, 'presentation', `${moduleName}.controller.ts`), controllerContent);
+fs.writeFileSync(
+  path.join(basePath, "presentation", `${moduleName}.controller.ts`),
+  controllerContent,
+);
 
 // Create Command File
 const commandContent = `import { Injectable } from "@nestjs/common";
@@ -87,7 +90,10 @@ export class Create${capitalize(moduleName)}Command {
   }
 }
 `;
-fs.writeFileSync(path.join(basePath, 'application/commands', `create-${moduleName}.command.ts`), commandContent);
+fs.writeFileSync(
+  path.join(basePath, "application/commands", `create-${moduleName}.command.ts`),
+  commandContent,
+);
 
 // Create Query File
 const queryContent = `import { Injectable } from "@nestjs/common";
@@ -103,7 +109,10 @@ export class Get${capitalize(moduleName)}Query {
   }
 }
 `;
-fs.writeFileSync(path.join(basePath, 'application/queries', `get-${moduleName}.query.ts`), queryContent);
+fs.writeFileSync(
+  path.join(basePath, "application/queries", `get-${moduleName}.query.ts`),
+  queryContent,
+);
 
 // Create Repository File
 const repoContent = `import { Injectable } from "@nestjs/common";
@@ -114,7 +123,7 @@ export class ${capitalize(moduleName)}Repository {
   constructor() {}
 }
 `;
-fs.writeFileSync(path.join(basePath, 'infrastructure', `${moduleName}.repository.ts`), repoContent);
+fs.writeFileSync(path.join(basePath, "infrastructure", `${moduleName}.repository.ts`), repoContent);
 
 console.log(`Successfully generated strict architecture for module '${moduleName}'!`);
 

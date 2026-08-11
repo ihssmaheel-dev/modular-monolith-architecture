@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "Workspace",
     "loading": "Loading...",
     "error": "An error occurred",
     "retry": "Retry",
@@ -15,6 +16,22 @@
     "next": "Next",
     "submit": "Submit"
   },
+  "email": {
+    "welcome": {
+      "subject": "Welcome to Workspace",
+      "preview": "Welcome to Workspace",
+      "greeting": "Hello {{name}},",
+      "body": "We are excited to have you on board.",
+      "buttonText": "Get started"
+    },
+    "passwordReset": {
+      "subject": "Password reset request",
+      "preview": "Reset your password",
+      "requestText": "We received a request to reset your password.",
+      "instructionText": "Use the button below to choose a new password. If you did not request this, you can safely ignore this email.",
+      "buttonText": "Reset password"
+    }
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome, {{name}}!",
@@ -25,6 +42,10 @@
     }
   },
   "users": {
+    "manage": "Manage your users",
+    "add": "Add user",
+    "loadFailed": "Failed to load users. Please try again.",
+    "userId": "User ID",
     "title": "Users",
     "list": "User List",
     "create": "Create User",
@@ -34,12 +55,22 @@
     "noUsers": "No users found"
   },
   "settings": {
+    "manageAccount": "Manage your account",
+    "description": "Manage your workspace preferences",
+    "loggedInAs": "Logged in as",
+    "appearance": "Appearance",
+    "appearanceDescription": "Choose how the workspace looks on this device.",
+    "notifications": "Notifications",
+    "notificationsDescription": "Control which workspace updates you receive.",
+    "systemDefault": "System default",
+    "enabled": "Enabled",
     "title": "Settings",
     "profile": "Profile Settings",
     "language": "Language",
     "theme": "Theme",
     "darkMode": "Dark Mode",
-    "lightMode": "Light Mode"
+    "lightMode": "Light Mode",
+    "switchTheme": "Switch to {{theme}}"
   },
   "errors": {
     "notFound": "Page not found",
@@ -48,7 +79,35 @@
     "serverError": "Server error. Please try again later.",
     "networkError": "Network error. Check your connection."
   },
+  "home": {
+    "title": "Home",
+    "description": "This is your home screen"
+  },
   "auth": {
+    "welcomeBack": "Welcome back",
+    "loginDescription": "Enter your credentials to sign in",
+    "emailPlaceholder": "name@example.com",
+    "passwordPlaceholder": "Enter your password",
+    "createPasswordPlaceholder": "Create a password",
+    "namePlaceholder": "Your name",
+    "signingIn": "Signing in...",
+    "signIn": "Sign in",
+    "loginFailed": "Login failed",
+    "registrationFailed": "Registration failed",
+    "requiredFields": "Please fill in all fields",
+    "createAccountTitle": "Create an account",
+    "registerDescription": "Enter your details to get started",
+    "creatingAccount": "Creating account...",
+    "createAccount": "Create account",
+    "forgotDescription": "Enter your email and we will send you a reset link",
+    "sending": "Sending...",
+    "sendResetLink": "Send reset link",
+    "rememberPassword": "Remember your password?",
+    "resetPasswordTitle": "Reset password",
+    "resetPasswordDescription": "Choose a new password for your account",
+    "newPassword": "New password",
+    "resettingPassword": "Resetting password...",
+    "backToLogin": "Back to sign in",
     "login": "Log In",
     "register": "Sign Up",
     "logout": "Log Out",
@@ -104,6 +163,9 @@
       "deleted": "User deleted successfully",
       "notFound": "User not found",
       "emailTaken": "Email is already taken"
+    },
+    "file": {
+      "notFound": "File not found"
     },
     "note": {
       "created": "Note created successfully",

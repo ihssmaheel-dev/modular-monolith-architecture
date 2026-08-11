@@ -1,8 +1,12 @@
-import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ClsService } from "nestjs-cls";
-import { createHmac } from "crypto";
+import type { AuthenticatedUser } from "@repo/shared";
+import { verifyAccessToken } from "../utils/access-token.utils";
+import { timingSafeEqual } from "crypto";
 import { env } from "../../config/env";
+
+const METRICS_PATH = "/metrics";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -17,63 +21,50 @@ export class AuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (isPublic) {
-      return true;
-    }
-
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest() as {
+      headers?: Record<string, string>;
+      cookies?: Record<string, string>;
+      user?: AuthenticatedUser;
+      url?: string;
+    };
+    if (isPublic || this.isMetricsAuthorized(request)) return true;
+    if (request.url?.split("?")[0] === METRICS_PATH) throw new UnauthorizedException();
     const token = this.extractToken(request);
 
-    if (!token) return false;
+    if (!token) throw new UnauthorizedException();
 
-    const decoded = this.verifyToken(token);
-    if (!decoded) return false;
-    
+    const decoded = verifyAccessToken(token);
+    if (!decoded) throw new UnauthorizedException();
+
     request.user = decoded;
-    if (typeof decoded.sub === "string") {
-      this.cls.set("userId", decoded.sub);
-    }
+    this.cls.set("userId", decoded.sub);
     return true;
   }
 
-  private extractToken(request: Record<string, unknown>): string | null {
-    const headers = request.headers as Record<string, string> | undefined;
-    const auth = headers?.authorization;
+  private extractToken(request: {
+    headers?: Record<string, string>;
+    cookies?: Record<string, string>;
+  }): string | null {
+    const auth = request.headers?.authorization;
     if (auth?.startsWith("Bearer ")) {
       return auth.slice(7);
     }
 
-    const cookies = request.cookies as Record<string, string> | undefined;
-    if (cookies?.access_token) {
-      return cookies.access_token;
+    if (request.cookies?.access_token) {
+      return request.cookies.access_token;
     }
 
     return null;
   }
 
-  private verifyToken(token: string): Record<string, unknown> | null {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) return null;
-      
-      const [header, payload, signature] = parts;
-      const expectedSig = createHmac('sha256', env.JWT_SECRET)
-        .update(`${header}.${payload}`)
-        .digest('base64url');
-      
-      if (signature !== expectedSig) return null;
-      
-      const decoded = JSON.parse(
-        Buffer.from(payload!, 'base64url').toString(),
-      ) as Record<string, unknown>;
-      
-      if (typeof decoded.exp === 'number' && decoded.exp * 1000 < Date.now()) {
-        return null;
-      }
-      
-      return decoded;
-    } catch {
-      return null;
-    }
+  private isMetricsAuthorized(request: {
+    headers?: Record<string, string>;
+    url?: string;
+  }): boolean {
+    if (request.url?.split("?")[0] !== METRICS_PATH) return false;
+    if (!env.METRICS_TOKEN) return env.NODE_ENV !== "production";
+    const provided = request.headers?.authorization?.replace(/^Bearer /, "");
+    if (!provided || provided.length !== env.METRICS_TOKEN.length) return false;
+    return timingSafeEqual(Buffer.from(provided), Buffer.from(env.METRICS_TOKEN));
   }
 }

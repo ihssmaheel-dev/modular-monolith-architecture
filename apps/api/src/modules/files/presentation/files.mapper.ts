@@ -3,9 +3,10 @@ import { FileEntity } from "../domain/entities/file.entity";
 import type { FileMetadataResponse } from "@repo/shared";
 
 export function toFileResponse(file: FileEntity): FileMetadataResponse {
-  const baseUrl = env.CDN_ENABLED && env.CDN_DOMAIN
-    ? `https://${env.CDN_DOMAIN}/${env.CDN_BUCKET_PATH}`
-    : `https://${file.bucket}.s3.${env.S3_REGION}.amazonaws.com`;
+  const baseUrl =
+    env.CDN_ENABLED && env.CDN_DOMAIN
+      ? `https://${env.CDN_DOMAIN}/${env.CDN_BUCKET_PATH}`
+      : `https://${file.bucket}.s3.${env.S3_REGION}.amazonaws.com`;
 
   return {
     id: file.id,

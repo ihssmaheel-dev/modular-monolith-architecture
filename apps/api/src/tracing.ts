@@ -3,12 +3,16 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { ConsoleSpanExporter, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { env } from "./config/env";
+import pino from "pino";
 
-const traceExporter = env.NODE_ENV === "production"
-  ? new OTLPTraceExporter({
-      url: env.OTEL_EXPORTER_OTLP_ENDPOINT,
-    })
-  : new ConsoleSpanExporter();
+const logger = pino({ name: "tracing", level: env.LOG_LEVEL });
+
+const traceExporter =
+  env.NODE_ENV === "production"
+    ? new OTLPTraceExporter({
+        url: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+      })
+    : new ConsoleSpanExporter();
 
 export const otelSDK = new NodeSDK({
   spanProcessor: new BatchSpanProcessor(traceExporter),
@@ -25,6 +29,6 @@ otelSDK.start();
 process.on("SIGTERM", () => {
   otelSDK
     .shutdown()
-    .then(() => console.log("Tracing terminated"))
-    .catch((error) => console.log("Error terminating tracing", error));
+    .then(() => logger.info("Tracing terminated"))
+    .catch((error: unknown) => logger.error({ error }, "Error terminating tracing"));
 });

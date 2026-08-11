@@ -11,16 +11,17 @@ import { DeleteFileCommand } from "./application/commands/delete-file.command";
 import { GetFileByIdQuery } from "./application/queries/get-file-by-id.query";
 import { GetFileDownloadUrlQuery } from "./application/queries/get-file-download-url.query";
 import { ListFilesByParentQuery } from "./application/queries/list-files-by-parent.query";
-import { FileMongooseSchema } from "./infrastructure/schemas/file.mongoose.schema";
+import { FileMongooseSchema, FileSchema } from "./infrastructure/schemas/file.mongoose.schema";
 import { StorageService } from "../../infrastructure/storage/storage.service";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 import { I18nService } from "../../infrastructure/i18n/i18n.service";
-import { env } from "../../config/env";
 import { ok } from "neverthrow";
 
-const MONGODB_URI = env.MONGODB_URI;
+const MONGODB_URI = process.env.TEST_MONGODB_URI;
+const describeWithMongo = MONGODB_URI ? describe : describe.skip;
+const ACTOR = { sub: "user-1", email: "user@example.com", role: "user" } as const;
 
-describe("FilesModule Integration", () => {
+describeWithMongo("FilesModule Integration", () => {
   let module: TestingModule;
   let requestUploadCmd: RequestUploadCommand;
   let confirmUploadCmd: ConfirmUploadCommand;
@@ -33,8 +34,8 @@ describe("FilesModule Integration", () => {
       imports: [
         EventEmitterModule.forRoot(),
         ClsModule.forRoot({ global: true, middleware: { mount: true } }),
-        MongooseModule.forRoot(MONGODB_URI),
-        MongooseModule.forFeature([{ name: FileMongooseSchema.name, schema: FileMongooseSchema }]),
+        MongooseModule.forRoot(requireTestDatabaseUri()),
+        MongooseModule.forFeature([{ name: FileMongooseSchema.name, schema: FileSchema }]),
       ],
       providers: [
         FilesRepository,
@@ -48,7 +49,12 @@ describe("FilesModule Integration", () => {
           provide: StorageService,
           useValue: {
             getPresignedUploadUrl: vi.fn().mockResolvedValue(ok("https://s3.example.com/upload")),
-            getPresignedDownloadUrl: vi.fn().mockResolvedValue(ok("https://s3.example.com/download")),
+            getPresignedDownloadUrl: vi
+              .fn()
+              .mockResolvedValue(ok("https://s3.example.com/download")),
+            getMetadata: vi
+              .fn()
+              .mockResolvedValue(ok({ size: 1024, contentType: "application/pdf" })),
             delete: vi.fn().mockResolvedValue(ok(undefined)),
           },
         },
@@ -79,8 +85,8 @@ describe("FilesModule Integration", () => {
   });
 
   afterAll(async () => {
-    await fileModel.deleteMany({});
-    await module.close();
+    await fileModel?.deleteMany({});
+    await module?.close();
   });
 
   beforeEach(async () => {
@@ -96,7 +102,7 @@ describe("FilesModule Integration", () => {
         parentType: "note",
         parentId: "note-1",
       },
-      "user-1"
+      "user-1",
     );
 
     expect(result.isOk()).toBe(true);
@@ -115,13 +121,13 @@ describe("FilesModule Integration", () => {
         parentType: "note",
         parentId: "note-1",
       },
-      "user-1"
+      "user-1",
     );
 
     const files = await fileModel.find().exec();
     expect(files.length).toBe(1);
 
-    const confirmResult = await confirmUploadCmd.execute(files[0]!.key);
+    const confirmResult = await confirmUploadCmd.execute(files[0]!.key, ACTOR);
     expect(confirmResult.isOk()).toBe(true);
 
     const updated = await fileModel.findById(files[0]!._id).exec();
@@ -137,11 +143,11 @@ describe("FilesModule Integration", () => {
         parentType: "note",
         parentId: "note-1",
       },
-      "user-1"
+      "user-1",
     );
 
     const files = await fileModel.find().exec();
-    const result = await getFileByIdQuery.execute(files[0]!._id.toString());
+    const result = await getFileByIdQuery.execute(files[0]!._id.toString(), ACTOR);
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
@@ -158,7 +164,7 @@ describe("FilesModule Integration", () => {
         parentType: "note",
         parentId: "note-1",
       },
-      "user-1"
+      "user-1",
     );
     await requestUploadCmd.execute(
       {
@@ -168,10 +174,10 @@ describe("FilesModule Integration", () => {
         parentType: "note",
         parentId: "note-1",
       },
-      "user-1"
+      "user-1",
     );
 
-    const result = await listFilesQuery.execute("note", "note-1");
+    const result = await listFilesQuery.execute("note", ACTOR, "note-1");
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
@@ -180,3 +186,12 @@ describe("FilesModule Integration", () => {
     }
   });
 });
+
+function requireTestDatabaseUri(): string {
+  if (!MONGODB_URI) throw new Error("TEST_MONGODB_URI is required");
+  const database = new URL(MONGODB_URI).pathname.slice(1);
+  if (!database.toLowerCase().includes("test")) {
+    throw new Error("TEST_MONGODB_URI must point to a database containing 'test' in its name");
+  }
+  return MONGODB_URI;
+}

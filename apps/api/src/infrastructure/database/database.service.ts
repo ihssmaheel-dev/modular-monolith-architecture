@@ -1,6 +1,6 @@
 import { Injectable, OnApplicationShutdown } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
-import { Connection } from "mongoose";
+import { ClientSession, Connection } from "mongoose";
 import { ok, err, Result } from "neverthrow";
 import { ClsService } from "nestjs-cls";
 import { PinoLoggerService } from "../logger/logger.service";
@@ -26,11 +26,9 @@ export class DatabaseService implements OnApplicationShutdown {
     return this.connection.readyState === 1;
   }
 
-  async withTransaction<T>(
-    fn: () => Promise<T>,
-  ): Promise<Result<T, TransactionError>> {
+  async withTransaction<T>(fn: () => Promise<T>): Promise<Result<T, TransactionError>> {
     const session = await this.connection.startSession();
-    
+
     // Check if we are inside a CLS context (e.g., HTTP request or worker job)
     if (!this.cls.isActive()) {
       return this.runTransaction(session, fn);
@@ -41,7 +39,20 @@ export class DatabaseService implements OnApplicationShutdown {
     return this.cls.runWith(context, () => this.runTransaction(session, fn));
   }
 
-  private async runTransaction<T>(session: any, fn: () => Promise<T>): Promise<Result<T, TransactionError>> {
+  async withResultTransaction<T, E>(
+    fn: () => Promise<Result<T, E>>,
+  ): Promise<Result<T, E | TransactionError>> {
+    const session = await this.connection.startSession();
+    if (!this.cls.isActive()) return this.runResultTransaction(session, fn);
+
+    const context = { ...this.cls.get(), mongoSession: session };
+    return this.cls.runWith(context, () => this.runResultTransaction(session, fn));
+  }
+
+  private async runTransaction<T>(
+    session: ClientSession,
+    fn: () => Promise<T>,
+  ): Promise<Result<T, TransactionError>> {
     try {
       session.startTransaction();
       const result = await fn();
@@ -59,6 +70,34 @@ export class DatabaseService implements OnApplicationShutdown {
       });
     } finally {
       session.endSession();
+    }
+  }
+
+  private async runResultTransaction<T, E>(
+    session: ClientSession,
+    fn: () => Promise<Result<T, E>>,
+  ): Promise<Result<T, E | TransactionError>> {
+    try {
+      session.startTransaction();
+      const result = await fn();
+      if (result.isErr()) {
+        await session.abortTransaction();
+        return err(result.error);
+      }
+      await session.commitTransaction();
+      return ok(result.value);
+    } catch (error) {
+      await session.abortTransaction();
+      this.logger.error(
+        { error: error instanceof Error ? error.message : String(error) },
+        "Transaction failed",
+      );
+      return err({
+        code: "TRANSACTION_FAILED",
+        message: "api.error.transactionFailed",
+      });
+    } finally {
+      await session.endSession();
     }
   }
 

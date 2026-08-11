@@ -5,7 +5,7 @@ export type FileDocument = HydratedDocument<FileMongooseSchema>;
 
 @Schema({ timestamps: true, collection: "files" })
 export class FileMongooseSchema {
-  @Prop({ required: true, unique: true, index: true })
+  @Prop({ required: true })
   key!: string;
 
   @Prop({ required: true })
@@ -20,13 +20,13 @@ export class FileMongooseSchema {
   @Prop({ required: true })
   bucket!: string;
 
-  @Prop({ index: true })
+  @Prop()
   parentId?: string;
 
   @Prop({ enum: ["note", "user", "general"], default: "general" })
   parentType!: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true })
   uploadedBy!: string;
 
   @Prop({ enum: ["pending", "uploaded", "failed"], default: "pending" })
@@ -34,5 +34,3 @@ export class FileMongooseSchema {
 }
 
 export const FileSchema = SchemaFactory.createForClass(FileMongooseSchema);
-
-FileSchema.index({ parentType: 1, parentId: 1 });

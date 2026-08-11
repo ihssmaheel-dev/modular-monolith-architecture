@@ -12,7 +12,7 @@ const CACHE_CHANNEL = "cache:invalidation";
 export class DistributedCacheService implements OnModuleInit, OnApplicationShutdown {
   private subscriber: Redis | null = null;
   private logger: PinoLoggerService;
-  private cache = new Map<string, { value: any; exp: number }>();
+  private cache = new Map<string, { value: unknown; exp: number }>();
 
   constructor(
     private readonly redisService: RedisService,
@@ -24,13 +24,16 @@ export class DistributedCacheService implements OnModuleInit, OnApplicationShutd
 
   async onModuleInit() {
     if (!env.REDIS_URL) {
-      this.logger.warn({}, "REDIS_URL not set. Distributed cache invalidation will only work locally.");
+      this.logger.warn(
+        {},
+        "REDIS_URL not set. Distributed cache invalidation will only work locally.",
+      );
       return;
     }
 
     try {
       this.subscriber = new Redis(env.REDIS_URL);
-      
+
       this.subscriber.on("error", (error) => {
         this.logger.error({ error }, "Cache subscriber error");
       });
@@ -55,7 +58,7 @@ export class DistributedCacheService implements OnModuleInit, OnApplicationShutd
     }
   }
 
-  get(key: string): any | undefined {
+  get<T>(key: string): T | undefined {
     const item = this.cache.get(key);
     if (!item) {
       this.cacheMetrics.recordMiss("memory");
@@ -69,10 +72,10 @@ export class DistributedCacheService implements OnModuleInit, OnApplicationShutd
     }
 
     this.cacheMetrics.recordHit("memory");
-    return item.value;
+    return item.value as T;
   }
 
-  set(key: string, value: any, ttlSeconds: number) {
+  set(key: string, value: unknown, ttlSeconds: number): void {
     this.cache.set(key, {
       value,
       exp: Date.now() + ttlSeconds * 1000,
@@ -90,8 +93,12 @@ export class DistributedCacheService implements OnModuleInit, OnApplicationShutd
   /**
    * Automatically executes a method and caches successful `Result.ok()` values in memory.
    */
-  async getOrSet<T, E>(key: string, ttlSeconds: number, fetcher: () => Promise<Result<T, E>>): Promise<Result<T, E>> {
-    const cached = this.get(key);
+  async getOrSet<T, E>(
+    key: string,
+    ttlSeconds: number,
+    fetcher: () => Promise<Result<T, E>>,
+  ): Promise<Result<T, E>> {
+    const cached = this.get<Result<T, E>>(key);
     if (cached !== undefined) {
       return cached; // Already wrapped in `Result.ok()` when it was saved
     }

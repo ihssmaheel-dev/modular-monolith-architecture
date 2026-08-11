@@ -8,12 +8,7 @@ import { RealtimeStreamConsumer } from "./realtime-stream.consumer";
 @Global()
 @Module({
   controllers: [RealtimeController],
-  providers: [
-    RealtimeConnectionRegistry,
-    RealtimeStreamConsumer,
-    RealtimeGateway,
-    RealtimeService,
-  ],
+  providers: [RealtimeConnectionRegistry, RealtimeStreamConsumer, RealtimeGateway, RealtimeService],
   exports: [RealtimeService],
 })
 export class RealtimeModule {}

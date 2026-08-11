@@ -1,13 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { AuthResponse } from "@repo/shared";
 
-
-interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
+type AuthUser = AuthResponse["user"];
 
 interface AuthState {
   user: AuthUser | null;
@@ -15,7 +10,6 @@ interface AuthState {
   login: (data: { user: AuthUser }) => void;
   logout: () => void;
 }
-
 
 export const useAuthStore = create<AuthState>()(
   persist(

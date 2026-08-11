@@ -12,7 +12,9 @@ services:
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      test:
+        - CMD-SHELL
+        - 'mongosh --quiet --username "$${MONGO_INITDB_ROOT_USERNAME}" --password "$${MONGO_INITDB_ROOT_PASSWORD}" --authenticationDatabase admin --eval "quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)"'
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,6 +49,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  minio-init:
+    image: minio/minio:latest
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - mc alias set local http://minio:9000 minioadmin minioadmin && mc mb --ignore-existing local/uploads
+    depends_on:
+      minio:
+        condition: service_healthy
 
 volumes:
   mongodb_data:

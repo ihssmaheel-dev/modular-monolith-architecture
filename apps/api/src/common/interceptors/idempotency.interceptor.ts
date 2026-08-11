@@ -7,12 +7,19 @@ import {
   ConflictException,
 } from "@nestjs/common";
 import { Observable, of, throwError } from "rxjs";
-import { catchError, tap } from "rxjs/operators";
+import { catchError, concatMap, map, mergeMap } from "rxjs/operators";
+import { from } from "rxjs";
 import { Reflector } from "@nestjs/core";
 import { ClsService } from "nestjs-cls";
 import { RedisService } from "../../infrastructure/redis/redis.service";
 import { IDEMPOTENT_KEY } from "../decorators/idempotent.decorator";
 import { FastifyRequest } from "fastify";
+import type Redis from "ioredis";
+import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
+
+const CACHE_TTL_SECONDS = 24 * 60 * 60;
+const MAX_KEY_LENGTH = 128;
+const VALID_KEY = /^[A-Za-z0-9._:-]+$/;
 
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
@@ -20,9 +27,14 @@ export class IdempotencyInterceptor implements NestInterceptor {
     private readonly reflector: Reflector,
     private readonly redisService: RedisService,
     private readonly cls: ClsService,
-  ) {}
+    logger: PinoLoggerService,
+  ) {
+    this.logger = logger.child({ module: "IdempotencyInterceptor" });
+  }
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+  private readonly logger: PinoLoggerService;
+
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     const isIdempotent = this.reflector.getAllAndOverride<boolean>(IDEMPOTENT_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -35,7 +47,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<FastifyRequest>();
     const idempotencyKey = request.headers["idempotency-key"];
 
-    if (!idempotencyKey || typeof idempotencyKey !== "string") {
+    if (!this.isValidKey(idempotencyKey)) {
       throw new BadRequestException();
     }
 
@@ -48,45 +60,45 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const userId = this.cls.get("userId") || request.ip || "anonymous";
     const cacheKey = `idempotency:${userId}:${idempotencyKey}`;
 
-    // Try to set the key as PROCESSING atomically
-    // NX = Only set if not exists, EX = Expire in 24 hours (86400 seconds)
-    const isNew = await redis.set(cacheKey, "PROCESSING", "EX", 86400, "NX");
-
-    if (!isNew) {
-      // Key already exists, it's either processing or completed
-      const value = await redis.get(cacheKey);
-
-      if (value === "PROCESSING") {
-        throw new ConflictException();
-      }
-
-      if (value) {
-        // Return cached response
-        try {
-          const parsed = JSON.parse(value);
-          return of(parsed);
-        } catch (e) {
-          return of(value);
-        }
-      }
-    }
-
-    // It's a new request, process it
+    const cached = await this.claimOrRead(redis, cacheKey);
+    if (cached !== undefined) return of(cached);
     return next.handle().pipe(
-      tap(async (response) => {
-        // On success, save the response payload
-        try {
-          const serialized = JSON.stringify(response);
-          await redis.set(cacheKey, serialized, "EX", 86400);
-        } catch (e) {
-          // Ignore cache serialization errors
-        }
-      }),
-      catchError((error) => {
-        // On error, delete the lock so the client can retry safely
-        redis.del(cacheKey).catch(() => {});
-        return throwError(() => error);
-      }),
+      concatMap((response) =>
+        from(this.cacheResponse(redis, cacheKey, response)).pipe(map(() => response)),
+      ),
+      catchError((error) => this.releaseAndRethrow(redis, cacheKey, error)),
+    );
+  }
+
+  private isValidKey(value: string | string[] | undefined): value is string {
+    return typeof value === "string" && value.length <= MAX_KEY_LENGTH && VALID_KEY.test(value);
+  }
+
+  private async claimOrRead(redis: Redis, key: string): Promise<unknown | undefined> {
+    const claimed = await redis.set(key, "PROCESSING", "EX", CACHE_TTL_SECONDS, "NX");
+    if (claimed) return undefined;
+    const value = await redis.get(key);
+    if (!value || value === "PROCESSING") throw new ConflictException();
+    try {
+      return JSON.parse(value) as unknown;
+    } catch {
+      this.logger.error({ key }, "Invalid cached idempotency response");
+      throw new ConflictException();
+    }
+  }
+
+  private async cacheResponse(redis: Redis, key: string, response: unknown): Promise<void> {
+    try {
+      await redis.set(key, JSON.stringify(response), "EX", CACHE_TTL_SECONDS);
+    } catch (error) {
+      this.logger.error({ key, error }, "Failed to cache idempotent response");
+    }
+  }
+
+  private releaseAndRethrow(redis: Redis, key: string, error: unknown): Observable<never> {
+    return from(redis.del(key)).pipe(
+      catchError(() => of(0)),
+      mergeMap(() => throwError(() => error)),
     );
   }
 }

@@ -1,17 +1,29 @@
-import { ExecutionContext, CallHandler, BadRequestException, ConflictException } from "@nestjs/common";
+import {
+  ExecutionContext,
+  CallHandler,
+  BadRequestException,
+  ConflictException,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ClsService } from "nestjs-cls";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { of, throwError } from "rxjs";
+import { firstValueFrom, of, throwError } from "rxjs";
 import { IdempotencyInterceptor } from "./idempotency.interceptor";
 import { RedisService } from "../../infrastructure/redis/redis.service";
+import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
+
+interface RedisMock {
+  set: ReturnType<typeof vi.fn>;
+  get: ReturnType<typeof vi.fn>;
+  del: ReturnType<typeof vi.fn>;
+}
 
 describe("IdempotencyInterceptor", () => {
   let interceptor: IdempotencyInterceptor;
   let reflector: Reflector;
   let redisService: RedisService;
   let cls: ClsService;
-  let redisClient: any;
+  let redisClient: RedisMock;
 
   beforeEach(() => {
     reflector = new Reflector();
@@ -27,7 +39,11 @@ describe("IdempotencyInterceptor", () => {
       get: vi.fn().mockReturnValue("user-123"),
     } as unknown as ClsService;
 
-    interceptor = new IdempotencyInterceptor(reflector, redisService, cls);
+    const logger = {
+      child: vi.fn().mockReturnThis(),
+      error: vi.fn(),
+    } as unknown as PinoLoggerService;
+    interceptor = new IdempotencyInterceptor(reflector, redisService, cls, logger);
   });
 
   const createMockContext = (headers: Record<string, string> = {}) => {
@@ -43,9 +59,13 @@ describe("IdempotencyInterceptor", () => {
     } as unknown as ExecutionContext;
   };
 
-  const createMockCallHandler = (returnValue: any = "success", shouldThrow = false) => {
+  const createMockCallHandler = (returnValue: unknown = "success", shouldThrow = false) => {
     return {
-      handle: vi.fn().mockReturnValue(shouldThrow ? throwError(() => new Error("Handler error")) : of(returnValue)),
+      handle: vi
+        .fn()
+        .mockReturnValue(
+          shouldThrow ? throwError(() => new Error("Handler error")) : of(returnValue),
+        ),
     } as CallHandler;
   };
 
@@ -55,7 +75,7 @@ describe("IdempotencyInterceptor", () => {
     const handler = createMockCallHandler();
 
     const result = await interceptor.intercept(context, handler);
-    result.subscribe((val) => expect(val).toBe("success"));
+    await expect(firstValueFrom(result)).resolves.toBe("success");
     expect(handler.handle).toHaveBeenCalled();
     expect(redisClient.set).not.toHaveBeenCalled();
   });
@@ -75,7 +95,7 @@ describe("IdempotencyInterceptor", () => {
     const handler = createMockCallHandler();
 
     const result = await interceptor.intercept(context, handler);
-    result.subscribe((val) => expect(val).toBe("success"));
+    await expect(firstValueFrom(result)).resolves.toBe("success");
     expect(handler.handle).toHaveBeenCalled();
   });
 
@@ -83,12 +103,12 @@ describe("IdempotencyInterceptor", () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
     const context = createMockContext({ "idempotency-key": "req-1" });
     const handler = createMockCallHandler({ data: "success" });
-    
+
     redisClient.set.mockResolvedValueOnce("OK"); // NX sets successfully
     redisClient.set.mockResolvedValueOnce("OK"); // Final save successfully
 
     const result = await interceptor.intercept(context, handler);
-    result.subscribe((val) => expect(val).toEqual({ data: "success" }));
+    await expect(firstValueFrom(result)).resolves.toEqual({ data: "success" });
 
     expect(redisClient.set).toHaveBeenNthCalledWith(
       1,
@@ -99,9 +119,7 @@ describe("IdempotencyInterceptor", () => {
       "NX",
     );
     expect(handler.handle).toHaveBeenCalled();
-    
-    // Check that tap worked (async microtask)
-    await Promise.resolve();
+
     expect(redisClient.set).toHaveBeenNthCalledWith(
       2,
       "idempotency:user-123:req-1",
@@ -115,7 +133,7 @@ describe("IdempotencyInterceptor", () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
     const context = createMockContext({ "idempotency-key": "req-1" });
     const handler = createMockCallHandler();
-    
+
     redisClient.set.mockResolvedValueOnce(null); // NX failed, key exists
     redisClient.get.mockResolvedValueOnce("PROCESSING");
 
@@ -127,12 +145,12 @@ describe("IdempotencyInterceptor", () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
     const context = createMockContext({ "idempotency-key": "req-1" });
     const handler = createMockCallHandler();
-    
+
     redisClient.set.mockResolvedValueOnce(null); // NX failed, key exists
     redisClient.get.mockResolvedValueOnce(JSON.stringify({ data: "cached" }));
 
     const result = await interceptor.intercept(context, handler);
-    result.subscribe((val) => expect(val).toEqual({ data: "cached" }));
+    await expect(firstValueFrom(result)).resolves.toEqual({ data: "cached" });
     expect(handler.handle).not.toHaveBeenCalled();
   });
 
@@ -140,18 +158,13 @@ describe("IdempotencyInterceptor", () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
     const context = createMockContext({ "idempotency-key": "req-1" });
     const handler = createMockCallHandler(null, true); // throws error
-    
+
     redisClient.set.mockResolvedValueOnce("OK"); // NX sets successfully
     redisClient.del.mockResolvedValueOnce(1); // Delete resolves
 
     const result = await interceptor.intercept(context, handler);
-    
-    result.subscribe({
-      error: async (err) => {
-        expect(err.message).toBe("Handler error");
-        await Promise.resolve();
-        expect(redisClient.del).toHaveBeenCalledWith("idempotency:user-123:req-1");
-      }
-    });
+
+    await expect(firstValueFrom(result)).rejects.toThrow("Handler error");
+    expect(redisClient.del).toHaveBeenCalledWith("idempotency:user-123:req-1");
   });
 });

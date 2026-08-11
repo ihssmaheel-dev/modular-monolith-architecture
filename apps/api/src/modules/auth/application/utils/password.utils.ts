@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto";
 
 /**
  * Generates a secure random token, typically used for password resets or email verification.
@@ -8,4 +8,8 @@ import { randomBytes } from "crypto";
 export function generateSecureToken(length = 32): string {
   const tokenBytes = randomBytes(length);
   return tokenBytes.toString("hex");
+}
+
+export function hashPasswordResetToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }

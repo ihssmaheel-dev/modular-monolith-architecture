@@ -21,7 +21,7 @@ export const ResetPasswordSchema = z.object({
 });
 
 export const RefreshTokenSchema = z.object({
-  refreshToken: z.string().min(1),
+  refreshToken: z.string().min(1).optional(),
 });
 
 export const AuthResponseSchema = z.object({
@@ -31,7 +31,7 @@ export const AuthResponseSchema = z.object({
     id: z.string(),
     email: z.string(),
     name: z.string(),
-    role: z.string(),
+    role: z.enum(["admin", "user"]),
   }),
 });
 

@@ -1,11 +1,13 @@
-import { ClientSession } from 'mongoose';
-import { ClsService } from 'nestjs-cls';
-import { BaseFindOptions } from './base-repository.types';
+import { ClientSession, Query } from "mongoose";
+import { ClsService } from "nestjs-cls";
+import { BaseFindOptions } from "./base-repository.types";
+
+type DataRecord = Record<string, unknown>;
 
 export function applySoftDelete(
-  filter: Record<string, any>,
-  options: Pick<BaseFindOptions, 'includeDeleted' | 'onlyDeleted'> = {},
-): Record<string, any> {
+  filter: DataRecord,
+  options: Pick<BaseFindOptions, "includeDeleted" | "onlyDeleted"> = {},
+): DataRecord {
   if (options.onlyDeleted) {
     return { ...filter, deletedAt: { $exists: true, $ne: null } };
   }
@@ -13,48 +15,63 @@ export function applySoftDelete(
   return { ...filter, deletedAt: { $exists: false } };
 }
 
-export function applyOptions(query: any, options: BaseFindOptions, cls?: ClsService) {
-  if (options.select) query = query.select(options.select);
-  if (options.populate) query = query.populate(options.populate);
-  if (options.sort) query = query.sort(options.sort);
-  if (options.lean !== false) query = query.lean();
-  if (typeof options.limit === 'number') query = query.limit(options.limit);
-  if (typeof options.skip === 'number') query = query.skip(options.skip);
-  if (options.session) query = query.session(options.session);
-  else {
-    const session = cls?.get('mongoSession') ?? undefined;
-    if (session) query = query.session(session);
-  }
-  return query;
+export function applyOptions<TResult, TDocument>(
+  initialQuery: Query<TResult, TDocument>,
+  options: BaseFindOptions,
+  cls?: ClsService,
+): Query<TResult, TDocument> {
+  if (options.select) initialQuery.select(options.select);
+  if (options.populate) applyPopulate(initialQuery, options.populate);
+  if (options.sort) initialQuery.sort(options.sort);
+  if (options.lean !== false) initialQuery.lean();
+  if (typeof options.limit === "number") initialQuery.limit(options.limit);
+  if (typeof options.skip === "number") initialQuery.skip(options.skip);
+  const session = options.session ?? getSession(cls);
+  if (session) initialQuery.session(session);
+  return initialQuery;
 }
 
 export function applyAuditOnCreate(
-  data: Record<string, any>,
+  data: DataRecord,
   enabled: boolean,
   cls?: ClsService,
-): Record<string, any> {
+): DataRecord {
   if (!enabled || !cls) return data;
-  const userId = cls.get('userId');
+  const userId = cls.get("userId");
   if (!userId) return data;
   return { ...data, createdBy: userId, updatedBy: userId };
 }
 
 export function applyAuditOnUpdate(
-  update: Record<string, any>,
+  update: DataRecord,
   enabled: boolean,
   cls?: ClsService,
-): Record<string, any> {
+): DataRecord {
   if (!enabled || !cls) return update;
-  const userId = cls.get('userId');
+  const userId = cls.get("userId");
   if (!userId) return update;
-  if (update.$set) {
-    update.$set.updatedBy = userId;
-  } else {
-    update.updatedBy = userId;
+  if (isDataRecord(update.$set)) {
+    return { ...update, $set: { ...update.$set, updatedBy: userId } };
   }
-  return update;
+  return { ...update, updatedBy: userId };
 }
 
 export function getSession(cls?: ClsService): ClientSession | undefined {
-  return cls?.get('mongoSession') ?? undefined;
+  return cls?.get("mongoSession") ?? undefined;
+}
+
+function isDataRecord(value: unknown): value is DataRecord {
+  return typeof value === "object" && value !== null;
+}
+
+function applyPopulate<TResult, TDocument>(
+  query: Query<TResult, TDocument>,
+  populate: NonNullable<BaseFindOptions["populate"]>,
+): void {
+  if (typeof populate === "string") {
+    query.populate({ path: populate });
+    return;
+  }
+  const values = Array.isArray(populate) ? populate : [populate];
+  query.populate(values.map((value) => (typeof value === "string" ? { path: value } : value)));
 }

@@ -1,4 +1,4 @@
-import { ClientSession, PopulateOptions, Types } from 'mongoose';
+import { ClientSession, PopulateOptions, Types } from "mongoose";
 
 export type Id = string | Types.ObjectId;
 
@@ -23,7 +23,7 @@ export interface CursorPaginationOptions extends BaseFindOptions {
   limit?: number;
   cursor?: string;
   cursorField?: string;
-  direction?: 'asc' | 'desc';
+  direction?: "asc" | "desc";
 }
 
 export interface PaginatedResult<T> {

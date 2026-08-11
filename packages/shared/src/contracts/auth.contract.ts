@@ -1,5 +1,4 @@
-import { initContract } from "@ts-rest/core";
-import { z } from "zod";
+import { initContract, type AppRouter } from "@ts-rest/core";
 import {
   RegisterSchema,
   LoginSchema,
@@ -9,59 +8,62 @@ import {
   AuthResponseSchema,
   MessageResponseSchema,
 } from "../schemas/auth.schema";
+import { contractSchema } from "./contract-schema";
 
 const c = initContract();
 
-export const authContract = c.router({
+export const authContract = {
   register: {
     method: "POST" as const,
     path: "/auth/register",
-    body: RegisterSchema as any,
+    body: contractSchema(RegisterSchema),
     responses: {
-      201: AuthResponseSchema as any,
-      409: { message: "" } as any,
+      201: contractSchema(AuthResponseSchema),
+      409: contractSchema(MessageResponseSchema),
     },
   },
   login: {
     method: "POST" as const,
     path: "/auth/login",
-    body: LoginSchema as any,
+    body: contractSchema(LoginSchema),
     responses: {
-      200: AuthResponseSchema as any,
-      401: { message: "" } as any,
+      200: contractSchema(AuthResponseSchema),
+      401: contractSchema(MessageResponseSchema),
     },
   },
   logout: {
     method: "POST" as const,
     path: "/auth/logout",
-    body: z.object({}) as any,
+    body: c.noBody(),
     responses: {
-      200: MessageResponseSchema as any,
+      200: contractSchema(MessageResponseSchema),
+      401: contractSchema(MessageResponseSchema),
     },
   },
   refresh: {
     method: "POST" as const,
     path: "/auth/refresh",
-    body: RefreshTokenSchema as any,
+    body: contractSchema(RefreshTokenSchema),
     responses: {
-      200: AuthResponseSchema as any,
-      401: { message: "" } as any,
+      200: contractSchema(AuthResponseSchema),
+      401: contractSchema(MessageResponseSchema),
     },
   },
   forgotPassword: {
     method: "POST" as const,
     path: "/auth/forgot-password",
-    body: ForgotPasswordSchema as any,
+    body: contractSchema(ForgotPasswordSchema),
     responses: {
-      200: MessageResponseSchema as any,
+      200: contractSchema(MessageResponseSchema),
     },
   },
   resetPassword: {
     method: "POST" as const,
     path: "/auth/reset-password",
-    body: ResetPasswordSchema as any,
+    body: contractSchema(ResetPasswordSchema),
     responses: {
-      200: MessageResponseSchema as any,
+      200: contractSchema(MessageResponseSchema),
+      401: contractSchema(MessageResponseSchema),
     },
   },
-});
+} as const satisfies AppRouter;

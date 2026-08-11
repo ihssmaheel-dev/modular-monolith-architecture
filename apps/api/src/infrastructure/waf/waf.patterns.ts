@@ -25,11 +25,7 @@ export const SQL_INJECTION_PATTERNS = [
   /(';\s*(DROP|DELETE|INSERT|UPDATE|SELECT))/i,
 ];
 
-export const HEADER_INJECTION_PATTERNS = [
-  /\r\n/i,
-  /\n/i,
-  /\r/i,
-];
+export const HEADER_INJECTION_PATTERNS = [/\r\n/i, /\n/i, /\r/i];
 
 const MAX_SCAN_DEPTH = 10;
 
@@ -47,7 +43,13 @@ export function scanObject(obj: Record<string, unknown>, depth = 0): string[] {
     }
 
     if (typeof value === "string") {
-      if (containsPattern(value, [...XSS_PATTERNS, ...SQL_INJECTION_PATTERNS, ...NOSQL_INJECTION_PATTERNS])) {
+      if (
+        containsPattern(value, [
+          ...XSS_PATTERNS,
+          ...SQL_INJECTION_PATTERNS,
+          ...NOSQL_INJECTION_PATTERNS,
+        ])
+      ) {
         violations.push(`Suspicious value in key: ${key}`);
       }
     } else if (typeof value === "object" && value !== null && !Array.isArray(value)) {

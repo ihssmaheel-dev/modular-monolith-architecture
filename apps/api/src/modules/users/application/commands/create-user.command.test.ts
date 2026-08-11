@@ -32,29 +32,34 @@ describe("CreateUserCommand", () => {
     } as unknown as GetUserByEmailQuery;
 
     databaseService = {
-      withTransaction: vi.fn().mockImplementation(async (cb) => {
-        try {
-          return ok(await cb());
-        } catch (e) {
-          throw e;
-        }
-      }),
+      withResultTransaction: vi.fn().mockImplementation(async (callback) => callback()),
     } as unknown as DatabaseService;
 
     outboxService = {
       dispatch: vi.fn().mockResolvedValue(ok(undefined)),
     } as unknown as OutboxService;
-    
+
     command = new CreateUserCommand(repository, getUserByEmail, databaseService, outboxService);
   });
 
   it("should return EMAIL_TAKEN if email exists", async () => {
     // Arrange
-    const existingUser = User.fromPersistence({ id: "123", email: "test@example.com", name: "Test", role: "user", createdAt: new Date(), updatedAt: new Date() });
+    const existingUser = User.fromPersistence({
+      id: "123",
+      email: "test@example.com",
+      name: "Test",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(existingUser));
 
     // Act
-    const result = await command.execute({ email: "test@example.com", name: "Test", password: "pwd" });
+    const result = await command.execute({
+      email: "test@example.com",
+      name: "Test",
+      password: "pwd",
+    });
 
     // Assert
     expect(result.isErr()).toBe(true);
@@ -67,19 +72,23 @@ describe("CreateUserCommand", () => {
     // Arrange
     vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(null));
     vi.mocked(bcrypt.hash).mockResolvedValue("hashed_pwd" as never);
-    
+
     const newUser = User.fromPersistence({
       id: "user-123",
       email: "test@example.com",
       name: "Test",
-      role: "user" as any,
+      role: "user",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
     vi.mocked(repository.create).mockResolvedValue(ok(newUser));
 
     // Act
-    const result = await command.execute({ email: "test@example.com", name: "Test", password: "pwd" });
+    const result = await command.execute({
+      email: "test@example.com",
+      name: "Test",
+      password: "pwd",
+    });
 
     // Assert
     expect(result.isOk()).toBe(true);
@@ -91,7 +100,7 @@ describe("CreateUserCommand", () => {
     });
     expect(outboxService.dispatch).toHaveBeenCalledWith(
       "user.created",
-      expect.any(UserCreatedEvent)
+      expect.any(UserCreatedEvent),
     );
   });
 });

@@ -9,7 +9,7 @@ import { DistributedCacheService } from "../../../../infrastructure/cache/distri
 export class GetUserByIdQuery {
   constructor(
     private readonly repository: UsersRepository,
-    private readonly cacheService: DistributedCacheService
+    private readonly cacheService: DistributedCacheService,
   ) {}
 
   async execute(id: string): Promise<Result<User, UserNotFound>> {

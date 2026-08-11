@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/lib/api";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, Button, Input, Label } from "@repo/ui";
+import { getResponseMessage } from "@/lib/api-response";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  Button,
+  Input,
+  Label,
+} from "@repo/ui";
 
 export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
   const { t } = useTranslation();
@@ -15,7 +25,7 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
     setLoading(true);
     setError(null);
 
-    const { status, body } = await (api.notes.createNote as any)({
+    const { status, body } = await api.notes.createNote({
       body: { title, content },
     });
 
@@ -24,9 +34,9 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
       setContent("");
       onSuccess?.();
     } else {
-      setError(body.message || t("api.note.createFailed"));
+      setError(getResponseMessage(body) ?? t("api.note.createFailed"));
     }
-    
+
     setLoading(false);
   };
 

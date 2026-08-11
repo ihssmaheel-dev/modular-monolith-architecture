@@ -10,7 +10,7 @@ import type { RequestUploadInput } from "@repo/shared";
 interface RequestUploadResult {
   uploadUrl: string;
   fileKey: string;
-  expiresAt: Date;
+  expiresAt: string;
 }
 
 @Injectable()
@@ -26,10 +26,7 @@ export class RequestUploadCommand {
   ): Promise<Result<RequestUploadResult, FileError>> {
     const fileKey = this.buildKey(input, userId);
 
-    const presignResult = await this.storage.getPresignedUploadUrl(
-      fileKey,
-      input.contentType,
-    );
+    const presignResult = await this.storage.getPresignedUploadUrl(fileKey, input.contentType);
 
     if (presignResult.isErr()) {
       return err({
@@ -63,16 +60,17 @@ export class RequestUploadCommand {
     return ok({
       uploadUrl: presignResult.value,
       fileKey,
-      expiresAt,
+      expiresAt: expiresAt.toISOString(),
     });
   }
 
   private buildKey(input: RequestUploadInput, userId: string): string {
     const uuid = randomUUID();
     const sanitized = input.fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const prefix = input.parentType !== "general" && input.parentId
-      ? `${input.parentType}/${input.parentId}`
-      : "general";
+    const prefix =
+      input.parentType !== "general" && input.parentId
+        ? `${input.parentType}/${input.parentId}`
+        : "general";
     return `${prefix}/${userId}/${uuid}-${sanitized}`;
   }
 }

@@ -1,7 +1,7 @@
 import { Controller, Req, HttpStatus } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
 import { RequirePermissions } from "../../../common";
-import { CreateUserInput, UpdateUserInput, usersContract } from "@repo/shared";
+import { usersContract } from "@repo/shared";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import { GetUsersQuery } from "../application/queries/get-users.query";
 import { GetUserByIdQuery } from "../application/queries/get-user-by-id.query";
@@ -26,91 +26,102 @@ export class UsersController {
 
   @TsRestHandler(usersContract.list)
   @RequirePermissions("users:read")
-  async list(
-    @Req() req?: FastifyRequest,
-  ) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(usersContract.list, async ({ query }: any) => {
+  list(@Req() req: FastifyRequest) {
+    return tsRestHandler(usersContract.list, async ({ query }) => {
       const { page, limit } = query;
       const lang = req?.headers["accept-language"];
-      const result = await this.getUsersQuery.execute(
-        page ? Number(page) : undefined,
-        limit ? Number(limit) : undefined,
-      );
+      const result = await this.getUsersQuery.execute(page, limit);
       const val = handleResult(result, {}, this.i18n, lang);
       const { users, total, page: p, limit: l } = val;
-      return { 
-        status: 200, 
-        body: { users: users.map(toUserResponse), total, page: p, limit: l } 
+      return {
+        status: 200 as const,
+        body: { users: users.map(toUserResponse), total, page: p, limit: l },
       };
     });
   }
 
   @TsRestHandler(usersContract.getById)
   @RequirePermissions("users:read")
-  async getById(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(usersContract.getById, async ({ params: { id } }: any) => {
+  getById(@Req() req: FastifyRequest) {
+    return tsRestHandler(usersContract.getById, async ({ params: { id } }) => {
       const lang = req?.headers["accept-language"];
       const result = await this.getUserByIdQuery.execute(id);
-      const user = handleResult(result, {
-        USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
-      }, this.i18n, lang);
+      const user = handleResult(
+        result,
+        {
+          USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+        },
+        this.i18n,
+        lang,
+      );
       return {
-        status: 200,
-        body: toUserResponse(user)
+        status: 200 as const,
+        body: toUserResponse(user),
       };
     });
   }
 
   @TsRestHandler(usersContract.create)
   @RequirePermissions("users:write")
-  async create(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(usersContract.create, async ({ body }: any) => {
+  create(@Req() req: FastifyRequest) {
+    return tsRestHandler(usersContract.create, async ({ body }) => {
       const lang = req?.headers["accept-language"];
-      const result = await this.createUserCommand.execute(body as CreateUserInput);
-      const user = handleResult(result, {
-        EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
-      }, this.i18n, lang);
+      const locale = this.i18n.getLocale(req.headers["accept-language"]);
+      const result = await this.createUserCommand.execute(body, locale);
+      const user = handleResult(
+        result,
+        {
+          EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
+        },
+        this.i18n,
+        lang,
+      );
       return {
-        status: 201,
-        body: toUserResponse(user)
+        status: 201 as const,
+        body: toUserResponse(user),
       };
     });
   }
 
   @TsRestHandler(usersContract.update)
   @RequirePermissions("users:write")
-  async update(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(usersContract.update, async ({ params: { id }, body }: any) => {
+  update(@Req() req: FastifyRequest) {
+    return tsRestHandler(usersContract.update, async ({ params: { id }, body }) => {
       const lang = req?.headers["accept-language"];
-      const result = await this.updateUserCommand.execute(id, body as UpdateUserInput);
-      const user = handleResult(result, {
-        USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
-        EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
-      }, this.i18n, lang);
+      const result = await this.updateUserCommand.execute(id, body);
+      const user = handleResult(
+        result,
+        {
+          USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+          EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
+        },
+        this.i18n,
+        lang,
+      );
       return {
-        status: 200,
-        body: toUserResponse(user)
+        status: 200 as const,
+        body: toUserResponse(user),
       };
     });
   }
 
   @TsRestHandler(usersContract.delete)
   @RequirePermissions("users:write")
-  async delete(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(usersContract.delete, async ({ params: { id } }: any) => {
+  delete(@Req() req: FastifyRequest) {
+    return tsRestHandler(usersContract.delete, async ({ params: { id } }) => {
       const lang = req?.headers["accept-language"];
       const result = await this.deleteUserCommand.execute(id);
-      handleResult(result, {
-        USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
-      }, this.i18n, lang);
+      handleResult(
+        result,
+        {
+          USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+        },
+        this.i18n,
+        lang,
+      );
       return {
-        status: 204,
-        body: undefined as any
+        status: 204 as const,
+        body: undefined,
       };
     });
   }

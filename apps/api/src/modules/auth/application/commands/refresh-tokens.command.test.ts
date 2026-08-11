@@ -17,11 +17,11 @@ describe("RefreshTokensCommand", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     getUserById = {
       execute: vi.fn(),
     } as unknown as GetUserByIdQuery;
-    
+
     command = new RefreshTokensCommand(getUserById);
   });
 
@@ -37,8 +37,14 @@ describe("RefreshTokensCommand", () => {
   });
 
   it("should return err USER_NOT_FOUND if user does not exist", async () => {
-    vi.mocked(jwtUtils.verifyRefreshToken).mockReturnValue({ sub: "user-123", type: "refresh" });
-    vi.mocked(getUserById.execute).mockResolvedValue(err({ type: "USER_NOT_FOUND", userId: "user-123" } as any));
+    vi.mocked(jwtUtils.verifyRefreshToken).mockReturnValue({
+      sub: "user-123",
+      type: "refresh",
+      version: 0,
+    });
+    vi.mocked(getUserById.execute).mockResolvedValue(
+      err({ type: "USER_NOT_FOUND", userId: "user-123" }),
+    );
 
     const result = await command.execute("valid-refresh-token");
 
@@ -49,13 +55,18 @@ describe("RefreshTokensCommand", () => {
   });
 
   it("should return ok with new tokens if token is valid and user exists", async () => {
-    vi.mocked(jwtUtils.verifyRefreshToken).mockReturnValue({ sub: "user-123", type: "refresh" });
-    
+    vi.mocked(jwtUtils.verifyRefreshToken).mockReturnValue({
+      sub: "user-123",
+      type: "refresh",
+      version: 0,
+    });
+
     const user = User.fromPersistence({
       id: "user-123",
       email: "test@example.com",
       name: "Test",
-      role: "USER" as any,
+      role: "user",
+      authVersion: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -70,10 +81,34 @@ describe("RefreshTokensCommand", () => {
       expect(result.value).toEqual({
         accessToken: "new-access",
         refreshToken: "new-refresh",
-        user: { id: "user-123", email: "test@example.com", name: "Test", role: "USER" },
+        user: { id: "user-123", email: "test@example.com", name: "Test", role: "user" },
       });
     }
     expect(jwtUtils.verifyRefreshToken).toHaveBeenCalledWith("valid-refresh-token");
-    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "USER");
+    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "user");
+    expect(jwtUtils.signRefreshToken).toHaveBeenCalledWith("user-123", 0);
+  });
+
+  it("rejects a refresh token issued before a password change", async () => {
+    vi.mocked(jwtUtils.verifyRefreshToken).mockReturnValue({
+      sub: "user-123",
+      type: "refresh",
+      version: 1,
+    });
+    const user = User.fromPersistence({
+      id: "user-123",
+      email: "test@example.com",
+      name: "Test",
+      role: "user",
+      authVersion: 2,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    vi.mocked(getUserById.execute).mockResolvedValue(ok(user));
+
+    const result = await command.execute("old-refresh-token");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) expect(result.error.type).toBe("INVALID_TOKEN");
   });
 });

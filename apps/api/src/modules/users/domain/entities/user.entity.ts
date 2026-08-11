@@ -1,11 +1,12 @@
-import { type UserRole } from '@repo/shared';
-import { randomUUID } from 'crypto';
+import { type UserRole } from "@repo/shared";
+import { randomUUID } from "crypto";
 
 export interface UserData {
   id: string;
   email: string;
   name: string;
   role: UserRole;
+  authVersion?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,6 +21,7 @@ export class User {
       email: input.email,
       name: input.name,
       role: input.role ?? "user",
+      authVersion: 0,
       createdAt: now,
       updatedAt: now,
     });
@@ -40,6 +42,9 @@ export class User {
   }
   get role() {
     return this.data.role;
+  }
+  get authVersion() {
+    return this.data.authVersion ?? 0;
   }
   get createdAt() {
     return this.data.createdAt;

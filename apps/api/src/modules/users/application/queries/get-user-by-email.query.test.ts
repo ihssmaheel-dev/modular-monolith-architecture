@@ -12,11 +12,9 @@ describe("GetUserByEmailQuery", () => {
     repository = {
       findOne: vi.fn(),
     } as unknown as UsersRepository;
-    
+
     query = new GetUserByEmailQuery(repository);
   });
-
-
 
   it("should return ok(null) if user not found", async () => {
     // Arrange
@@ -34,7 +32,14 @@ describe("GetUserByEmailQuery", () => {
 
   it("should return ok(user) if found", async () => {
     // Arrange
-    const user = User.fromPersistence({ id: "123", email: "test@example.com", name: "Test", role: "user", createdAt: new Date(), updatedAt: new Date() });
+    const user = User.fromPersistence({
+      id: "123",
+      email: "test@example.com",
+      name: "Test",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     vi.mocked(repository.findOne).mockResolvedValue(ok(user));
 
     // Act

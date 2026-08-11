@@ -9,6 +9,15 @@ export interface FileUploadProps {
   maxSizeMB?: number;
   disabled?: boolean;
   className?: string;
+  labels: {
+    loading: string;
+    uploading: string;
+    prompt: string;
+    maxSize: (size: number) => string;
+    invalidType: (type: string) => string;
+    tooLarge: (size: number) => string;
+    uploadFailed: string;
+  };
 }
 
 export function FileUpload({
@@ -17,6 +26,7 @@ export function FileUpload({
   maxSizeMB = MAX_FILE_SIZE_MB,
   disabled = false,
   className,
+  labels,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
@@ -25,10 +35,10 @@ export function FileUpload({
 
   const validateFile = (file: File): string | null => {
     if (!accept.includes(file.type)) {
-      return `File type "${file.type}" is not allowed`;
+      return labels.invalidType(file.type);
     }
     if (file.size > maxSizeMB * 1024 * 1024) {
-      return `File size exceeds ${maxSizeMB}MB limit`;
+      return labels.tooLarge(maxSizeMB);
     }
     return null;
   };
@@ -45,7 +55,7 @@ export function FileUpload({
     try {
       await onUpload(file);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(err instanceof Error ? err.message : labels.uploadFailed);
     } finally {
       setIsUploading(false);
     }
@@ -87,13 +97,11 @@ export function FileUpload({
           isDragging
             ? "border-primary bg-primary/5"
             : "border-muted-foreground/25 hover:border-muted-foreground/50",
-          disabled || isUploading
-            ? "cursor-not-allowed opacity-50"
-            : "cursor-pointer",
+          disabled || isUploading ? "cursor-not-allowed opacity-50" : "cursor-pointer",
         )}
       >
         {isUploading ? (
-          <Spinner className="h-8 w-8" />
+          <Spinner className="h-8 w-8" label={labels.loading} />
         ) : (
           <svg
             className="h-8 w-8 text-muted-foreground"
@@ -110,13 +118,9 @@ export function FileUpload({
           </svg>
         )}
         <p className="text-sm text-muted-foreground">
-          {isUploading
-            ? "Uploading..."
-            : "Drag & drop a file here, or click to select"}
+          {isUploading ? labels.uploading : labels.prompt}
         </p>
-        <p className="text-xs text-muted-foreground/70">
-          Max size: {maxSizeMB}MB
-        </p>
+        <p className="text-xs text-muted-foreground/70">{labels.maxSize(maxSizeMB)}</p>
       </div>
 
       <input
@@ -128,9 +132,7 @@ export function FileUpload({
         disabled={disabled || isUploading}
       />
 
-      {error && (
-        <p className="mt-2 text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
     </div>
   );
 }

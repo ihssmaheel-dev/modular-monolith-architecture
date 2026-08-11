@@ -7,6 +7,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "@ts-rest/core": "^3.26.0",
     "@repo/shared": "workspace:*"

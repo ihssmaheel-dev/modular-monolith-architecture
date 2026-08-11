@@ -17,11 +17,21 @@ describe("VerifyUserCredentialsQuery", () => {
   let repository: UsersRepository;
   let getUserById: GetUserByIdQuery;
 
+  const credentialsResult = (id: string) =>
+    ok({
+      _id: { toString: () => id },
+      email: "test@example.com",
+      name: "Test",
+      role: "user",
+      authVersion: 0,
+      passwordHash: "hash",
+    }) as unknown as Awaited<ReturnType<UsersRepository["findByEmailWithPassword"]>>;
+
   beforeEach(() => {
     repository = {
       findByEmailWithPassword: vi.fn(),
     } as unknown as UsersRepository;
-    
+
     getUserById = {
       execute: vi.fn(),
     } as unknown as GetUserByIdQuery;
@@ -45,8 +55,7 @@ describe("VerifyUserCredentialsQuery", () => {
 
   it("should return ok(null) if password does not match", async () => {
     // Arrange
-    const dbUser = { _id: "123", passwordHash: "hash" };
-    vi.mocked(repository.findByEmailWithPassword).mockResolvedValue(ok(dbUser as any));
+    vi.mocked(repository.findByEmailWithPassword).mockResolvedValue(credentialsResult("123"));
     vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
 
     // Act
@@ -61,10 +70,16 @@ describe("VerifyUserCredentialsQuery", () => {
 
   it("should return ok(user) if credentials are valid", async () => {
     // Arrange
-    const dbUser = { _id: "123", passwordHash: "hash" };
-    const user = User.fromPersistence({ id: "123", email: "test@example.com", name: "Test", role: "user", createdAt: new Date(), updatedAt: new Date() });
-    
-    vi.mocked(repository.findByEmailWithPassword).mockResolvedValue(ok(dbUser as any));
+    const user = User.fromPersistence({
+      id: "123",
+      email: "test@example.com",
+      name: "Test",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    vi.mocked(repository.findByEmailWithPassword).mockResolvedValue(credentialsResult("123"));
     vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
     vi.mocked(getUserById.execute).mockResolvedValue(ok(user));
 

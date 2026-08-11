@@ -18,7 +18,7 @@ describe("RegisterCommand", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     getUserByEmail = {
       execute: vi.fn(),
     } as unknown as GetUserByEmailQuery;
@@ -26,17 +26,28 @@ describe("RegisterCommand", () => {
     createUser = {
       execute: vi.fn(),
     } as unknown as CreateUserCommand;
-    
+
     command = new RegisterCommand(getUserByEmail, createUser);
   });
 
   it("should return EMAIL_TAKEN if user already exists", async () => {
     // Arrange
-    const existingUser = User.fromPersistence({ id: "123", email: "test@example.com", name: "Test", role: "user", createdAt: new Date(), updatedAt: new Date() });
+    const existingUser = User.fromPersistence({
+      id: "123",
+      email: "test@example.com",
+      name: "Test",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(existingUser));
 
     // Act
-    const result = await command.execute({ name: "Test", email: "test@example.com", password: "password123" });
+    const result = await command.execute({
+      name: "Test",
+      email: "test@example.com",
+      password: "password123",
+    });
 
     // Assert
     expect(result.isErr()).toBe(true);
@@ -49,12 +60,12 @@ describe("RegisterCommand", () => {
   it("should create user and return tokens when email is unique", async () => {
     // Arrange
     vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(null));
-    
+
     const newUser = User.fromPersistence({
       id: "user-123",
       email: "test@example.com",
       name: "Test",
-      role: "USER" as any,
+      role: "user",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -63,7 +74,11 @@ describe("RegisterCommand", () => {
     vi.mocked(jwtUtils.signRefreshToken).mockReturnValue("refresh-token");
 
     // Act
-    const result = await command.execute({ name: "Test", email: "test@example.com", password: "password123" });
+    const result = await command.execute({
+      name: "Test",
+      email: "test@example.com",
+      password: "password123",
+    });
 
     // Assert
     expect(result.isOk()).toBe(true);
@@ -71,10 +86,13 @@ describe("RegisterCommand", () => {
       expect(result.value).toEqual({
         accessToken: "access-token",
         refreshToken: "refresh-token",
-        user: { id: "user-123", email: "test@example.com", name: "Test", role: "USER" },
+        user: { id: "user-123", email: "test@example.com", name: "Test", role: "user" },
       });
     }
-    expect(createUser.execute).toHaveBeenCalledWith({ email: "test@example.com", name: "Test", password: "password123" });
-    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "USER");
+    expect(createUser.execute).toHaveBeenCalledWith(
+      { email: "test@example.com", name: "Test", password: "password123" },
+      "en",
+    );
+    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "user");
   });
 });

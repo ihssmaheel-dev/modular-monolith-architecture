@@ -37,13 +37,21 @@ describe("UpdateUserCommand", () => {
     distributedCacheService = {
       invalidateGlobal: vi.fn(),
     } as unknown as DistributedCacheService;
-    
-    command = new UpdateUserCommand(repository, getUserById, getUserByEmail, eventEmitter, distributedCacheService);
+
+    command = new UpdateUserCommand(
+      repository,
+      getUserById,
+      getUserByEmail,
+      eventEmitter,
+      distributedCacheService,
+    );
   });
 
   it("should return USER_NOT_FOUND if user does not exist", async () => {
     // Arrange
-    vi.mocked(getUserById.execute).mockResolvedValue(err({ type: "USER_NOT_FOUND", userId: "123" }));
+    vi.mocked(getUserById.execute).mockResolvedValue(
+      err({ type: "USER_NOT_FOUND", userId: "123" }),
+    );
 
     // Act
     const result = await command.execute("123", { name: "New Name" });
@@ -54,10 +62,24 @@ describe("UpdateUserCommand", () => {
 
   it("should return EMAIL_TAKEN if changing email to an existing one", async () => {
     // Arrange
-    const user = User.fromPersistence({ id: "123", email: "old@example.com", name: "Old", role: "user", createdAt: new Date(), updatedAt: new Date() });
+    const user = User.fromPersistence({
+      id: "123",
+      email: "old@example.com",
+      name: "Old",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     vi.mocked(getUserById.execute).mockResolvedValue(ok(user));
-    
-    const otherUser = User.fromPersistence({ id: "456", email: "new@example.com", name: "Other", role: "user", createdAt: new Date(), updatedAt: new Date() });
+
+    const otherUser = User.fromPersistence({
+      id: "456",
+      email: "new@example.com",
+      name: "Other",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(otherUser));
 
     // Act
@@ -72,7 +94,14 @@ describe("UpdateUserCommand", () => {
 
   it("should update user, emit event, and return ok", async () => {
     // Arrange
-    const user = User.fromPersistence({ id: "123", email: "old@example.com", name: "Old", role: "user", createdAt: new Date(), updatedAt: new Date() });
+    const user = User.fromPersistence({
+      id: "123",
+      email: "old@example.com",
+      name: "Old",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     vi.mocked(getUserById.execute).mockResolvedValue(ok(user));
     vi.mocked(repository.updateById).mockResolvedValue(ok(user));
 

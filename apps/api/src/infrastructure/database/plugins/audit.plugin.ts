@@ -1,5 +1,5 @@
-import { Schema, Document } from "mongoose";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { Schema } from "mongoose";
 import { ClsServiceManager } from "nestjs-cls";
 import { DatabaseMutatedEvent } from "../../audit/audit.listener";
 
@@ -7,101 +7,143 @@ export interface AuditPluginOptions {
   eventEmitter: EventEmitter2;
 }
 
-export function auditPlugin(schema: Schema, options: AuditPluginOptions) {
-  // --- CREATE / UPDATE (via save) ---
-  schema.pre("save", async function () {
-    const isNew = this.isNew;
-    this.$locals.auditAction = isNew ? "CREATE" : "UPDATE";
+interface QueryResult {
+  lean(): { exec(): Promise<unknown> };
+}
 
-    if (!isNew) {
-      // Fetch the previous state directly from the DB
-      try {
-        const model = this.constructor as any;
-        const before = await model.findById(this._id).lean().exec();
-        this.$locals.auditBefore = before;
-      } catch (err) {
-        // Ignore error if fetching original fails, though ideally we log it
-      }
-    }
+interface AuditModel {
+  findById(id: unknown): QueryResult;
+  findOne(filter: unknown): QueryResult;
+}
+
+interface AuditContext {
+  isNew?: boolean;
+  _id?: unknown;
+  $locals?: Record<string, unknown>;
+  model?: AuditModel;
+  getQuery?(): unknown;
+  constructor?: unknown;
+}
+
+interface MiddlewareSchema {
+  pre(operation: string, handler: (this: AuditContext) => void | Promise<void>): void;
+  post(operation: string, handler: (this: AuditContext, result: unknown) => void): void;
+}
+
+const beforeSnapshots = new WeakMap<object, unknown>();
+const auditActions = new WeakMap<object, "CREATE" | "UPDATE">();
+const SENSITIVE_FIELDS = new Set(["passwordHash", "passwordResetTokenHash"]);
+
+export function auditPlugin(schema: Schema, options: AuditPluginOptions): void {
+  const middleware = schema as unknown as MiddlewareSchema;
+
+  middleware.pre("save", async function () {
+    auditActions.set(this, this.isNew ? "CREATE" : "UPDATE");
+    if (this.isNew) return;
+    const model = getModel(this);
+    if (!model) return;
+    const before = await safeQuery(() => model.findById(this._id));
+    beforeSnapshots.set(this, before);
+  });
+  middleware.post("save", function (result) {
+    const action = auditActions.get(this) ?? "UPDATE";
+    emitAuditEvent(result, action, beforeSnapshots.get(this), toPlain(result), options);
+    beforeSnapshots.delete(this);
+    auditActions.delete(this);
   });
 
-  schema.post("save", function (doc: Document) {
-    const action = (this.$locals.auditAction as "CREATE" | "UPDATE") || "UPDATE";
-    emitAuditEvent(doc, action, this.$locals.auditBefore, doc.toObject(), options.eventEmitter);
-  });
+  registerQueryAudit(middleware, "findOneAndUpdate", "UPDATE", options);
+  registerQueryAudit(middleware, "findOneAndDelete", "DELETE", options);
+}
 
-  // --- UPDATE (via findOneAndUpdate / updateOne) ---
-  schema.pre(["findOneAndUpdate", "updateOne"], async function () {
-    // Fetch the document BEFORE the update is applied
-    try {
-      const model = (this as any).model;
-      const before = await model.findOne(this.getQuery()).lean().exec();
-      (this as any).$locals = (this as any).$locals || {};
-      (this as any).$locals.auditBefore = before;
-    } catch (err) {
-      // Ignore
-    }
+function registerQueryAudit(
+  schema: MiddlewareSchema,
+  operation: string,
+  action: "UPDATE" | "DELETE",
+  options: AuditPluginOptions,
+): void {
+  schema.pre(operation, async function () {
+    if (!this.model || !this.getQuery) return;
+    const before = await safeQuery(() => this.model!.findOne(this.getQuery!()));
+    beforeSnapshots.set(this, before);
   });
-
-  schema.post(["findOneAndUpdate", "updateOne"], async function (result: any) {
-    if (result) {
-      // Note: If options.new = true was not used, `result` might be the old document.
-      // But BaseRepository always uses options.new = true, so result is the AFTER state.
-      // Wait, Mongoose post('updateOne') does not return the document.
-      // But post('findOneAndUpdate') does. BaseRepository uses findOneAndUpdate.
-      
-      const after = result.toObject ? result.toObject() : result;
-      // Upsert
-      const action: "CREATE" | "UPDATE" = (this as any).$locals?.auditBefore ? "UPDATE" : "CREATE";
-      emitAuditEvent(result, action, (this as any).$locals?.auditBefore, after, options.eventEmitter);
-    }
-  });
-
-  // --- DELETE (via findOneAndDelete) ---
-  schema.pre("findOneAndDelete", async function () {
-    try {
-      const model = (this as any).model;
-      const before = await model.findOne(this.getQuery()).lean().exec();
-      (this as any).$locals = (this as any).$locals || {};
-      (this as any).$locals.auditBefore = before;
-    } catch (err) {
-      // Ignore
-    }
-  });
-
-  schema.post("findOneAndDelete", function (result: any) {
-    if (result) {
-      emitAuditEvent(result, "DELETE", (this as any).$locals?.auditBefore, null, options.eventEmitter);
-    }
+  schema.post(operation, function (result) {
+    if (!result) return;
+    const after = action === "DELETE" ? null : toPlain(result);
+    emitAuditEvent(result, action, beforeSnapshots.get(this), after, options);
+    beforeSnapshots.delete(this);
   });
 }
 
+async function safeQuery(build: () => QueryResult): Promise<unknown> {
+  try {
+    return await build().lean().exec();
+  } catch {
+    return null;
+  }
+}
+
 function emitAuditEvent(
-  doc: Document | any,
+  document: unknown,
   action: "CREATE" | "UPDATE" | "DELETE",
-  before: any,
-  after: any,
-  eventEmitter: EventEmitter2
-) {
-  // IMPORTANT: Ignore the audit_logs collection to prevent infinite loops!
-  const collectionName = doc.collection?.name || doc.constructor?.collection?.name;
-  if (!collectionName || collectionName === "audit_logs") return;
+  before: unknown,
+  after: unknown,
+  options: AuditPluginOptions,
+): void {
+  const collectionName = getCollectionName(document);
+  const documentId = getDocumentId(document);
+  if (!collectionName || collectionName === "audit_logs" || !documentId) return;
+  const event = new DatabaseMutatedEvent(
+    collectionName,
+    documentId,
+    action,
+    getActorId(),
+    sanitizeAuditValue(before),
+    sanitizeAuditValue(after),
+  );
+  options.eventEmitter.emit("database.mutated", event);
+}
 
-  const documentId = doc._id ? doc._id.toString() : null;
-  if (!documentId) return;
+function getModel(context: AuditContext): AuditModel | null {
+  const constructor = context.constructor as { findById?: AuditModel["findById"] } | undefined;
+  return constructor?.findById ? (constructor as AuditModel) : null;
+}
 
-  // Attempt to extract the user from the global ClsService
-  let actorId: string | undefined;
+function toPlain(value: unknown): unknown {
+  if (typeof value !== "object" || value === null) return value;
+  const document = value as { toObject?: () => unknown };
+  return document.toObject ? document.toObject() : value;
+}
+
+function getCollectionName(value: unknown): string | null {
+  if (typeof value !== "object" || value === null) return null;
+  const document = value as { collection?: { name?: unknown }; constructor?: unknown };
+  if (typeof document.collection?.name === "string") return document.collection.name;
+  const constructor = document.constructor as { collection?: { name?: unknown } } | undefined;
+  return typeof constructor?.collection?.name === "string" ? constructor.collection.name : null;
+}
+
+function getDocumentId(value: unknown): string | null {
+  if (typeof value !== "object" || value === null || !("_id" in value)) return null;
+  const id = value._id;
+  return id === null || id === undefined ? null : String(id);
+}
+
+function getActorId(): string | undefined {
   try {
     const cls = ClsServiceManager.getClsService();
-    if (cls && cls.isActive()) {
-      actorId = cls.get("userId");
-    }
-  } catch (err) {
-    // CLS not active, ignore
+    return cls?.isActive() ? cls.get("userId") : undefined;
+  } catch {
+    return undefined;
   }
+}
 
-  // Sanitize big objects or sensitive data if necessary, but full snapshot is required for compliance
-  const event = new DatabaseMutatedEvent(collectionName, documentId, action, actorId, before, after);
-  eventEmitter.emit("database.mutated", event);
+function sanitizeAuditValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizeAuditValue);
+  if (typeof value !== "object" || value === null) return value;
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (!SENSITIVE_FIELDS.has(key)) sanitized[key] = sanitizeAuditValue(item);
+  }
+  return sanitized;
 }

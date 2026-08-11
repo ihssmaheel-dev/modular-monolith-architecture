@@ -1,28 +1,43 @@
-import { Html, Head, Preview, Body, Container, Text, Tailwind, Button } from "@react-email/components";
+import {
+  Html,
+  Head,
+  Preview,
+  Body,
+  Container,
+  Text,
+  Tailwind,
+  Button,
+} from "@react-email/components";
 
 interface PasswordResetEmailProps {
   resetLink: string;
+  preview: string;
+  requestText: string;
+  instructionText: string;
+  buttonText: string;
 }
 
-export const PasswordResetEmail = ({ resetLink }: PasswordResetEmailProps) => {
+export const PasswordResetEmail = ({
+  resetLink,
+  preview,
+  requestText,
+  instructionText,
+  buttonText,
+}: PasswordResetEmailProps) => {
   return (
     <Html>
       <Head />
-      <Preview>Reset your password</Preview>
+      <Preview>{preview}</Preview>
       <Tailwind>
         <Body className="bg-white my-auto mx-auto font-sans">
           <Container className="border border-solid border-[#eaeaea] rounded my-[40px] mx-auto p-[20px] w-[465px]">
-            <Text className="text-black text-[14px] leading-[24px]">
-              We received a request to reset your password.
-            </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
-              Click the button below to choose a new password. If you didn't request this, you can safely ignore this email.
-            </Text>
+            <Text className="text-black text-[14px] leading-[24px]">{requestText}</Text>
+            <Text className="text-black text-[14px] leading-[24px]">{instructionText}</Text>
             <Button
               className="bg-[#000000] rounded text-white text-[12px] font-semibold no-underline text-center px-4 py-3"
               href={resetLink}
             >
-              Reset Password
+              {buttonText}
             </Button>
           </Container>
         </Body>

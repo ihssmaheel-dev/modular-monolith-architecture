@@ -2,9 +2,10 @@ import { cn } from "../lib/utils";
 
 interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "default" | "lg";
+  label: string;
 }
 
-function Spinner({ className, size = "default", ...props }: SpinnerProps) {
+function Spinner({ className, size = "default", label, ...props }: SpinnerProps) {
   return (
     <div
       className={cn(
@@ -17,10 +18,10 @@ function Spinner({ className, size = "default", ...props }: SpinnerProps) {
         className,
       )}
       role="status"
-      aria-label="Loading"
+      aria-label={label}
       {...props}
     >
-      <span className="sr-only">Loading...</span>
+      <span className="sr-only">{label}</span>
     </div>
   );
 }

@@ -77,6 +77,8 @@ pnpm db:seed          # Seed database
 
 # Code Quality
 pnpm lint             # Lint all packages
+pnpm format:check     # Verify formatting
+pnpm rules:check      # Enforce architecture rules
 
 # Docker
 pnpm docker:up        # Start infrastructure
@@ -86,6 +88,7 @@ pnpm docker:down      # Stop infrastructure
 ## API Documentation
 
 When running in development mode, Swagger UI is available at:
+
 ```
 http://localhost:3000/api/docs
 ```

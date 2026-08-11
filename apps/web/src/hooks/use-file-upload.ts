@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { uploadFile, type UploadProgress } from "@/lib/upload";
 import type { ApiClient } from "@repo/api-client";
 import type { FileMetadataResponse } from "@repo/shared";
+import { useTranslation } from "react-i18next";
 
 export interface UseFileUploadReturn {
   upload: (params: {
@@ -16,6 +17,7 @@ export interface UseFileUploadReturn {
 }
 
 export function useFileUpload(api: ApiClient): UseFileUploadReturn {
+  const { t } = useTranslation();
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,14 +46,13 @@ export function useFileUpload(api: ApiClient): UseFileUploadReturn {
         });
         return result;
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Upload failed";
-        setError(message);
+        setError(t("api.error.uploadFailed"));
         throw err;
       } finally {
         setIsUploading(false);
       }
     },
-    [api],
+    [api, t],
   );
 
   return { upload, progress, isUploading, error, reset };

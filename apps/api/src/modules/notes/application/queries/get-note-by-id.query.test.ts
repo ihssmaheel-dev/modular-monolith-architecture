@@ -4,6 +4,8 @@ import { NotesRepository } from "../../infrastructure/notes.repository";
 import { Note } from "../../domain/entities/note.entity";
 import { ok } from "neverthrow";
 
+const ACTOR = { sub: "admin-1", email: "admin@example.com", role: "admin" } as const;
+
 describe("GetNoteByIdQuery", () => {
   let query: GetNoteByIdQuery;
   let repository: NotesRepository;
@@ -12,18 +14,16 @@ describe("GetNoteByIdQuery", () => {
     repository = {
       findById: vi.fn(),
     } as unknown as NotesRepository;
-    
+
     query = new GetNoteByIdQuery(repository);
   });
-
-
 
   it("should return NOTE_NOT_FOUND if repository returns null", async () => {
     // Arrange
     vi.mocked(repository.findById).mockResolvedValue(ok(null));
 
     // Act
-    const result = await query.execute("123");
+    const result = await query.execute("123", ACTOR);
 
     // Assert
     expect(result.isErr()).toBe(true);
@@ -44,7 +44,7 @@ describe("GetNoteByIdQuery", () => {
     vi.mocked(repository.findById).mockResolvedValue(ok(note));
 
     // Act
-    const result = await query.execute("123");
+    const result = await query.execute("123", ACTOR);
 
     // Assert
     expect(result.isOk()).toBe(true);

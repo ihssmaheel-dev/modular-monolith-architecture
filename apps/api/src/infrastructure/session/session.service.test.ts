@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SessionService } from "./session.service";
+import type { RedisService } from "../redis/redis.service";
+import type { PinoLoggerService } from "../logger/logger.service";
 
 const mockSetex = vi.fn();
 const mockGet = vi.fn();
@@ -20,7 +22,12 @@ describe("SessionService", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const mockLogger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } as any;
+    const mockLogger = {
+      info: vi.fn(),
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+    } as unknown as PinoLoggerService;
     mockLogger.child = () => mockLogger;
 
     service = new SessionService(
@@ -38,8 +45,7 @@ describe("SessionService", () => {
             exec: vi.fn().mockResolvedValue([]),
           }),
         }),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      } as unknown as RedisService,
       mockLogger,
     );
   });

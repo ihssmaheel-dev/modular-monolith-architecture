@@ -12,14 +12,15 @@ export class SmtpDriver implements EmailDriver {
     this.transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
-      auth: env.SMTP_USER
-        ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
-        : undefined,
+      auth: env.SMTP_USER ? { user: env.SMTP_USER, pass: env.SMTP_PASS } : undefined,
     });
     this.logger = logger.child({ module: "SmtpDriver" });
   }
 
-  async send(recipients: string[], params: SendEmailParams): Promise<Result<SendEmailResult, EmailError>> {
+  async send(
+    recipients: string[],
+    params: SendEmailParams,
+  ): Promise<Result<SendEmailResult, EmailError>> {
     try {
       const info = await this.transporter.sendMail({
         from: env.EMAIL_FROM,

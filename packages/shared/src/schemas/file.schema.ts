@@ -47,9 +47,16 @@ export const PresignedUrlResponseSchema = z.object({
   expiresAt: z.string().datetime(),
 });
 
+export const DownloadUrlResponseSchema = z.object({
+  downloadUrl: z.string().url(),
+});
+
 export const FileListResponseSchema = z.object({
   items: z.array(FileMetadataSchema),
-  total: z.number(),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  totalPages: z.number().int().positive(),
 });
 
 export type RequestUploadInput = z.infer<typeof RequestUploadSchema>;

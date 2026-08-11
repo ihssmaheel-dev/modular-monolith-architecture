@@ -50,6 +50,8 @@ COPY --from=build-shared /app/packages/shared/dist ./packages/shared/dist/
 COPY --from=build-shared /app/packages/shared/package.json ./packages/shared/
 COPY --from=build-shared /app/packages/email/dist ./packages/email/dist/
 COPY --from=build-shared /app/packages/email/package.json ./packages/email/
+COPY migrations ./migrations/
+COPY scripts/run-migrations.js ./scripts/run-migrations.js
 
 # Set ownership
 RUN chown -R appuser:appgroup /app

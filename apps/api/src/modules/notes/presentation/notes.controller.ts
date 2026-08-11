@@ -1,7 +1,7 @@
 import { Controller, HttpStatus, Req } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
-import { RequirePermissions, Idempotent } from "../../../common";
-import { CreateNoteDto, UpdateNoteDto, notesContract } from "@repo/shared";
+import { RequirePermissions, Idempotent, requireAuthenticatedUser } from "../../../common";
+import { notesContract } from "@repo/shared";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import { CreateNoteCommand } from "../application/commands/create-note.command";
 import { UpdateNoteCommand } from "../application/commands/update-note.command";
@@ -25,25 +25,27 @@ export class NotesController {
 
   @TsRestHandler(notesContract.getNotes)
   @RequirePermissions("notes:read")
-  async list(
-    @Req() req?: FastifyRequest,
-  ) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(notesContract.getNotes, async ({ query }: any) => {
+  list(@Req() req: FastifyRequest) {
+    return tsRestHandler(notesContract.getNotes, async ({ query }) => {
       const { page, limit } = query;
       const lang = req?.headers["accept-language"];
-      const result = await this.getNotesQuery.execute({
-        page: page ? Number(page) : 1,
-        limit: limit ? Number(limit) : 20,
-      });
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.getNotesQuery.execute(
+        {
+          page,
+          limit,
+        },
+        actor,
+      );
       const val = handleResult(result, {}, this.i18n, lang);
       return {
-        status: 200,
-        body: { 
-          items: val.items.map(toNoteResponse), 
-          total: val.total, 
-          page: val.page, 
-          totalPages: val.totalPages 
+        status: 200 as const,
+        body: {
+          items: val.items.map(toNoteResponse),
+          total: val.total,
+          page: val.page,
+          limit: val.limit,
+          totalPages: val.totalPages,
         },
       };
     });
@@ -51,16 +53,21 @@ export class NotesController {
 
   @TsRestHandler(notesContract.getNoteById)
   @RequirePermissions("notes:read")
-  async getById(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(notesContract.getNoteById, async ({ params: { id } }: any) => {
+  getById(@Req() req: FastifyRequest) {
+    return tsRestHandler(notesContract.getNoteById, async ({ params: { id } }) => {
       const lang = req?.headers["accept-language"];
-      const result = await this.getNoteByIdQuery.execute(id);
-      const note = handleResult(result, {
-        NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-      }, this.i18n, lang);
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.getNoteByIdQuery.execute(id, actor);
+      const note = handleResult(
+        result,
+        {
+          NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+        },
+        this.i18n,
+        lang,
+      );
       return {
-        status: 200,
+        status: 200 as const,
         body: toNoteResponse(note),
       };
     });
@@ -69,14 +76,14 @@ export class NotesController {
   @TsRestHandler(notesContract.createNote)
   @Idempotent()
   @RequirePermissions("notes:write")
-  async create(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(notesContract.createNote, async ({ body }: any) => {
+  create(@Req() req: FastifyRequest) {
+    return tsRestHandler(notesContract.createNote, async ({ body }) => {
       const lang = req?.headers["accept-language"];
-      const result = await this.createNoteCommand.execute(body as CreateNoteDto);
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.createNoteCommand.execute(body, actor);
       const note = handleResult(result, {}, this.i18n, lang);
       return {
-        status: 201,
+        status: 201 as const,
         body: toNoteResponse(note),
       };
     });
@@ -84,16 +91,21 @@ export class NotesController {
 
   @TsRestHandler(notesContract.updateNote)
   @RequirePermissions("notes:write")
-  async update(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(notesContract.updateNote, async ({ params: { id }, body }: any) => {
+  update(@Req() req: FastifyRequest) {
+    return tsRestHandler(notesContract.updateNote, async ({ params: { id }, body }) => {
       const lang = req?.headers["accept-language"];
-      const result = await this.updateNoteCommand.execute(id, body as UpdateNoteDto);
-      const note = handleResult(result, {
-        NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-      }, this.i18n, lang);
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.updateNoteCommand.execute(id, body, actor);
+      const note = handleResult(
+        result,
+        {
+          NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+        },
+        this.i18n,
+        lang,
+      );
       return {
-        status: 200,
+        status: 200 as const,
         body: toNoteResponse(note),
       };
     });
@@ -101,17 +113,22 @@ export class NotesController {
 
   @TsRestHandler(notesContract.deleteNote)
   @RequirePermissions("notes:write")
-  async delete(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(notesContract.deleteNote, async ({ params: { id } }: any) => {
+  delete(@Req() req: FastifyRequest) {
+    return tsRestHandler(notesContract.deleteNote, async ({ params: { id } }) => {
       const lang = req?.headers["accept-language"];
-      const result = await this.deleteNoteCommand.execute(id);
-      handleResult(result, {
-        NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-      }, this.i18n, lang);
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.deleteNoteCommand.execute(id, actor);
+      handleResult(
+        result,
+        {
+          NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+        },
+        this.i18n,
+        lang,
+      );
       return {
-        status: 204,
-        body: undefined as any,
+        status: 204 as const,
+        body: undefined,
       };
     });
   }

@@ -16,7 +16,18 @@ describe("OutboxService", () => {
   });
 
   it("should create an outbox event with pending status", async () => {
-    (repository.create as any).mockResolvedValue(ok({ id: "event-1" }));
+    const now = new Date();
+    vi.mocked(repository.create).mockResolvedValue(
+      ok({
+        id: "event-1",
+        topic: "test.event",
+        payload: { test: true },
+        status: "PENDING",
+        attempts: 0,
+        createdAt: now,
+        updatedAt: now,
+      }),
+    );
 
     const payload = { test: true };
     await service.dispatch("test.event", payload);

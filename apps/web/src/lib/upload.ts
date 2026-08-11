@@ -1,7 +1,5 @@
 import type { ApiClient } from "@repo/api-client";
-import type { FileMetadataResponse, RequestUploadInput } from "@repo/shared";
-
-type AllowedMimeTypes = RequestUploadInput["contentType"];
+import { RequestUploadSchema, type FileMetadataResponse } from "@repo/shared";
 
 export interface UploadProgress {
   loaded: number;
@@ -24,15 +22,15 @@ export async function uploadFile({
   onProgress,
   api,
 }: UploadFileParams): Promise<FileMetadataResponse> {
-  const requestInput: RequestUploadInput = {
+  const requestInput = RequestUploadSchema.parse({
     fileName: file.name,
-    contentType: file.type as AllowedMimeTypes,
+    contentType: file.type,
     fileSize: file.size,
     parentId,
     parentType: parentType ?? "general",
-  };
+  });
 
-  const presignResult = await (api.files.requestUpload as any)({
+  const presignResult = await api.files.requestUpload({
     body: requestInput,
   });
 
@@ -44,7 +42,7 @@ export async function uploadFile({
 
   await uploadToS3(uploadUrl, file, onProgress);
 
-  const confirmResult = await (api.files.confirmUpload as any)({
+  const confirmResult = await api.files.confirmUpload({
     body: { fileKey },
   });
 

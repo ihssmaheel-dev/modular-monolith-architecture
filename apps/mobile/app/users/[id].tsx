@@ -2,14 +2,23 @@ import { View, Text, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../lib/api";
+import { useTranslation } from "react-i18next";
 
 export default function UserDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const { data: user, isLoading, error } = useQuery({
+  const {
+    data: user,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["users", id],
     queryFn: async () => {
       const result = await api.users.getById({ params: { id: id! } });
+      if (result.status !== 200) {
+        throw new Error("users.getById failed");
+      }
       return result.body;
     },
     enabled: !!id,
@@ -26,7 +35,7 @@ export default function UserDetailScreen() {
   if (error || !user) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-destructive">User not found</Text>
+        <Text className="text-destructive">{t("auth.userNotFound")}</Text>
       </View>
     );
   }
@@ -40,7 +49,7 @@ export default function UserDetailScreen() {
         </View>
 
         <View className="rounded-lg border border-border bg-card p-4">
-          <Text className="text-sm font-medium text-muted-foreground">User ID</Text>
+          <Text className="text-sm font-medium text-muted-foreground">{t("users.userId")}</Text>
           <Text className="mt-1 font-mono text-foreground">{user.id}</Text>
         </View>
       </View>

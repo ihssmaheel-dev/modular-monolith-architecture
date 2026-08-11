@@ -48,16 +48,38 @@ export class S3Driver implements StorageDriver {
   }
 
   async getPresignedDownloadUrl(key: string, ttlSeconds = PRESIGN_TTL_SECONDS) {
-    await this.client.send(
-      new HeadObjectCommand({ Bucket: this.bucket, Key: key }),
-    );
+    await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }));
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.client, command, { expiresIn: ttlSeconds });
   }
 
   async delete(key: string) {
-    await this.client.send(
-      new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
-    );
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+  }
+
+  async getMetadata(key: string) {
+    try {
+      const result = await this.client.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+      return {
+        size: result.ContentLength ?? 0,
+        contentType: result.ContentType,
+      };
+    } catch (error) {
+      if (this.isNotFound(error)) return null;
+      throw error;
+    }
+  }
+
+  private isNotFound(error: unknown): boolean {
+    if (typeof error !== "object" || error === null) return false;
+    const value = error as Record<string, unknown>;
+    const metadata = value.$metadata;
+    const status =
+      typeof metadata === "object" && metadata !== null
+        ? (metadata as Record<string, unknown>).httpStatusCode
+        : undefined;
+    return value.name === "NotFound" || status === 404;
   }
 }

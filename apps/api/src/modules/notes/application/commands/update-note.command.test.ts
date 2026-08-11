@@ -6,6 +6,8 @@ import { GetNoteByIdQuery } from "../queries/get-note-by-id.query";
 import { Note } from "../../domain/entities/note.entity";
 import { ok, err } from "neverthrow";
 
+const ACTOR = { sub: "admin-1", email: "admin@example.com", role: "admin" } as const;
+
 describe("UpdateNoteCommand", () => {
   let command: UpdateNoteCommand;
   let repository: NotesRepository;
@@ -24,16 +26,18 @@ describe("UpdateNoteCommand", () => {
     eventEmitter = {
       emit: vi.fn(),
     } as unknown as EventEmitter2;
-    
+
     command = new UpdateNoteCommand(repository, getNoteById, eventEmitter);
   });
 
   it("should return err NOTE_NOT_FOUND if query returns err", async () => {
     // Arrange
-    vi.mocked(getNoteById.execute).mockResolvedValue(err({ type: "NOTE_NOT_FOUND", noteId: "123" }));
+    vi.mocked(getNoteById.execute).mockResolvedValue(
+      err({ type: "NOTE_NOT_FOUND", noteId: "123" }),
+    );
 
     // Act
-    const result = await command.execute("123", { title: "New Title" });
+    const result = await command.execute("123", { title: "New Title" }, ACTOR);
 
     // Assert
     expect(result.isErr()).toBe(true);
@@ -55,14 +59,17 @@ describe("UpdateNoteCommand", () => {
     vi.mocked(repository.updateById).mockResolvedValue(ok(note));
 
     // Act
-    const result = await command.execute("123", { title: "New Title" });
+    const result = await command.execute("123", { title: "New Title" }, ACTOR);
 
     // Assert
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       expect(result.value.title).toBe("New Title");
     }
-    expect(repository.updateById).toHaveBeenCalledWith("123", { title: "New Title", content: "Old Content" });
+    expect(repository.updateById).toHaveBeenCalledWith("123", {
+      title: "New Title",
+      content: "Old Content",
+    });
   });
 
   it("should return err if repository update fails", async () => {
@@ -75,10 +82,10 @@ describe("UpdateNoteCommand", () => {
       updatedAt: new Date(),
     });
     vi.mocked(getNoteById.execute).mockResolvedValue(ok(note));
-    vi.mocked(repository.updateById).mockResolvedValue(err({} as any));
+    vi.mocked(repository.updateById).mockResolvedValue(err({ type: "CONFLICT" }));
 
     // Act
-    const result = await command.execute("123", { title: "New Title" });
+    const result = await command.execute("123", { title: "New Title" }, ACTOR);
 
     // Assert
     expect(result.isErr()).toBe(true);

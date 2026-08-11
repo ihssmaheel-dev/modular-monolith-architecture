@@ -21,7 +21,10 @@ export class UpdateUserCommand {
     private readonly cacheService: DistributedCacheService,
   ) {}
 
-  async execute(id: string, data: z.infer<typeof UpdateUserSchema>): Promise<Result<User, UserNotFound | EmailTaken>> {
+  async execute(
+    id: string,
+    data: z.infer<typeof UpdateUserSchema>,
+  ): Promise<Result<User, UserNotFound | EmailTaken>> {
     const existing = await this.getUserById.execute(id);
     if (existing.isErr()) return err(existing.error);
 

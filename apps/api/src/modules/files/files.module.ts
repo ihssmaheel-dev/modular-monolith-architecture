@@ -11,9 +11,7 @@ import { FilesRepository } from "./infrastructure/files.repository";
 import { FileMongooseSchema, FileSchema } from "./infrastructure/schemas/file.mongoose.schema";
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: FileMongooseSchema.name, schema: FileSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: FileMongooseSchema.name, schema: FileSchema }])],
   controllers: [FilesController],
   providers: [
     RequestUploadCommand,

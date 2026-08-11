@@ -1,40 +1,40 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@repo/ui";
-import { Input } from "@repo/ui";
-import { Label } from "@repo/ui";
-import { Button } from "@repo/ui";
-import { API_BASE_URL } from "@/lib/api";
+import { useTranslation } from "react-i18next";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@repo/ui";
+import { api } from "@/lib/api";
+import { getResponseMessage } from "@/lib/api-response";
 
 function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError("");
     setMessage("");
     setLoading(true);
-
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message ?? "Something went wrong");
+      const result = await api.auth.forgotPassword({ body: { email } });
+      if (result.status !== 200) {
+        setError(getResponseMessage(result.body) ?? t("common.error"));
         return;
       }
-
-      setMessage(data.message ?? "If the email exists, a reset link has been sent.");
+      setMessage(result.body.message);
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("errors.networkError"));
     } finally {
       setLoading(false);
     }
@@ -43,42 +43,38 @@ function ForgotPasswordPage() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Forgot password?</CardTitle>
-        <CardDescription>Enter your email and we'll send you a reset link</CardDescription>
+        <CardTitle className="text-2xl">{t("auth.forgotPassword")}</CardTitle>
+        <CardDescription>{t("auth.forgotDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
           )}
-
           {message && (
             <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
               {message}
             </div>
           )}
-
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("auth.email")}</Label>
             <Input
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder={t("auth.emailPlaceholder")}
               required
             />
           </div>
-
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Sending..." : "Send reset link"}
+            {loading ? t("auth.sending") : t("auth.sendResetLink")}
           </Button>
         </form>
-
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          Remember your password?{" "}
+          {t("auth.rememberPassword")}{" "}
           <Link to="/login" className="text-primary hover:underline">
-            Sign in
+            {t("auth.signIn")}
           </Link>
         </div>
       </CardContent>
@@ -86,7 +82,4 @@ function ForgotPasswordPage() {
   );
 }
 
-
-export const Route = createFileRoute("/_auth/forgot-password")({
-  component: ForgotPasswordPage,
-});
+export const Route = createFileRoute("/_auth/forgot-password")({ component: ForgotPasswordPage });

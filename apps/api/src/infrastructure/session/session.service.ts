@@ -42,7 +42,10 @@ export class SessionService {
       await client.sadd(`user:${input.userId}:sessions`, sessionId);
       this.logger.info({ sessionId, userId: input.userId }, "Session created");
     } else {
-      this.logger.warn({ userId: input.userId }, "Session generated but not persisted (Redis offline)");
+      this.logger.warn(
+        { userId: input.userId },
+        "Session generated but not persisted (Redis offline)",
+      );
     }
 
     return session;
@@ -73,11 +76,7 @@ export class SessionService {
     }
 
     session.lastAccessedAt = Date.now();
-    await client.setex(
-      sessionKey(sessionId),
-      SESSION_TTL_SECONDS,
-      JSON.stringify(session),
-    );
+    await client.setex(sessionKey(sessionId), SESSION_TTL_SECONDS, JSON.stringify(session));
 
     return session;
   }
@@ -91,11 +90,7 @@ export class SessionService {
 
     await client.del(sessionKey(sessionId));
     await client.srem(`user:${session.userId}:sessions`, sessionId);
-    await client.setex(
-      tokenRevocationKey(sessionId),
-      TOKEN_REVOCATION_TTL_SECONDS,
-      "1",
-    );
+    await client.setex(tokenRevocationKey(sessionId), TOKEN_REVOCATION_TTL_SECONDS, "1");
 
     this.logger.info({ sessionId, userId: session.userId }, "Session revoked");
   }
@@ -105,7 +100,7 @@ export class SessionService {
     if (!client) return;
 
     const sessionIds = await client.smembers(`user:${userId}:sessions`);
-    
+
     if (sessionIds.length > 0) {
       const pipeline = client.pipeline();
       for (const sid of sessionIds) {

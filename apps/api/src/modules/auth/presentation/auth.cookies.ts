@@ -7,13 +7,13 @@ const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
+  sameSite: "strict" as const,
 };
 
 export function setAccessTokenCookie(reply: FastifyReply, token: string): void {
   reply.setCookie("access_token", token, {
     ...COOKIE_OPTIONS,
+    path: "/",
     maxAge: ACCESS_TOKEN_MAX_AGE,
   });
 }
@@ -21,11 +21,21 @@ export function setAccessTokenCookie(reply: FastifyReply, token: string): void {
 export function setRefreshTokenCookie(reply: FastifyReply, token: string): void {
   reply.setCookie("refresh_token", token, {
     ...COOKIE_OPTIONS,
+    path: "/api/auth",
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
 }
 
+export function setAuthCookies(
+  reply: FastifyReply,
+  accessToken: string,
+  refreshToken: string,
+): void {
+  setAccessTokenCookie(reply, accessToken);
+  setRefreshTokenCookie(reply, refreshToken);
+}
+
 export function clearAuthCookies(reply: FastifyReply): void {
-  reply.clearCookie("access_token", { path: "/" });
-  reply.clearCookie("refresh_token", { path: "/" });
+  reply.clearCookie("access_token", { ...COOKIE_OPTIONS, path: "/" });
+  reply.clearCookie("refresh_token", { ...COOKIE_OPTIONS, path: "/api/auth" });
 }

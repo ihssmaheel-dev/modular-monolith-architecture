@@ -1,12 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { ok, Result } from "neverthrow";
+import { Result } from "neverthrow";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
-
-interface ListFilesResult {
-  items: FileEntity[];
-  total: number;
-}
+import type { AuthenticatedUser } from "@repo/shared";
+import type { PaginatedResult } from "../../../../infrastructure/database/base.repository";
 
 @Injectable()
 export class ListFilesByParentQuery {
@@ -14,15 +11,18 @@ export class ListFilesByParentQuery {
 
   async execute(
     parentType: string,
+    actor: AuthenticatedUser,
     parentId?: string,
-  ): Promise<Result<ListFilesResult, never>> {
-    if (!parentId) {
-      const findResult = await this.filesRepo.find({ parentType });
-      const files = findResult._unsafeUnwrap();
-      return ok({ items: files, total: files.length });
-    }
-
-    const files = await this.filesRepo.findByParent(parentType, parentId);
-    return ok({ items: files, total: files.length });
+    page = 1,
+    limit = 20,
+  ): Promise<Result<PaginatedResult<FileEntity>, never>> {
+    const filter: Record<string, string> = { parentType };
+    if (parentId) filter.parentId = parentId;
+    if (actor.role !== "admin") filter.uploadedBy = actor.sub;
+    return this.filesRepo.paginate(filter, {
+      page,
+      limit,
+      sort: { createdAt: -1 },
+    });
   }
 }

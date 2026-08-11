@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { StorageService } from "./storage.service";
+import type { PinoLoggerService } from "../logger/logger.service";
+import type { Connection } from "mongoose";
 
 vi.mock("../../config/env", () => ({
   env: {
@@ -23,6 +25,7 @@ vi.mock("./drivers/gridfs.driver", () => {
       delete = vi.fn().mockResolvedValue(undefined);
       getPresignedDownloadUrl = vi.fn().mockResolvedValue("http://dl");
       getPresignedUploadUrl = vi.fn().mockResolvedValue("http://ul");
+      getMetadata = vi.fn().mockResolvedValue({ size: 4, contentType: "text/plain" });
     },
   };
 });
@@ -32,14 +35,15 @@ describe("StorageService", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const mockLogger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } as any;
+    const mockLogger = {
+      info: vi.fn(),
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+    } as unknown as PinoLoggerService;
     mockLogger.child = () => mockLogger;
 
-    service = new StorageService(
-      mockLogger,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { db: {} } as any,
-    );
+    service = new StorageService(mockLogger, { db: {} } as unknown as Connection);
   });
 
   it("should upload file successfully", async () => {
@@ -60,5 +64,10 @@ describe("StorageService", () => {
   it("should get presigned upload url", async () => {
     const result = await service.getPresignedUploadUrl("file.txt", "text/plain");
     expect(result.isOk()).toBe(true);
+  });
+
+  it("should read stored object metadata", async () => {
+    const result = await service.getMetadata("file.txt");
+    expect(result.isOk() && result.value?.size).toBe(4);
   });
 });

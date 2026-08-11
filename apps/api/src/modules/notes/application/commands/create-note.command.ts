@@ -6,6 +6,7 @@ import { CreateNoteSchema } from "@repo/shared";
 import { Note } from "../../domain/entities/note.entity";
 import { NotesRepository } from "../../infrastructure/notes.repository";
 import { NoteCreatedEvent } from "../../domain/events/note.events";
+import type { AuthenticatedUser } from "@repo/shared";
 
 @Injectable()
 export class CreateNoteCommand {
@@ -14,18 +15,21 @@ export class CreateNoteCommand {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(data: z.infer<typeof CreateNoteSchema>): Promise<Result<Note, Error>> {
+  async execute(
+    data: z.infer<typeof CreateNoteSchema>,
+    actor: AuthenticatedUser,
+  ): Promise<Result<Note, Error>> {
     const result = await this.repository.create({
       title: data.title,
       content: data.content,
+      createdBy: actor.sub,
     });
-    
+
     if (result.isOk()) {
-      this.eventEmitter.emit("note.created", new NoteCreatedEvent(
-        result.value.id,
-        result.value.title,
-        result.value.content,
-      ));
+      this.eventEmitter.emit(
+        "note.created",
+        new NoteCreatedEvent(result.value.id, actor.sub, result.value.title, result.value.content),
+      );
     }
 
     return result;

@@ -1,7 +1,7 @@
-import { Controller, Req, HttpStatus } from "@nestjs/common";
+import { Controller, Req } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
-import { RequirePermissions } from "../../../common";
-import { filesContract, RequestUploadInput } from "@repo/shared";
+import { RequirePermissions, requireAuthenticatedUser } from "../../../common";
+import { filesContract } from "@repo/shared";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import { RequestUploadCommand } from "../application/commands/request-upload.command";
 import { ConfirmUploadCommand } from "../application/commands/confirm-upload.command";
@@ -12,6 +12,13 @@ import { ListFilesByParentQuery } from "../application/queries/list-files-by-par
 import { toFileResponse } from "./files.mapper";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
 import { handleResult } from "../../../common/utils/presentation.utils";
+import {
+  CONFIRM_UPLOAD_ERRORS,
+  DELETE_FILE_ERRORS,
+  DOWNLOAD_ERRORS,
+  FILE_NOT_FOUND_ERRORS,
+  REQUEST_UPLOAD_ERRORS,
+} from "./files.error-maps";
 
 @Controller("files")
 export class FilesController {
@@ -27,76 +34,74 @@ export class FilesController {
 
   @TsRestHandler(filesContract.requestUpload)
   @RequirePermissions("files:write")
-  async requestUpload(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(filesContract.requestUpload, async ({ body }: any) => {
+  requestUpload(@Req() req: FastifyRequest) {
+    return tsRestHandler(filesContract.requestUpload, async ({ body }) => {
       const lang = req?.headers["accept-language"];
-      const userId = (req as any)?.user?.id;
-      const result = await this.requestUploadCmd.execute(body as RequestUploadInput, userId);
-      const response = handleResult(result, {
-        PRESIGN_FAILED: { status: HttpStatus.INTERNAL_SERVER_ERROR, i18nKey: "api.error.presignFailed" },
-        UPLOAD_FAILED: { status: HttpStatus.INTERNAL_SERVER_ERROR, i18nKey: "api.error.uploadFailed" },
-      }, this.i18n, lang);
-      return { status: 201, body: response };
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.requestUploadCmd.execute(body, actor.sub);
+      const response = handleResult(result, REQUEST_UPLOAD_ERRORS, this.i18n, lang);
+      return { status: 201 as const, body: response };
     });
   }
 
   @TsRestHandler(filesContract.confirmUpload)
   @RequirePermissions("files:write")
-  async confirmUpload(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(filesContract.confirmUpload, async ({ body }: any) => {
+  confirmUpload(@Req() req: FastifyRequest) {
+    return tsRestHandler(filesContract.confirmUpload, async ({ body }) => {
       const lang = req?.headers["accept-language"];
-      const result = await this.confirmUploadCmd.execute(body.fileKey);
-      const file = handleResult(result, {
-        FILE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-        UPLOAD_FAILED: { status: HttpStatus.INTERNAL_SERVER_ERROR, i18nKey: "api.error.uploadFailed" },
-      }, this.i18n, lang);
-      return { status: 200, body: toFileResponse(file) };
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.confirmUploadCmd.execute(body.fileKey, actor);
+      const file = handleResult(result, CONFIRM_UPLOAD_ERRORS, this.i18n, lang);
+      return { status: 200 as const, body: toFileResponse(file) };
     });
   }
 
   @TsRestHandler(filesContract.getDownloadUrl)
   @RequirePermissions("files:read")
-  async getDownloadUrl(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(filesContract.getDownloadUrl, async ({ params: { id } }: any) => {
+  getDownloadUrl(@Req() req: FastifyRequest) {
+    return tsRestHandler(filesContract.getDownloadUrl, async ({ params: { id } }) => {
       const lang = req?.headers["accept-language"];
-      const result = await this.getDownloadUrlQuery.execute(id);
-      const response = handleResult(result, {
-        FILE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-        PRESIGN_FAILED: { status: HttpStatus.INTERNAL_SERVER_ERROR, i18nKey: "api.error.presignFailed" },
-      }, this.i18n, lang);
-      return { status: 200, body: response };
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.getDownloadUrlQuery.execute(id, actor);
+      const response = handleResult(result, DOWNLOAD_ERRORS, this.i18n, lang);
+      return { status: 200 as const, body: response };
     });
   }
 
   @TsRestHandler(filesContract.getById)
   @RequirePermissions("files:read")
-  async getById(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(filesContract.getById, async ({ params: { id } }: any) => {
+  getById(@Req() req: FastifyRequest) {
+    return tsRestHandler(filesContract.getById, async ({ params: { id } }) => {
       const lang = req?.headers["accept-language"];
-      const result = await this.getFileByIdQuery.execute(id);
-      const file = handleResult(result, {
-        FILE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-      }, this.i18n, lang);
-      return { status: 200, body: toFileResponse(file) };
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.getFileByIdQuery.execute(id, actor);
+      const file = handleResult(result, FILE_NOT_FOUND_ERRORS, this.i18n, lang);
+      return { status: 200 as const, body: toFileResponse(file) };
     });
   }
 
   @TsRestHandler(filesContract.listByParent)
   @RequirePermissions("files:read")
-  async listByParent() {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(filesContract.listByParent, async ({ query }: any) => {
-      const result = await this.listFilesQuery.execute(query.parentType, query.parentId);
-      const data = result._unsafeUnwrap();
+  listByParent(@Req() req: FastifyRequest) {
+    return tsRestHandler(filesContract.listByParent, async ({ query }) => {
+      const lang = req?.headers["accept-language"];
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.listFilesQuery.execute(
+        query.parentType,
+        actor,
+        query.parentId,
+        query.page,
+        query.limit,
+      );
+      const data = handleResult(result, {}, this.i18n, lang);
       return {
-        status: 200,
+        status: 200 as const,
         body: {
           items: data.items.map(toFileResponse),
           total: data.total,
+          page: data.page,
+          limit: data.limit,
+          totalPages: data.totalPages,
         },
       };
     });
@@ -104,18 +109,13 @@ export class FilesController {
 
   @TsRestHandler(filesContract.delete)
   @RequirePermissions("files:delete")
-  async delete(@Req() req?: FastifyRequest) {
-    // @ts-ignore ts-rest v3 + Zod v4 type inference broken
-    return tsRestHandler(filesContract.delete, async ({ params: { id } }: any) => {
+  delete(@Req() req: FastifyRequest) {
+    return tsRestHandler(filesContract.delete, async ({ params: { id } }) => {
       const lang = req?.headers["accept-language"];
-      const userId = (req as any)?.user?.id;
-      const result = await this.deleteFileCmd.execute(id, userId);
-      handleResult(result, {
-        FILE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-        UNAUTHORIZED: { status: HttpStatus.FORBIDDEN, i18nKey: "api.error.unauthorized" },
-        DELETE_FAILED: { status: HttpStatus.INTERNAL_SERVER_ERROR, i18nKey: "api.error.deleteFailed" },
-      }, this.i18n, lang);
-      return { status: 204, body: undefined as any };
+      const actor = requireAuthenticatedUser(req);
+      const result = await this.deleteFileCmd.execute(id, actor);
+      handleResult(result, DELETE_FILE_ERRORS, this.i18n, lang);
+      return { status: 204 as const, body: undefined };
     });
   }
 }

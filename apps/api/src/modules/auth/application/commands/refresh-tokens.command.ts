@@ -9,9 +9,7 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/
 export class RefreshTokensCommand {
   constructor(private readonly getUserById: GetUserByIdQuery) {}
 
-  async execute(
-    refreshToken: string,
-  ): Promise<Result<AuthResponse, AuthError>> {
+  async execute(refreshToken: string): Promise<Result<AuthResponse, AuthError>> {
     const decoded = verifyRefreshToken(refreshToken);
     if (!decoded) return err({ type: "INVALID_TOKEN" });
 
@@ -21,8 +19,11 @@ export class RefreshTokensCommand {
     }
 
     const user = result.value;
+    if (decoded.version !== user.authVersion) {
+      return err({ type: "INVALID_TOKEN" });
+    }
     const newAccessToken = signAccessToken(user.id, user.email, user.role);
-    const newRefreshToken = signRefreshToken(user.id);
+    const newRefreshToken = signRefreshToken(user.id, user.authVersion);
 
     return ok({
       accessToken: newAccessToken,

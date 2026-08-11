@@ -21,25 +21,32 @@ describe("GetUsersQuery", () => {
     repository = {
       paginate: vi.fn(),
     } as unknown as UsersRepository;
-    
+
     query = new GetUsersQuery(repository);
   });
 
-
-
   it("should return users and pagination data", async () => {
     // Arrange
-    const user = User.fromPersistence({ id: "123", email: "test@example.com", name: "Test", role: "user", createdAt: new Date(), updatedAt: new Date() });
+    const user = User.fromPersistence({
+      id: "123",
+      email: "test@example.com",
+      name: "Test",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     vi.mocked(shared.paginate).mockReturnValue({ page: 2, limit: 5, skip: 5 });
-    vi.mocked(repository.paginate).mockResolvedValue(ok({
-      items: [user],
-      total: 1,
-      page: 2,
-      limit: 5,
-      totalPages: 1,
-      hasNextPage: false,
-      hasPrevPage: true,
-    }));
+    vi.mocked(repository.paginate).mockResolvedValue(
+      ok({
+        items: [user],
+        total: 1,
+        page: 2,
+        limit: 5,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: true,
+      }),
+    );
 
     // Act
     const result = await query.execute(2, 5);

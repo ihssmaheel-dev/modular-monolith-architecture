@@ -6,7 +6,7 @@ export function toNoteResponse(note: Note): NoteResponseDto {
     id: note.id,
     title: note.title,
     content: note.content,
-    createdAt: note.createdAt,
-    updatedAt: note.updatedAt,
+    createdAt: note.createdAt.toISOString(),
+    updatedAt: note.updatedAt.toISOString(),
   };
 }

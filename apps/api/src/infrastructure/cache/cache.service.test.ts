@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CacheService } from "./cache.service";
+import type { RedisService } from "../redis/redis.service";
+import type { CacheMetricsService } from "./cache-metrics.service";
+import type { PinoLoggerService } from "../logger/logger.service";
 
 const mockGet = vi.fn();
 const mockSetex = vi.fn();
@@ -32,17 +35,16 @@ describe("CacheService", () => {
           del: mockDel,
           keys: mockKeys,
         }),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      } as unknown as RedisService,
       {
         recordHit: vi.fn(),
         recordMiss: vi.fn(),
         recordSet: vi.fn(),
         recordEvict: vi.fn(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn() }) } as any,
+      } as unknown as CacheMetricsService,
+      {
+        child: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn() }),
+      } as unknown as PinoLoggerService,
     );
   });
 

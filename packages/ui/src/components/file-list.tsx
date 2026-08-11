@@ -8,18 +8,23 @@ export interface FileListProps {
   isLoading?: boolean;
   onDelete?: (fileId: string) => void;
   className?: string;
+  labels: {
+    loading: string;
+    empty: string;
+    download: string;
+    delete: string;
+    image: string;
+    pdf: string;
+    text: string;
+    file: string;
+  };
 }
 
-export function FileList({
-  files,
-  isLoading = false,
-  onDelete,
-  className,
-}: FileListProps) {
+export function FileList({ files, isLoading = false, onDelete, className, labels }: FileListProps) {
   if (isLoading) {
     return (
       <div className={cn("flex items-center justify-center p-8", className)}>
-        <Spinner />
+        <Spinner label={labels.loading} />
       </div>
     );
   }
@@ -27,7 +32,7 @@ export function FileList({
   if (files.length === 0) {
     return (
       <div className={cn("text-center text-sm text-muted-foreground p-8", className)}>
-        No files uploaded yet.
+        {labels.empty}
       </div>
     );
   }
@@ -35,7 +40,7 @@ export function FileList({
   return (
     <div className={cn("space-y-2", className)}>
       {files.map((file) => (
-        <FileListItem key={file.id} file={file} onDelete={onDelete} />
+        <FileListItem key={file.id} file={file} onDelete={onDelete} labels={labels} />
       ))}
     </div>
   );
@@ -44,9 +49,10 @@ export function FileList({
 interface FileListItemProps {
   file: FileMetadataResponse;
   onDelete?: (fileId: string) => void;
+  labels: FileListProps["labels"];
 }
 
-function FileListItem({ file, onDelete }: FileListItemProps) {
+function FileListItem({ file, onDelete, labels }: FileListItemProps) {
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -54,18 +60,16 @@ function FileListItem({ file, onDelete }: FileListItemProps) {
   };
 
   const getFileIcon = (contentType: string): string => {
-    if (contentType.startsWith("image/")) return "image";
-    if (contentType === "application/pdf") return "pdf";
-    if (contentType.startsWith("text/")) return "text";
-    return "file";
+    if (contentType.startsWith("image/")) return labels.image;
+    if (contentType === "application/pdf") return labels.pdf;
+    if (contentType.startsWith("text/")) return labels.text;
+    return labels.file;
   };
 
   return (
     <div className="flex items-center gap-3 rounded-md border p-3 hover:bg-muted/50">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted">
-        <span className="text-xs font-medium uppercase">
-          {getFileIcon(file.contentType)}
-        </span>
+        <span className="text-xs font-medium uppercase">{getFileIcon(file.contentType)}</span>
       </div>
 
       <div className="min-w-0 flex-1">
@@ -81,13 +85,9 @@ function FileListItem({ file, onDelete }: FileListItemProps) {
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium hover:bg-muted"
+          aria-label={labels.download}
         >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -103,13 +103,9 @@ function FileListItem({ file, onDelete }: FileListItemProps) {
             size="sm"
             onClick={() => onDelete(file.id)}
             className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+            aria-label={labels.delete}
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

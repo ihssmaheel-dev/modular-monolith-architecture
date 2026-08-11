@@ -20,7 +20,7 @@ describe("LoginCommand", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     verifyCredentials = {
       execute: vi.fn(),
     } as unknown as VerifyUserCredentialsQuery;
@@ -34,7 +34,7 @@ describe("LoginCommand", () => {
       recordFailedAttempt: vi.fn(),
       resetAttempts: vi.fn(),
     } as unknown as AccountLockoutService;
-    
+
     command = new LoginCommand(verifyCredentials, metricsService, lockoutService);
   });
 
@@ -44,11 +44,11 @@ describe("LoginCommand", () => {
       id: "user-123",
       email: "test@example.com",
       name: "Test User",
-      role: "USER" as any,
+      role: "user",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    
+
     vi.mocked(verifyCredentials.execute).mockResolvedValue(ok(user));
     vi.mocked(jwtUtils.signAccessToken).mockReturnValue("access-token");
     vi.mocked(jwtUtils.signRefreshToken).mockReturnValue("refresh-token");
@@ -66,15 +66,18 @@ describe("LoginCommand", () => {
           id: "user-123",
           email: "test@example.com",
           name: "Test User",
-          role: "USER",
+          role: "user",
         },
       });
     }
-    
+
     expect(verifyCredentials.execute).toHaveBeenCalledWith("test@example.com", "password123");
-    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "USER");
-    expect(jwtUtils.signRefreshToken).toHaveBeenCalledWith("user-123");
-    expect(metricsService.incrementCounter).toHaveBeenCalledWith("auth_successful_logins_total", "Total number of successful logins");
+    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "user");
+    expect(jwtUtils.signRefreshToken).toHaveBeenCalledWith("user-123", 0);
+    expect(metricsService.incrementCounter).toHaveBeenCalledWith(
+      "auth_successful_logins_total",
+      "Total number of successful logins",
+    );
     expect(lockoutService.resetAttempts).toHaveBeenCalledWith("test@example.com");
   });
 
@@ -91,7 +94,10 @@ describe("LoginCommand", () => {
       expect(result.error).toEqual({ type: "INVALID_CREDENTIALS" });
     }
     expect(jwtUtils.signAccessToken).not.toHaveBeenCalled();
-    expect(metricsService.incrementCounter).toHaveBeenCalledWith("auth_failed_logins_total", "Total number of failed logins");
+    expect(metricsService.incrementCounter).toHaveBeenCalledWith(
+      "auth_failed_logins_total",
+      "Total number of failed logins",
+    );
     expect(lockoutService.recordFailedAttempt).toHaveBeenCalledWith("test@example.com");
   });
 

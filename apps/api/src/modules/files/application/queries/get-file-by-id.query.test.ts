@@ -4,6 +4,8 @@ import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import { ok } from "neverthrow";
 
+const ACTOR = { sub: "user-1", email: "user@example.com", role: "user" } as const;
+
 describe("GetFileByIdQuery", () => {
   let query: GetFileByIdQuery;
   let filesRepo: FilesRepository;
@@ -34,7 +36,7 @@ describe("GetFileByIdQuery", () => {
   it("should return FILE_NOT_FOUND when file does not exist", async () => {
     vi.mocked(filesRepo.findById).mockResolvedValue(ok(null));
 
-    const result = await query.execute("file-1");
+    const result = await query.execute("file-1", ACTOR);
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -45,7 +47,7 @@ describe("GetFileByIdQuery", () => {
   it("should return file on success", async () => {
     vi.mocked(filesRepo.findById).mockResolvedValue(ok(mockFile));
 
-    const result = await query.execute("file-1");
+    const result = await query.execute("file-1", ACTOR);
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {

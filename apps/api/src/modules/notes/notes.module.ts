@@ -11,9 +11,7 @@ import { NotesRealtimeListener } from "./application/listeners/notes-realtime.li
 import { NotesController } from "./presentation/notes.controller";
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: NoteMongooseSchema.name, schema: NoteSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: NoteMongooseSchema.name, schema: NoteSchema }])],
   controllers: [NotesController],
   providers: [
     NotesRepository,

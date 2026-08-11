@@ -4,8 +4,7 @@ import { StorageDriver, FileInput } from "../storage.types";
 
 const BUCKET_NAME = "uploads";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type GridFSBucket = any;
+type GridFSBucket = InstanceType<typeof mongoose.mongo.GridFSBucket>;
 
 export class GridFsDriver implements StorageDriver {
   private bucket: GridFSBucket;
@@ -18,8 +17,7 @@ export class GridFsDriver implements StorageDriver {
   async upload(key: string, body: FileInput, contentType: string) {
     const stream = this.toReadable(body);
     const uploadStream = this.bucket.openUploadStream(key, {
-      contentType,
-      metadata: { key },
+      metadata: { key, contentType },
     });
 
     await new Promise<void>((resolve, reject) => {
@@ -32,12 +30,16 @@ export class GridFsDriver implements StorageDriver {
   }
 
   async getPresignedUploadUrl(_key: string, _contentType?: string, _ttlSeconds?: number) {
-    if (_contentType || _ttlSeconds) { /* unused */ }
+    if (_contentType || _ttlSeconds) {
+      /* unused */
+    }
     return `/gridfs/${BUCKET_NAME}/${_key}`;
   }
 
   async getPresignedDownloadUrl(key: string, _ttlSeconds?: number) {
-    if (_ttlSeconds) { /* unused */ }
+    if (_ttlSeconds) {
+      /* unused */
+    }
     const file = await this.bucket.find({ "metadata.key": key }).next();
     if (!file) throw new Error("File not found");
     return `/gridfs/${BUCKET_NAME}/${key}`;
@@ -48,6 +50,16 @@ export class GridFsDriver implements StorageDriver {
     if (file) {
       await this.bucket.delete(file._id);
     }
+  }
+
+  async getMetadata(key: string) {
+    const file = await this.bucket.find({ "metadata.key": key }).next();
+    if (!file) return null;
+    const metadata = file.metadata as Record<string, unknown> | undefined;
+    return {
+      size: file.length,
+      contentType: typeof metadata?.contentType === "string" ? metadata.contentType : undefined,
+    };
   }
 
   async download(key: string): Promise<Readable> {

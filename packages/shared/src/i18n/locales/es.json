@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "Espacio de trabajo",
     "loading": "Cargando...",
     "error": "Ocurrió un error",
     "retry": "Reintentar",
@@ -16,6 +17,30 @@
     "submit": "Enviar"
   },
   "auth": {
+    "welcomeBack": "Te damos la bienvenida de nuevo",
+    "loginDescription": "Introduce tus credenciales para iniciar sesión",
+    "emailPlaceholder": "nombre@ejemplo.com",
+    "passwordPlaceholder": "Introduce tu contraseña",
+    "createPasswordPlaceholder": "Crea una contraseña",
+    "namePlaceholder": "Tu nombre",
+    "signingIn": "Iniciando sesión...",
+    "signIn": "Iniciar sesión",
+    "loginFailed": "No se pudo iniciar sesión",
+    "registrationFailed": "No se pudo completar el registro",
+    "requiredFields": "Completa todos los campos",
+    "createAccountTitle": "Crear una cuenta",
+    "registerDescription": "Introduce tus datos para empezar",
+    "creatingAccount": "Creando la cuenta...",
+    "createAccount": "Crear cuenta",
+    "forgotDescription": "Introduce tu correo y te enviaremos un enlace de restablecimiento",
+    "sending": "Enviando...",
+    "sendResetLink": "Enviar enlace de restablecimiento",
+    "rememberPassword": "¿Recuerdas tu contraseña?",
+    "resetPasswordTitle": "Restablecer contraseña",
+    "resetPasswordDescription": "Elige una contraseña nueva para tu cuenta",
+    "newPassword": "Nueva contraseña",
+    "resettingPassword": "Restableciendo la contraseña...",
+    "backToLogin": "Volver al inicio de sesión",
     "login": "Iniciar sesión",
     "register": "Registrarse",
     "logout": "Cerrar sesión",
@@ -37,6 +62,22 @@
     "passwordResetSuccess": "La contraseña se ha restablecido correctamente",
     "accountLocked": "Cuenta bloqueada temporalmente por demasiados intentos fallidos. Inténtelo de nuevo más tarde."
   },
+  "email": {
+    "welcome": {
+      "subject": "Te damos la bienvenida a Espacio de trabajo",
+      "preview": "Te damos la bienvenida a Espacio de trabajo",
+      "greeting": "Hola {{name}},",
+      "body": "Nos alegra tenerte con nosotros.",
+      "buttonText": "Empezar"
+    },
+    "passwordReset": {
+      "subject": "Solicitud de restablecimiento de contraseña",
+      "preview": "Restablece tu contraseña",
+      "requestText": "Recibimos una solicitud para restablecer tu contraseña.",
+      "instructionText": "Usa el botón siguiente para elegir una contraseña nueva. Si no solicitaste este cambio, puedes ignorar este correo.",
+      "buttonText": "Restablecer contraseña"
+    }
+  },
   "dashboard": {
     "title": "Panel",
     "welcome": "¡Bienvenido, {{name}}!",
@@ -47,6 +88,10 @@
     }
   },
   "users": {
+    "manage": "Administra tus usuarios",
+    "add": "Añadir usuario",
+    "loadFailed": "No se pudieron cargar los usuarios. Inténtalo de nuevo.",
+    "userId": "ID de usuario",
     "title": "Usuarios",
     "list": "Lista de usuarios",
     "create": "Crear usuario",
@@ -56,12 +101,22 @@
     "noUsers": "No se encontraron usuarios"
   },
   "settings": {
+    "manageAccount": "Administra tu cuenta",
+    "description": "Administra las preferencias de tu espacio de trabajo",
+    "loggedInAs": "Sesión iniciada como",
+    "appearance": "Apariencia",
+    "appearanceDescription": "Elige cómo se muestra el espacio de trabajo en este dispositivo.",
+    "notifications": "Notificaciones",
+    "notificationsDescription": "Controla qué novedades del espacio de trabajo recibes.",
+    "systemDefault": "Configuración del sistema",
+    "enabled": "Activadas",
     "title": "Configuración",
     "profile": "Configuración de perfil",
     "language": "Idioma",
     "theme": "Tema",
     "darkMode": "Modo oscuro",
-    "lightMode": "Modo claro"
+    "lightMode": "Modo claro",
+    "switchTheme": "Cambiar a {{theme}}"
   },
   "errors": {
     "notFound": "Página no encontrada",
@@ -72,6 +127,17 @@
   },
   "api": {
     "error": {
+      "urlTooLong": "La URL es demasiado larga",
+      "invalidRequest": "Solicitud no válida",
+      "blockedContent": "El cuerpo de la solicitud contiene contenido bloqueado",
+      "invalidHeader": "Valor de cabecera no válido",
+      "transactionFailed": "La transacción falló",
+      "uploadFailed": "La carga falló",
+      "presignFailed": "No se pudo generar la URL firmada",
+      "deleteFailed": "No se pudo eliminar",
+      "invalidAddress": "No se proporcionaron destinatarios",
+      "configError": "Error de configuración",
+      "sendFailed": "No se pudo enviar el correo electrónico",
       "internal": "Error interno del servidor",
       "notFound": "Recurso no encontrado",
       "unauthorized": "No autorizado",
@@ -83,6 +149,23 @@
       "sessionExpired": "Sesión expirada",
       "invalidToken": "Token inválido"
     },
+    "health": {
+      "redisUnconfigured": "Redis no está configurado, pero es opcional",
+      "redisDown": "Redis no está disponible, pero es opcional"
+    },
+    "file": {
+      "notFound": "Archivo no encontrado"
+    },
+    "note": {
+      "created": "Nota creada correctamente",
+      "updated": "Nota actualizada correctamente",
+      "deleted": "Nota eliminada correctamente",
+      "notFound": "Nota no encontrada",
+      "fetchFailed": "No se pudieron obtener las notas",
+      "createFailed": "No se pudo crear la nota",
+      "updateFailed": "No se pudo actualizar la nota",
+      "deleteFailed": "No se pudo eliminar la nota"
+    },
     "user": {
       "created": "Usuario creado exitosamente",
       "updated": "Usuario actualizado exitosamente",
@@ -90,6 +173,24 @@
       "notFound": "Usuario no encontrado",
       "emailTaken": "El correo electrónico ya está en uso"
     }
+  },
+  "notes": {
+    "title": "Notas",
+    "description": "Administra tus notas aquí.",
+    "newNote": "Nueva nota",
+    "cancel": "Cancelar",
+    "createNote": "Crear una nota",
+    "noteTitle": "Título",
+    "noteTitlePlaceholder": "Título de la nota",
+    "content": "Contenido",
+    "contentPlaceholder": "¿Qué tienes en mente?",
+    "creating": "Creando...",
+    "createButton": "Crear nota",
+    "noNotes": "Todavía no hay notas. Crea una arriba."
+  },
+  "home": {
+    "title": "Inicio",
+    "description": "Esta es tu pantalla de inicio"
   },
   "zod": {
     "errors": {

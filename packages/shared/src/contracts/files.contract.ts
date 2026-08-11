@@ -1,33 +1,38 @@
-import { initContract } from "@ts-rest/core";
+import { initContract, type AppRouter } from "@ts-rest/core";
 import {
   RequestUploadSchema,
   ConfirmUploadSchema,
   FileMetadataSchema,
   PresignedUrlResponseSchema,
   FileListResponseSchema,
+  DownloadUrlResponseSchema,
 } from "../schemas/file.schema";
+import { MessageResponseSchema } from "../schemas/auth.schema";
+import { PaginationQuerySchema } from "../schemas/pagination.schema";
+import { z } from "zod";
+import { contractSchema } from "./contract-schema";
 
 const c = initContract();
 
-export const filesContract = c.router({
+export const filesContract = {
   requestUpload: {
     method: "POST" as const,
     path: "/files/upload-url",
-    body: RequestUploadSchema as any,
+    body: contractSchema(RequestUploadSchema),
     responses: {
-      201: PresignedUrlResponseSchema as any,
-      400: { message: "" } as any,
-      413: { message: "" } as any,
+      201: contractSchema(PresignedUrlResponseSchema),
+      400: contractSchema(MessageResponseSchema),
+      413: contractSchema(MessageResponseSchema),
     },
     summary: "Request a presigned URL for direct S3 upload",
   },
   confirmUpload: {
     method: "POST" as const,
     path: "/files/confirm",
-    body: ConfirmUploadSchema as any,
+    body: contractSchema(ConfirmUploadSchema),
     responses: {
-      200: FileMetadataSchema as any,
-      404: { message: "" } as any,
+      200: contractSchema(FileMetadataSchema),
+      404: contractSchema(MessageResponseSchema),
     },
     summary: "Confirm upload completed and persist metadata",
   },
@@ -35,8 +40,8 @@ export const filesContract = c.router({
     method: "GET" as const,
     path: "/files/:id/download-url",
     responses: {
-      200: { downloadUrl: "" } as any,
-      404: { message: "" } as any,
+      200: contractSchema(DownloadUrlResponseSchema),
+      404: contractSchema(MessageResponseSchema),
     },
     summary: "Get a presigned download URL for a file",
   },
@@ -44,17 +49,22 @@ export const filesContract = c.router({
     method: "GET" as const,
     path: "/files/:id",
     responses: {
-      200: FileMetadataSchema as any,
-      404: { message: "" } as any,
+      200: contractSchema(FileMetadataSchema),
+      404: contractSchema(MessageResponseSchema),
     },
     summary: "Get file metadata by ID",
   },
   listByParent: {
     method: "GET" as const,
     path: "/files",
-    query: { parentId: undefined, parentType: undefined } as any,
+    query: contractSchema(
+      PaginationQuerySchema.extend({
+        parentId: z.string().optional(),
+        parentType: z.enum(["note", "user", "general"]),
+      }),
+    ),
     responses: {
-      200: FileListResponseSchema as any,
+      200: contractSchema(FileListResponseSchema),
     },
     summary: "List files by parent entity",
   },
@@ -62,9 +72,9 @@ export const filesContract = c.router({
     method: "DELETE" as const,
     path: "/files/:id",
     responses: {
-      204: undefined as any,
-      404: { message: "" } as any,
+      204: c.noBody(),
+      404: contractSchema(MessageResponseSchema),
     },
     summary: "Delete a file",
   },
-});
+} as const satisfies AppRouter;

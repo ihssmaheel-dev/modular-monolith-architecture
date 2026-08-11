@@ -4,16 +4,20 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
-  MessageBody,
   SubscribeMessage,
 } from "@nestjs/websockets";
 import { Server, WebSocket } from "ws";
 import { RealtimeService } from "./realtime.service";
 import { PinoLoggerService } from "../logger/logger.service";
 import { env } from "../../config/env";
+import { verifyAccessToken } from "../../common/utils/access-token.utils";
 
 const WS_READY_STATE_OPEN = 1;
-const USER_ID_QUERY_PARAM = "userId";
+const ACCESS_TOKEN_COOKIE = "access_token";
+
+interface HandshakeRequest {
+  headers?: Record<string, string | string[] | undefined>;
+}
 
 @WebSocketGateway({ cors: { origin: env.CLIENT_URL.split(",") } })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -28,18 +32,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {}
 
   handleConnection(@ConnectedSocket() client: WebSocket, ...args: unknown[]): void {
-    const req = args[0] as { url?: string } | undefined;
-    const url = new URL(req?.url ?? "/", "http://localhost");
-    const userId = url.searchParams.get(USER_ID_QUERY_PARAM);
+    const request = args[0] as HandshakeRequest | undefined;
+    const token = this.extractToken(request);
+    const user = token ? verifyAccessToken(token) : null;
 
-    if (!userId) {
+    if (!user) {
       client.close();
       return;
     }
 
-    this.socketToUser.set(client, userId);
-    this.realtime.addWsClient(userId, client);
-    this.logger.debug({ userId }, "WS connected");
+    this.socketToUser.set(client, user.sub);
+    this.realtime.addWsClient(user.sub, client);
+    this.logger.debug({ userId: user.sub }, "WS connected");
   }
 
   handleDisconnect(@ConnectedSocket() client: WebSocket): void {
@@ -58,12 +62,22 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
-  @SubscribeMessage("join-room")
-  handleJoinRoom(
-    @ConnectedSocket() client: WebSocket,
-    @MessageBody() data: { room: string },
-  ): void {
-    const userId = this.socketToUser.get(client);
-    this.logger.debug({ userId, room: data.room }, "Client joined room");
+  private extractToken(request?: HandshakeRequest): string | null {
+    const authorization = request?.headers?.authorization;
+    if (typeof authorization === "string" && authorization.startsWith("Bearer ")) {
+      return authorization.slice(7);
+    }
+
+    const cookie = request?.headers?.cookie;
+    if (typeof cookie !== "string") return null;
+    return this.readCookie(cookie, ACCESS_TOKEN_COOKIE);
+  }
+
+  private readCookie(header: string, name: string): string | null {
+    for (const item of header.split(";")) {
+      const [key, ...value] = item.trim().split("=");
+      if (key === name) return decodeURIComponent(value.join("="));
+    }
+    return null;
   }
 }

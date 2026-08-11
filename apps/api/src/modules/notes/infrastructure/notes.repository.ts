@@ -21,11 +21,13 @@ export class NotesRepository extends BaseRepository<Note, NoteMongooseSchema> {
     super(model, cls);
   }
 
-  protected toDomain(doc: LeanNoteDocument): Note {
+  protected toDomain(value: unknown): Note {
+    const doc = value as LeanNoteDocument;
     return Note.fromPersistence({
       id: doc._id.toString(),
       title: doc.title,
       content: doc.content,
+      createdBy: doc.createdBy,
       createdAt: doc.createdAt ?? new Date(),
       updatedAt: doc.updatedAt ?? new Date(),
     });
