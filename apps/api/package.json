@@ -5,6 +5,7 @@
   "scripts": {
     "predev": "pnpm --filter @repo/email build",
     "dev": "nest start --watch",
+    "dev:debug": "nest start --debug 0.0.0.0:9229 --watch",
     "prebuild": "pnpm --filter @repo/email build",
     "build": "nest build",
     "start": "node dist/main",
@@ -13,9 +14,12 @@
     "pretest": "pnpm --filter @repo/email build",
     "test": "vitest run",
     "test:unit": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "db:migrate": "node ../../scripts/run-migrations.js up -f ../../migrations/migrate-mongo-config.ts",
+    "db:migrate:status": "node ../../scripts/run-migrations.js status -f ../../migrations/migrate-mongo-config.ts",
+    "db:migrate:down": "node ../../scripts/run-migrations.js down -f ../../migrations/migrate-mongo-config.ts",
     "db:migrate:dev": "node ../../scripts/run-migrations.js up -f ../../migrations/migrate-mongo-config.ts",
     "db:seed": "ts-node src/seeds/seed.ts"
   },

@@ -4,11 +4,17 @@ const path = require("path");
 const moduleName = process.argv[2];
 
 if (!moduleName) {
-  console.error("Please provide a module name. Usage: npm run generate:module <name>");
+  console.error("Please provide a module name. Usage: pnpm generate:module <name>");
+  process.exit(1);
+}
+
+if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(moduleName)) {
+  console.error("Module names must use lowercase kebab-case.");
   process.exit(1);
 }
 
 const basePath = path.join(__dirname, "../apps/api/src/modules", moduleName);
+const pascalName = toPascalCase(moduleName);
 
 if (fs.existsSync(basePath)) {
   console.error(`Module '${moduleName}' already exists.`);
@@ -31,60 +37,44 @@ folders.forEach((folder) => {
   fs.mkdirSync(path.join(basePath, folder), { recursive: true });
 });
 
-// Create Module File
 const moduleFileContent = `import { Module } from "@nestjs/common";
-import { ${capitalize(moduleName)}Controller } from "./presentation/${moduleName}.controller";
-import { ${capitalize(moduleName)}Repository } from "./infrastructure/${moduleName}.repository";
-import { Create${capitalize(moduleName)}Command } from "./application/commands/create-${moduleName}.command";
-import { Get${capitalize(moduleName)}Query } from "./application/queries/get-${moduleName}.query";
+import { ${pascalName}Controller } from "./presentation/${moduleName}.controller";
+import { ${pascalName}Repository } from "./infrastructure/${moduleName}.repository";
+import { Create${pascalName}Command } from "./application/commands/create-${moduleName}.command";
+import { Get${pascalName}Query } from "./application/queries/get-${moduleName}.query";
 
 @Module({
-  controllers: [${capitalize(moduleName)}Controller],
+  controllers: [${pascalName}Controller],
   providers: [
-    ${capitalize(moduleName)}Repository,
-    Create${capitalize(moduleName)}Command,
-    Get${capitalize(moduleName)}Query
+    ${pascalName}Repository,
+    Create${pascalName}Command,
+    Get${pascalName}Query,
   ],
   exports: [
-    ${capitalize(moduleName)}Repository,
-    Create${capitalize(moduleName)}Command,
-    Get${capitalize(moduleName)}Query
+    Create${pascalName}Command,
+    Get${pascalName}Query,
   ],
 })
-export class ${capitalize(moduleName)}Module {}
+export class ${pascalName}Module {}
 `;
 
 fs.writeFileSync(path.join(basePath, `${moduleName}.module.ts`), moduleFileContent);
 
-// Create Controller File
 const controllerContent = `import { Controller } from "@nestjs/common";
-import { I18nService } from "../../../infrastructure/i18n/i18n.service";
-import { Create${capitalize(moduleName)}Command } from "../application/commands/create-${moduleName}.command";
-import { Get${capitalize(moduleName)}Query } from "../application/queries/get-${moduleName}.query";
 
 @Controller("${moduleName}")
-export class ${capitalize(moduleName)}Controller {
-  constructor(
-    private readonly createCommand: Create${capitalize(moduleName)}Command,
-    private readonly getQuery: Get${capitalize(moduleName)}Query,
-    private readonly i18n: I18nService
-  ) {}
-}
+export class ${pascalName}Controller {}
 `;
 fs.writeFileSync(
   path.join(basePath, "presentation", `${moduleName}.controller.ts`),
   controllerContent,
 );
 
-// Create Command File
 const commandContent = `import { Injectable } from "@nestjs/common";
-import { ok, err, Result } from "neverthrow";
-import { ${capitalize(moduleName)}Repository } from "../../infrastructure/${moduleName}.repository";
+import { ok, type Result } from "neverthrow";
 
 @Injectable()
-export class Create${capitalize(moduleName)}Command {
-  constructor(private readonly repository: ${capitalize(moduleName)}Repository) {}
-
+export class Create${pascalName}Command {
   async execute(): Promise<Result<void, never>> {
     return ok(undefined);
   }
@@ -95,15 +85,11 @@ fs.writeFileSync(
   commandContent,
 );
 
-// Create Query File
 const queryContent = `import { Injectable } from "@nestjs/common";
-import { ok, err, Result } from "neverthrow";
-import { ${capitalize(moduleName)}Repository } from "../../infrastructure/${moduleName}.repository";
+import { ok, type Result } from "neverthrow";
 
 @Injectable()
-export class Get${capitalize(moduleName)}Query {
-  constructor(private readonly repository: ${capitalize(moduleName)}Repository) {}
-
+export class Get${pascalName}Query {
   async execute(): Promise<Result<void, never>> {
     return ok(undefined);
   }
@@ -114,19 +100,21 @@ fs.writeFileSync(
   queryContent,
 );
 
-// Create Repository File
-const repoContent = `import { Injectable } from "@nestjs/common";
-import { ok, err, Result } from "neverthrow";
+const repositoryContent = `import { Injectable } from "@nestjs/common";
 
 @Injectable()
-export class ${capitalize(moduleName)}Repository {
-  constructor() {}
-}
+export class ${pascalName}Repository {}
 `;
-fs.writeFileSync(path.join(basePath, "infrastructure", `${moduleName}.repository.ts`), repoContent);
+fs.writeFileSync(
+  path.join(basePath, "infrastructure", `${moduleName}.repository.ts`),
+  repositoryContent,
+);
 
 console.log(`Successfully generated strict architecture for module '${moduleName}'!`);
 
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+function toPascalCase(value) {
+  return value
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
 }

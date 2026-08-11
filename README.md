@@ -14,27 +14,20 @@ A production-ready modular monolith built with NestJS, featuring clean architect
 
 - Node.js >= 20.0.0
 - pnpm >= 9.0.0
-- Docker & Docker Compose
+- Docker with Compose v2.17+
 
 ## Quick Start
 
 ```bash
-# Install dependencies
-pnpm install
+# Install, configure, start infrastructure, migrate, and build
+pnpm bootstrap
 
-# Start infrastructure (MongoDB, Redis, MinIO)
-pnpm docker:up
-
-# Build shared packages
-pnpm --filter @repo/shared build
-pnpm --filter @repo/email build
-
-# Start API in development mode
-pnpm dev:api
-
-# Start web app
-pnpm dev:web
+# Start the applications
+pnpm dev
 ```
+
+See the [developer bootstrap guide](./docs/DEVELOPMENT.md) for focused app commands and local
+service URLs.
 
 ## Project Structure
 
@@ -90,6 +83,8 @@ pnpm docker:down      # Stop infrastructure
 Optional single-/multi-tenant setup is documented in [docs/TENANCY.md](./docs/TENANCY.md).
 Database boundaries, repositories, and transactions are documented in
 [docs/DATABASE.md](./docs/DATABASE.md).
+Environment variables are documented in [docs/ENVIRONMENT.md](./docs/ENVIRONMENT.md), and new
+backend modules in [docs/NEW_MODULE.md](./docs/NEW_MODULE.md).
 
 When running in development mode, Swagger UI is available at:
 

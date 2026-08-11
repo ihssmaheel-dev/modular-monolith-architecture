@@ -1,0 +1,127 @@
+# Developer bootstrap
+
+This is the supported local-development path for the monorepo.
+
+## Prerequisites
+
+- Node.js 20 or newer
+- pnpm 9 (`corepack enable` if `pnpm` is unavailable)
+- Docker Desktop, or Docker Engine with Compose v2.17+
+- Git
+
+Verify the tools with `node --version`, `pnpm --version`, and `docker compose version`.
+
+## One-command setup
+
+From the repository root, run:
+
+```sh
+pnpm bootstrap
+```
+
+The command:
+
+1. Verifies Node, pnpm, Docker, and Compose.
+2. Copies each app's `.env.example` to `.env` only when the destination is missing.
+3. Installs the locked dependencies with `pnpm install --frozen-lockfile`.
+4. Starts MongoDB, Redis, MinIO, and Mailpit and waits for ready services.
+5. Creates the local MinIO bucket idempotently.
+6. Applies pending MongoDB migrations.
+7. Builds the complete monorepo.
+
+It never overwrites an existing `.env` and does not create an administrator automatically.
+
+Start all applications after setup:
+
+```sh
+pnpm dev
+```
+
+Use `pnpm dev:api`, `pnpm dev:web`, or `pnpm dev:mobile` to run one application. Local endpoints
+are API `http://localhost:3000/api`, Swagger `http://localhost:3000/api/docs`, web
+`http://localhost:5173`, MinIO console `http://localhost:9001`, and Mailpit
+`http://localhost:8025`.
+
+Stop infrastructure with `pnpm docker:down`.
+
+## Database migrations
+
+The API reads `MONGODB_URI` from `apps/api/.env`. Migration files live in `migrations/` and are the
+only place indexes may be defined.
+
+```sh
+pnpm db:migrate:status  # show applied and pending migrations
+pnpm db:migrate         # apply every pending migration
+pnpm db:migrate:down    # roll back exactly one migration
+```
+
+Create migrations as `migrations/YYYYMMDDHHMMSS-descriptive-name.ts`. Every migration must provide
+safe `up` and `down` functions. Review the target database before running a rollback in a shared
+environment.
+
+## Database seeding
+
+The seed is optional and idempotent by administrator email. Add both values to `apps/api/.env`:
+
+```env
+SEED_ADMIN_EMAIL=admin@example.com
+SEED_ADMIN_PASSWORD=replace-with-at-least-12-characters
+```
+
+Then run `pnpm db:seed`. The command skips when credentials are absent and does not replace an
+existing administrator. Remove the credentials from `.env` after use.
+
+## Testing and quality checks
+
+```sh
+pnpm test:unit          # fast unit tests across the workspace
+pnpm test:integration   # real infrastructure tests
+pnpm test:e2e           # API/application flows
+pnpm lint
+pnpm format:check
+pnpm rules:check
+pnpm build
+```
+
+Integration and E2E tests require `TEST_MONGODB_URI` in `apps/api/.env`; its database name must
+contain `test`. Run one API test with:
+
+```sh
+pnpm --filter api exec vitest run src/path/file.test.ts --config vitest.config.ts
+```
+
+Use `pnpm test:api:watch` while developing.
+
+## Debugging
+
+Run `pnpm dev:api:debug`, then attach a Node debugger to port `9229`. Breakpoints and source maps
+work against the TypeScript API source. Use browser developer tools for the web app and Expo's
+developer menu for mobile. Set `LOG_LEVEL=debug` for structured API diagnostics; never add
+`console.log` to production code.
+
+Useful runtime checks:
+
+```sh
+docker compose -f docker/docker-compose.yml ps
+docker compose -f docker/docker-compose.yml logs mongodb redis minio mailpit
+pnpm db:migrate:status
+```
+
+## Troubleshooting
+
+- **`docker` is unavailable:** install/start Docker and confirm `docker compose version` succeeds.
+- **A port is occupied:** check `3000`, `5173`, `6379`, `8025`, `9000`, `9001`, and `27017`, then
+  stop the conflicting process.
+- **Environment validation fails:** compare the relevant `.env` with its `.env.example`; access and
+  refresh JWT secrets must differ and contain at least 32 characters.
+- **MongoDB authentication fails:** use the example URI including `authSource=admin`.
+- **Integration tests are skipped:** set `TEST_MONGODB_URI` and keep `test` in the database name.
+- **Emails do not appear:** keep `EMAIL_DRIVER=smtp`, `SMTP_HOST=localhost`, and `SMTP_PORT=1025`,
+  then inspect Mailpit at `http://localhost:8025`.
+- **Multi-tenant transactions fail:** use the replica-set profile described in
+  [TENANCY.md](./TENANCY.md).
+- **Local data must be reset:** `docker compose -f docker/docker-compose.yml down -v` permanently
+  deletes the local Docker volumes; run it only when that data is disposable.
+
+See [ENVIRONMENT.md](./ENVIRONMENT.md) for configuration and [NEW_MODULE.md](./NEW_MODULE.md) for
+feature development.
