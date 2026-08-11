@@ -10,7 +10,7 @@ import {
   type InviteMemberInput,
   type Locale,
 } from "@repo/shared";
-import { TenantContextService } from "../../../../infrastructure/database/tenant-context.service";
+import { TenantContextService } from "../../../../infrastructure/database";
 import type { Invitation } from "../../domain/entities/tenancy.entity";
 import type { TenancyError } from "../../domain/errors/tenancy.errors";
 import { InvitationCreatedEvent } from "../../domain/events/invitation-created.event";

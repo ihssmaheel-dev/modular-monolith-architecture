@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { err, ok, type Result } from "neverthrow";
 import type { AuthenticatedUser, CreateOrganizationInput } from "@repo/shared";
-import { DatabaseService } from "../../../../infrastructure/database/database.service";
+import { DatabaseService } from "../../../../infrastructure/database";
 import type { Membership, Organization } from "../../domain/entities/tenancy.entity";
 import type { TenancyError } from "../../domain/errors/tenancy.errors";
 import { MembershipsRepository } from "../../infrastructure/memberships.repository";

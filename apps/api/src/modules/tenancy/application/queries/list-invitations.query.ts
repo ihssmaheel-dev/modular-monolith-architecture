@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { err, type Result } from "neverthrow";
-import type { PaginatedResult } from "../../../../infrastructure/database/base.repository";
-import { TenantContextService } from "../../../../infrastructure/database/tenant-context.service";
+import { TenantContextService, type PaginatedResult } from "../../../../infrastructure/database";
 import type { Invitation } from "../../domain/entities/tenancy.entity";
 import type { TenancyError } from "../../domain/errors/tenancy.errors";
 import { InvitationsRepository } from "../../infrastructure/invitations.repository";

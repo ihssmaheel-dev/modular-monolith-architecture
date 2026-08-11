@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Result } from "neverthrow";
 import { Note } from "../../domain/entities/note.entity";
 import { NotesRepository } from "../../infrastructure/notes.repository";
-import { PaginatedResult } from "../../../../infrastructure/database/base.repository";
+import type { PaginatedResult } from "../../../../infrastructure/database";
 import type { AuthenticatedUser } from "@repo/shared";
 
 @Injectable()

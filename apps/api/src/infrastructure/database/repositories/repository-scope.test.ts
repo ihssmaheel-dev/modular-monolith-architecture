@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ClsService } from "nestjs-cls";
-import { env } from "../../config/env";
-import { applyCreateScope, applyRepositoryScope } from "./base-repository.scope";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { env } from "../../../config/env";
+import { applyCreateScope, applyRepositoryScope } from "./repository-scope";
 
 const originalMode = env.TENANCY_MODE;
 

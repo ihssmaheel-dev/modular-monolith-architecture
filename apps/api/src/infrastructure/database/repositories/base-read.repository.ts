@@ -1,15 +1,15 @@
 import type { Model } from "mongoose";
 import type { ClsService } from "nestjs-cls";
 import type { Result } from "neverthrow";
-import type { BaseFindOptions, Id } from "./base-repository.types";
 import {
   countEntities,
   entityExists,
   findEntities,
   findEntityById,
   findOneEntity,
-} from "./base-repository.read";
-import type { RepositoryScope } from "./base-repository.scope";
+} from "./repository-read";
+import type { RepositoryScope } from "./repository-scope";
+import type { BaseFindOptions, Id } from "./repository.types";
 
 export abstract class BaseReadRepository<TEntity, TDocument> {
   constructor(
@@ -18,7 +18,7 @@ export abstract class BaseReadRepository<TEntity, TDocument> {
     protected readonly repositoryScope: RepositoryScope = "global",
   ) {}
 
-  protected abstract toDomain(doc: unknown): TEntity;
+  protected abstract toDomain(document: unknown): TEntity;
 
   findById(id: Id, options: BaseFindOptions = {}): Promise<Result<TEntity | null, never>> {
     return findEntityById(

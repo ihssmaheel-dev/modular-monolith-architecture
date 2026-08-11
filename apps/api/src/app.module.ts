@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { EventEmitterModule, EventEmitter2 } from "@nestjs/event-emitter";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ClsModule } from "nestjs-cls";
 import { UsersModule } from "./modules/users/users.module";
@@ -12,7 +11,7 @@ import { RedisModule } from "./infrastructure/redis/redis.module";
 import { QueueModule } from "./infrastructure/queue/queue.module";
 import { LoggerModule } from "./infrastructure/logger/logger.module";
 import { WorkersModule } from "./infrastructure/workers/workers.module";
-import { DatabaseModule } from "./infrastructure/database/database.module";
+import { DatabaseModule } from "./infrastructure/database";
 import { CacheModule } from "./infrastructure/cache/cache.module";
 import { StorageModule } from "./infrastructure/storage/storage.module";
 import { EmailModule } from "./infrastructure/email/email.module";
@@ -25,13 +24,8 @@ import { SecurityModule } from "./infrastructure/security/security.module";
 import { I18nModule } from "./infrastructure/i18n/i18n.module";
 import { AuditModule } from "./infrastructure/audit/audit.module";
 import { OutboxModule } from "./infrastructure/outbox/outbox.module";
-import { auditPlugin } from "./infrastructure/database/plugins/audit.plugin";
-import { metricsPlugin } from "./infrastructure/database/plugins/metrics.plugin";
-import { env } from "./config/env";
-
 import { APP_INTERCEPTOR, APP_GUARD } from "@nestjs/core";
 import { MetricsModule } from "./infrastructure/metrics/metrics.module";
-import { MetricsService } from "./infrastructure/metrics/metrics.service";
 import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor";
 import { TracingInterceptor } from "./infrastructure/tracing/tracing.interceptor";
 import {
@@ -49,22 +43,6 @@ import {
     ClsModule.forRoot({ global: true, middleware: { mount: true } }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
-    MongooseModule.forRootAsync({
-      imports: [EventEmitterModule, MetricsModule],
-      inject: [EventEmitter2, MetricsService],
-      useFactory: (eventEmitter: EventEmitter2, metricsService: MetricsService) => ({
-        uri: env.MONGODB_URI,
-        maxPoolSize: env.MONGODB_MAX_POOL_SIZE,
-        minPoolSize: env.MONGODB_MIN_POOL_SIZE,
-        serverSelectionTimeoutMS: env.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
-        heartbeatFrequencyMS: env.MONGODB_HEARTBEAT_FREQUENCY_MS,
-        connectionFactory: (connection) => {
-          connection.plugin(auditPlugin, { eventEmitter });
-          connection.plugin(metricsPlugin, { metricsService });
-          return connection;
-        },
-      }),
-    }),
     RedisModule,
     QueueModule,
     LoggerModule,

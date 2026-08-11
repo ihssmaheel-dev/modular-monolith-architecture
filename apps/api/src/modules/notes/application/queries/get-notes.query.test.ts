@@ -3,7 +3,7 @@ import { GetNotesQuery } from "./get-notes.query";
 import { NotesRepository } from "../../infrastructure/notes.repository";
 import { Note } from "../../domain/entities/note.entity";
 import { ok } from "neverthrow";
-import { PaginatedResult } from "../../../../infrastructure/database/base.repository";
+import type { PaginatedResult } from "../../../../infrastructure/database";
 
 const ACTOR = { sub: "admin-1", email: "admin@example.com", role: "admin" } as const;
 

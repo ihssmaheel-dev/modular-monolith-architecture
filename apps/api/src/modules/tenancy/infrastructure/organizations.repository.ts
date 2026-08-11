@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { type FlattenMaps, type Model } from "mongoose";
 import { type ClsService } from "nestjs-cls";
 import { type Result } from "neverthrow";
-import { BaseRepository } from "../../../infrastructure/database/base.repository";
+import { BaseRepository } from "../../../infrastructure/database";
 import { Organization } from "../domain/entities/tenancy.entity";
 import { OrganizationMongooseSchema } from "./schemas/tenancy.mongoose-schema";
 

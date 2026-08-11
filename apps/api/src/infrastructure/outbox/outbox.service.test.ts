@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { OutboxService } from "./outbox.service";
 import { OutboxRepository } from "./outbox.repository";
 import { ok } from "neverthrow";
-import type { TenantContextService } from "../database/tenant-context.service";
+import type { TenantContextService } from "../database";
 
 describe("OutboxService", () => {
   let service: OutboxService;

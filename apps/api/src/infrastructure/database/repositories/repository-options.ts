@@ -1,6 +1,6 @@
-import { ClientSession, Query } from "mongoose";
-import { ClsService } from "nestjs-cls";
-import { BaseFindOptions } from "./base-repository.types";
+import type { ClientSession, Query } from "mongoose";
+import type { ClsService } from "nestjs-cls";
+import type { BaseFindOptions } from "./repository.types";
 
 type DataRecord = Record<string, unknown>;
 
@@ -16,19 +16,19 @@ export function applySoftDelete(
 }
 
 export function applyOptions<TResult, TDocument>(
-  initialQuery: Query<TResult, TDocument>,
+  query: Query<TResult, TDocument>,
   options: BaseFindOptions,
   cls?: ClsService,
 ): Query<TResult, TDocument> {
-  if (options.select) initialQuery.select(options.select);
-  if (options.populate) applyPopulate(initialQuery, options.populate);
-  if (options.sort) initialQuery.sort(options.sort);
-  if (options.lean !== false) initialQuery.lean();
-  if (typeof options.limit === "number") initialQuery.limit(options.limit);
-  if (typeof options.skip === "number") initialQuery.skip(options.skip);
+  if (options.select) query.select(options.select);
+  if (options.populate) applyPopulate(query, options.populate);
+  if (options.sort) query.sort(options.sort);
+  if (options.lean !== false) query.lean();
+  if (typeof options.limit === "number") query.limit(options.limit);
+  if (typeof options.skip === "number") query.skip(options.skip);
   const session = options.session ?? getSession(cls);
-  if (session) initialQuery.session(session);
-  return initialQuery;
+  if (session) query.session(session);
+  return query;
 }
 
 export function applyAuditOnCreate(
@@ -38,8 +38,7 @@ export function applyAuditOnCreate(
 ): DataRecord {
   if (!enabled || !cls) return data;
   const userId = cls.get("userId");
-  if (!userId) return data;
-  return { ...data, createdBy: userId, updatedBy: userId };
+  return userId ? { ...data, createdBy: userId, updatedBy: userId } : data;
 }
 
 export function applyAuditOnUpdate(

@@ -7,7 +7,7 @@ import {
   BaseRepository,
   type PaginatedResult,
   type PaginationOptions,
-} from "../../../infrastructure/database/base.repository";
+} from "../../../infrastructure/database";
 import { Invitation } from "../domain/entities/tenancy.entity";
 import { InvitationMongooseSchema } from "./schemas/tenancy.mongoose-schema";
 

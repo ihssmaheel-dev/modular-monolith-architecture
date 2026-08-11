@@ -4,7 +4,7 @@ import { Model, FlattenMaps } from "mongoose";
 import { ClsService } from "nestjs-cls";
 import { Note } from "../domain/entities/note.entity";
 import { NoteMongooseSchema } from "./schemas/note.mongoose.schema";
-import { TenantScopedRepository } from "../../../infrastructure/database/tenant-scoped.repository";
+import { TenantScopedRepository } from "../../../infrastructure/database";
 
 type LeanNoteDocument = FlattenMaps<NoteMongooseSchema> & {
   _id: { toString(): string };

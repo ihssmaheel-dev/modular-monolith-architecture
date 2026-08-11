@@ -1,4 +1,4 @@
-import { ClientSession, PopulateOptions, Types } from "mongoose";
+import type { ClientSession, PopulateOptions, Types } from "mongoose";
 
 export type Id = string | Types.ObjectId;
 
@@ -19,13 +19,6 @@ export interface PaginationOptions extends BaseFindOptions {
   limit?: number;
 }
 
-export interface CursorPaginationOptions extends BaseFindOptions {
-  limit?: number;
-  cursor?: string;
-  cursorField?: string;
-  direction?: "asc" | "desc";
-}
-
 export interface PaginatedResult<T> {
   items: T[];
   total: number;
@@ -34,13 +27,6 @@ export interface PaginatedResult<T> {
   totalPages: number;
   hasNextPage: boolean;
   hasPrevPage: boolean;
-}
-
-export interface CursorPaginatedResult<T> {
-  items: T[];
-  nextCursor: string | null;
-  hasNextPage: boolean;
-  limit: number;
 }
 
 export interface CreateOptions {
@@ -56,7 +42,5 @@ export interface UpdateOptions extends BaseFindOptions {
   version?: number;
 }
 
-export interface SearchOptions extends BaseFindOptions {
-  fields?: string[];
-  minScore?: number;
-}
+export type DeleteOptions = Pick<UpdateOptions, "includeDeleted" | "onlyDeleted" | "session">;
+export type SoftDeleteOptions = Pick<UpdateOptions, "audit" | "session">;

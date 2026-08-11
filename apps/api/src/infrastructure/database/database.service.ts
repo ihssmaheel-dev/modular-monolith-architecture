@@ -1,14 +1,10 @@
 import { Injectable, OnApplicationShutdown } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
-import { ClientSession, Connection } from "mongoose";
-import { ok, err, Result } from "neverthrow";
+import type { ClientSession, Connection } from "mongoose";
+import { err, ok, type Result } from "neverthrow";
 import { ClsService } from "nestjs-cls";
 import { PinoLoggerService } from "../logger/logger.service";
-
-export interface TransactionError {
-  code: "TRANSACTION_FAILED" | "TRANSACTION_ABORTED";
-  message: string;
-}
+import type { TransactionError } from "./database.types";
 
 @Injectable()
 export class DatabaseService implements OnApplicationShutdown {
@@ -18,93 +14,100 @@ export class DatabaseService implements OnApplicationShutdown {
     private readonly cls: ClsService,
   ) {}
 
-  getConnection(): Connection {
-    return this.connection;
-  }
-
   isConnected(): boolean {
     return this.connection.readyState === 1;
   }
 
   async withTransaction<T>(fn: () => Promise<T>): Promise<Result<T, TransactionError>> {
-    const session = await this.connection.startSession();
-
-    // Check if we are inside a CLS context (e.g., HTTP request or worker job)
-    if (!this.cls.isActive()) {
-      return this.runTransaction(session, fn);
-    }
-
-    // Clone the current context so concurrent transactions in the same request don't collide
-    const context = { ...this.cls.get(), mongoSession: session };
-    return this.cls.runWith(context, () => this.runTransaction(session, fn));
+    return this.useSession((session) => this.runTransaction(session, fn));
   }
 
   async withResultTransaction<T, E>(
     fn: () => Promise<Result<T, E>>,
   ): Promise<Result<T, E | TransactionError>> {
-    const session = await this.connection.startSession();
-    if (!this.cls.isActive()) return this.runResultTransaction(session, fn);
-
-    const context = { ...this.cls.get(), mongoSession: session };
-    return this.cls.runWith(context, () => this.runResultTransaction(session, fn));
+    return this.useSession((session) => this.runResultTransaction(session, fn));
   }
 
   private async runTransaction<T>(
     session: ClientSession,
     fn: () => Promise<T>,
-  ): Promise<Result<T, TransactionError>> {
+  ): Promise<Result<T, never>> {
+    session.startTransaction();
     try {
-      session.startTransaction();
       const result = await fn();
       await session.commitTransaction();
       return ok(result);
     } catch (error) {
-      await session.abortTransaction();
-      this.logger.error(
-        { error: error instanceof Error ? error.message : String(error) },
-        "Transaction failed",
-      );
-      return err({
-        code: "TRANSACTION_FAILED",
-        message: "api.error.transactionFailed",
-      });
-    } finally {
-      session.endSession();
+      await this.abortTransaction(session);
+      throw error;
     }
   }
 
   private async runResultTransaction<T, E>(
     session: ClientSession,
     fn: () => Promise<Result<T, E>>,
-  ): Promise<Result<T, E | TransactionError>> {
+  ): Promise<Result<T, E>> {
+    session.startTransaction();
     try {
-      session.startTransaction();
       const result = await fn();
       if (result.isErr()) {
-        await session.abortTransaction();
+        await this.abortTransaction(session);
         return err(result.error);
       }
       await session.commitTransaction();
       return ok(result.value);
     } catch (error) {
-      await session.abortTransaction();
-      this.logger.error(
-        { error: error instanceof Error ? error.message : String(error) },
-        "Transaction failed",
-      );
-      return err({
-        code: "TRANSACTION_FAILED",
-        message: "api.error.transactionFailed",
-      });
-    } finally {
-      await session.endSession();
+      await this.abortTransaction(session);
+      throw error;
     }
   }
 
-  async onApplicationShutdown() {
+  private async useSession<T, E>(
+    callback: (session: ClientSession) => Promise<Result<T, E>>,
+  ): Promise<Result<T, E | TransactionError>> {
+    let session: ClientSession | undefined;
+    try {
+      const activeSession = await this.connection.startSession();
+      session = activeSession;
+      const current = this.cls.isActive() ? this.cls.get() : {};
+      const context = Object.assign({}, current, { mongoSession: activeSession });
+      return await this.cls.runWith(context, () => callback(activeSession));
+    } catch (error) {
+      this.logTransactionFailure(error);
+      return err({ type: "TRANSACTION_FAILED" });
+    } finally {
+      if (session) await this.endSession(session);
+    }
+  }
+
+  private async abortTransaction(session: ClientSession): Promise<void> {
+    try {
+      await session.abortTransaction();
+    } catch (error) {
+      this.logger.error({ error: errorMessage(error) }, "Transaction abort failed");
+    }
+  }
+
+  private async endSession(session: ClientSession): Promise<void> {
+    try {
+      await session.endSession();
+    } catch (error) {
+      this.logger.error({ error: errorMessage(error) }, "Database session cleanup failed");
+    }
+  }
+
+  private logTransactionFailure(error: unknown): void {
+    this.logger.error({ error: errorMessage(error) }, "Transaction failed");
+  }
+
+  async onApplicationShutdown(): Promise<void> {
     if (this.isConnected()) {
       await this.connection.close();
       this.logger.info({}, "MongoDB connection closed");
     }
   }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

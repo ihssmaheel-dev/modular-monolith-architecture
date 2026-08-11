@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { ClsService } from "nestjs-cls";
 import type { TenantContext } from "@repo/shared";
-import { env } from "../../config/env";
+import { ClsService } from "nestjs-cls";
+import { env } from "../../../config/env";
 
 @Injectable()
 export class TenantContextService {

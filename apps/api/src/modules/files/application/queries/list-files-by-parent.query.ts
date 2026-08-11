@@ -3,7 +3,7 @@ import { Result } from "neverthrow";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import type { AuthenticatedUser } from "@repo/shared";
-import type { PaginatedResult } from "../../../../infrastructure/database/base.repository";
+import type { PaginatedResult } from "../../../../infrastructure/database";
 
 @Injectable()
 export class ListFilesByParentQuery {

@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { FlattenMaps, Model } from "mongoose";
 import { ClsService } from "nestjs-cls";
-import { TenantScopedRepository } from "../../../infrastructure/database/tenant-scoped.repository";
+import { TenantScopedRepository } from "../../../infrastructure/database";
 import { FileEntity } from "../domain/entities/file.entity";
 import { FileMongooseSchema } from "./schemas/file.mongoose.schema";
 

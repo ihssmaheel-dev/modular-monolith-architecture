@@ -73,6 +73,10 @@ export class UsersController {
         result,
         {
           EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
+          TRANSACTION_FAILED: {
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            i18nKey: "api.error.transactionFailed",
+          },
         },
         this.i18n,
         lang,

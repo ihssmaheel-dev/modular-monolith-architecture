@@ -1,5 +1,4 @@
-export { DatabaseModule } from "./database/database.module";
-export { DatabaseService } from "./database/database.service";
+export { DatabaseModule, DatabaseService } from "./database";
 export { CacheModule } from "./cache/cache.module";
 export { CacheService } from "./cache/cache.service";
 export { StorageModule } from "./storage/storage.module";

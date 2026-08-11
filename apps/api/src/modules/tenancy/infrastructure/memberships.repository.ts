@@ -8,7 +8,7 @@ import {
   BaseRepository,
   type PaginatedResult,
   type PaginationOptions,
-} from "../../../infrastructure/database/base.repository";
+} from "../../../infrastructure/database";
 import { Membership } from "../domain/entities/tenancy.entity";
 import { MembershipMongooseSchema } from "./schemas/tenancy.mongoose-schema";
 

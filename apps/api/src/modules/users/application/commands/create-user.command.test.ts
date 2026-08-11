@@ -6,7 +6,7 @@ import { ok } from "neverthrow";
 import { User } from "../../domain/entities/user.entity";
 import { UserCreatedEvent } from "../../domain/events/user.events";
 import bcrypt from "bcryptjs";
-import { DatabaseService } from "../../../../infrastructure/database/database.service";
+import { DatabaseService } from "../../../../infrastructure/database";
 import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 vi.mock("bcryptjs", () => ({

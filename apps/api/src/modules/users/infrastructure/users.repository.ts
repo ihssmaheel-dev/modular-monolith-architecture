@@ -5,7 +5,7 @@ import { ClsService } from "nestjs-cls";
 import { ok, Result } from "neverthrow";
 import { User } from "../domain/entities/user.entity";
 import { UserMongooseSchema } from "./schemas/user.mongoose.schema";
-import { BaseRepository } from "../../../infrastructure/database/base.repository";
+import { BaseRepository } from "../../../infrastructure/database";
 
 const USER_SELECT_WITH_PASSWORD = "email name passwordHash role createdAt updatedAt";
 

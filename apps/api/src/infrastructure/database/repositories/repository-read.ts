@@ -1,9 +1,9 @@
 import type { Model } from "mongoose";
 import type { ClsService } from "nestjs-cls";
 import { ok, type Result } from "neverthrow";
-import type { BaseFindOptions, Id } from "./base-repository.types";
-import { applyOptions, applySoftDelete, getSession } from "./base-repository.helpers";
-import { applyRepositoryScope, type RepositoryScope } from "./base-repository.scope";
+import { applyOptions, applySoftDelete, getSession } from "./repository-options";
+import { applyRepositoryScope, type RepositoryScope } from "./repository-scope";
+import type { BaseFindOptions, Id } from "./repository.types";
 
 type Mapper<TEntity> = (value: unknown) => TEntity;
 
@@ -27,8 +27,7 @@ export async function findOneEntity<TEntity, TDocument>(
   options: BaseFindOptions,
 ): Promise<Result<TEntity | null, never>> {
   const scoped = applyRepositoryScope(filter, scope, cls);
-  let query = model.findOne(applySoftDelete(scoped, options));
-  query = applyOptions(query, options, cls);
+  const query = applyOptions(model.findOne(applySoftDelete(scoped, options)), options, cls);
   const document = await query.exec();
   return ok(document ? mapper(document) : null);
 }
@@ -42,8 +41,7 @@ export async function findEntities<TEntity, TDocument>(
   options: BaseFindOptions,
 ): Promise<Result<TEntity[], never>> {
   const scoped = applyRepositoryScope(filter, scope, cls);
-  let query = model.find(applySoftDelete(scoped, options));
-  query = applyOptions(query, options, cls);
+  const query = applyOptions(model.find(applySoftDelete(scoped, options)), options, cls);
   const documents = await query.exec();
   return ok(documents.map(mapper));
 }

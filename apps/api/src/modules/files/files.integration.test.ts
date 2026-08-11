@@ -16,7 +16,7 @@ import { StorageService } from "../../infrastructure/storage/storage.service";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 import { I18nService } from "../../infrastructure/i18n/i18n.service";
 import { ok } from "neverthrow";
-import { TenantContextService } from "../../infrastructure/database/tenant-context.service";
+import { TenantContextService } from "../../infrastructure/database";
 import { env } from "../../config/env";
 
 const MONGODB_URI = process.env.TEST_MONGODB_URI;

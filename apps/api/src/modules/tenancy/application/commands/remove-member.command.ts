@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { err, ok, type Result } from "neverthrow";
-import { TenantContextService } from "../../../../infrastructure/database/tenant-context.service";
+import { TenantContextService } from "../../../../infrastructure/database";
 import type { TenancyError } from "../../domain/errors/tenancy.errors";
 import { MembershipsRepository } from "../../infrastructure/memberships.repository";
 

@@ -1,5 +1,5 @@
 import type { ClsService } from "nestjs-cls";
-import { env } from "../../config/env";
+import { env } from "../../../config/env";
 
 export type RepositoryScope = "global" | "tenant";
 type DataRecord = Record<string, unknown>;

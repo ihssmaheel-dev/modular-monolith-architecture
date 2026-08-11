@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { OutboxRepository } from "./outbox.repository";
 import { Result, err, ok } from "neverthrow";
-import { TenantContextService } from "../database/tenant-context.service";
+import { TenantContextService } from "../database";
 
 export interface OutboxError {
   type: "OUTBOX_WRITE_FAILED";

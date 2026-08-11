@@ -60,6 +60,9 @@ function checkFile(file) {
   if (name.startsWith("apps/mobile/") && /from\s+["']@repo\/ui/.test(source)) {
     report(file, "mobile must not import the web-only UI package");
   }
+  if (!name.includes("/infrastructure/database/") && /from\s+["'][^"']*database\//.test(source)) {
+    report(file, "database consumers must import from the public database barrel");
+  }
 }
 
 function leafKeys(value, prefix = "") {

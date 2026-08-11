@@ -4,7 +4,7 @@ import { StorageService } from "../../../../infrastructure/storage/storage.servi
 import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import { ok, err } from "neverthrow";
-import type { TenantContextService } from "../../../../infrastructure/database/tenant-context.service";
+import type { TenantContextService } from "../../../../infrastructure/database";
 
 vi.mock("../../../../config/env", () => ({
   env: { S3_BUCKET: "test-bucket" },

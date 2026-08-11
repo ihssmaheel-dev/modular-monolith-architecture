@@ -1,24 +1,23 @@
-import { ClientSession } from "mongoose";
-import { Result } from "neverthrow";
-import {
-  Id,
-  PaginationOptions,
-  PaginatedResult,
+import type { Result } from "neverthrow";
+import { BaseReadRepository } from "./base-read.repository";
+import { paginateEntities } from "./repository-pagination";
+import { applyCreateScope, applyRepositoryScope } from "./repository-scope";
+import type {
   CreateOptions,
+  DeleteOptions,
+  Id,
+  PaginatedResult,
+  PaginationOptions,
+  SoftDeleteOptions,
   UpdateOptions,
-} from "./base-repository.types";
-import { paginateEntities } from "./base-repository.pagination";
+} from "./repository.types";
 import {
   createEntity,
   createManyEntities,
   deleteEntity,
   softDeleteEntity,
   updateEntity,
-} from "./base-repository.write";
-import { applyCreateScope, applyRepositoryScope } from "./base-repository.scope";
-import { BaseReadRepository } from "./base-read.repository";
-
-export * from "./base-repository.types";
+} from "./repository-write";
 
 export abstract class BaseRepository<TEntity, TDocument> extends BaseReadRepository<
   TEntity,
@@ -65,14 +64,14 @@ export abstract class BaseRepository<TEntity, TDocument> extends BaseReadReposit
     update: Record<string, unknown>,
     options: UpdateOptions = {},
   ): Promise<Result<TEntity | null, { type: "CONFLICT" }>> {
+    const filter = applyRepositoryScope({ _id: id }, this.repositoryScope, this.cls);
     return updateEntity(
       this.model,
       this.cls,
       (value) => this.toDomain(value),
-      applyRepositoryScope({ _id: id }, this.repositoryScope, this.cls),
+      filter,
       update,
       options,
-      false,
     );
   }
 
@@ -81,29 +80,26 @@ export abstract class BaseRepository<TEntity, TDocument> extends BaseReadReposit
     update: Record<string, unknown>,
     options: UpdateOptions = {},
   ): Promise<Result<TEntity | null, { type: "CONFLICT" }>> {
+    const scopedFilter = applyRepositoryScope(filter, this.repositoryScope, this.cls);
     return updateEntity(
       this.model,
       this.cls,
       (value) => this.toDomain(value),
-      applyRepositoryScope(filter, this.repositoryScope, this.cls),
+      scopedFilter,
       update,
       options,
-      true,
     );
   }
 
   async softDeleteById(
     id: Id,
-    options: { session?: ClientSession; audit?: boolean } = {},
+    options: SoftDeleteOptions = {},
   ): Promise<Result<TEntity | null, never>> {
     const filter = applyRepositoryScope({ _id: id }, this.repositoryScope, this.cls);
     return softDeleteEntity(this.model, this.cls, (value) => this.toDomain(value), filter, options);
   }
 
-  async deleteById(
-    id: Id,
-    options: { session?: ClientSession } = {},
-  ): Promise<Result<boolean, never>> {
+  async deleteById(id: Id, options: DeleteOptions = {}): Promise<Result<boolean, never>> {
     const filter = applyRepositoryScope({ _id: id }, this.repositoryScope, this.cls);
     return deleteEntity(this.model, this.cls, filter, options);
   }

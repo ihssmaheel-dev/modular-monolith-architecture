@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, FlattenMaps } from "mongoose";
 import { ClsService } from "nestjs-cls";
 import { OutboxEventMongooseSchema } from "./schemas/outbox-event.mongoose.schema";
-import { BaseRepository } from "../database/base.repository";
+import { BaseRepository } from "../database";
 
 export interface OutboxEvent {
   id: string;

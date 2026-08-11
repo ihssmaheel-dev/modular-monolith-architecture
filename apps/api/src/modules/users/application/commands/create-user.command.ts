@@ -3,10 +3,7 @@ import { CreateUserSchema, DEFAULT_LOCALE, PASSWORD_HASH_ROUNDS, type Locale } f
 import bcrypt from "bcryptjs";
 import { err, ok, Result } from "neverthrow";
 import { z } from "zod";
-import {
-  DatabaseService,
-  TransactionError,
-} from "../../../../infrastructure/database/database.service";
+import { DatabaseService, type TransactionError } from "../../../../infrastructure/database";
 import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 import { User } from "../../domain/entities/user.entity";
 import { EmailTaken } from "../../domain/errors/user.errors";
@@ -50,6 +47,6 @@ export class CreateUserCommand {
   }
 
   private transactionError(): TransactionError {
-    return { code: "TRANSACTION_FAILED", message: "api.error.transactionFailed" };
+    return { type: "TRANSACTION_FAILED" };
   }
 }

@@ -33,6 +33,8 @@ To make a domain tenant-owned:
 4. Never accept `tenantId` in a public input schema.
 
 ```ts
+import { TenantScopedRepository } from "../../../infrastructure/database";
+
 export class OrdersRepository extends TenantScopedRepository<Order, OrderSchema> {
   constructor(@InjectModel(OrderSchema.name) model: Model<OrderSchema>, cls: ClsService) {
     super(model, cls);

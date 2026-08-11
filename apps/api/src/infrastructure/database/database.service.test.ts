@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { DatabaseService } from "./database.service";
 import type { Connection } from "mongoose";
 import type { ClsService } from "nestjs-cls";
+import { err } from "neverthrow";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PinoLoggerService } from "../logger/logger.service";
+import { DatabaseService } from "./database.service";
 
 const mockStartSession = vi.fn();
 const mockStartTransaction = vi.fn();
@@ -10,6 +11,7 @@ const mockCommitTransaction = vi.fn();
 const mockAbortTransaction = vi.fn();
 const mockEndSession = vi.fn();
 const mockClose = vi.fn();
+const mockRunWith = vi.fn();
 
 vi.mock("@nestjs/mongoose", () => ({
   InjectConnection: () => () => {},
@@ -34,10 +36,11 @@ describe("DatabaseService", () => {
     } as unknown as PinoLoggerService;
     mockLogger.child = () => mockLogger;
 
+    mockRunWith.mockImplementation(async (_context, callback) => await callback());
     const mockCls = {
       isActive: vi.fn().mockReturnValue(false),
       get: vi.fn().mockReturnValue({}),
-      runWith: vi.fn().mockImplementation(async (_ctx, cb) => await cb()),
+      runWith: mockRunWith,
     } as unknown as ClsService;
 
     service = new DatabaseService(
@@ -64,6 +67,10 @@ describe("DatabaseService", () => {
     }
     expect(mockCommitTransaction).toHaveBeenCalled();
     expect(mockEndSession).toHaveBeenCalled();
+    expect(mockRunWith).toHaveBeenCalledWith(
+      expect.objectContaining({ mongoSession: expect.any(Object) }),
+      expect.any(Function),
+    );
   });
 
   it("should abort transaction on failure", async () => {
@@ -71,10 +78,27 @@ describe("DatabaseService", () => {
     const result = await service.withTransaction(fn);
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.error.code).toBe("TRANSACTION_FAILED");
+      expect(result.error.type).toBe("TRANSACTION_FAILED");
     }
     expect(mockAbortTransaction).toHaveBeenCalled();
     expect(mockEndSession).toHaveBeenCalled();
+  });
+
+  it("aborts when a Result-returning callback fails", async () => {
+    const result = await service.withResultTransaction(async () => err({ type: "EXPECTED" }));
+
+    expect(result.isErr()).toBe(true);
+    expect(mockAbortTransaction).toHaveBeenCalled();
+    expect(mockCommitTransaction).not.toHaveBeenCalled();
+  });
+
+  it("returns a transaction error when session creation fails", async () => {
+    mockStartSession.mockRejectedValue(new Error("unavailable"));
+
+    const result = await service.withTransaction(async () => "value");
+
+    expect(result.isErr() && result.error.type).toBe("TRANSACTION_FAILED");
+    expect(mockRunWith).not.toHaveBeenCalled();
   });
 
   it("should close connection on application shutdown", async () => {

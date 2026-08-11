@@ -1,8 +1,8 @@
 import type { Model } from "mongoose";
 import type { ClsService } from "nestjs-cls";
 import { ok, type Result } from "neverthrow";
-import type { PaginatedResult, PaginationOptions } from "./base-repository.types";
-import { applyOptions, applySoftDelete, getSession } from "./base-repository.helpers";
+import { applyOptions, applySoftDelete, getSession } from "./repository-options";
+import type { PaginatedResult, PaginationOptions } from "./repository.types";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
@@ -18,9 +18,11 @@ export async function paginateEntities<TEntity, TDocument>(
   const page = Math.max(DEFAULT_PAGE, options.page ?? DEFAULT_PAGE);
   const limit = Math.min(MAX_LIMIT, Math.max(1, options.limit ?? DEFAULT_LIMIT));
   const softFilter = applySoftDelete(filter, options);
-  let query = model.find(softFilter);
-  query = applyOptions(query, { ...options, skip: (page - 1) * limit, limit }, cls);
-
+  const query = applyOptions(
+    model.find(softFilter),
+    { ...options, skip: (page - 1) * limit, limit },
+    cls,
+  );
   const [documents, total] = await Promise.all([
     query.exec(),
     model
