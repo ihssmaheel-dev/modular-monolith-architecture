@@ -28,3 +28,4 @@ export type {
   PresignedUrlResponse,
   FileListResponse,
 } from "./file.schema";
+export * from "./tenancy.schema";

@@ -16,6 +16,8 @@ import { StorageService } from "../../infrastructure/storage/storage.service";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 import { I18nService } from "../../infrastructure/i18n/i18n.service";
 import { ok } from "neverthrow";
+import { TenantContextService } from "../../infrastructure/database/tenant-context.service";
+import { env } from "../../config/env";
 
 const MONGODB_URI = process.env.TEST_MONGODB_URI;
 const describeWithMongo = MONGODB_URI ? describe : describe.skip;
@@ -28,6 +30,8 @@ describeWithMongo("FilesModule Integration", () => {
   let getFileByIdQuery: GetFileByIdQuery;
   let listFilesQuery: ListFilesByParentQuery;
   let fileModel: Model<FileMongooseSchema>;
+  let filesRepository: FilesRepository;
+  let tenantContext: TenantContextService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -39,6 +43,7 @@ describeWithMongo("FilesModule Integration", () => {
       ],
       providers: [
         FilesRepository,
+        TenantContextService,
         RequestUploadCommand,
         ConfirmUploadCommand,
         DeleteFileCommand,
@@ -82,6 +87,8 @@ describeWithMongo("FilesModule Integration", () => {
     getFileByIdQuery = module.get(GetFileByIdQuery);
     listFilesQuery = module.get(ListFilesByParentQuery);
     fileModel = module.get(getModelToken(FileMongooseSchema.name));
+    filesRepository = module.get(FilesRepository);
+    tenantContext = module.get(TenantContextService);
   });
 
   afterAll(async () => {
@@ -183,6 +190,32 @@ describeWithMongo("FilesModule Integration", () => {
     if (result.isOk()) {
       expect(result.value.total).toBe(2);
       expect(result.value.items.length).toBe(2);
+    }
+  });
+
+  it("should isolate tenant-owned repository lookups", async () => {
+    const originalMode = env.TENANCY_MODE;
+    env.TENANCY_MODE = "multi";
+    try {
+      const created = await tenantContext.run({ mode: "multi", tenantId: "tenant-a" }, () =>
+        filesRepository.create({
+          key: "tenant-a/file.pdf",
+          fileName: "file.pdf",
+          contentType: "application/pdf",
+          fileSize: 10,
+          bucket: "test",
+          uploadedBy: ACTOR.sub,
+          status: "uploaded",
+        }),
+      );
+      expect(created.isOk()).toBe(true);
+      if (created.isErr()) return;
+      const crossTenant = await tenantContext.run({ mode: "multi", tenantId: "tenant-b" }, () =>
+        filesRepository.findById(created.value.id),
+      );
+      expect(crossTenant.isOk() && crossTenant.value === null).toBe(true);
+    } finally {
+      env.TENANCY_MODE = originalMode;
     }
   });
 });

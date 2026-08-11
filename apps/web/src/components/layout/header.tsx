@@ -5,11 +5,15 @@ import { Button } from "@repo/ui";
 import { Menu, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/lib/api";
+import { useTenantStore } from "@/stores/tenant.store";
+import { TenantSwitcher } from "./tenant-switcher";
+import { queryClient } from "@/lib/query-client";
 
 export function Header() {
   const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const { toggleSidebar } = useUIStore();
+  const clearTenant = useTenantStore((state) => state.clearTenant);
 
   const handleLogout = async () => {
     try {
@@ -17,6 +21,8 @@ export function Header() {
     } catch {
       // Ignore network errors — clear local state regardless
     }
+    clearTenant();
+    queryClient.clear();
     logout();
   };
 
@@ -29,6 +35,7 @@ export function Header() {
         <h1 className="text-lg font-semibold">{t("dashboard.title")}</h1>
       </div>
       <div className="flex items-center gap-4">
+        <TenantSwitcher />
         <ThemeToggle />
         <span className="text-sm text-muted-foreground">{user?.email}</span>
         <Button variant="ghost" size="sm" onClick={handleLogout}>

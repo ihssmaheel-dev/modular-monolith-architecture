@@ -1,15 +1,12 @@
-import { Model, ClientSession } from "mongoose";
-import { ClsService } from "nestjs-cls";
-import { ok, Result } from "neverthrow";
+import { ClientSession } from "mongoose";
+import { Result } from "neverthrow";
 import {
   Id,
-  BaseFindOptions,
   PaginationOptions,
   PaginatedResult,
   CreateOptions,
   UpdateOptions,
 } from "./base-repository.types";
-import { applySoftDelete, applyOptions, getSession } from "./base-repository.helpers";
 import { paginateEntities } from "./base-repository.pagination";
 import {
   createEntity,
@@ -18,85 +15,49 @@ import {
   softDeleteEntity,
   updateEntity,
 } from "./base-repository.write";
+import { applyCreateScope, applyRepositoryScope } from "./base-repository.scope";
+import { BaseReadRepository } from "./base-read.repository";
 
 export * from "./base-repository.types";
 
-export abstract class BaseRepository<TEntity, TDocument> {
-  constructor(
-    protected readonly model: Model<TDocument>,
-    protected readonly cls?: ClsService,
-  ) {}
-  protected abstract toDomain(doc: unknown): TEntity;
-
+export abstract class BaseRepository<TEntity, TDocument> extends BaseReadRepository<
+  TEntity,
+  TDocument
+> {
   async create(
     data: Record<string, unknown>,
     options: CreateOptions = {},
   ): Promise<Result<TEntity, never>> {
-    return createEntity(this.model, this.cls, (value) => this.toDomain(value), data, options);
+    const payload = applyCreateScope(data, this.repositoryScope, this.cls);
+    return createEntity(this.model, this.cls, (value) => this.toDomain(value), payload, options);
   }
 
   async createMany(
     data: Record<string, unknown>[],
     options: CreateOptions = {},
   ): Promise<Result<TEntity[], never>> {
-    return createManyEntities(this.model, this.cls, (value) => this.toDomain(value), data, options);
-  }
-
-  async findById(id: Id, options: BaseFindOptions = {}): Promise<Result<TEntity | null, never>> {
-    let query = this.model.findById(id);
-    query = applyOptions(query, options, this.cls);
-    const doc = await query.exec();
-    if (!doc) return ok(null);
-    return ok(this.toDomain(doc));
-  }
-
-  async findOne(
-    filter: Record<string, unknown>,
-    options: BaseFindOptions = {},
-  ): Promise<Result<TEntity | null, never>> {
-    let query = this.model.findOne(applySoftDelete(filter, options));
-    query = applyOptions(query, options, this.cls);
-    const doc = await query.exec();
-    if (!doc) return ok(null);
-    return ok(this.toDomain(doc));
-  }
-
-  async find(
-    filter: Record<string, unknown> = {},
-    options: BaseFindOptions = {},
-  ): Promise<Result<TEntity[], never>> {
-    let query = this.model.find(applySoftDelete(filter, options));
-    query = applyOptions(query, options, this.cls);
-    const docs = await query.exec();
-    return ok(docs.map((doc) => this.toDomain(doc)));
-  }
-
-  async exists(
-    filter: Record<string, unknown>,
-    options: Pick<BaseFindOptions, "includeDeleted" | "onlyDeleted" | "session"> = {},
-  ): Promise<Result<boolean, never>> {
-    const result = await this.model
-      .exists(applySoftDelete(filter, options))
-      .session(options.session ?? getSession(this.cls) ?? null);
-    return ok(!!result);
-  }
-
-  async count(
-    filter: Record<string, unknown> = {},
-    options: Pick<BaseFindOptions, "includeDeleted" | "onlyDeleted" | "session"> = {},
-  ): Promise<Result<number, never>> {
-    const total = await this.model
-      .countDocuments(applySoftDelete(filter, options))
-      .session(options.session ?? getSession(this.cls) ?? null)
-      .exec();
-    return ok(total);
+    const payloads = data.map((item) => applyCreateScope(item, this.repositoryScope, this.cls));
+    return createManyEntities(
+      this.model,
+      this.cls,
+      (value) => this.toDomain(value),
+      payloads,
+      options,
+    );
   }
 
   async paginate(
     filter: Record<string, unknown> = {},
     options: PaginationOptions = {},
   ): Promise<Result<PaginatedResult<TEntity>, never>> {
-    return paginateEntities(this.model, this.cls, (value) => this.toDomain(value), filter, options);
+    const scopedFilter = applyRepositoryScope(filter, this.repositoryScope, this.cls);
+    return paginateEntities(
+      this.model,
+      this.cls,
+      (value) => this.toDomain(value),
+      scopedFilter,
+      options,
+    );
   }
 
   async updateById(
@@ -108,7 +69,7 @@ export abstract class BaseRepository<TEntity, TDocument> {
       this.model,
       this.cls,
       (value) => this.toDomain(value),
-      { _id: id },
+      applyRepositoryScope({ _id: id }, this.repositoryScope, this.cls),
       update,
       options,
       false,
@@ -124,7 +85,7 @@ export abstract class BaseRepository<TEntity, TDocument> {
       this.model,
       this.cls,
       (value) => this.toDomain(value),
-      filter,
+      applyRepositoryScope(filter, this.repositoryScope, this.cls),
       update,
       options,
       true,
@@ -135,13 +96,15 @@ export abstract class BaseRepository<TEntity, TDocument> {
     id: Id,
     options: { session?: ClientSession; audit?: boolean } = {},
   ): Promise<Result<TEntity | null, never>> {
-    return softDeleteEntity(this.model, this.cls, (value) => this.toDomain(value), id, options);
+    const filter = applyRepositoryScope({ _id: id }, this.repositoryScope, this.cls);
+    return softDeleteEntity(this.model, this.cls, (value) => this.toDomain(value), filter, options);
   }
 
   async deleteById(
     id: Id,
     options: { session?: ClientSession } = {},
   ): Promise<Result<boolean, never>> {
-    return deleteEntity(this.model, this.cls, id, options);
+    const filter = applyRepositoryScope({ _id: id }, this.repositoryScope, this.cls);
+    return deleteEntity(this.model, this.cls, filter, options);
   }
 }

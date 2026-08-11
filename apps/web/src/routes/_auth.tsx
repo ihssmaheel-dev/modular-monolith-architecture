@@ -1,10 +1,15 @@
-import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Navigate, Outlet, useSearch } from "@tanstack/react-router";
 import { useAuthStore } from "@/stores/auth.store";
+import type { InvitationSearch } from "@/lib/invitation-search";
 
 function AuthLayout() {
   const { isAuthenticated } = useAuthStore();
+  const { invitationToken } = useSearch({ strict: false }) as InvitationSearch;
 
   if (isAuthenticated) {
+    if (invitationToken) {
+      return <Navigate to="/accept-invitation" search={{ token: invitationToken }} replace />;
+    }
     return <Navigate to="/" replace />;
   }
 

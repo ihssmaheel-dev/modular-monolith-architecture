@@ -6,6 +6,7 @@ export class Note {
     public readonly createdBy: string | undefined,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    public readonly tenantId?: string,
   ) {}
 
   static fromPersistence(data: {
@@ -15,6 +16,7 @@ export class Note {
     createdBy?: string;
     createdAt: Date;
     updatedAt: Date;
+    tenantId?: string;
   }): Note {
     return new Note(
       data.id,
@@ -23,6 +25,7 @@ export class Note {
       data.createdBy,
       data.createdAt,
       data.updatedAt,
+      data.tenantId,
     );
   }
 

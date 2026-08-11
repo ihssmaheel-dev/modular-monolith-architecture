@@ -15,6 +15,9 @@ export class AuditLogMongooseSchema extends Document {
   @Prop({ type: String, required: false })
   actorId?: string;
 
+  @Prop({ type: String, required: false })
+  tenantId?: string;
+
   @Prop({ type: MongooseSchema.Types.Mixed })
   before?: unknown;
 

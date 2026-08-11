@@ -72,7 +72,12 @@ describe("LoginCommand", () => {
     }
 
     expect(verifyCredentials.execute).toHaveBeenCalledWith("test@example.com", "password123");
-    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "user");
+    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith(
+      "user-123",
+      "test@example.com",
+      "Test User",
+      "user",
+    );
     expect(jwtUtils.signRefreshToken).toHaveBeenCalledWith("user-123", 0);
     expect(metricsService.incrementCounter).toHaveBeenCalledWith(
       "auth_successful_logins_total",

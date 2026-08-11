@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { OutboxService } from "./outbox.service";
 import { OutboxRepository } from "./outbox.repository";
 import { ok } from "neverthrow";
+import type { TenantContextService } from "../database/tenant-context.service";
 
 describe("OutboxService", () => {
   let service: OutboxService;
@@ -12,7 +13,10 @@ describe("OutboxService", () => {
       create: vi.fn(),
     } as unknown as OutboxRepository;
 
-    service = new OutboxService(repository);
+    const tenantContext = {
+      get: vi.fn().mockReturnValue({ mode: "single" }),
+    } as unknown as TenantContextService;
+    service = new OutboxService(repository, tenantContext);
   });
 
   it("should create an outbox event with pending status", async () => {
@@ -33,6 +37,7 @@ describe("OutboxService", () => {
     await service.dispatch("test.event", payload);
 
     expect(repository.create).toHaveBeenCalledWith({
+      tenantId: undefined,
       topic: "test.event",
       payload,
       status: "PENDING",

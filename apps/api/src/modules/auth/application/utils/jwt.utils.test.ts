@@ -21,13 +21,14 @@ describe("jwt.utils", () => {
       const role = "user" as const;
       vi.mocked(jwt.sign).mockImplementation(() => "mock-access-token");
 
-      const token = signAccessToken(userId, email, role);
+      const token = signAccessToken(userId, email, "Test User", role);
 
       expect(token).toBe("mock-access-token");
-      expect(jwt.sign).toHaveBeenCalledWith({ sub: userId, email, role }, env.JWT_SECRET, {
-        algorithm: "HS256",
-        expiresIn: "15m",
-      });
+      expect(jwt.sign).toHaveBeenCalledWith(
+        { sub: userId, email, name: "Test User", role },
+        env.JWT_SECRET,
+        { algorithm: "HS256", expiresIn: "15m" },
+      );
     });
   });
 

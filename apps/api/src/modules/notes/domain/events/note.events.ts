@@ -4,6 +4,7 @@ export class NoteCreatedEvent {
     public readonly userId: string,
     public readonly title: string,
     public readonly content: string,
+    public readonly tenantId?: string,
   ) {}
 }
 
@@ -13,6 +14,7 @@ export class NoteUpdatedEvent {
     public readonly userId: string,
     public readonly title?: string,
     public readonly content?: string,
+    public readonly tenantId?: string,
   ) {}
 }
 
@@ -20,5 +22,6 @@ export class NoteDeletedEvent {
   constructor(
     public readonly noteId: string,
     public readonly userId: string,
+    public readonly tenantId?: string,
   ) {}
 }

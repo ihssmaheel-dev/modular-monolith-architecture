@@ -30,6 +30,13 @@
       "requestText": "We received a request to reset your password.",
       "instructionText": "Use the button below to choose a new password. If you did not request this, you can safely ignore this email.",
       "buttonText": "Reset password"
+    },
+    "invitation": {
+      "subject": "You are invited to {{organization}}",
+      "preview": "Organization invitation",
+      "heading": "Join {{organization}}",
+      "body": "You have been invited to collaborate in {{organization}}. This invitation expires in seven days.",
+      "buttonText": "Accept invitation"
     }
   },
   "dashboard": {
@@ -162,7 +169,8 @@
       "updated": "User updated successfully",
       "deleted": "User deleted successfully",
       "notFound": "User not found",
-      "emailTaken": "Email is already taken"
+      "emailTaken": "Email is already taken",
+      "ownsOrganization": "Transfer or remove this user's organization ownership before deletion"
     },
     "file": {
       "notFound": "File not found"
@@ -176,6 +184,17 @@
       "createFailed": "Failed to create note",
       "updateFailed": "Failed to update note",
       "deleteFailed": "Failed to delete note"
+    },
+    "tenancy": {
+      "slugTaken": "This organization URL is already in use",
+      "tenantRequired": "Select an organization to continue",
+      "membershipNotFound": "Organization membership not found",
+      "membershipExists": "This user is already an organization member",
+      "lastOwner": "An organization must have at least one owner",
+      "invitationExists": "A pending invitation already exists for this email",
+      "invitationInvalid": "This invitation is invalid or has expired",
+      "invitationEmailMismatch": "Sign in with the email address that received this invitation",
+      "operationFailed": "The organization operation could not be completed"
     }
   },
   "notes": {
@@ -191,6 +210,15 @@
     "creating": "Creating...",
     "createButton": "Create Note",
     "noNotes": "No notes yet. Create one above!"
+  },
+  "tenancy": {
+    "activeOrganization": "Active organization",
+    "organizationName": "Organization name",
+    "createOrganization": "Create organization",
+    "acceptInvitation": "Accept invitation",
+    "accepting": "Accepting...",
+    "invalidInvitationLink": "This invitation link is invalid.",
+    "signInToAccept": "Sign in to accept the invitation"
   },
   "zod": {
     "errors": {

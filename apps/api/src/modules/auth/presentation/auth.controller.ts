@@ -2,7 +2,7 @@ import { Controller, Req, Res } from "@nestjs/common";
 import { authContract } from "@repo/shared";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { Public, requireAuthenticatedUser } from "../../../common";
+import { Public, TenantAgnostic, requireAuthenticatedUser } from "../../../common";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
 import { ForgotPasswordCommand } from "../application/commands/forgot-password.command";
@@ -16,6 +16,7 @@ import { EMAIL_TAKEN_ERRORS, INVALID_TOKEN_ERRORS, LOGIN_ERRORS } from "./auth.e
 import { AuthRateLimit } from "./auth-rate-limit.decorator";
 
 @Controller("auth")
+@TenantAgnostic()
 export class AuthController {
   constructor(
     private readonly registerCmd: RegisterCommand,

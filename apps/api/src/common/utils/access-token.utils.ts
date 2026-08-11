@@ -19,6 +19,7 @@ function isAuthenticatedUser(value: jwt.JwtPayload): value is AuthenticatedUser 
   return (
     typeof value.sub === "string" &&
     typeof value.email === "string" &&
+    (value.name === undefined || typeof value.name === "string") &&
     (value.role === "admin" || value.role === "user")
   );
 }

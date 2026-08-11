@@ -87,6 +87,8 @@ pnpm docker:down      # Stop infrastructure
 
 ## API Documentation
 
+Optional single-/multi-tenant setup is documented in [docs/TENANCY.md](./docs/TENANCY.md).
+
 When running in development mode, Swagger UI is available at:
 
 ```

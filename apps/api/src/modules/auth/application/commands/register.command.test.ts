@@ -93,6 +93,11 @@ describe("RegisterCommand", () => {
       { email: "test@example.com", name: "Test", password: "password123" },
       "en",
     );
-    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "user");
+    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith(
+      "user-123",
+      "test@example.com",
+      "Test",
+      "user",
+    );
   });
 });

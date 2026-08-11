@@ -14,9 +14,11 @@ import {
 import { api } from "@/lib/api";
 import { getResponseMessage } from "@/lib/api-response";
 import { useAuthStore } from "@/stores/auth.store";
+import { validateInvitationSearch } from "@/lib/invitation-search";
 
 function RegisterPage() {
   const { t } = useTranslation();
+  const { invitationToken } = Route.useSearch();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -92,7 +94,7 @@ function RegisterPage() {
         </form>
         <div className="mt-4 text-center text-sm text-muted-foreground">
           {t("auth.hasAccount")}{" "}
-          <Link to="/login" className="text-primary hover:underline">
+          <Link to="/login" search={{ invitationToken }} className="text-primary hover:underline">
             {t("auth.signIn")}
           </Link>
         </div>
@@ -101,4 +103,7 @@ function RegisterPage() {
   );
 }
 
-export const Route = createFileRoute("/_auth/register")({ component: RegisterPage });
+export const Route = createFileRoute("/_auth/register")({
+  validateSearch: validateInvitationSearch,
+  component: RegisterPage,
+});

@@ -5,6 +5,9 @@ export type NoteDocument = HydratedDocument<NoteMongooseSchema>;
 
 @Schema({ timestamps: true, collection: "notes" })
 export class NoteMongooseSchema {
+  @Prop()
+  tenantId?: string;
+
   @Prop({ required: true })
   title!: string;
 

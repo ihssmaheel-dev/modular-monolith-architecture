@@ -13,16 +13,16 @@ export class NotesRealtimeListener {
 
   @OnEvent("note.created")
   handleNoteCreated(event: NoteCreatedEvent) {
-    this.realtimeService.sendToUser(event.userId, "note.created", event);
+    this.realtimeService.sendToUser(event.userId, "note.created", event, event.tenantId);
   }
 
   @OnEvent("note.updated")
   handleNoteUpdated(event: NoteUpdatedEvent) {
-    this.realtimeService.sendToUser(event.userId, "note.updated", event);
+    this.realtimeService.sendToUser(event.userId, "note.updated", event, event.tenantId);
   }
 
   @OnEvent("note.deleted")
   handleNoteDeleted(event: NoteDeletedEvent) {
-    this.realtimeService.sendToUser(event.userId, "note.deleted", event);
+    this.realtimeService.sendToUser(event.userId, "note.deleted", event, event.tenantId);
   }
 }

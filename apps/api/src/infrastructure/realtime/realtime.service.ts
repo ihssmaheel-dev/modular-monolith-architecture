@@ -26,21 +26,29 @@ export class RealtimeService {
   }
 
   // --- WS Methods (Facade) ---
-  addWsClient(userId: string, socket: WebSocket): void {
-    this.registry.addWsClient(userId, socket);
+  addWsClient(userId: string, tenantId: string | undefined, socket: WebSocket): void {
+    this.registry.addWsClient(userId, tenantId, socket);
   }
 
-  removeWsClient(userId: string, socket: WebSocket): void {
-    this.registry.removeWsClient(userId, socket);
+  removeWsClient(userId: string, tenantId: string | undefined, socket: WebSocket): void {
+    this.registry.removeWsClient(userId, tenantId, socket);
   }
 
   // --- SSE Methods (Facade) ---
-  addSseClient(userId: string, subject: Subject<NestMessageEvent>): void {
-    this.registry.addSseClient(userId, subject);
+  addSseClient(
+    userId: string,
+    tenantId: string | undefined,
+    subject: Subject<NestMessageEvent>,
+  ): void {
+    this.registry.addSseClient(userId, tenantId, subject);
   }
 
-  removeSseClient(userId: string, subject: Subject<NestMessageEvent>): void {
-    this.registry.removeSseClient(userId, subject);
+  removeSseClient(
+    userId: string,
+    tenantId: string | undefined,
+    subject: Subject<NestMessageEvent>,
+  ): void {
+    this.registry.removeSseClient(userId, tenantId, subject);
   }
 
   // --- Publishing ---
@@ -48,8 +56,9 @@ export class RealtimeService {
     this.publishToStream("broadcast", event, payload);
   }
 
-  sendToUser(userId: string, event: string, payload: unknown): void {
-    this.publishToStream(`user:${userId}`, event, payload);
+  sendToUser(userId: string, event: string, payload: unknown, tenantId?: string): void {
+    const target = tenantId ? `tenant:${tenantId}:user:${userId}` : `user:${userId}`;
+    this.publishToStream(target, event, payload);
   }
 
   sendToRoom(room: string, event: string, payload: unknown): void {

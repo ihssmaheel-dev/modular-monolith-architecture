@@ -102,6 +102,30 @@ function checkTranslationUsage() {
   }
 }
 
+function checkTenantRepositories() {
+  const modulesDirectory = path.join(ROOT, "apps/api/src/modules");
+  for (const entry of fs.readdirSync(modulesDirectory, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name === "tenancy") continue;
+    const infrastructure = path.join(modulesDirectory, entry.name, "infrastructure");
+    if (!fs.existsSync(infrastructure)) continue;
+    const files = walk(infrastructure);
+    const schemas = files.filter((file) => file.endsWith("mongoose.schema.ts"));
+    const isTenantOwned = schemas.some((file) =>
+      fs.readFileSync(file, "utf8").includes("tenantId"),
+    );
+    if (!isTenantOwned) continue;
+    for (const file of files.filter((value) => value.endsWith(".repository.ts"))) {
+      const source = fs.readFileSync(file, "utf8");
+      if (!/extends\s+TenantScopedRepository/.test(source)) {
+        report(file, "tenant-owned repositories must extend TenantScopedRepository");
+      }
+      if (/this\.model\./.test(source)) {
+        report(file, "tenant-owned repositories must not bypass scoped base methods");
+      }
+    }
+  }
+}
+
 for (const directory of ["apps", "packages"]) {
   for (const file of walk(path.join(ROOT, directory))) {
     if (CODE_EXTENSIONS.has(path.extname(file))) checkFile(file);
@@ -109,6 +133,7 @@ for (const directory of ["apps", "packages"]) {
 }
 checkLocaleParity();
 checkTranslationUsage();
+checkTenantRepositories();
 
 if (failures.length) {
   process.stderr.write(

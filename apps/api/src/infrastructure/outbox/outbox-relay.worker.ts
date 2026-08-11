@@ -4,6 +4,8 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { MetricsService } from "../metrics/metrics.service";
 import { PinoLoggerService } from "../logger/logger.service";
 import { OutboxEvent, OutboxRepository } from "./outbox.repository";
+import { ClsService } from "nestjs-cls";
+import { env } from "../../config/env";
 
 const BATCH_SIZE = 10;
 const MAX_ATTEMPTS = 5;
@@ -20,6 +22,7 @@ export class OutboxRelayWorker {
     private readonly repository: OutboxRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly metrics: MetricsService,
+    private readonly cls: ClsService,
     logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "OutboxRelayWorker" });
@@ -51,6 +54,11 @@ export class OutboxRelayWorker {
   }
 
   private async relayEvent(event: OutboxEvent): Promise<void> {
+    const context = { tenantMode: env.TENANCY_MODE, tenantId: event.tenantId };
+    await this.cls.runWith(context, () => this.publishEvent(event));
+  }
+
+  private async publishEvent(event: OutboxEvent): Promise<void> {
     try {
       await this.eventEmitter.emitAsync(event.topic, event.payload);
       await this.repository.updateById(event.id, {

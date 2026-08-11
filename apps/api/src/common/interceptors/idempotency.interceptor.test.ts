@@ -36,7 +36,7 @@ describe("IdempotencyInterceptor", () => {
       getClient: vi.fn().mockReturnValue(redisClient),
     } as unknown as RedisService;
     cls = {
-      get: vi.fn().mockReturnValue("user-123"),
+      get: vi.fn((key: string) => (key === "userId" ? "user-123" : undefined)),
     } as unknown as ClsService;
 
     const logger = {
@@ -112,7 +112,7 @@ describe("IdempotencyInterceptor", () => {
 
     expect(redisClient.set).toHaveBeenNthCalledWith(
       1,
-      "idempotency:user-123:req-1",
+      "idempotency:single:user-123:req-1",
       "PROCESSING",
       "EX",
       86400,
@@ -122,7 +122,7 @@ describe("IdempotencyInterceptor", () => {
 
     expect(redisClient.set).toHaveBeenNthCalledWith(
       2,
-      "idempotency:user-123:req-1",
+      "idempotency:single:user-123:req-1",
       JSON.stringify({ data: "success" }),
       "EX",
       86400,
@@ -165,6 +165,6 @@ describe("IdempotencyInterceptor", () => {
     const result = await interceptor.intercept(context, handler);
 
     await expect(firstValueFrom(result)).rejects.toThrow("Handler error");
-    expect(redisClient.del).toHaveBeenCalledWith("idempotency:user-123:req-1");
+    expect(redisClient.del).toHaveBeenCalledWith("idempotency:single:user-123:req-1");
   });
 });

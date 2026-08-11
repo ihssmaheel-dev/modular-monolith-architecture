@@ -11,6 +11,7 @@ export class DatabaseMutatedEvent {
     public readonly documentId: string,
     public readonly action: "CREATE" | "UPDATE" | "DELETE",
     public readonly actorId: string | undefined,
+    public readonly tenantId: string | undefined,
     public readonly before: unknown,
     public readonly after: unknown,
   ) {}
@@ -36,6 +37,7 @@ export class AuditListener {
         documentId: event.documentId,
         action: event.action,
         actorId: event.actorId,
+        tenantId: event.tenantId,
         before: event.before,
         after: event.after,
       });

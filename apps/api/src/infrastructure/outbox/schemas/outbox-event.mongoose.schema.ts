@@ -3,6 +3,9 @@ import { Document, Schema as MongooseSchema } from "mongoose";
 
 @Schema({ collection: "outbox_events", timestamps: { createdAt: true, updatedAt: true } })
 export class OutboxEventMongooseSchema extends Document {
+  @Prop()
+  tenantId?: string;
+
   @Prop({ required: true })
   topic!: string;
 

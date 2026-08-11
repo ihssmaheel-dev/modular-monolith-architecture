@@ -11,12 +11,19 @@ import { RealtimeService } from "./realtime.service";
 import { PinoLoggerService } from "../logger/logger.service";
 import { env } from "../../config/env";
 import { verifyAccessToken } from "../../common/utils/access-token.utils";
+import { ResolveTenantAccessQuery } from "../../modules/tenancy/application/queries/resolve-tenant-access.query";
 
 const WS_READY_STATE_OPEN = 1;
 const ACCESS_TOKEN_COOKIE = "access_token";
 
 interface HandshakeRequest {
   headers?: Record<string, string | string[] | undefined>;
+  url?: string;
+}
+
+interface SocketIdentity {
+  userId: string;
+  tenantId?: string;
 }
 
 @WebSocketGateway({ cors: { origin: env.CLIENT_URL.split(",") } })
@@ -24,14 +31,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   @WebSocketServer()
   server!: Server;
 
-  private socketToUser = new Map<WebSocket, string>();
+  private socketIdentity = new Map<WebSocket, SocketIdentity>();
 
   constructor(
     private readonly realtime: RealtimeService,
+    private readonly tenantAccess: ResolveTenantAccessQuery,
     private readonly logger: PinoLoggerService,
   ) {}
 
-  handleConnection(@ConnectedSocket() client: WebSocket, ...args: unknown[]): void {
+  async handleConnection(@ConnectedSocket() client: WebSocket, ...args: unknown[]): Promise<void> {
     const request = args[0] as HandshakeRequest | undefined;
     const token = this.extractToken(request);
     const user = token ? verifyAccessToken(token) : null;
@@ -41,17 +49,26 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return;
     }
 
-    this.socketToUser.set(client, user.sub);
-    this.realtime.addWsClient(user.sub, client);
-    this.logger.debug({ userId: user.sub }, "WS connected");
+    const access = await this.tenantAccess.execute(user.sub, this.extractTenantId(request));
+    if (access.isErr()) {
+      client.close();
+      return;
+    }
+    const identity = { userId: user.sub, tenantId: access.value.tenantId };
+    this.socketIdentity.set(client, identity);
+    this.realtime.addWsClient(identity.userId, identity.tenantId, client);
+    this.logger.debug(identity, "WS connected");
   }
 
   handleDisconnect(@ConnectedSocket() client: WebSocket): void {
-    const userId = this.socketToUser.get(client);
-    if (userId) {
-      this.realtime.removeWsClient(userId, client);
-      this.socketToUser.delete(client);
-      this.logger.debug({ userId }, "WS disconnected");
+    const identity = this.socketIdentity.get(client);
+    if (identity) {
+      this.realtime.removeWsClient(identity.userId, identity.tenantId, client);
+      this.socketIdentity.delete(client);
+      this.logger.debug(
+        { userId: identity.userId, tenantId: identity.tenantId },
+        "WS disconnected",
+      );
     }
   }
 
@@ -79,5 +96,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       if (key === name) return decodeURIComponent(value.join("="));
     }
     return null;
+  }
+
+  private extractTenantId(request?: HandshakeRequest): string | undefined {
+    const header = request?.headers?.["x-tenant-id"];
+    if (typeof header === "string" && header) return header;
+    if (!request?.url) return undefined;
+    return new URL(request.url, "http://localhost").searchParams.get("tenantId") ?? undefined;
   }
 }

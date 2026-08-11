@@ -7,6 +7,7 @@ import { UsersModule } from "./modules/users/users.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { NotesModule } from "./modules/notes/notes.module";
 import { FilesModule } from "./modules/files/files.module";
+import { TenancyModule } from "./modules/tenancy/tenancy.module";
 import { RedisModule } from "./infrastructure/redis/redis.module";
 import { QueueModule } from "./infrastructure/queue/queue.module";
 import { LoggerModule } from "./infrastructure/logger/logger.module";
@@ -38,6 +39,7 @@ import {
   PermissionsGuard,
   IdempotencyInterceptor,
   RateLimitGuard,
+  TenantContextGuard,
   OriginValidationInterceptor,
   RequestIdInterceptor,
 } from "./common";
@@ -81,6 +83,7 @@ import {
     MetricsModule,
     AuditModule,
     OutboxModule,
+    TenancyModule.forRoot(),
     UsersModule,
     AuthModule,
     NotesModule,
@@ -90,6 +93,10 @@ import {
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: TenantContextGuard,
     },
     {
       provide: APP_GUARD,

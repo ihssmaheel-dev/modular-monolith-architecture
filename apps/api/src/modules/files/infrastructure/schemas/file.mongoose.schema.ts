@@ -5,6 +5,9 @@ export type FileDocument = HydratedDocument<FileMongooseSchema>;
 
 @Schema({ timestamps: true, collection: "files" })
 export class FileMongooseSchema {
+  @Prop()
+  tenantId?: string;
+
   @Prop({ required: true })
   key!: string;
 

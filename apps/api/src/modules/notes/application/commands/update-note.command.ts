@@ -42,6 +42,7 @@ export class UpdateNoteCommand {
         saved.value.createdBy ?? actor.sub,
         data.title,
         data.content,
+        saved.value.tenantId,
       ),
     );
 

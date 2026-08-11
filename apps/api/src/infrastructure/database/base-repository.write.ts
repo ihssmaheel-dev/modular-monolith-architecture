@@ -1,7 +1,7 @@
 import type { Model } from "mongoose";
 import type { ClsService } from "nestjs-cls";
 import { err, ok, type Result } from "neverthrow";
-import type { CreateOptions, Id, UpdateOptions } from "./base-repository.types";
+import type { CreateOptions, UpdateOptions } from "./base-repository.types";
 import {
   applyAuditOnCreate,
   applyAuditOnUpdate,
@@ -68,11 +68,11 @@ export async function updateEntity<TEntity, TDocument>(
 export async function deleteEntity<TDocument>(
   model: Model<TDocument>,
   cls: ClsService | undefined,
-  id: Id,
+  filter: Record<string, unknown>,
   options: UpdateOptions,
 ): Promise<Result<boolean, never>> {
   const result = await model
-    .findByIdAndDelete(id, { session: options.session ?? getSession(cls) })
+    .findOneAndDelete(filter, { session: options.session ?? getSession(cls) })
     .exec();
   return ok(Boolean(result));
 }
@@ -81,14 +81,14 @@ export async function softDeleteEntity<TEntity, TDocument>(
   model: Model<TDocument>,
   cls: ClsService | undefined,
   mapper: Mapper<TEntity>,
-  id: Id,
+  filter: Record<string, unknown>,
   options: UpdateOptions,
 ): Promise<Result<TEntity | null, never>> {
   const result = await updateEntity(
     model,
     cls,
     mapper,
-    { _id: id },
+    filter,
     { deletedAt: new Date() },
     options,
     false,

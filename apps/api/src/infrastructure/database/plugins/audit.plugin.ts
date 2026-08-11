@@ -2,10 +2,9 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Schema } from "mongoose";
 import { ClsServiceManager } from "nestjs-cls";
 import { DatabaseMutatedEvent } from "../../audit/audit.listener";
+import { getTenantId, sanitizeAuditValue } from "./audit-plugin.utils";
 
-export interface AuditPluginOptions {
-  eventEmitter: EventEmitter2;
-}
+export type AuditPluginOptions = { eventEmitter: EventEmitter2 };
 
 interface QueryResult {
   lean(): { exec(): Promise<unknown> };
@@ -32,8 +31,6 @@ interface MiddlewareSchema {
 
 const beforeSnapshots = new WeakMap<object, unknown>();
 const auditActions = new WeakMap<object, "CREATE" | "UPDATE">();
-const SENSITIVE_FIELDS = new Set(["passwordHash", "passwordResetTokenHash"]);
-
 export function auditPlugin(schema: Schema, options: AuditPluginOptions): void {
   const middleware = schema as unknown as MiddlewareSchema;
 
@@ -93,11 +90,18 @@ function emitAuditEvent(
   const collectionName = getCollectionName(document);
   const documentId = getDocumentId(document);
   if (!collectionName || collectionName === "audit_logs" || !documentId) return;
+  const context = getAuditContext();
+  const tenantId =
+    context.tenantId ??
+    getTenantId(after) ??
+    getTenantId(before) ??
+    (collectionName === "organizations" ? documentId : undefined);
   const event = new DatabaseMutatedEvent(
     collectionName,
     documentId,
     action,
-    getActorId(),
+    context.actorId,
+    tenantId,
     sanitizeAuditValue(before),
     sanitizeAuditValue(after),
   );
@@ -129,21 +133,12 @@ function getDocumentId(value: unknown): string | null {
   return id === null || id === undefined ? null : String(id);
 }
 
-function getActorId(): string | undefined {
+function getAuditContext(): { actorId?: string; tenantId?: string } {
   try {
     const cls = ClsServiceManager.getClsService();
-    return cls?.isActive() ? cls.get("userId") : undefined;
+    if (!cls?.isActive()) return {};
+    return { actorId: cls.get("userId"), tenantId: cls.get("tenantId") };
   } catch {
-    return undefined;
+    return {};
   }
-}
-
-function sanitizeAuditValue(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sanitizeAuditValue);
-  if (typeof value !== "object" || value === null) return value;
-  const sanitized: Record<string, unknown> = {};
-  for (const [key, item] of Object.entries(value)) {
-    if (!SENSITIVE_FIELDS.has(key)) sanitized[key] = sanitizeAuditValue(item);
-  }
-  return sanitized;
 }

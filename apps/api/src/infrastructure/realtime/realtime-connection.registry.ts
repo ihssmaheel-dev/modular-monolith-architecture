@@ -3,8 +3,8 @@ import { WebSocket } from "ws";
 import { Subject } from "rxjs";
 import { PinoLoggerService } from "../logger/logger.service";
 import { MetricsService } from "../metrics/metrics.service";
+import { dispatchToConnection, dispatchToEveryConnection } from "./realtime-dispatcher";
 
-const WS_READY_STATE_OPEN = 1;
 const MAX_CLIENTS_PER_CONNECTION = 100;
 
 @Injectable()
@@ -21,11 +21,12 @@ export class RealtimeConnectionRegistry {
   }
 
   // --- WS Methods ---
-  addWsClient(userId: string, socket: WebSocket): void {
-    if (!this.wsClients.has(userId)) {
-      this.wsClients.set(userId, new Set());
+  addWsClient(userId: string, tenantId: string | undefined, socket: WebSocket): void {
+    const key = connectionKey(userId, tenantId);
+    if (!this.wsClients.has(key)) {
+      this.wsClients.set(key, new Set());
     }
-    const userClients = this.wsClients.get(userId)!;
+    const userClients = this.wsClients.get(key)!;
     if (userClients.size >= MAX_CLIENTS_PER_CONNECTION) {
       this.logger.warn({ userId }, "Max WebSocket connections reached");
       socket.close();
@@ -41,8 +42,9 @@ export class RealtimeConnectionRegistry {
     this.logger.debug({ userId, total: userClients.size }, "WS Client connected");
   }
 
-  removeWsClient(userId: string, socket: WebSocket): void {
-    const userClients = this.wsClients.get(userId);
+  removeWsClient(userId: string, tenantId: string | undefined, socket: WebSocket): void {
+    const key = connectionKey(userId, tenantId);
+    const userClients = this.wsClients.get(key);
     if (userClients) {
       if (userClients.has(socket)) {
         userClients.delete(socket);
@@ -54,17 +56,22 @@ export class RealtimeConnectionRegistry {
         );
       }
       if (userClients.size === 0) {
-        this.wsClients.delete(userId);
+        this.wsClients.delete(key);
       }
     }
   }
 
   // --- SSE Methods ---
-  addSseClient(userId: string, subject: Subject<NestMessageEvent>): void {
-    if (!this.sseClients.has(userId)) {
-      this.sseClients.set(userId, new Set());
+  addSseClient(
+    userId: string,
+    tenantId: string | undefined,
+    subject: Subject<NestMessageEvent>,
+  ): void {
+    const key = connectionKey(userId, tenantId);
+    if (!this.sseClients.has(key)) {
+      this.sseClients.set(key, new Set());
     }
-    const userClients = this.sseClients.get(userId)!;
+    const userClients = this.sseClients.get(key)!;
     if (userClients.size >= MAX_CLIENTS_PER_CONNECTION) {
       this.logger.warn({ userId }, "Max SSE connections reached");
       subject.complete();
@@ -80,8 +87,13 @@ export class RealtimeConnectionRegistry {
     this.logger.debug({ userId, total: userClients.size }, "SSE Client connected");
   }
 
-  removeSseClient(userId: string, subject: Subject<NestMessageEvent>): void {
-    const userClients = this.sseClients.get(userId);
+  removeSseClient(
+    userId: string,
+    tenantId: string | undefined,
+    subject: Subject<NestMessageEvent>,
+  ): void {
+    const key = connectionKey(userId, tenantId);
+    const userClients = this.sseClients.get(key);
     if (userClients) {
       if (userClients.has(subject)) {
         userClients.delete(subject);
@@ -93,50 +105,31 @@ export class RealtimeConnectionRegistry {
         );
       }
       if (userClients.size === 0) {
-        this.sseClients.delete(userId);
+        this.sseClients.delete(key);
       }
     }
   }
 
   // --- Dispatch Routing ---
-  dispatchToUser(userId: string, event: string, payload: unknown): void {
-    const wsSet = this.wsClients.get(userId);
-    if (wsSet) {
-      const message = JSON.stringify({ event, payload });
-      for (const socket of wsSet) {
-        if (socket.readyState === WS_READY_STATE_OPEN) {
-          socket.send(message);
-        }
-      }
-    }
-
-    const sseSet = this.sseClients.get(userId);
-    if (sseSet) {
-      for (const subject of sseSet) {
-        subject.next({ type: event, data: payload } as NestMessageEvent);
-      }
-    }
+  dispatchToUser(
+    userId: string,
+    tenantId: string | undefined,
+    event: string,
+    payload: unknown,
+  ): void {
+    const key = connectionKey(userId, tenantId);
+    dispatchToConnection(this.wsClients, this.sseClients, key, event, payload);
   }
 
   dispatchToAll(event: string, payload: unknown): void {
-    const message = JSON.stringify({ event, payload });
-
-    for (const wsSet of this.wsClients.values()) {
-      for (const socket of wsSet) {
-        if (socket.readyState === WS_READY_STATE_OPEN) {
-          socket.send(message);
-        }
-      }
-    }
-
-    for (const sseSet of this.sseClients.values()) {
-      for (const subject of sseSet) {
-        subject.next({ type: event, data: payload } as NestMessageEvent);
-      }
-    }
+    dispatchToEveryConnection(this.wsClients, this.sseClients, event, payload);
   }
 
   getUserCount(): number {
     return this.wsClients.size + this.sseClients.size;
   }
+}
+
+function connectionKey(userId: string, tenantId?: string): string {
+  return `${tenantId ?? "single"}:${userId}`;
 }

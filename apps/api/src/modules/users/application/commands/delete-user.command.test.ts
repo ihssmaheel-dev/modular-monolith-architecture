@@ -7,6 +7,7 @@ import { User } from "../../domain/entities/user.entity";
 import { ok, err } from "neverthrow";
 import { UserDeletedEvent } from "../../domain/events/user.events";
 import { DistributedCacheService } from "../../../../infrastructure/cache/distributed-cache.service";
+import { CanDeleteUserQuery } from "../../../tenancy/application/queries/can-delete-user.query";
 
 describe("DeleteUserCommand", () => {
   let command: DeleteUserCommand;
@@ -14,6 +15,7 @@ describe("DeleteUserCommand", () => {
   let getUserById: GetUserByIdQuery;
   let eventEmitter: EventEmitter2;
   let cacheService: DistributedCacheService;
+  let canDeleteUser: CanDeleteUserQuery;
 
   beforeEach(() => {
     repository = {
@@ -28,8 +30,17 @@ describe("DeleteUserCommand", () => {
       emit: vi.fn(),
     } as unknown as EventEmitter2;
     cacheService = { invalidateGlobal: vi.fn() } as unknown as DistributedCacheService;
+    canDeleteUser = {
+      execute: vi.fn().mockResolvedValue(ok(undefined)),
+    } as unknown as CanDeleteUserQuery;
 
-    command = new DeleteUserCommand(repository, getUserById, eventEmitter, cacheService);
+    command = new DeleteUserCommand(
+      repository,
+      getUserById,
+      eventEmitter,
+      cacheService,
+      canDeleteUser,
+    );
   });
 
   it("should return USER_NOT_FOUND if user does not exist", async () => {
@@ -86,5 +97,23 @@ describe("DeleteUserCommand", () => {
 
     // Assert
     expect(result.isErr()).toBe(true);
+  });
+
+  it("should preserve users who own an organization", async () => {
+    const user = User.fromPersistence({
+      id: "123",
+      email: "owner@example.com",
+      name: "Owner",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    vi.mocked(getUserById.execute).mockResolvedValue(ok(user));
+    vi.mocked(canDeleteUser.execute).mockResolvedValue(err({ type: "USER_OWNS_ORGANIZATION" }));
+
+    const result = await command.execute("123");
+
+    expect(result.isErr() && result.error.type).toBe("USER_OWNS_ORGANIZATION");
+    expect(repository.deleteById).not.toHaveBeenCalled();
   });
 });

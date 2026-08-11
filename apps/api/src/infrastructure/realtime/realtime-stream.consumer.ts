@@ -83,9 +83,14 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
             const payload = JSON.parse(payloadStr);
             if (target === "broadcast") {
               this.registry.dispatchToAll(event, payload);
+            } else if (target.startsWith("tenant:")) {
+              const [, tenantId, targetType, userId] = target.split(":");
+              if (tenantId && targetType === "user" && userId) {
+                this.registry.dispatchToUser(userId, tenantId, event, payload);
+              }
             } else if (target.startsWith("user:")) {
               const userId = target.split(":")[1];
-              if (userId) this.registry.dispatchToUser(userId, event, payload);
+              if (userId) this.registry.dispatchToUser(userId, undefined, event, payload);
             } else if (target.startsWith("room:")) {
               this.registry.dispatchToAll(event, payload);
             }

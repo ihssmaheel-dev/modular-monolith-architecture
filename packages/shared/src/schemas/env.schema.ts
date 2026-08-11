@@ -9,6 +9,7 @@ export const envSchema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().default(3000),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+    TENANCY_MODE: z.enum(["single", "multi"]).default("single"),
 
     // URLs
     CLIENT_URL: z.string().url().default("http://localhost:5173"),

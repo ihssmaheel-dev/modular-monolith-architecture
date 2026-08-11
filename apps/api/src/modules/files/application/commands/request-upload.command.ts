@@ -6,6 +6,9 @@ import { StorageService } from "../../../../infrastructure/storage/storage.servi
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
 import type { RequestUploadInput } from "@repo/shared";
+import { TenantContextService } from "../../../../infrastructure/database/tenant-context.service";
+
+const PRESIGNED_UPLOAD_TTL_SECONDS = 3_600;
 
 interface RequestUploadResult {
   uploadUrl: string;
@@ -18,6 +21,7 @@ export class RequestUploadCommand {
   constructor(
     private readonly storage: StorageService,
     private readonly filesRepo: FilesRepository,
+    private readonly tenantContext: TenantContextService,
   ) {}
 
   async execute(
@@ -55,7 +59,7 @@ export class RequestUploadCommand {
     }
 
     const expiresAt = new Date();
-    expiresAt.setSeconds(expiresAt.getSeconds() + 3600);
+    expiresAt.setSeconds(expiresAt.getSeconds() + PRESIGNED_UPLOAD_TTL_SECONDS);
 
     return ok({
       uploadUrl: presignResult.value,
@@ -71,6 +75,8 @@ export class RequestUploadCommand {
       input.parentType !== "general" && input.parentId
         ? `${input.parentType}/${input.parentId}`
         : "general";
-    return `${prefix}/${userId}/${uuid}-${sanitized}`;
+    const tenantId = this.tenantContext.get().tenantId;
+    const tenantPrefix = tenantId ? `tenants/${tenantId}/` : "";
+    return `${tenantPrefix}${prefix}/${userId}/${uuid}-${sanitized}`;
   }
 }

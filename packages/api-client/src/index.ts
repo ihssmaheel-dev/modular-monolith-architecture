@@ -4,14 +4,18 @@ import {
   authContract,
   filesContract,
   notesContract,
+  tenancyContract,
   usersContract,
   type AuthResponse,
 } from "@repo/shared";
+
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 export interface ApiClientOptions {
   getAccessToken?: () => string | null;
   getRefreshToken?: () => string | null;
   getLocale?: () => string | null;
+  getTenantId?: () => string | null;
   onAuthRefreshed?: (response: AuthResponse) => void;
   onAuthFailure?: () => void;
 }
@@ -42,7 +46,8 @@ async function requestRefresh(
 function createRefreshingFetcher(baseUrl: string, options: ApiClientOptions): ApiFetcher {
   let refreshPromise: Promise<AuthResponse | null> | null = null;
   return async (args) => {
-    const response = await tsRestFetchApi(args);
+    const requestArgs = addIdempotencyKey(args);
+    const response = await tsRestFetchApi(requestArgs);
     if (response.status !== 401 || args.route.path.startsWith("/auth/")) return response;
 
     refreshPromise ??= requestRefresh(baseUrl, options).finally(() => {
@@ -56,10 +61,24 @@ function createRefreshingFetcher(baseUrl: string, options: ApiClientOptions): Ap
 
     options.onAuthRefreshed?.(refreshed);
     return tsRestFetchApi({
-      ...args,
-      headers: { ...args.headers, authorization: `Bearer ${refreshed.accessToken}` },
+      ...requestArgs,
+      headers: { ...requestArgs.headers, authorization: `Bearer ${refreshed.accessToken}` },
     });
   };
+}
+
+function addIdempotencyKey(args: Parameters<ApiFetcher>[0]): Parameters<ApiFetcher>[0] {
+  if (!MUTATING_METHODS.has(args.route.method)) return args;
+  if (args.headers["idempotency-key"]) return args;
+  return {
+    ...args,
+    headers: { ...args.headers, "idempotency-key": createIdempotencyKey() },
+  };
+}
+
+function createIdempotencyKey(): string {
+  if (typeof globalThis.crypto?.randomUUID === "function") return globalThis.crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
 export function createApiClient(baseUrl: string, options: ApiClientOptions = {}) {
@@ -69,6 +88,7 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     baseHeaders: {
       authorization: () => getAuthorizationHeader(options),
       "accept-language": () => options.getLocale?.() ?? "en",
+      "x-tenant-id": () => options.getTenantId?.() ?? "",
     },
     api: createRefreshingFetcher(baseUrl, options),
     throwOnUnknownStatus: true as const,
@@ -78,6 +98,7 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     auth: initClient(authContract, clientOptions),
     files: initClient(filesContract, clientOptions),
     notes: initClient(notesContract, clientOptions),
+    tenancy: initClient(tenancyContract, clientOptions),
     users: initClient(usersContract, clientOptions),
   };
 }

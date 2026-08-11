@@ -3,16 +3,22 @@ import { useRouter } from "expo-router";
 import { useAuthStore } from "../../stores/auth.store";
 import { useTranslation } from "react-i18next";
 import { api } from "../../lib/api";
+import { useTenantStore } from "../../stores/tenant.store";
+import { TenantSettings } from "../../components/tenant-settings";
+import { queryClient } from "../../lib/query-client";
 
 export default function SettingsTab() {
   const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const router = useRouter();
+  const clearTenant = useTenantStore((state) => state.clearTenant);
 
   const handleLogout = async () => {
     try {
       await api.auth.logout({});
     } finally {
+      clearTenant();
+      queryClient.clear();
       logout();
       router.replace("/(auth)/login");
     }
@@ -46,6 +52,8 @@ export default function SettingsTab() {
           </Text>
           <Text className="mt-1 text-foreground">{t("settings.enabled")}</Text>
         </View>
+
+        <TenantSettings />
 
         <TouchableOpacity onPress={handleLogout} className="rounded-lg bg-destructive py-3">
           <Text className="text-center font-medium text-destructive-foreground">

@@ -7,6 +7,7 @@ import { BaseRepository } from "../database/base.repository";
 
 export interface OutboxEvent {
   id: string;
+  tenantId?: string;
   topic: string;
   payload: unknown;
   status: "PENDING" | "PROCESSING" | "PUBLISHED" | "FAILED";
@@ -37,6 +38,7 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxEventMon
     const doc = value as LeanOutboxDocument;
     return {
       id: doc._id.toString(),
+      tenantId: doc.tenantId,
       topic: doc.topic,
       payload: doc.payload,
       status: doc.status as OutboxEvent["status"],

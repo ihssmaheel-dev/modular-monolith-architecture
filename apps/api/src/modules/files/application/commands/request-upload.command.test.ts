@@ -4,6 +4,7 @@ import { StorageService } from "../../../../infrastructure/storage/storage.servi
 import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import { ok, err } from "neverthrow";
+import type { TenantContextService } from "../../../../infrastructure/database/tenant-context.service";
 
 vi.mock("../../../../config/env", () => ({
   env: { S3_BUCKET: "test-bucket" },
@@ -23,7 +24,10 @@ describe("RequestUploadCommand", () => {
       create: vi.fn(),
     } as unknown as FilesRepository;
 
-    command = new RequestUploadCommand(storage, filesRepo);
+    const tenantContext = {
+      get: vi.fn().mockReturnValue({ mode: "single" }),
+    } as unknown as TenantContextService;
+    command = new RequestUploadCommand(storage, filesRepo, tenantContext);
   });
 
   it("should return PRESIGN_FAILED when presign fails", async () => {

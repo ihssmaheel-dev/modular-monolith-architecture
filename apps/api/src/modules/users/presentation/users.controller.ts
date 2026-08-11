@@ -1,6 +1,6 @@
 import { Controller, Req, HttpStatus } from "@nestjs/common";
 import { FastifyRequest } from "fastify";
-import { RequirePermissions } from "../../../common";
+import { RequirePermissions, TenantAgnostic } from "../../../common";
 import { usersContract } from "@repo/shared";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import { GetUsersQuery } from "../application/queries/get-users.query";
@@ -14,6 +14,7 @@ import { handleResult } from "../../../common/utils/presentation.utils";
 import { toUserResponse } from "./users.mapper";
 
 @Controller("users")
+@TenantAgnostic()
 export class UsersController {
   constructor(
     private readonly getUsersQuery: GetUsersQuery,
@@ -115,6 +116,10 @@ export class UsersController {
         result,
         {
           USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+          USER_OWNS_ORGANIZATION: {
+            status: HttpStatus.CONFLICT,
+            i18nKey: "api.user.ownsOrganization",
+          },
         },
         this.i18n,
         lang,

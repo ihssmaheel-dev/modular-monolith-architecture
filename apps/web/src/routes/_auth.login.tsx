@@ -14,9 +14,11 @@ import {
 import { api } from "@/lib/api";
 import { getResponseMessage } from "@/lib/api-response";
 import { useAuthStore } from "@/stores/auth.store";
+import { validateInvitationSearch } from "@/lib/invitation-search";
 
 function LoginPage() {
   const { t } = useTranslation();
+  const { invitationToken } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -85,7 +87,11 @@ function LoginPage() {
         </form>
         <div className="mt-4 text-center text-sm text-muted-foreground">
           {t("auth.noAccount")}{" "}
-          <Link to="/register" className="text-primary hover:underline">
+          <Link
+            to="/register"
+            search={{ invitationToken }}
+            className="text-primary hover:underline"
+          >
             {t("auth.register")}
           </Link>
         </div>
@@ -94,4 +100,7 @@ function LoginPage() {
   );
 }
 
-export const Route = createFileRoute("/_auth/login")({ component: LoginPage });
+export const Route = createFileRoute("/_auth/login")({
+  validateSearch: validateInvitationSearch,
+  component: LoginPage,
+});

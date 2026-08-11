@@ -25,7 +25,7 @@ export class DeleteNoteCommand {
 
     this.eventEmitter.emit(
       "note.deleted",
-      new NoteDeletedEvent(id, existing.value.createdBy ?? actor.sub),
+      new NoteDeletedEvent(id, existing.value.createdBy ?? actor.sub, existing.value.tenantId),
     );
 
     return ok(undefined);

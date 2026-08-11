@@ -85,7 +85,12 @@ describe("RefreshTokensCommand", () => {
       });
     }
     expect(jwtUtils.verifyRefreshToken).toHaveBeenCalledWith("valid-refresh-token");
-    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith("user-123", "test@example.com", "user");
+    expect(jwtUtils.signAccessToken).toHaveBeenCalledWith(
+      "user-123",
+      "test@example.com",
+      "Test",
+      "user",
+    );
     expect(jwtUtils.signRefreshToken).toHaveBeenCalledWith("user-123", 0);
   });
 

@@ -8,8 +8,17 @@ interface RefreshTokenPayload {
   version: number;
 }
 
-export function signAccessToken(userId: string, email: string, role: UserRole): string {
-  return jwt.sign({ sub: userId, email, role }, env.JWT_SECRET, tokenOptions(env.JWT_EXPIRES_IN));
+export function signAccessToken(
+  userId: string,
+  email: string,
+  name: string,
+  role: UserRole,
+): string {
+  return jwt.sign(
+    { sub: userId, email, name, role },
+    env.JWT_SECRET,
+    tokenOptions(env.JWT_EXPIRES_IN),
+  );
 }
 
 export function signRefreshToken(userId: string, version: number): string {

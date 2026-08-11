@@ -28,7 +28,13 @@ export class CreateNoteCommand {
     if (result.isOk()) {
       this.eventEmitter.emit(
         "note.created",
-        new NoteCreatedEvent(result.value.id, actor.sub, result.value.title, result.value.content),
+        new NoteCreatedEvent(
+          result.value.id,
+          actor.sub,
+          result.value.title,
+          result.value.content,
+          result.value.tenantId,
+        ),
       );
     }
 

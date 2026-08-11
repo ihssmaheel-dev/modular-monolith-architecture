@@ -39,7 +39,7 @@ export class LoginCommand {
     await this.lockoutService.resetAttempts(data.email);
 
     const user = result.value;
-    const accessToken = signAccessToken(user.id, user.email, user.role);
+    const accessToken = signAccessToken(user.id, user.email, user.name, user.role);
     const refreshToken = signRefreshToken(user.id, user.authVersion);
 
     this.metricsService.incrementCounter(

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EventEmitter2 } from "@nestjs/event-emitter";
 import type { MetricsService } from "../metrics/metrics.service";
 import type { PinoLoggerService } from "../logger/logger.service";
+import type { ClsService } from "nestjs-cls";
 import { OutboxRelayWorker } from "./outbox-relay.worker";
 import type { OutboxEvent, OutboxRepository } from "./outbox.repository";
 
@@ -35,7 +36,10 @@ describe("OutboxRelayWorker", () => {
       error: vi.fn(),
       warn: vi.fn(),
     } as unknown as PinoLoggerService;
-    worker = new OutboxRelayWorker(repository, emitter, metrics, logger);
+    const cls = {
+      runWith: vi.fn((_context, callback: () => Promise<void>) => callback()),
+    } as unknown as ClsService;
+    worker = new OutboxRelayWorker(repository, emitter, metrics, cls, logger);
   });
 
   it("publishes and marks a locked event complete", async () => {

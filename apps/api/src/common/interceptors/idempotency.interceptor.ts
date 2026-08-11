@@ -58,7 +58,8 @@ export class IdempotencyInterceptor implements NestInterceptor {
     }
 
     const userId = this.cls.get("userId") || request.ip || "anonymous";
-    const cacheKey = `idempotency:${userId}:${idempotencyKey}`;
+    const tenantId = this.cls.get("tenantId") || "single";
+    const cacheKey = `idempotency:${tenantId}:${userId}:${idempotencyKey}`;
 
     const cached = await this.claimOrRead(redis, cacheKey);
     if (cached !== undefined) return of(cached);

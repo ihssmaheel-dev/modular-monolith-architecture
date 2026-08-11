@@ -76,6 +76,13 @@
       "requestText": "Recibimos una solicitud para restablecer tu contraseña.",
       "instructionText": "Usa el botón siguiente para elegir una contraseña nueva. Si no solicitaste este cambio, puedes ignorar este correo.",
       "buttonText": "Restablecer contraseña"
+    },
+    "invitation": {
+      "subject": "Te han invitado a {{organization}}",
+      "preview": "Invitación a la organización",
+      "heading": "Únete a {{organization}}",
+      "body": "Te han invitado a colaborar en {{organization}}. Esta invitación caduca en siete días.",
+      "buttonText": "Aceptar invitación"
     }
   },
   "dashboard": {
@@ -166,12 +173,24 @@
       "updateFailed": "No se pudo actualizar la nota",
       "deleteFailed": "No se pudo eliminar la nota"
     },
+    "tenancy": {
+      "slugTaken": "La URL de esta organización ya está en uso",
+      "tenantRequired": "Selecciona una organización para continuar",
+      "membershipNotFound": "No se encontró la membresía de la organización",
+      "membershipExists": "Este usuario ya pertenece a la organización",
+      "lastOwner": "Una organización debe tener al menos un propietario",
+      "invitationExists": "Ya existe una invitación pendiente para este correo",
+      "invitationInvalid": "Esta invitación no es válida o ha caducado",
+      "invitationEmailMismatch": "Inicia sesión con el correo que recibió esta invitación",
+      "operationFailed": "No se pudo completar la operación de la organización"
+    },
     "user": {
       "created": "Usuario creado exitosamente",
       "updated": "Usuario actualizado exitosamente",
       "deleted": "Usuario eliminado exitosamente",
       "notFound": "Usuario no encontrado",
-      "emailTaken": "El correo electrónico ya está en uso"
+      "emailTaken": "El correo electrónico ya está en uso",
+      "ownsOrganization": "Transfiere o elimina la propiedad de las organizaciones de este usuario antes de eliminarlo"
     }
   },
   "notes": {
@@ -187,6 +206,15 @@
     "creating": "Creando...",
     "createButton": "Crear nota",
     "noNotes": "Todavía no hay notas. Crea una arriba."
+  },
+  "tenancy": {
+    "activeOrganization": "Organización activa",
+    "organizationName": "Nombre de la organización",
+    "createOrganization": "Crear organización",
+    "acceptInvitation": "Aceptar invitación",
+    "accepting": "Aceptando...",
+    "invalidInvitationLink": "Este enlace de invitación no es válido.",
+    "signInToAccept": "Inicia sesión para aceptar la invitación"
   },
   "home": {
     "title": "Inicio",

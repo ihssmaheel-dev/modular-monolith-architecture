@@ -35,7 +35,7 @@ export class RegisterCommand {
     if (result.isErr()) return err({ type: "EMAIL_TAKEN" });
 
     const user = result.value;
-    const accessToken = signAccessToken(user.id, user.email, user.role);
+    const accessToken = signAccessToken(user.id, user.email, user.name, user.role);
     const refreshToken = signRefreshToken(user.id, user.authVersion);
 
     return ok({

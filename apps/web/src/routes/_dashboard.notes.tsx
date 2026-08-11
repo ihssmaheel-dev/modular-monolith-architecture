@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { NotesList } from "../components/features/notes/NotesList";
 import { CreateNoteForm } from "../components/features/notes/CreateNoteForm";
 import { Button } from "@repo/ui";
+import { useTenantStore } from "@/stores/tenant.store";
 
 export const Route = createFileRoute("/_dashboard/notes")({
   component: NotesRoute,
@@ -13,6 +14,7 @@ function NotesRoute() {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const activeTenantId = useTenantStore((state) => state.activeTenantId);
 
   const handleSuccess = () => {
     setShowForm(false);
@@ -33,11 +35,11 @@ function NotesRoute() {
 
       {showForm && (
         <div className="mb-8">
-          <CreateNoteForm onSuccess={handleSuccess} />
+          <CreateNoteForm key={activeTenantId} onSuccess={handleSuccess} />
         </div>
       )}
 
-      <NotesList key={refreshKey} />
+      <NotesList key={`${activeTenantId ?? "single"}:${refreshKey}`} />
     </div>
   );
 }
