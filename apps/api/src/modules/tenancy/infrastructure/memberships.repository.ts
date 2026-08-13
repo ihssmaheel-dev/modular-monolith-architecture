@@ -10,7 +10,7 @@ import {
   type PaginationOptions,
 } from "../../../infrastructure/database";
 import { Membership } from "../domain/entities/tenancy.entity";
-import { MembershipMongooseSchema } from "./schemas/tenancy.mongoose-schema";
+import { MembershipMongooseSchema } from "./schemas/tenancy.mongoose.schema";
 
 type LeanMembership = FlattenMaps<MembershipMongooseSchema> & {
   _id: { toString(): string };

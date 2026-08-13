@@ -34,6 +34,7 @@ describeWithMongo("FilesController E2E", () => {
     })
       .overrideProvider(StorageService)
       .useValue({
+        usesDirectTransfer: vi.fn().mockReturnValue(true),
         getPresignedUploadUrl: vi.fn().mockResolvedValue(ok("https://s3.example.com/upload")),
         getPresignedDownloadUrl: vi.fn().mockResolvedValue(ok("https://s3.example.com/download")),
         getMetadata: vi.fn().mockResolvedValue(ok({ size: 1024, contentType: "application/pdf" })),

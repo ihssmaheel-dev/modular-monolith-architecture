@@ -53,6 +53,7 @@ describeWithMongo("FilesModule Integration", () => {
         {
           provide: StorageService,
           useValue: {
+            usesDirectTransfer: vi.fn().mockReturnValue(true),
             getPresignedUploadUrl: vi.fn().mockResolvedValue(ok("https://s3.example.com/upload")),
             getPresignedDownloadUrl: vi
               .fn()

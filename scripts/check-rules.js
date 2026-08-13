@@ -30,6 +30,7 @@ function isTest(file) {
 
 function checkFile(file) {
   const name = relative(file);
+  const fileName = path.basename(file);
   const source = fs.readFileSync(file, "utf8");
   const lineCount = source.split(/\r?\n/).length;
   const limit = isTest(file) ? 300 : 150;
@@ -38,6 +39,13 @@ function checkFile(file) {
   }
   if (name.endsWith("routeTree.gen.ts")) return;
   if (name.endsWith(".d.ts")) return;
+  if (
+    name.includes("/infrastructure/schemas/") &&
+    fileName.includes("mongoose") &&
+    !fileName.endsWith(".mongoose.schema.ts")
+  ) {
+    report(file, "Mongoose schema files must use the .mongoose.schema.ts suffix");
+  }
 
   const forbidden = [
     [/\bas\s+any\b|:\s*any\b|<any>|\bany\[\]/, "explicit any is forbidden"],

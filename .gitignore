@@ -7,6 +7,8 @@ node_modules/
 dist/
 build/
 .turbo/
+*.tsbuildinfo
+apps/web/.tanstack/
 
 # Environment
 .env

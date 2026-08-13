@@ -24,7 +24,7 @@ import {
   MembershipSchema,
   OrganizationMongooseSchema,
   OrganizationSchema,
-} from "./infrastructure/schemas/tenancy.mongoose-schema";
+} from "./infrastructure/schemas/tenancy.mongoose.schema";
 import { MembershipsController } from "./presentation/memberships.controller";
 import { OrganizationsController } from "./presentation/organizations.controller";
 import { TenancyStatusController } from "./presentation/tenancy-status.controller";

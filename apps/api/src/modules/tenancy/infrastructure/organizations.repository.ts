@@ -5,7 +5,7 @@ import { type ClsService } from "nestjs-cls";
 import { type Result } from "neverthrow";
 import { BaseRepository } from "../../../infrastructure/database";
 import { Organization } from "../domain/entities/tenancy.entity";
-import { OrganizationMongooseSchema } from "./schemas/tenancy.mongoose-schema";
+import { OrganizationMongooseSchema } from "./schemas/tenancy.mongoose.schema";
 
 type LeanOrganization = FlattenMaps<OrganizationMongooseSchema> & {
   _id: { toString(): string };

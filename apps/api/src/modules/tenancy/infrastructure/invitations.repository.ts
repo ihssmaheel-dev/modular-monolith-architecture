@@ -9,7 +9,7 @@ import {
   type PaginationOptions,
 } from "../../../infrastructure/database";
 import { Invitation } from "../domain/entities/tenancy.entity";
-import { InvitationMongooseSchema } from "./schemas/tenancy.mongoose-schema";
+import { InvitationMongooseSchema } from "./schemas/tenancy.mongoose.schema";
 
 type LeanInvitation = FlattenMaps<InvitationMongooseSchema> & {
   _id: { toString(): string };

@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
-  PNPM_VERSION: '9.0.0'
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9.0.0"
 
 jobs:
   lint:
@@ -26,9 +26,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @repo/shared build
+      - run: pnpm rules:check
+      - run: pnpm format:check
       - run: pnpm lint
 
   test:
@@ -55,17 +57,34 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @repo/shared build
       - run: pnpm --filter @repo/email build
       - run: pnpm test:unit
         env:
           NODE_ENV: test
-          MONGODB_URI: mongodb://admin:password@localhost:27017/app?authSource=admin
+          MONGODB_URI: mongodb://admin:password@localhost:27017/app-test?authSource=admin
+          TEST_MONGODB_URI: mongodb://admin:password@localhost:27017/app-test?authSource=admin
           REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret
-          JWT_REFRESH_SECRET: test-refresh-secret
+          JWT_SECRET: test-jwt-secret-with-at-least-32-characters
+          JWT_REFRESH_SECRET: test-refresh-secret-with-at-least-32-characters
+      - run: pnpm test:integration
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://admin:password@localhost:27017/app-test?authSource=admin
+          TEST_MONGODB_URI: mongodb://admin:password@localhost:27017/app-test?authSource=admin
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-with-at-least-32-characters
+          JWT_REFRESH_SECRET: test-refresh-secret-with-at-least-32-characters
+      - run: pnpm test:e2e
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://admin:password@localhost:27017/app-test?authSource=admin
+          TEST_MONGODB_URI: mongodb://admin:password@localhost:27017/app-test?authSource=admin
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-with-at-least-32-characters
+          JWT_REFRESH_SECRET: test-refresh-secret-with-at-least-32-characters
 
   build:
     name: Build
@@ -79,6 +98,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
