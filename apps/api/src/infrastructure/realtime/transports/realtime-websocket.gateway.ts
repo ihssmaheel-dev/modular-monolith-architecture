@@ -7,11 +7,11 @@ import {
   SubscribeMessage,
 } from "@nestjs/websockets";
 import { Server, WebSocket } from "ws";
-import { RealtimeService } from "./realtime.service";
-import { PinoLoggerService } from "../logger/logger.service";
-import { env } from "../../config/env";
-import { verifyAccessToken } from "../../common/utils/access-token.utils";
-import { ResolveTenantAccessQuery } from "../../modules/tenancy/application/queries/resolve-tenant-access.query";
+import { RealtimeService } from "../realtime.service";
+import { PinoLoggerService } from "../../../infrastructure/logger/logger.service";
+import { env } from "../../../config/env";
+import { verifyAccessToken } from "../../../common/utils/access-token.utils";
+import { ResolveTenantAccessQuery } from "../../../modules/tenancy/application/queries/resolve-tenant-access.query";
 
 const WS_READY_STATE_OPEN = 1;
 const ACCESS_TOKEN_COOKIE = "access_token";
@@ -27,7 +27,7 @@ interface SocketIdentity {
 }
 
 @WebSocketGateway({ cors: { origin: env.CLIENT_URL.split(",") } })
-export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class RealtimeWebsocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 

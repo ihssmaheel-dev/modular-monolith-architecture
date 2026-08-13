@@ -206,4 +206,10 @@ When building a new feature (like "Invoices"), follow this perfect flow:
 
 ## Enforcement
 
-The rules defined in `ai_instructions/` are supreme. They are strictly enforced by ESLint boundary rules and Git pre-commit hooks to guarantee 100% architectural integrity.
+The rules defined in `ai_instructions/` are supreme. `pnpm rules:check` runs
+dependency-cruiser together with repository convention checks, and CI blocks violations.
+
+Dependency-cruiser enforces that domain code cannot depend on outer layers or NestJS/Mongoose,
+controllers cannot import module infrastructure, application code cannot import Mongoose schemas,
+modules cannot import another module's infrastructure or schemas, and dependency cycles fail the build.
+Shared contracts and cross-cutting technical services remain intentional, documented exceptions.

@@ -1,17 +1,12 @@
 import { Injectable, MessageEvent as NestMessageEvent } from "@nestjs/common";
 import { RedisService } from "../redis/redis.service";
 import { PinoLoggerService } from "../logger/logger.service";
-import { RealtimeConnectionRegistry } from "./realtime-connection.registry";
+import { RealtimeConnectionRegistry } from "./connections/realtime-connection.registry";
 import { WebSocket } from "ws";
 import { Subject } from "rxjs";
 
 const STREAM_KEY = "realtime:events";
 const MAX_STREAM_LENGTH = 10000;
-
-export interface RealtimeEvent {
-  event: string;
-  payload: unknown;
-}
 
 @Injectable()
 export class RealtimeService {
@@ -25,7 +20,6 @@ export class RealtimeService {
     this.logger = logger.child({ module: "RealtimeService" });
   }
 
-  // --- WS Methods (Facade) ---
   addWsClient(userId: string, tenantId: string | undefined, socket: WebSocket): void {
     this.registry.addWsClient(userId, tenantId, socket);
   }
@@ -34,7 +28,6 @@ export class RealtimeService {
     this.registry.removeWsClient(userId, tenantId, socket);
   }
 
-  // --- SSE Methods (Facade) ---
   addSseClient(
     userId: string,
     tenantId: string | undefined,
@@ -51,7 +44,6 @@ export class RealtimeService {
     this.registry.removeSseClient(userId, tenantId, subject);
   }
 
-  // --- Publishing ---
   broadcast(event: string, payload: unknown): void {
     this.publishToStream("broadcast", event, payload);
   }
@@ -61,11 +53,7 @@ export class RealtimeService {
     this.publishToStream(target, event, payload);
   }
 
-  sendToRoom(room: string, event: string, payload: unknown): void {
-    this.publishToStream(`room:${room}`, event, payload);
-  }
-
-  private publishToStream(target: string, event: string, payload: unknown) {
+  private publishToStream(target: string, event: string, payload: unknown): void {
     const client = this.redis.getClient();
     if (!client) return;
 

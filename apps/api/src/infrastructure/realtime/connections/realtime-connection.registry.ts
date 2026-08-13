@@ -1,9 +1,9 @@
 import { Injectable, MessageEvent as NestMessageEvent } from "@nestjs/common";
 import { WebSocket } from "ws";
 import { Subject } from "rxjs";
-import { PinoLoggerService } from "../logger/logger.service";
-import { MetricsService } from "../metrics/metrics.service";
-import { dispatchToConnection, dispatchToEveryConnection } from "./realtime-dispatcher";
+import { PinoLoggerService } from "../../logger/logger.service";
+import { MetricsService } from "../../metrics/metrics.service";
+import { dispatchToConnection, dispatchToEveryConnection } from "./realtime-connection.dispatcher";
 
 const MAX_CLIENTS_PER_CONNECTION = 100;
 
@@ -27,6 +27,7 @@ export class RealtimeConnectionRegistry {
       this.wsClients.set(key, new Set());
     }
     const userClients = this.wsClients.get(key)!;
+    if (userClients.has(socket)) return;
     if (userClients.size >= MAX_CLIENTS_PER_CONNECTION) {
       this.logger.warn({ userId }, "Max WebSocket connections reached");
       socket.close();
@@ -72,6 +73,7 @@ export class RealtimeConnectionRegistry {
       this.sseClients.set(key, new Set());
     }
     const userClients = this.sseClients.get(key)!;
+    if (userClients.has(subject)) return;
     if (userClients.size >= MAX_CLIENTS_PER_CONNECTION) {
       this.logger.warn({ userId }, "Max SSE connections reached");
       subject.complete();
@@ -126,7 +128,7 @@ export class RealtimeConnectionRegistry {
   }
 
   getUserCount(): number {
-    return this.wsClients.size + this.sseClients.size;
+    return new Set([...this.wsClients.keys(), ...this.sseClients.keys()]).size;
   }
 }
 

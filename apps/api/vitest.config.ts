@@ -7,6 +7,20 @@ export default defineConfig({
     environment: "node",
     include: ["src/**/*.test.ts"],
     exclude: ["src/**/*.e2e.test.ts", "src/**/*.integration.test.ts"],
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.ts"],
+      exclude: [
+        "src/**/*.test.ts",
+        "src/**/*.integration.test.ts",
+        "src/**/*.e2e.test.ts",
+        "src/**/*.module.ts",
+        "src/**/index.ts",
+        "src/**/*.types.ts",
+        "src/**/*.mongoose.schema.ts",
+      ],
+      reporter: ["text", "json-summary"],
+    },
   },
   resolve: {
     alias: {

@@ -1,14 +1,21 @@
 import { Module, Global } from "@nestjs/common";
-import { RealtimeGateway } from "./realtime.gateway";
+import { RealtimeConnectionRegistry } from "./connections/realtime-connection.registry";
 import { RealtimeService } from "./realtime.service";
-import { RealtimeController } from "./realtime.controller";
-import { RealtimeConnectionRegistry } from "./realtime-connection.registry";
-import { RealtimeStreamConsumer } from "./realtime-stream.consumer";
+import { RealtimeStreamConsumer } from "./streams/realtime-stream.consumer";
+import { RealtimeStreamRouter } from "./streams/realtime-stream.router";
+import { RealtimeSseController } from "./transports/realtime-sse.controller";
+import { RealtimeWebsocketGateway } from "./transports/realtime-websocket.gateway";
 
 @Global()
 @Module({
-  controllers: [RealtimeController],
-  providers: [RealtimeConnectionRegistry, RealtimeStreamConsumer, RealtimeGateway, RealtimeService],
+  controllers: [RealtimeSseController],
+  providers: [
+    RealtimeConnectionRegistry,
+    RealtimeStreamConsumer,
+    RealtimeStreamRouter,
+    RealtimeWebsocketGateway,
+    RealtimeService,
+  ],
   exports: [RealtimeService],
 })
 export class RealtimeModule {}

@@ -1,15 +1,15 @@
 import { Controller, Sse, Req, MessageEvent as NestMessageEvent } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { RealtimeService } from "./realtime.service";
+import { RealtimeService } from "../realtime.service";
 import { Subject, Observable } from "rxjs";
 import { finalize } from "rxjs/operators";
-import { requireAuthenticatedUser } from "../../common/utils/request-user.utils";
+import { requireAuthenticatedUser } from "../../../common/utils/request-user.utils";
 import type { TenantContext } from "@repo/shared";
 
 type TenantRequest = FastifyRequest & { tenant?: TenantContext };
 
 @Controller("realtime")
-export class RealtimeController {
+export class RealtimeSseController {
   constructor(private readonly realtimeService: RealtimeService) {}
 
   @Sse("events")
