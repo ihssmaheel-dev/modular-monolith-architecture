@@ -20,6 +20,6 @@
     "@ts-rest/core": "^3.26.0"
   },
   "devDependencies": {
-    "typescript": "^5.5.0"
+    "typescript": "^7.0.2"
   }
 }
