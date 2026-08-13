@@ -1,6 +1,9 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { FilesController } from "./presentation/files.controller";
+import { FilesTransferController } from "./presentation/files-transfer.controller";
+import { UploadGridFsFileCommand } from "./application/commands/upload-gridfs-file.command";
+import { GetGridFsFileContentQuery } from "./application/queries/get-gridfs-file-content.query";
 import { RequestUploadCommand } from "./application/commands/request-upload.command";
 import { ConfirmUploadCommand } from "./application/commands/confirm-upload.command";
 import { DeleteFileCommand } from "./application/commands/delete-file.command";
@@ -12,7 +15,7 @@ import { FileMongooseSchema, FileSchema } from "./infrastructure/schemas/file.mo
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: FileMongooseSchema.name, schema: FileSchema }])],
-  controllers: [FilesController],
+  controllers: [FilesController, FilesTransferController],
   providers: [
     RequestUploadCommand,
     ConfirmUploadCommand,
@@ -20,6 +23,8 @@ import { FileMongooseSchema, FileSchema } from "./infrastructure/schemas/file.mo
     GetFileByIdQuery,
     GetFileDownloadUrlQuery,
     ListFilesByParentQuery,
+    UploadGridFsFileCommand,
+    GetGridFsFileContentQuery,
     FilesRepository,
   ],
   exports: [

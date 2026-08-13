@@ -48,4 +48,8 @@ export class FilesRepository extends TenantScopedRepository<FileEntity, FileMong
     const result = await this.find({ parentType, parentId });
     return result.isOk() ? result.value : [];
   }
+
+  async claimPendingUpload(key: string) {
+    return this.updateOne({ key, status: "pending" }, { status: "uploading" });
+  }
 }

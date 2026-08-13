@@ -11,9 +11,10 @@ import { TenantContextService } from "../../../../infrastructure/database";
 const PRESIGNED_UPLOAD_TTL_SECONDS = 3_600;
 
 interface RequestUploadResult {
+  uploadMode: "direct" | "proxy";
   uploadUrl: string;
   fileKey: string;
-  expiresAt: string;
+  expiresAt?: string;
 }
 
 @Injectable()
@@ -30,9 +31,9 @@ export class RequestUploadCommand {
   ): Promise<Result<RequestUploadResult, FileError>> {
     const fileKey = this.buildKey(input, userId);
 
-    const presignResult = await this.storage.getPresignedUploadUrl(fileKey, input.contentType);
+    const transfer = await this.createTransfer(fileKey, input.contentType);
 
-    if (presignResult.isErr()) {
+    if (transfer.isErr()) {
       return err({
         type: "PRESIGN_FAILED",
         message: "api.error.presignFailed",
@@ -58,14 +59,27 @@ export class RequestUploadCommand {
       });
     }
 
-    const expiresAt = new Date();
-    expiresAt.setSeconds(expiresAt.getSeconds() + PRESIGNED_UPLOAD_TTL_SECONDS);
+    return ok({ ...transfer.value, fileKey });
+  }
 
+  private async createTransfer(fileKey: string, contentType: string) {
+    if (!this.storage.usesDirectTransfer()) {
+      return ok({ uploadMode: "proxy" as const, uploadUrl: this.proxyUploadUrl(fileKey) });
+    }
+    const result = await this.storage.getPresignedUploadUrl(fileKey, contentType);
+    if (result.isErr()) return err(result.error);
+    const expiresAt = new Date(Date.now() + PRESIGNED_UPLOAD_TTL_SECONDS * 1_000);
     return ok({
-      uploadUrl: presignResult.value,
-      fileKey,
+      uploadMode: "direct" as const,
+      uploadUrl: result.value,
       expiresAt: expiresAt.toISOString(),
     });
+  }
+
+  private proxyUploadUrl(fileKey: string): string {
+    const url = new URL("/api/files/gridfs/upload", env.API_URL);
+    url.searchParams.set("fileKey", fileKey);
+    return url.toString();
   }
 
   private buildKey(input: RequestUploadInput, userId: string): string {

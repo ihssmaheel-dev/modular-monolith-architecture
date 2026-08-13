@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
 import { StorageService } from "../../../../infrastructure/storage/storage.service";
+import { env } from "../../../../config/env";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
 import type { AuthenticatedUser } from "@repo/shared";
@@ -32,6 +33,12 @@ export class GetFileDownloadUrlQuery {
     const file = findResult.value;
     if (actor.role !== "admin" && file.uploadedBy !== actor.sub) {
       return err({ type: "FILE_NOT_FOUND", message: "api.file.notFound" });
+    }
+    if (file.status !== "uploaded") {
+      return err({ type: "FILE_NOT_FOUND", message: "api.file.notFound" });
+    }
+    if (!this.storage.usesDirectTransfer()) {
+      return ok({ downloadUrl: new URL(`/api/files/${file.id}/content`, env.API_URL).toString() });
     }
     const urlResult = await this.storage.getPresignedDownloadUrl(file.key);
 

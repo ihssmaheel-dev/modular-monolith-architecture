@@ -14,6 +14,7 @@ export const REQUEST_UPLOAD_ERRORS: ErrorMap = {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     i18nKey: "api.error.uploadFailed",
   },
+  FILE_TOO_LARGE: { status: HttpStatus.PAYLOAD_TOO_LARGE, i18nKey: "api.error.fileTooLarge" },
 };
 
 export const CONFIRM_UPLOAD_ERRORS: ErrorMap = {
@@ -22,6 +23,17 @@ export const CONFIRM_UPLOAD_ERRORS: ErrorMap = {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     i18nKey: "api.error.uploadFailed",
   },
+};
+
+export const GRIDFS_TRANSFER_ERRORS: ErrorMap = {
+  ...FILE_NOT_FOUND_ERRORS,
+  UPLOAD_IN_PROGRESS: { status: HttpStatus.CONFLICT, i18nKey: "api.error.conflict" },
+  PROXY_TRANSFER_UNAVAILABLE: { status: HttpStatus.NOT_FOUND, i18nKey: "api.file.notFound" },
+  UPLOAD_FAILED: {
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    i18nKey: "api.error.uploadFailed",
+  },
+  FILE_TOO_LARGE: { status: HttpStatus.PAYLOAD_TOO_LARGE, i18nKey: "api.error.fileTooLarge" },
 };
 
 export const DOWNLOAD_ERRORS: ErrorMap = {

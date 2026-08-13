@@ -37,14 +37,15 @@ export const FileMetadataSchema = z.object({
   parentId: z.string().optional(),
   parentType: z.string(),
   uploadedBy: z.string(),
-  status: z.enum(["pending", "uploaded", "failed"]),
+  status: z.enum(["pending", "uploading", "uploaded", "failed"]),
   createdAt: z.string().datetime(),
 });
 
 export const PresignedUrlResponseSchema = z.object({
+  uploadMode: z.enum(["direct", "proxy"]),
   uploadUrl: z.string().url(),
   fileKey: z.string(),
-  expiresAt: z.string().datetime(),
+  expiresAt: z.string().datetime().optional(),
 });
 
 export const DownloadUrlResponseSchema = z.object({

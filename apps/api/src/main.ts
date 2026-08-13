@@ -12,6 +12,7 @@ import { I18nService } from "./infrastructure/i18n/i18n.service";
 import { env } from "./config/env";
 import { setupSwagger } from "./infrastructure/swagger/swagger";
 import { printStartupBanner } from "./common/utils/startup-banner.util";
+import { MAX_FILE_SIZE_BYTES } from "@repo/shared";
 
 const MAX_BODY_SIZE_BYTES = 1048576; // 1MB
 
@@ -23,6 +24,15 @@ async function bootstrap() {
       trustProxy: true,
     }),
   );
+
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addContentTypeParser(
+      "application/octet-stream",
+      { bodyLimit: MAX_FILE_SIZE_BYTES },
+      (_request, payload, done) => done(null, payload),
+    );
 
   await app.register(helmet, {
     contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false,

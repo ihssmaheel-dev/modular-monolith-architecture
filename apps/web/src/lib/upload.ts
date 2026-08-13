@@ -38,9 +38,9 @@ export async function uploadFile({
     throw new Error("Failed to get upload URL");
   }
 
-  const { uploadUrl, fileKey } = presignResult.body;
+  const { uploadMode, uploadUrl, fileKey } = presignResult.body;
 
-  await uploadToS3(uploadUrl, file, onProgress);
+  await uploadContent(uploadMode, uploadUrl, file, api.getTransferHeaders(), onProgress);
 
   const confirmResult = await api.files.confirmUpload({
     body: { fileKey },
@@ -53,9 +53,11 @@ export async function uploadFile({
   return confirmResult.body;
 }
 
-function uploadToS3(
+function uploadContent(
+  mode: "direct" | "proxy",
   url: string,
   file: File,
+  headers: Record<string, string>,
   onProgress?: (progress: UploadProgress) => void,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -88,7 +90,11 @@ function uploadToS3(
     });
 
     xhr.open("PUT", url);
-    xhr.setRequestHeader("Content-Type", file.type);
+    xhr.withCredentials = mode === "proxy";
+    xhr.setRequestHeader("Content-Type", mode === "proxy" ? "application/octet-stream" : file.type);
+    if (mode === "proxy") {
+      for (const [name, value] of Object.entries(headers)) xhr.setRequestHeader(name, value);
+    }
     xhr.send(file);
   });
 }

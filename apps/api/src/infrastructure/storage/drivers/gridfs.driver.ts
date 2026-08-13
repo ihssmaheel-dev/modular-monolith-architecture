@@ -1,4 +1,5 @@
-import { Readable } from "stream";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import mongoose, { Connection } from "mongoose";
 import { StorageDriver, FileInput } from "../storage.types";
 
@@ -15,41 +16,32 @@ export class GridFsDriver implements StorageDriver {
   }
 
   async upload(key: string, body: FileInput, contentType: string) {
-    const stream = this.toReadable(body);
+    await this.delete(key);
     const uploadStream = this.bucket.openUploadStream(key, {
       metadata: { key, contentType },
     });
 
-    await new Promise<void>((resolve, reject) => {
-      stream.pipe(uploadStream);
-      uploadStream.on("error", reject);
-      uploadStream.on("finish", resolve);
-    });
+    try {
+      await pipeline(this.toReadable(body), uploadStream);
+    } catch (error) {
+      await uploadStream.abort().catch(() => undefined);
+      throw error;
+    }
 
     return { key, url: `/gridfs/${BUCKET_NAME}/${key}` };
   }
 
-  async getPresignedUploadUrl(_key: string, _contentType?: string, _ttlSeconds?: number) {
-    if (_contentType || _ttlSeconds) {
-      /* unused */
-    }
-    return `/gridfs/${BUCKET_NAME}/${_key}`;
+  async getPresignedUploadUrl(): Promise<string> {
+    throw new Error("GridFS does not support direct upload URLs");
   }
 
-  async getPresignedDownloadUrl(key: string, _ttlSeconds?: number) {
-    if (_ttlSeconds) {
-      /* unused */
-    }
-    const file = await this.bucket.find({ "metadata.key": key }).next();
-    if (!file) throw new Error("File not found");
-    return `/gridfs/${BUCKET_NAME}/${key}`;
+  async getPresignedDownloadUrl(): Promise<string> {
+    throw new Error("GridFS does not support direct download URLs");
   }
 
   async delete(key: string) {
-    const file = await this.bucket.find({ "metadata.key": key }).next();
-    if (file) {
-      await this.bucket.delete(file._id);
-    }
+    const files = await this.bucket.find({ "metadata.key": key }).toArray();
+    await Promise.all(files.map((file) => this.bucket.delete(file._id)));
   }
 
   async getMetadata(key: string) {
@@ -62,7 +54,7 @@ export class GridFsDriver implements StorageDriver {
     };
   }
 
-  async download(key: string): Promise<Readable> {
+  async getDownloadStream(key: string): Promise<Readable> {
     const file = await this.bucket.find({ "metadata.key": key }).next();
     if (!file) throw new Error("File not found");
     return this.bucket.openDownloadStream(file._id);

@@ -140,6 +140,7 @@
       "invalidHeader": "Valor de cabecera no válido",
       "transactionFailed": "La transacción falló",
       "uploadFailed": "La carga falló",
+      "fileTooLarge": "El archivo supera el tamaño permitido",
       "presignFailed": "No se pudo generar la URL firmada",
       "deleteFailed": "No se pudo eliminar",
       "invalidAddress": "No se proporcionaron destinatarios",

@@ -140,6 +140,7 @@
       "invalidHeader": "Valeur d’en-tête non valide",
       "transactionFailed": "La transaction a échoué",
       "uploadFailed": "Le téléversement a échoué",
+      "fileTooLarge": "Le fichier dépasse la taille autorisée",
       "presignFailed": "Impossible de générer l’URL signée",
       "deleteFailed": "La suppression a échoué",
       "invalidAddress": "Aucun destinataire fourni",

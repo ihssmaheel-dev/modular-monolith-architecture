@@ -25,6 +25,18 @@ function getAuthorizationHeader(options: ApiClientOptions): string {
   return token ? `Bearer ${token}` : "";
 }
 
+function getTransferHeaders(options: ApiClientOptions): Record<string, string> {
+  const headers: Record<string, string> = {
+    "accept-language": options.getLocale?.() ?? "en",
+    "idempotency-key": createIdempotencyKey(),
+  };
+  const authorization = getAuthorizationHeader(options);
+  const tenantId = options.getTenantId?.();
+  if (authorization) headers.authorization = authorization;
+  if (tenantId) headers["x-tenant-id"] = tenantId;
+  return headers;
+}
+
 async function requestRefresh(
   baseUrl: string,
   options: ApiClientOptions,
@@ -100,6 +112,7 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     notes: initClient(notesContract, clientOptions),
     tenancy: initClient(tenancyContract, clientOptions),
     users: initClient(usersContract, clientOptions),
+    getTransferHeaders: () => getTransferHeaders(options),
   };
 }
 

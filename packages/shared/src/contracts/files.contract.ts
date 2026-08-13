@@ -24,7 +24,7 @@ export const filesContract = {
       400: contractSchema(MessageResponseSchema),
       413: contractSchema(MessageResponseSchema),
     },
-    summary: "Request a presigned URL for direct S3 upload",
+    summary: "Request a direct S3 URL or authenticated GridFS upload endpoint",
   },
   confirmUpload: {
     method: "POST" as const,
@@ -43,7 +43,7 @@ export const filesContract = {
       200: contractSchema(DownloadUrlResponseSchema),
       404: contractSchema(MessageResponseSchema),
     },
-    summary: "Get a presigned download URL for a file",
+    summary: "Get a direct S3 URL or authenticated GridFS download endpoint",
   },
   getById: {
     method: "GET" as const,

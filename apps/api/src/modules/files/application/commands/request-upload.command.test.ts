@@ -7,7 +7,7 @@ import { ok, err } from "neverthrow";
 import type { TenantContextService } from "../../../../infrastructure/database";
 
 vi.mock("../../../../config/env", () => ({
-  env: { S3_BUCKET: "test-bucket" },
+  env: { S3_BUCKET: "test-bucket", API_URL: "http://localhost:3001" },
 }));
 
 describe("RequestUploadCommand", () => {
@@ -18,6 +18,7 @@ describe("RequestUploadCommand", () => {
   beforeEach(() => {
     storage = {
       getPresignedUploadUrl: vi.fn(),
+      usesDirectTransfer: vi.fn().mockReturnValue(true),
     } as unknown as StorageService;
 
     filesRepo = {
@@ -107,7 +108,8 @@ describe("RequestUploadCommand", () => {
     if (result.isOk()) {
       expect(result.value.uploadUrl).toBe("https://s3.example.com/upload");
       expect(result.value.fileKey).toContain("note/note-1/user-1/");
-      expect(Number.isNaN(Date.parse(result.value.expiresAt))).toBe(false);
+      expect(result.value.expiresAt).toBeDefined();
+      expect(Number.isNaN(Date.parse(result.value.expiresAt ?? ""))).toBe(false);
     }
   });
 
@@ -177,5 +179,37 @@ describe("RequestUploadCommand", () => {
     if (result.isOk()) {
       expect(result.value.fileKey).not.toContain(" ");
     }
+  });
+
+  it("returns an authenticated proxy endpoint when GridFS is configured", async () => {
+    vi.mocked(storage.usesDirectTransfer).mockReturnValue(false);
+    vi.mocked(filesRepo.create).mockResolvedValue(
+      ok({
+        id: "file-4",
+        key: "general/user-1/abc-file.txt",
+        fileName: "file.txt",
+        contentType: "text/plain",
+        fileSize: 100,
+        bucket: "test-bucket",
+        parentType: "general",
+        uploadedBy: "user-1",
+        status: "pending",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    );
+
+    const result = await command.execute(
+      { fileName: "file.txt", contentType: "text/plain", fileSize: 100, parentType: "general" },
+      "user-1",
+    );
+
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      expect(result.value.uploadMode).toBe("proxy");
+      expect(result.value.uploadUrl).toContain("/api/files/gridfs/upload?fileKey=");
+      expect(result.value.expiresAt).toBeUndefined();
+    }
+    expect(storage.getPresignedUploadUrl).not.toHaveBeenCalled();
   });
 });

@@ -5,6 +5,7 @@ import {
   HeadObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import { Readable } from "node:stream";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "../../../config/env";
 import { StorageDriver, FileInput, PRESIGN_TTL_SECONDS } from "../storage.types";
@@ -70,6 +71,12 @@ export class S3Driver implements StorageDriver {
       if (this.isNotFound(error)) return null;
       throw error;
     }
+  }
+
+  async getDownloadStream(key: string): Promise<Readable> {
+    const result = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+    if (!(result.Body instanceof Readable)) throw new Error("File stream unavailable");
+    return result.Body;
   }
 
   private isNotFound(error: unknown): boolean {

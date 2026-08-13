@@ -154,6 +154,7 @@
       "invalidHeader": "Invalid header value",
       "transactionFailed": "Transaction failed",
       "uploadFailed": "Upload failed",
+      "fileTooLarge": "File exceeds the allowed size",
       "presignFailed": "Presign failed",
       "deleteFailed": "Delete failed",
       "invalidAddress": "No recipients provided",

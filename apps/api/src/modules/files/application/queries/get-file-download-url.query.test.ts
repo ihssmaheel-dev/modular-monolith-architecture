@@ -30,6 +30,7 @@ describe("GetFileDownloadUrlQuery", () => {
   beforeEach(() => {
     storage = {
       getPresignedDownloadUrl: vi.fn(),
+      usesDirectTransfer: vi.fn().mockReturnValue(true),
     } as unknown as StorageService;
 
     filesRepo = {

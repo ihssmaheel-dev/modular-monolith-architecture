@@ -14,6 +14,7 @@ import { S3Driver } from "./drivers/s3.driver";
 import { GridFsDriver } from "./drivers/gridfs.driver";
 import { InjectConnection } from "@nestjs/mongoose";
 import { Connection } from "mongoose";
+import { Readable } from "node:stream";
 import { CircuitBreaker } from "../../common/utils/circuit-breaker";
 import { Bulkhead } from "../../common/utils/bulkhead";
 
@@ -22,19 +23,16 @@ export class StorageService {
   private driver: StorageDriver;
   private circuitBreaker: CircuitBreaker<StorageError>;
   private bulkhead: Bulkhead<StorageError>;
-
   constructor(
     private logger: PinoLoggerService,
     @InjectConnection() connection: Connection,
   ) {
     this.logger = logger.child({ module: "StorageService" });
     this.driver = this.createDriver(connection);
-
     this.circuitBreaker = new CircuitBreaker(
       { failureThreshold: 5, resetTimeoutMs: 10000 },
       { code: "CIRCUIT_OPEN", message: "api.error.circuitOpen" },
     );
-
     this.bulkhead = new Bulkhead(
       { maxConcurrent: 20 },
       { code: "BULKHEAD_REJECTED", message: "api.error.bulkheadRejected" },
@@ -52,7 +50,6 @@ export class StorageService {
         return new GridFsDriver(connection);
     }
   }
-
   async upload(
     key: string,
     body: FileInput,
@@ -71,7 +68,6 @@ export class StorageService {
       }),
     );
   }
-
   async getPresignedUploadUrl(
     key: string,
     contentType: string,
@@ -88,6 +84,9 @@ export class StorageService {
         }
       }),
     );
+  }
+  usesDirectTransfer(): boolean {
+    return env.STORAGE_DRIVER === "s3";
   }
 
   async getPresignedDownloadUrl(
@@ -130,6 +129,19 @@ export class StorageService {
         } catch (error) {
           this.logger.error({ key, error }, "Storage existence check failed");
           return err({ code: "NOT_FOUND", message: "api.error.notFound" });
+        }
+      }),
+    );
+  }
+
+  async getDownloadStream(key: string): Promise<Result<Readable, StorageError>> {
+    return this.bulkhead.execute(() =>
+      this.circuitBreaker.execute(async () => {
+        try {
+          return ok(await this.driver.getDownloadStream(key));
+        } catch (error) {
+          this.logger.error({ key, error }, "Download stream failed");
+          return err({ code: "DOWNLOAD_FAILED", message: "api.error.notFound" });
         }
       }),
     );

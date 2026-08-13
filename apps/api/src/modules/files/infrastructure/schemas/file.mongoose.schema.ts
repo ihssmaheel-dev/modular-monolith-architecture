@@ -32,7 +32,7 @@ export class FileMongooseSchema {
   @Prop({ required: true })
   uploadedBy!: string;
 
-  @Prop({ enum: ["pending", "uploaded", "failed"], default: "pending" })
+  @Prop({ enum: ["pending", "uploading", "uploaded", "failed"], default: "pending" })
   status!: string;
 }
 

@@ -8,7 +8,7 @@ export interface FileEntity {
   parentId?: string;
   parentType: "note" | "user" | "general";
   uploadedBy: string;
-  status: "pending" | "uploaded" | "failed";
+  status: "pending" | "uploading" | "uploaded" | "failed";
   createdAt: Date;
   updatedAt: Date;
 }
