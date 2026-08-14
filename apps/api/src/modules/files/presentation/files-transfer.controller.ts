@@ -1,6 +1,6 @@
 import { BadRequestException, Controller, Get, HttpCode, Put, Req, Res } from "@nestjs/common";
 import { ConfirmUploadSchema } from "@repo/shared";
-import { FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
 import { Readable } from "node:stream";
 import { Idempotent, RequirePermissions, requireAuthenticatedUser } from "../../../common";
 import { ZodValidationException } from "../../../common/exceptions/zod-validation.exception";

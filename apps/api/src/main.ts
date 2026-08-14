@@ -34,17 +34,17 @@ async function bootstrap() {
       (_request, payload, done) => done(null, payload),
     );
 
-  await app.register(helmet, {
+  await app.register(helmet as any, {
     contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false,
     crossOriginEmbedderPolicy: false,
   });
 
-  await app.register(compress, {
+  await app.register(compress as any, {
     threshold: 1024,
     encodings: ["gzip", "deflate", "br"],
   });
 
-  await app.register(cookie, {
+  await app.register(cookie as any, {
     secret: env.JWT_SECRET,
     hook: "onRequest",
   });

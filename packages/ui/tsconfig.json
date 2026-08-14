@@ -5,11 +5,8 @@
     "outDir": "./dist",
     "noEmit": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "baseUrl": ".",
-    "paths": {
-      "@repo/shared": ["../shared/src/index.ts"],
-      "@repo/api-client": ["../api-client/src/index.ts"]
-    }
+
+
   },
   "include": ["src"]
 }

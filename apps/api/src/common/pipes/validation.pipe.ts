@@ -1,5 +1,5 @@
 import { PipeTransform, Injectable } from "@nestjs/common";
-import { ZodSchema } from "zod";
+import type { ZodSchema } from "zod";
 import { ZodValidationException } from "../exceptions/zod-validation.exception";
 
 @Injectable()

@@ -96,7 +96,7 @@ function createIdempotencyKey(): string {
 export function createApiClient(baseUrl: string, options: ApiClientOptions = {}) {
   const clientOptions = {
     baseUrl,
-    credentials: "include" as const,
+
     baseHeaders: {
       authorization: () => getAuthorizationHeader(options),
       "accept-language": () => options.getLocale?.() ?? "en",

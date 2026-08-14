@@ -1,5 +1,5 @@
 import { Injectable, NestMiddleware, HttpStatus } from "@nestjs/common";
-import { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyRequest, FastifyReply } from "fastify";
 import {
   XSS_PATTERNS,
   SQL_INJECTION_PATTERNS,

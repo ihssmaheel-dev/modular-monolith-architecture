@@ -1,5 +1,5 @@
 import { INestApplication } from "@nestjs/common";
-import boxen from "boxen";
+
 import { blue, green, yellow, bold, cyan, dim } from "colorette";
 import { env } from "../../config/env";
 import { RedisService } from "../../infrastructure/redis/redis.service";
@@ -22,14 +22,5 @@ ${bold("Storage")}     : ${cyan(env.STORAGE_DRIVER.toUpperCase())}
 ${bold("Email")}       : ${cyan(env.EMAIL_DRIVER.toUpperCase())}
   `.trim();
 
-  const banner = boxen(bannerContent, {
-    padding: 1,
-    margin: 1,
-    borderStyle: "round",
-    borderColor: "blue",
-    title: "Server Status",
-    titleAlignment: "center",
-  });
-
-  logger.info({ banner }, "Server status");
+  logger.info({ banner: bannerContent }, "Server status");
 }

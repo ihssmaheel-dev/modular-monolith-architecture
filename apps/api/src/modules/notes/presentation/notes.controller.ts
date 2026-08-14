@@ -1,5 +1,5 @@
 import { Controller, HttpStatus, Req } from "@nestjs/common";
-import { FastifyRequest } from "fastify";
+import type { FastifyRequest } from "fastify";
 import { RequirePermissions, Idempotent, requireAuthenticatedUser } from "../../../common";
 import { notesContract } from "@repo/shared";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";

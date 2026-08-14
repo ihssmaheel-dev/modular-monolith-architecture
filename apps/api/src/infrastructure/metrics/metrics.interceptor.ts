@@ -2,7 +2,7 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from "@nes
 import { Observable } from "rxjs";
 import { tap, catchError } from "rxjs/operators";
 import { MetricsService } from "./metrics.service";
-import { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyRequest, FastifyReply } from "fastify";
 
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {

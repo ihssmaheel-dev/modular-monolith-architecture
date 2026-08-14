@@ -13,7 +13,7 @@ import { Reflector } from "@nestjs/core";
 import { ClsService } from "nestjs-cls";
 import { RedisService } from "../../infrastructure/redis/redis.service";
 import { IDEMPOTENT_KEY } from "../decorators/idempotent.decorator";
-import { FastifyRequest } from "fastify";
+import type { FastifyRequest } from "fastify";
 import type Redis from "ioredis";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 

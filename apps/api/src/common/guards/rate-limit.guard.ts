@@ -3,7 +3,7 @@ import { Reflector } from "@nestjs/core";
 import { RateLimitService } from "../../infrastructure/rate-limit/rate-limit.service";
 import { I18nService } from "../../infrastructure/i18n/i18n.service";
 import { RATE_LIMIT_KEY, RateLimitMetadata } from "../decorators/rate-limit.decorator";
-import { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyRequest, FastifyReply } from "fastify";
 import { HttpException } from "@nestjs/common";
 
 const DEFAULT_MAX_REQUESTS = 100;
