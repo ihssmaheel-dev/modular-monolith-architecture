@@ -1,30 +1,42 @@
-FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
-WORKDIR /app
+FROM node:22.12.0-alpine AS base
 
-FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-COPY apps/web/package.json apps/web/
-COPY packages/shared/package.json packages/shared/
-COPY packages/ui/package.json packages/ui/
-COPY packages/api-client/package.json packages/api-client/
+# Stage 1: Builder (Prune workspace)
+FROM base AS builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+RUN corepack enable pnpm
+RUN pnpm install turbo --global
+COPY . .
+RUN turbo prune web --docker
+
+# Stage 2: Installer
+FROM base AS installer
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+RUN corepack enable pnpm
+
+# Install dependencies
+COPY .gitignore .gitignore
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm install --frozen-lockfile
 
-FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
-COPY --from=deps /app/packages/ui/node_modules ./packages/ui/node_modules
-COPY --from=deps /app/packages/api-client/node_modules ./packages/api-client/node_modules
-COPY packages/shared/ ./packages/shared/
-COPY packages/ui/ ./packages/ui/
-COPY packages/api-client/ ./packages/api-client/
-COPY apps/web/ ./apps/web/
-COPY tsconfig.base.json ./
-RUN pnpm --filter @repo/shared build
-RUN pnpm --filter web build
+# Build the project
+COPY --from=builder /app/out/full/ .
+COPY turbo.json turbo.json
+# Ensure environment variables are passed during build if needed
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+RUN pnpm turbo build --filter=web...
 
-FROM nginx:alpine AS production
-COPY --from=build /app/apps/web/dist /usr/share/nginx/html
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+# Stage 3: Runner (Nginx)
+FROM nginx:alpine AS runner
+# Copy custom nginx config if needed, otherwise use default
+# COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built assets from installer stage
+COPY --from=installer /app/apps/web/dist /usr/share/nginx/html
+
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]

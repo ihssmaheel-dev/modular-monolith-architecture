@@ -12,6 +12,7 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.8.0",
     "@repo/api-client": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/ui": "workspace:*",
@@ -21,8 +22,10 @@
     "@tanstack/router-vite-plugin": "^1.167.30",
     "i18next": "^26.3.6",
     "lucide-react": "^1.31.0",
+    "nuqs": "^2.9.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-hook-form": "^7.85.0",
     "react-i18next": "^17.0.11",
     "zustand": "^5.0.15"
   },
@@ -37,6 +40,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",
     "jsdom": "^30.0.1",
+    "msw": "^2.15.0",
     "postcss": "^8.5.26",
     "tailwindcss": "^4.3.3",
     "tailwindcss-animate": "^1.0.7",

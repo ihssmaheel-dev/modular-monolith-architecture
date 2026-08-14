@@ -16,8 +16,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "zod": "^4.4.3",
-    "@ts-rest/core": "^3.52.1"
+    "@ts-rest/core": "^3.52.1",
+    "type-fest": "^5.8.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "typescript": "^7.0.2"

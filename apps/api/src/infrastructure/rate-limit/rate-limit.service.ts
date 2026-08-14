@@ -38,14 +38,24 @@ export class RateLimitService {
       };
     }
 
-    const pipeline = client.pipeline();
-    pipeline.zremrangebyscore(redisKey, 0, windowStart);
-    pipeline.zadd(redisKey, now.toString(), `${now}:${crypto.randomUUID()}`);
-    pipeline.zcard(redisKey);
-    pipeline.expire(redisKey, windowSeconds);
-    const results = await pipeline.exec();
+    const script = `
+      redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, ARGV[1])
+      redis.call('ZADD', KEYS[1], ARGV[2], ARGV[3])
+      local count = redis.call('ZCARD', KEYS[1])
+      redis.call('EXPIRE', KEYS[1], ARGV[4])
+      return count
+    `;
 
-    const count = (results?.[2]?.[1] as number) ?? 0;
+    const count = (await client.eval(
+      script,
+      1,
+      redisKey,
+      windowStart.toString(),
+      now.toString(),
+      `${now}:${crypto.randomUUID()}`,
+      windowSeconds.toString()
+    )) as number;
+
     const remaining = Math.max(0, maxRequests - count);
     const resetAt = Math.ceil((now + windowSeconds * MS_PER_SECOND) / MS_PER_SECOND);
 

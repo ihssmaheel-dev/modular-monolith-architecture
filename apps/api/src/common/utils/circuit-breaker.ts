@@ -1,4 +1,5 @@
 import { err, Result } from "neverthrow";
+import OpossumCircuitBreaker from "opossum";
 
 export type CircuitBreakerState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
@@ -9,72 +10,50 @@ export interface CircuitBreakerOptions {
 }
 
 export class CircuitBreaker<E> {
-  private state: CircuitBreakerState = "CLOSED";
-  private failures = 0;
-  private nextAttemptMs = 0;
-
-  private readonly threshold: number;
-  private readonly timeoutMs: number;
+  private breaker: OpossumCircuitBreaker<[() => Promise<Result<any, E>>], Result<any, E>>;
   private readonly fallbackError: E;
   private readonly onStateChange?: (state: CircuitBreakerState) => void;
 
   constructor(options: CircuitBreakerOptions, fallbackError: E) {
-    this.threshold = options.failureThreshold;
-    this.timeoutMs = options.resetTimeoutMs;
-    this.onStateChange = options.onStateChange;
     this.fallbackError = fallbackError;
+    this.onStateChange = options.onStateChange;
+
+    this.breaker = new OpossumCircuitBreaker(async (action: () => Promise<Result<any, E>>) => {
+      const result = await action();
+      if (result.isErr()) {
+        throw result.error;
+      }
+      return result;
+    }, {
+      errorThresholdPercentage: 1, // Any failure after volume threshold opens circuit
+      volumeThreshold: options.failureThreshold,
+      resetTimeout: options.resetTimeoutMs,
+    });
+
+    if (this.onStateChange) {
+      this.breaker.on('open', () => this.onStateChange!("OPEN"));
+      this.breaker.on('halfOpen', () => this.onStateChange!("HALF_OPEN"));
+      this.breaker.on('close', () => this.onStateChange!("CLOSED"));
+    }
   }
 
   async execute<T>(action: () => Promise<Result<T, E>>): Promise<Result<T, E>> {
-    if (this.state === "OPEN") {
-      if (Date.now() > this.nextAttemptMs) {
-        this.changeState("HALF_OPEN");
-      } else {
+    try {
+      const result = await (this.breaker as any).fire(action);
+      return result as Result<T, E>;
+    } catch (e: any) {
+      // Opossum throws its own error when the circuit is open (usually with code 'EOPENBREAKER' or message 'Breaker is open')
+      if (e && (e.code === 'EOPENBREAKER' || e.message?.includes('Breaker is open'))) {
         return err(this.fallbackError);
       }
-    }
-
-    try {
-      const result = await action();
-
-      if (result.isOk()) {
-        this.onSuccess();
-      } else {
-        this.onFailure();
-      }
-
-      return result;
-    } catch (error) {
-      this.onFailure();
-      throw error;
-    }
-  }
-
-  private onSuccess(): void {
-    this.failures = 0;
-    if (this.state !== "CLOSED") {
-      this.changeState("CLOSED");
-    }
-  }
-
-  private onFailure(): void {
-    this.failures++;
-    if (this.failures >= this.threshold || this.state === "HALF_OPEN") {
-      this.changeState("OPEN");
-      this.nextAttemptMs = Date.now() + this.timeoutMs;
-    }
-  }
-
-  private changeState(newState: CircuitBreakerState): void {
-    if (this.state !== newState) {
-      this.state = newState;
-      if (this.onStateChange) {
-        this.onStateChange(newState);
-      }
+      // Otherwise, this is the underlying error we threw from the action when it returned a Result.err
+      return err(e);
     }
   }
 
   getState(): CircuitBreakerState {
-    return this.state;
+    if (this.breaker.opened) return "OPEN";
+    if (this.breaker.halfOpen) return "HALF_OPEN";
+    return "CLOSED";
   }
 }

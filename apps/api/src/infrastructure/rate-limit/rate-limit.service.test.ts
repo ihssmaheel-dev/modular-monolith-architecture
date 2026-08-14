@@ -1,11 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RateLimitService } from "./rate-limit.service";
 
-const mockPipeline = vi.fn();
-const mockZremrangebyscore = vi.fn();
-const mockZadd = vi.fn();
-const mockZcard = vi.fn();
-const mockExpire = vi.fn();
+const mockEval = vi.fn();
 
 vi.mock("../../config/env", () => ({
   env: {
@@ -19,21 +15,11 @@ describe("RateLimitService", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockZremrangebyscore.mockReturnThis();
-    mockZadd.mockReturnThis();
-    mockZcard.mockReturnThis();
-    mockExpire.mockReturnThis();
-    mockPipeline.mockReturnValue({
-      zremrangebyscore: mockZremrangebyscore,
-      zadd: mockZadd,
-      zcard: mockZcard,
-      expire: mockExpire,
-      exec: vi.fn().mockResolvedValue([null, null, [null, 5], null]),
-    });
+    mockEval.mockResolvedValue(5);
 
     service = new RateLimitService({
       getClient: () => ({
-        pipeline: mockPipeline,
+        eval: mockEval,
       }),
     } as never);
   });
