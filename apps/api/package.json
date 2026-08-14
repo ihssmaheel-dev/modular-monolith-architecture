@@ -55,7 +55,7 @@
     "colorette": "^2.0.20",
     "dotenv": "^17.4.2",
     "fastify": "5.11.0",
-    "ioredis": "^5.4.0",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.2",
     "nestjs-cls": "^6.2.1",
