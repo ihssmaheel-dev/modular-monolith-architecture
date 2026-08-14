@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { LoginSchema, type LoginInput } from "@repo/shared";
 import {
   Button,
   Card,
@@ -19,18 +22,22 @@ import { validateInvitationSearch } from "@/lib/invitation-search";
 function LoginPage() {
   const { t } = useTranslation();
   const { invitationToken } = Route.useSearch();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const login = useAuthStore((state) => state.login);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginInput>({
+    resolver: zodResolver(LoginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const onSubmit = async (data: LoginInput) => {
     setError("");
-    setLoading(true);
     try {
-      const result = await api.auth.login({ body: { email, password } });
+      const result = await api.auth.login({ body: data });
       if (result.status !== 200) {
         setError(getResponseMessage(result.body) ?? t("auth.loginFailed"));
         return;
@@ -38,8 +45,6 @@ function LoginPage() {
       login({ user: result.body.user });
     } catch {
       setError(t("errors.networkError"));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -50,7 +55,7 @@ function LoginPage() {
         <CardDescription>{t("auth.loginDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
           )}
@@ -59,11 +64,12 @@ function LoginPage() {
             <Input
               id="email"
               type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
               placeholder={t("auth.emailPlaceholder")}
-              required
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -75,14 +81,15 @@ function LoginPage() {
             <Input
               id="password"
               type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
               placeholder={t("auth.passwordPlaceholder")}
-              required
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password.message}</p>
+            )}
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? t("auth.signingIn") : t("auth.signIn")}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
           </Button>
         </form>
         <div className="mt-4 text-center text-sm text-muted-foreground">

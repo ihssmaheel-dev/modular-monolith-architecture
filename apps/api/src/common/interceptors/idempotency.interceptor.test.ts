@@ -167,4 +167,39 @@ describe("IdempotencyInterceptor", () => {
     await expect(firstValueFrom(result)).rejects.toThrow("Handler error");
     expect(redisClient.del).toHaveBeenCalledWith("idempotency:single:user-123:req-1");
   });
+
+  it("should always generate consistent redis keys and lock successfully for any valid idempotency key", async () => {
+    const fc = await import("fast-check");
+    vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
+
+    await fc.assert(
+      fc.asyncProperty(
+        fc.string({ minLength: 1, maxLength: 50 }).filter(k => !k.includes(" ")),
+        fc.json(),
+        async (idempotencyKey, responseData) => {
+          const parsedData = JSON.parse(responseData);
+          const context = createMockContext({ "idempotency-key": idempotencyKey });
+          const handler = createMockCallHandler(parsedData);
+          
+          redisClient.set.mockResolvedValueOnce("OK");
+          redisClient.set.mockResolvedValueOnce("OK");
+
+          const result = await interceptor.intercept(context, handler);
+          await expect(firstValueFrom(result)).resolves.toEqual(parsedData);
+
+          const expectedKey = `idempotency:single:user-123:${idempotencyKey}`;
+          expect(redisClient.set).toHaveBeenCalledWith(
+            expectedKey,
+            "PROCESSING",
+            "EX",
+            86400,
+            "NX"
+          );
+          
+          redisClient.set.mockClear();
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
 });

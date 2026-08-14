@@ -22,7 +22,15 @@ export class PinoLoggerService implements OnModuleDestroy {
       transport:
         env.NODE_ENV !== "production"
           ? { target: "pino-pretty", options: { colorize: true } }
-          : undefined,
+          : {
+              target: "pino-loki",
+              options: {
+                batching: true,
+                interval: 5,
+                host: env.LOKI_HOST,
+                labels: { application: "api-service" },
+              },
+            },
     });
   }
 

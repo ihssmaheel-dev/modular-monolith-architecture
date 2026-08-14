@@ -1,18 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useQueryState, parseAsInteger } from "nuqs";
 import { api } from "@/lib/api";
 import { useTranslation } from "react-i18next";
-
-const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 10;
+import { Button } from "@repo/ui";
 
 function UsersPage() {
   const { t } = useTranslation();
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [limit] = useQueryState("limit", parseAsInteger.withDefault(10));
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ["users", { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT }],
+    queryKey: ["users", { page, limit }],
     queryFn: async () => {
       const result = await api.users.list({
-        query: { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT },
+        query: { page, limit },
       });
       if (result.status !== 200) throw new Error("USERS_FETCH_FAILED");
       return result.body;
@@ -60,6 +62,24 @@ function UsersPage() {
             </div>
           </div>
         ))}
+      </div>
+      
+      <div className="flex justify-between items-center pt-4">
+        <Button
+          variant="outline"
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">Page {page} of {data ? Math.ceil(data.total / data.limit) : 1}</span>
+        <Button
+          variant="outline"
+          disabled={!data || page >= Math.ceil(data.total / data.limit)}
+          onClick={() => setPage(page + 1)}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );

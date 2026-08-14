@@ -1,3 +1,4 @@
+import { setGlobalDispatcher, Agent } from "undici";
 import "./tracing";
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
@@ -13,6 +14,14 @@ import { env } from "./config/env";
 import { setupSwagger } from "./infrastructure/swagger/swagger";
 import { printStartupBanner } from "./common/utils/startup-banner.util";
 import { MAX_FILE_SIZE_BYTES } from "@repo/shared";
+
+// Configure high-performance global HTTP agent
+setGlobalDispatcher(
+  new Agent({
+    connections: 100,
+    keepAliveTimeout: 15 * 60 * 1000,
+  })
+);
 
 const MAX_BODY_SIZE_BYTES = 1048576; // 1MB
 
