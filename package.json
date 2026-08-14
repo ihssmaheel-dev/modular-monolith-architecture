@@ -37,12 +37,12 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
-    "dependency-cruiser": "17.3.4",
+    "dependency-cruiser": "18.2.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "prettier": "^3.3.0",
     "turbo": "^2.10.9",
-    "typescript": "^5.5.0"
+    "typescript": "^7.0.2"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
