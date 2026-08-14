@@ -50,7 +50,7 @@
     "@ts-rest/open-api": "^3.52.1",
     "@willsoto/nestjs-prometheus": "^6.1.0",
     "bcryptjs": "^3.0.3",
-    "boxen": "5.1.2",
+    "boxen": "8.0.1",
     "bullmq": "^5.12.0",
     "colorette": "^2.0.20",
     "dotenv": "^17.4.2",
