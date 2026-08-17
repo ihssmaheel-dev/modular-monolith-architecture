@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { PASSWORD_HASH_ROUNDS } from "@repo/shared";
-import bcrypt from "bcryptjs";
+
+import { hash } from "@node-rs/argon2";
 import { err, ok, Result } from "neverthrow";
 import { User } from "../../domain/entities/user.entity";
 import type { InvalidPasswordResetToken } from "../../domain/errors/user.errors";
@@ -18,7 +18,7 @@ export class ResetUserPasswordCommand {
     tokenHash: string,
     newPassword: string,
   ): Promise<Result<User, InvalidPasswordResetToken>> {
-    const passwordHash = await bcrypt.hash(newPassword, PASSWORD_HASH_ROUNDS);
+    const passwordHash = await hash(newPassword);
     const result = await this.repository.resetPasswordByToken(tokenHash, passwordHash);
     if (result.isErr() || !result.value) {
       return err({ type: "INVALID_PASSWORD_RESET_TOKEN" });

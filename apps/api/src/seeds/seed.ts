@@ -1,6 +1,6 @@
 import { NestFactory } from "@nestjs/core";
-import { PASSWORD_HASH_ROUNDS } from "@repo/shared";
-import bcrypt from "bcryptjs";
+
+import { hash } from "@node-rs/argon2";
 import { AppModule } from "../app.module";
 import { env } from "../config/env";
 import { PinoLoggerService } from "../infrastructure/logger/logger.service";
@@ -23,7 +23,7 @@ async function bootstrap(): Promise<void> {
       return;
     }
 
-    const passwordHash = await bcrypt.hash(env.SEED_ADMIN_PASSWORD, PASSWORD_HASH_ROUNDS);
+    const passwordHash = await hash(env.SEED_ADMIN_PASSWORD);
     const result = await repository.create({
       email: env.SEED_ADMIN_EMAIL,
       name: "System Admin",

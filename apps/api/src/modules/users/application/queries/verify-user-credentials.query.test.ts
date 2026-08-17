@@ -4,12 +4,10 @@ import { UsersRepository } from "../../infrastructure/users.repository";
 import { GetUserByIdQuery } from "./get-user-by-id.query";
 import { User } from "../../domain/entities/user.entity";
 import { ok } from "neverthrow";
-import bcrypt from "bcryptjs";
+import * as argon2 from "@node-rs/argon2";
 
-vi.mock("bcryptjs", () => ({
-  default: {
-    compare: vi.fn(),
-  },
+vi.mock("@node-rs/argon2", () => ({
+  verify: vi.fn(),
 }));
 
 describe("VerifyUserCredentialsQuery", () => {
@@ -56,7 +54,7 @@ describe("VerifyUserCredentialsQuery", () => {
   it("should return ok(null) if password does not match", async () => {
     // Arrange
     vi.mocked(repository.findByEmailWithPassword).mockResolvedValue(credentialsResult("123"));
-    vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
+    vi.mocked(argon2.verify).mockResolvedValue(false as never);
 
     // Act
     const result = await query.execute("test@example.com", "wrong");
@@ -80,7 +78,7 @@ describe("VerifyUserCredentialsQuery", () => {
     });
 
     vi.mocked(repository.findByEmailWithPassword).mockResolvedValue(credentialsResult("123"));
-    vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+    vi.mocked(argon2.verify).mockResolvedValue(true as never);
     vi.mocked(getUserById.execute).mockResolvedValue(ok(user));
 
     // Act

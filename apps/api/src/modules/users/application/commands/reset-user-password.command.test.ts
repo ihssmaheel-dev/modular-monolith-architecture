@@ -33,7 +33,7 @@ describe("ResetUserPasswordCommand", () => {
     expect(result.isOk()).toBe(true);
     expect(repository.resetPasswordByToken).toHaveBeenCalledWith(
       "token-hash",
-      expect.stringMatching(/^\$2[aby]\$/),
+      expect.stringMatching(/^\$argon2(id|i|d)\$/),
     );
     expect(cacheService.invalidateGlobal).toHaveBeenCalledWith(`user:${USER.id}`);
   });

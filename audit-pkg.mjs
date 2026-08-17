@@ -16,6 +16,10 @@
  *                         the npm registry and flag stale ones (needs internet)
  *   --versions           Show EVERY dependency with current vs latest npm version
  *                         (not just the stale ones — needs internet)
+ *   --changelog           With --outdated, fetch release notes for each outdated
+ *                         package from GitHub Releases (needs internet, uses the
+ *                         unauthenticated GitHub API — 60 req/hr limit applies)
+ *   --changelog-lines=N   Max lines of release-notes body to show per package (default 6)
  *   --concurrency=N       Parallel registry requests for --outdated/--versions (default 8)
  *   --top=N              Show N most-shared dependencies (default 10, 0 to hide)
  *   --only-conflicts     Skip the workspace list, show only the conflicts section
@@ -28,6 +32,7 @@
  *   node pkg-audit.mjs . --top=15
  *   node pkg-audit.mjs . --workspace=@architecture/web
  *   node pkg-audit.mjs . --outdated
+ *   node pkg-audit.mjs . --outdated --changelog
  *   node pkg-audit.mjs . --full --no-color > report.txt
  */
 
@@ -75,6 +80,8 @@ function parseArgs(argv) {
     full: false,
     outdated: false,
     versions: false,
+    changelog: false,
+    changelogLines: 6,
     concurrency: 8,
     ignoreDirs: new Set(DEFAULT_IGNORE_DIRS),
     respectGitignore: true,
@@ -97,6 +104,11 @@ function parseArgs(argv) {
       opts.outdated = true;
     } else if (arg === "--versions") {
       opts.versions = true;
+    } else if (arg === "--changelog") {
+      opts.changelog = true;
+    } else if (arg.startsWith("--changelog-lines=")) {
+      const n = Number(arg.split("=")[1]);
+      opts.changelogLines = Number.isFinite(n) && n > 0 ? n : 6;
     } else if (arg.startsWith("--concurrency=")) {
       const n = Number(arg.split("=")[1]);
       opts.concurrency = Number.isFinite(n) && n > 0 ? n : 8;
@@ -127,14 +139,16 @@ Usage:
   node pkg-audit.mjs [dir] [options]
 
 Options:
-  --json[=file]        Emit JSON (stdout, or to file if given)
+  --json[=file]         Emit JSON (stdout, or to file if given)
   --workspace=<name>    Full dependency detail for one workspace (name or path)
-  --full                 Full dependency matrix for every workspace
-  --outdated             Check versions against the npm registry (needs internet)
-  --versions             Show EVERY dependency with current vs latest npm version
-  --concurrency=N        Parallel registry requests for --outdated/--versions (default 8)
+  --full                Full dependency matrix for every workspace
+  --outdated            Check versions against the npm registry (needs internet)
+  --versions            Show EVERY dependency with current vs latest npm version
+  --changelog           With --outdated, fetch GitHub release notes per package
+  --changelog-lines=N   Max lines of release notes to show per package (default 6)
+  --concurrency=N       Parallel registry requests for --outdated/--versions (default 8)
   --top=N               Show N most-shared dependencies (default 10, 0 to hide)
-  --only-conflicts       Skip the workspace list, show only conflicts
+  --only-conflicts      Skip the workspace list, show only conflicts
   --ignore-dir=a,b      Extra directory names to skip
   --no-gitignore        Don't honor .gitignore files (respected by default)
   --no-color            Disable ANSI colors
@@ -566,6 +580,185 @@ async function checkOutdated(depMap, concurrency) {
 }
 
 // ---------------------------------------------------------------------------
+// --changelog: fetch GitHub release notes for outdated packages
+// ---------------------------------------------------------------------------
+
+function extractGithubRepo(repoField) {
+  if (!repoField) return null;
+  let url = typeof repoField === "string" ? repoField : repoField.url;
+  if (!url) return null;
+
+  url = url
+    .replace(/^git\+/, "")
+    .replace(/^git:\/\//, "https://")
+    .replace(/\.git$/, "")
+    .replace(/^git@github\.com:/, "https://github.com/");
+
+  const m = url.match(/github\.com[/:]([^/]+)\/([^/#]+)/);
+  if (!m) return null;
+  return { owner: m[1], repo: m[2].replace(/\.git$/, "") };
+}
+
+async function fetchJson(url, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/vnd.github+json", "User-Agent": "pkg-audit" },
+    });
+    if (!res.ok) return { ok: false, status: res.status };
+    return { ok: true, data: await res.json() };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Candidate tag names GitHub projects commonly use for a release. Plain
+ * packages usually tag `v1.2.3` or `1.2.3`; monorepo packages (e.g. a repo
+ * that publishes many npm packages from one GitHub repo) often prefix with
+ * the package name, e.g. `react@19.0.0` or `@scope/name@1.2.3`. */
+function candidateTags(name, version) {
+  return [`v${version}`, version, `${name}@${version}`, `${name}-v${version}`];
+}
+
+async function fetchReleaseNotesForPackage(name, latestVersion, concurrencyGuard) {
+  await concurrencyGuard.acquire();
+  try {
+    // 1. Look up the repository field from the npm registry (full metadata,
+    //    not the /latest shortcut, since /latest omits `repository` sometimes
+    //    on older publishes — full doc is more reliable).
+    const pkgMeta = await fetchNpmFullMetadata(name);
+    if (!pkgMeta.ok) {
+      return { name, status: "no-repo", reason: "could not load npm metadata" };
+    }
+    const repo = extractGithubRepo(pkgMeta.repository);
+    if (!repo) {
+      return { name, status: "no-repo", reason: "no GitHub repository listed on npm" };
+    }
+
+    // 2. Try to find a GitHub Release matching one of the likely tag names.
+    for (const tag of candidateTags(name, latestVersion)) {
+      const res = await fetchJson(`https://api.github.com/repos/${repo.owner}/${repo.repo}/releases/tags/${encodeURIComponent(tag)}`);
+      if (res.ok) {
+        return {
+          name,
+          status: "ok",
+          repo: `${repo.owner}/${repo.repo}`,
+          tag,
+          title: res.data.name || tag,
+          url: res.data.html_url,
+          publishedAt: res.data.published_at,
+          body: res.data.body || "",
+        };
+      }
+      if (res.status === 403) {
+        return { name, status: "rate-limited", repo: `${repo.owner}/${repo.repo}` };
+      }
+    }
+
+    // 3. No exact-tag release found — fall back to the most recent release
+    //    listed for the repo, noting it may not exactly match this version
+    //    (common for packages that only tag some releases, or where the repo
+    //    hosts several packages).
+    const listRes = await fetchJson(`https://api.github.com/repos/${repo.owner}/${repo.repo}/releases?per_page=1`);
+    if (listRes.ok && Array.isArray(listRes.data) && listRes.data.length) {
+      const r = listRes.data[0];
+      return {
+        name,
+        status: "approx",
+        repo: `${repo.owner}/${repo.repo}`,
+        tag: r.tag_name,
+        title: r.name || r.tag_name,
+        url: r.html_url,
+        publishedAt: r.published_at,
+        body: r.body || "",
+      };
+    }
+    if (listRes.status === 403) {
+      return { name, status: "rate-limited", repo: `${repo.owner}/${repo.repo}` };
+    }
+
+    return { name, status: "no-release", repo: `${repo.owner}/${repo.repo}` };
+  } finally {
+    concurrencyGuard.release();
+  }
+}
+
+async function fetchNpmFullMetadata(name, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    // Scoped names need encoding of the leading @ segment's slash.
+    const res = await fetch(`https://registry.npmjs.org/${name.replace("/", "%2F")}`, { signal: controller.signal });
+    if (!res.ok) return { ok: false };
+    const data = await res.json();
+    const latest = data["dist-tags"] && data["dist-tags"].latest;
+    const repository = (latest && data.versions && data.versions[latest] && data.versions[latest].repository) || data.repository;
+    return { ok: true, repository };
+  } catch {
+    return { ok: false };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Simple semaphore so GitHub calls (2 requests per package worst case)
+ * don't fan out past a small concurrency limit — the unauthenticated GitHub
+ * API allows only 60 requests/hour. */
+function makeSemaphore(max) {
+  let active = 0;
+  const queue = [];
+  return {
+    async acquire() {
+      if (active < max) {
+        active++;
+        return;
+      }
+      await new Promise((resolve) => queue.push(resolve));
+      active++;
+    },
+    release() {
+      active--;
+      const next = queue.shift();
+      if (next) next();
+    },
+  };
+}
+
+function cleanReleaseBody(body, maxLines) {
+  if (!body) return [];
+  const lines = body
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((l) => l.replace(/^#+\s*/, "").trimEnd())
+    .filter((l) => l.trim().length > 0 && !/^https?:\/\/\S+$/.test(l.trim()));
+  return lines.slice(0, maxLines);
+}
+
+async function fetchChangelogs(outdatedList, changelogLines) {
+  // GitHub's unauthenticated limit is 60/hr — cap concurrency conservatively
+  // regardless of the user's --concurrency setting (that flag is for the npm
+  // registry, which is far more permissive).
+  const guard = makeSemaphore(4);
+  const results = await Promise.all(
+    outdatedList.map((pkg) => fetchReleaseNotesForPackage(pkg.name, pkg.latest, guard))
+  );
+  const byName = new Map(results.map((r) => [r.name, r]));
+  for (const pkg of outdatedList) {
+    const r = byName.get(pkg.name);
+    if (r && r.status === "ok" || (r && r.status === "approx")) {
+      pkg.changelog = { ...r, bodyLines: cleanReleaseBody(r.body, changelogLines) };
+    } else if (r) {
+      pkg.changelog = r;
+    }
+  }
+  return outdatedList;
+}
+
+// ---------------------------------------------------------------------------
 // Rendering
 // ---------------------------------------------------------------------------
 
@@ -638,7 +831,7 @@ function renderHygiene(issues, c, out) {
   out.push("");
 }
 
-function renderOutdated({ outdated, unpublished, networkErrors }, c, out) {
+function renderOutdated({ outdated, unpublished, networkErrors }, c, out, showChangelog) {
   if (networkErrors.length) {
     out.push(c.dim(`(${networkErrors.length} package(s) could not be checked — network/registry issue)`));
   }
@@ -653,6 +846,46 @@ function renderOutdated({ outdated, unpublished, networkErrors }, c, out) {
   for (const o of outdated) {
     const marker = o.status === "major" ? c.red("✗") : o.status === "minor" ? c.yellow("⚠") : c.dim("·");
     out.push(`  ${marker} ${o.name.padEnd(nameW)}  ${o.current.padEnd(14)} → ${c.bold(o.latest)}  ${c.dim(`(${o.status})`)}`);
+    if (showChangelog) renderChangelogBlock(o.changelog, c, out);
+  }
+  out.push("");
+}
+
+function renderChangelogBlock(changelog, c, out) {
+  const indent = "        ";
+  if (!changelog) {
+    out.push(`${indent}${c.dim("(release notes not fetched)")}`);
+    return;
+  }
+  switch (changelog.status) {
+    case "ok":
+    case "approx": {
+      const approxNote = changelog.status === "approx" ? c.dim(" (closest release found, tag didn't match exactly)") : "";
+      out.push(`${indent}${c.cyan(changelog.title)}${approxNote}  ${c.dim(`— ${changelog.repo}`)}`);
+      if (changelog.publishedAt) {
+        out.push(`${indent}${c.dim(new Date(changelog.publishedAt).toISOString().slice(0, 10))}`);
+      }
+      if (changelog.bodyLines.length) {
+        for (const line of changelog.bodyLines) {
+          out.push(`${indent}${c.dim("│")} ${line}`);
+        }
+      } else {
+        out.push(`${indent}${c.dim("(release has no notes body)")}`);
+      }
+      if (changelog.url) out.push(`${indent}${c.dim(changelog.url)}`);
+      break;
+    }
+    case "no-release":
+      out.push(`${indent}${c.dim(`no GitHub releases found for ${changelog.repo}`)}`);
+      break;
+    case "no-repo":
+      out.push(`${indent}${c.dim(`no changelog available — ${changelog.reason}`)}`);
+      break;
+    case "rate-limited":
+      out.push(`${indent}${c.yellow("GitHub API rate limit hit — try again later or reduce --changelog scope")}`);
+      break;
+    default:
+      out.push(`${indent}${c.dim("(could not fetch release notes)")}`);
   }
   out.push("");
 }
@@ -792,6 +1025,9 @@ async function main() {
   let outdatedResult = null;
   if (opts.outdated || opts.versions) {
     outdatedResult = await checkOutdated(depMap, opts.concurrency);
+    if (opts.changelog && outdatedResult.outdated.length) {
+      await fetchChangelogs(outdatedResult.outdated, opts.changelogLines);
+    }
   }
 
   const elapsedMs = Date.now() - startedAt;
@@ -853,7 +1089,7 @@ async function main() {
     if (opts.versions) {
       renderVersionsTable(outdatedResult, c, out);
     } else {
-      renderOutdated(outdatedResult, c, out);
+      renderOutdated(outdatedResult, c, out, opts.changelog);
     }
   }
   renderTopShared(depMap, opts.top, c, out);

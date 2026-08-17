@@ -56,7 +56,7 @@ export const env = loadEnv();
 - Store tokens in httpOnly cookies (not localStorage). Set `httpOnly: true`, `secure: true`, `sameSite: "strict"`.
 - Auth guard reads tokens from both Bearer header and cookies.
 - Logout clears cookies on the server via `POST /auth/logout`.
-- Never store passwords in plaintext. Hash with bcrypt or argon2.
+- Never store passwords in plaintext. Hash with argon2.
 - Validate auth on every protected route via guard.
 - Apply account lockout after configurable failed attempts (default: 5 attempts, 15-minute lockout).
 - Use `SecurityModule` (global) for cross-cutting security concerns (rate limiting, WAF, session, lockout).

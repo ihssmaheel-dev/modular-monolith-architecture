@@ -5,14 +5,12 @@ import { GetUserByEmailQuery } from "../queries/get-user-by-email.query";
 import { ok } from "neverthrow";
 import { User } from "../../domain/entities/user.entity";
 import { UserCreatedEvent } from "../../domain/events/user.events";
-import bcrypt from "bcryptjs";
+import * as argon2 from "@node-rs/argon2";
 import { DatabaseService } from "../../../../infrastructure/database";
 import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
-vi.mock("bcryptjs", () => ({
-  default: {
-    hash: vi.fn(),
-  },
+vi.mock("@node-rs/argon2", () => ({
+  hash: vi.fn(),
 }));
 
 describe("CreateUserCommand", () => {
@@ -71,7 +69,7 @@ describe("CreateUserCommand", () => {
   it("should create user, emit event, and return ok", async () => {
     // Arrange
     vi.mocked(getUserByEmail.execute).mockResolvedValue(ok(null));
-    vi.mocked(bcrypt.hash).mockResolvedValue("hashed_pwd" as never);
+    vi.mocked(argon2.hash).mockResolvedValue("hashed_pwd" as never);
 
     const newUser = User.fromPersistence({
       id: "user-123",

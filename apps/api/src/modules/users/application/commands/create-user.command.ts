@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { CreateUserSchema, DEFAULT_LOCALE, PASSWORD_HASH_ROUNDS, type Locale } from "@repo/shared";
-import bcrypt from "bcryptjs";
+import { CreateUserSchema, DEFAULT_LOCALE, type Locale } from "@repo/shared";
+import { hash } from "@node-rs/argon2";
 import { err, ok, Result } from "neverthrow";
 import { z } from "zod";
 import { DatabaseService, type TransactionError } from "../../../../infrastructure/database";
@@ -28,7 +28,7 @@ export class CreateUserCommand {
     if (existing.isErr()) return err(existing.error);
     if (existing.value) return err({ type: "EMAIL_TAKEN", email: data.email });
 
-    const passwordHash = await bcrypt.hash(data.password, PASSWORD_HASH_ROUNDS);
+    const passwordHash = await hash(data.password);
     return this.databaseService.withResultTransaction<User, TransactionError>(async () => {
       const created = await this.repository.create({
         email: data.email,
