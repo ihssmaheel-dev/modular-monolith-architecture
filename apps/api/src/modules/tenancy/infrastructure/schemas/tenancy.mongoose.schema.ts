@@ -2,61 +2,61 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 @Schema({ timestamps: true, collection: "organizations" })
 export class OrganizationMongooseSchema {
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   name!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   slug!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   createdBy!: string;
 }
 
 @Schema({ timestamps: true, collection: "memberships" })
 export class MembershipMongooseSchema {
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   tenantId!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   userId!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   userEmail!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   userName!: string;
 
-  @Prop({ required: true, enum: ["owner", "admin", "member"] })
+  @Prop({ type: String, required: true, enum: ["owner", "admin", "member"] })
   role!: string;
 }
 
 @Schema({ timestamps: true, collection: "invitations" })
 export class InvitationMongooseSchema {
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   tenantId!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   email!: string;
 
-  @Prop({ required: true, enum: ["admin", "member"] })
+  @Prop({ type: String, required: true, enum: ["admin", "member"] })
   role!: string;
 
-  @Prop({ required: true, select: false })
+  @Prop({ type: String, required: true, select: false })
   tokenHash!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   invitedBy!: string;
 
-  @Prop({ required: true, enum: ["pending", "accepted", "revoked"], default: "pending" })
+  @Prop({ type: String, required: true, enum: ["pending", "accepted", "revoked"], default: "pending" })
   status!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: Date, required: true })
   expiresAt!: Date;
 
-  @Prop()
+  @Prop({ type: String })
   acceptedBy?: string;
 
-  @Prop()
+  @Prop({ type: Date })
   acceptedAt?: Date;
 }
 

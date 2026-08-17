@@ -5,22 +5,22 @@ export type NoteDocument = HydratedDocument<NoteMongooseSchema>;
 
 @Schema({ timestamps: true, collection: "notes" })
 export class NoteMongooseSchema {
-  @Prop()
+  @Prop({ type: String })
   tenantId?: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   title!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   content!: string;
 
-  @Prop()
+  @Prop({ type: Date })
   deletedAt?: Date;
 
-  @Prop()
+  @Prop({ type: String })
   createdBy?: string;
 
-  @Prop()
+  @Prop({ type: String })
   updatedBy?: string;
 }
 

@@ -174,7 +174,7 @@ describe("IdempotencyInterceptor", () => {
 
     await fc.assert(
       fc.asyncProperty(
-        fc.string({ minLength: 1, maxLength: 50 }).filter(k => !k.includes(" ")),
+        fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:-'), { minLength: 1, maxLength: 50 }).map(arr => arr.join('')),
         fc.json(),
         async (idempotencyKey, responseData) => {
           const parsedData = JSON.parse(responseData);

@@ -5,25 +5,25 @@ export type UserDocument = HydratedDocument<UserMongooseSchema>;
 
 @Schema({ timestamps: true, collection: "users" })
 export class UserMongooseSchema {
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   email!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   name!: string;
 
-  @Prop({ required: true, select: false })
+  @Prop({ type: String, required: true, select: false })
   passwordHash!: string;
 
-  @Prop({ select: false })
+  @Prop({ type: String, select: false })
   passwordResetTokenHash?: string;
 
-  @Prop({ select: false })
+  @Prop({ type: Date, select: false })
   passwordResetExpiresAt?: Date;
 
-  @Prop({ required: true, enum: ["admin", "user"], default: "user" })
+  @Prop({ type: String, required: true, enum: ["admin", "user"], default: "user" })
   role!: string;
 
-  @Prop({ required: true, default: 0 })
+  @Prop({ type: Number, required: true, default: 0 })
   authVersion!: number;
 }
 

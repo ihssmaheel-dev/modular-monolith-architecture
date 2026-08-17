@@ -5,34 +5,34 @@ export type FileDocument = HydratedDocument<FileMongooseSchema>;
 
 @Schema({ timestamps: true, collection: "files" })
 export class FileMongooseSchema {
-  @Prop()
+  @Prop({ type: String })
   tenantId?: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   key!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   fileName!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   contentType!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: Number, required: true })
   fileSize!: number;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   bucket!: string;
 
-  @Prop()
+  @Prop({ type: String })
   parentId?: string;
 
-  @Prop({ enum: ["note", "user", "general"], default: "general" })
+  @Prop({ type: String, enum: ["note", "user", "general"], default: "general" })
   parentType!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   uploadedBy!: string;
 
-  @Prop({ enum: ["pending", "uploading", "uploaded", "failed"], default: "pending" })
+  @Prop({ type: String, enum: ["pending", "uploading", "uploaded", "failed"], default: "pending" })
   status!: string;
 }
 

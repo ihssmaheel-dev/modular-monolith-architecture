@@ -3,26 +3,27 @@ import { Document, Schema as MongooseSchema } from "mongoose";
 
 @Schema({ collection: "outbox_events", timestamps: { createdAt: true, updatedAt: true } })
 export class OutboxEventMongooseSchema extends Document {
-  @Prop()
+  @Prop({ type: String })
   tenantId?: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   topic!: string;
 
   @Prop({ type: MongooseSchema.Types.Mixed, required: true })
   payload!: unknown;
 
   @Prop({
+    type: String,
     required: true,
     enum: ["PENDING", "PROCESSING", "PUBLISHED", "FAILED"],
     default: "PENDING",
   })
   status!: string;
 
-  @Prop({ required: false })
+  @Prop({ type: String, required: false })
   error?: string;
 
-  @Prop({ required: true, default: 0 })
+  @Prop({ type: Number, required: true, default: 0 })
   attempts!: number;
 
   @Prop({ type: Date })
