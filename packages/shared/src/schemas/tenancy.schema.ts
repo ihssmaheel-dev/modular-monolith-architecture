@@ -10,6 +10,8 @@ const PageFields = {
 
 export const TenantIdSchema = z.string().regex(/^[a-f\d]{24}$/i);
 export const TenantRoleSchema = z.enum(TENANT_ROLES);
+
+export const MemberUserIdParamSchema = z.object({ userId: z.string() });
 export const TenantHeaderSchema = z.object({ "x-tenant-id": TenantIdSchema });
 
 export const CreateOrganizationSchema = z.object({

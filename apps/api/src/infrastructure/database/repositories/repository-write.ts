@@ -54,7 +54,7 @@ export async function updateEntity<TEntity, TDocument>(
   const finalUpdate = applyAuditOnUpdate(update, options.audit !== false, cls);
   const query = applyOptions(
     model.findOneAndUpdate(queryFilter, finalUpdate, {
-      new: options.new ?? true,
+      returnDocument: options.new === false ? "before" : "after",
       upsert: options.upsert ?? false,
       runValidators: options.runValidators ?? true,
       session: options.session ?? getSession(cls),

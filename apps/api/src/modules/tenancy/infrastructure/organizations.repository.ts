@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { type FlattenMaps, type Model } from "mongoose";
-import { type ClsService } from "nestjs-cls";
-import { type Result } from "neverthrow";
+import { FlattenMaps, Model } from "mongoose";
+import { ClsService } from "nestjs-cls";
+import { Result } from "neverthrow";
 import { BaseRepository } from "../../../infrastructure/database";
 import { Organization } from "../domain/entities/tenancy.entity";
 import { OrganizationMongooseSchema } from "./schemas/tenancy.mongoose.schema";
@@ -20,7 +20,7 @@ export class OrganizationsRepository extends BaseRepository<
 > {
   constructor(
     @InjectModel(OrganizationMongooseSchema.name) model: Model<OrganizationMongooseSchema>,
-    cls: ClsService,
+    @Inject(ClsService) cls: ClsService,
   ) {
     super(model, cls);
   }

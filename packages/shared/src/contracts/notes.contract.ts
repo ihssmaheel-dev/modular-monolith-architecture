@@ -4,6 +4,7 @@ import {
   NoteListResponseSchema,
   NoteResponseSchema,
   UpdateNoteSchema,
+  NoteIdParamSchema,
 } from "../schemas/note.schema";
 import { MessageResponseSchema } from "../schemas/auth.schema";
 import { PaginationQuerySchema } from "../schemas/pagination.schema";
@@ -34,6 +35,7 @@ export const notesContract = {
   getNoteById: {
     method: "GET" as const,
     path: "/notes/:id",
+    pathParams: contractSchema(NoteIdParamSchema),
     responses: {
       200: contractSchema(NoteResponseSchema),
       404: contractSchema(MessageResponseSchema),
@@ -43,6 +45,7 @@ export const notesContract = {
   updateNote: {
     method: "PATCH" as const,
     path: "/notes/:id",
+    pathParams: contractSchema(NoteIdParamSchema),
     responses: {
       200: contractSchema(NoteResponseSchema),
       404: contractSchema(MessageResponseSchema),
@@ -53,6 +56,7 @@ export const notesContract = {
   deleteNote: {
     method: "DELETE" as const,
     path: "/notes/:id",
+    pathParams: contractSchema(NoteIdParamSchema),
     responses: {
       204: c.noBody(),
       404: contractSchema(MessageResponseSchema),

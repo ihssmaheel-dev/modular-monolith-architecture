@@ -20,7 +20,7 @@ export function setupSwagger(app: NestFastifyApplication) {
       },
       servers: [{ url: `${env.API_URL}/api` }],
     },
-    { setOperationId: true },
+    {},
   );
 
   SwaggerModule.setup("api/docs", app, document);

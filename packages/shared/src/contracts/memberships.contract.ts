@@ -10,6 +10,7 @@ import {
   PaginationQuerySchema,
   TenantHeaderSchema,
   UpdateMemberSchema,
+  MemberUserIdParamSchema,
 } from "../schemas";
 import { contractSchema } from "./contract-schema";
 
@@ -27,6 +28,7 @@ export const membershipRoutes = {
   updateMember: {
     method: "PATCH" as const,
     path: "/tenancy/members/:userId",
+    pathParams: contractSchema(MemberUserIdParamSchema),
     headers: contractSchema(TenantHeaderSchema),
     body: contractSchema(UpdateMemberSchema),
     responses: {
@@ -39,6 +41,7 @@ export const membershipRoutes = {
   removeMember: {
     method: "DELETE" as const,
     path: "/tenancy/members/:userId",
+    pathParams: contractSchema(MemberUserIdParamSchema),
     headers: contractSchema(TenantHeaderSchema),
     responses: {
       204: c.noBody(),

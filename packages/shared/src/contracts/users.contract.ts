@@ -4,6 +4,7 @@ import {
   UpdateUserSchema,
   UserResponseSchema,
   UserListResponseSchema,
+  UserIdParamSchema,
 } from "../schemas/user.schema";
 import { MessageResponseSchema } from "../schemas/auth.schema";
 import { PaginationQuerySchema } from "../schemas/pagination.schema";
@@ -23,6 +24,7 @@ export const usersContract = {
   getById: {
     method: "GET" as const,
     path: "/users/:id",
+    pathParams: contractSchema(UserIdParamSchema),
     responses: {
       200: contractSchema(UserResponseSchema),
       404: contractSchema(MessageResponseSchema),
@@ -40,6 +42,7 @@ export const usersContract = {
   update: {
     method: "PATCH" as const,
     path: "/users/:id",
+    pathParams: contractSchema(UserIdParamSchema),
     body: contractSchema(UpdateUserSchema),
     responses: {
       200: contractSchema(UserResponseSchema),
@@ -49,6 +52,7 @@ export const usersContract = {
   delete: {
     method: "DELETE" as const,
     path: "/users/:id",
+    pathParams: contractSchema(UserIdParamSchema),
     responses: {
       204: c.noBody(),
       404: contractSchema(MessageResponseSchema),

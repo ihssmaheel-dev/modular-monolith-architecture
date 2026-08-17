@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { type FlattenMaps, type Model } from "mongoose";
-import { type ClsService } from "nestjs-cls";
-import { type Result } from "neverthrow";
+import { FlattenMaps, Model } from "mongoose";
+import { ClsService } from "nestjs-cls";
+import { Result } from "neverthrow";
 import type { TenantRole } from "@repo/shared";
 import {
   BaseRepository,
@@ -22,7 +22,7 @@ type LeanMembership = FlattenMaps<MembershipMongooseSchema> & {
 export class MembershipsRepository extends BaseRepository<Membership, MembershipMongooseSchema> {
   constructor(
     @InjectModel(MembershipMongooseSchema.name) model: Model<MembershipMongooseSchema>,
-    cls: ClsService,
+    @Inject(ClsService) cls: ClsService,
   ) {
     super(model, cls);
   }

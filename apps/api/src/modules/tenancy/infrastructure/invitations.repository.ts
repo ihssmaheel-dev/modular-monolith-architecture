@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { type FlattenMaps, type Model } from "mongoose";
-import { type ClsService } from "nestjs-cls";
-import { ok, type Result } from "neverthrow";
+import { FlattenMaps, Model } from "mongoose";
+import { ClsService } from "nestjs-cls";
+import { ok, Result } from "neverthrow";
 import {
   BaseRepository,
   type PaginatedResult,
@@ -21,7 +21,7 @@ type LeanInvitation = FlattenMaps<InvitationMongooseSchema> & {
 export class InvitationsRepository extends BaseRepository<Invitation, InvitationMongooseSchema> {
   constructor(
     @InjectModel(InvitationMongooseSchema.name) model: Model<InvitationMongooseSchema>,
-    cls: ClsService,
+    @Inject(ClsService) cls: ClsService,
   ) {
     super(model, cls);
   }

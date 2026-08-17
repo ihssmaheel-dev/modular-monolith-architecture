@@ -5,7 +5,7 @@ import { env } from "../../config/env";
 import { RedisService } from "../../infrastructure/redis/redis.service";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 
-export function printStartupBanner(app: INestApplication, logger: PinoLoggerService): void {
+export function printStartupBanner(app: INestApplication, _logger: PinoLoggerService): void {
   const redisService = app.get(RedisService);
   const redisConnected = !!redisService.getClient();
   const redisStatus = redisConnected ? green("[OK] Connected") : yellow("[!] Disabled (Optional)");
@@ -22,5 +22,6 @@ ${bold("Storage")}     : ${cyan(env.STORAGE_DRIVER.toUpperCase())}
 ${bold("Email")}       : ${cyan(env.EMAIL_DRIVER.toUpperCase())}
   `.trim();
 
-  logger.info({ banner: bannerContent }, "Server status");
+  // Bypass Pino so the ANSI colors render natively in the terminal
+  console.log("\n" + bannerContent + "\n");
 }

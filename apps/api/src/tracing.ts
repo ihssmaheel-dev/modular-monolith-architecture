@@ -1,21 +1,18 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { ConsoleSpanExporter, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { env } from "./config/env";
 import pino from "pino";
 
 const logger = pino({ name: "tracing", level: env.LOG_LEVEL });
 
-const traceExporter =
-  env.NODE_ENV === "production"
-    ? new OTLPTraceExporter({
-        url: env.OTEL_EXPORTER_OTLP_ENDPOINT,
-      })
-    : new ConsoleSpanExporter();
+const traceExporter = env.NODE_ENV === "production" || env.OTEL_EXPORTER_OTLP_ENDPOINT
+  ? new OTLPTraceExporter({ url: env.OTEL_EXPORTER_OTLP_ENDPOINT })
+  : undefined;
 
 export const otelSDK = new NodeSDK({
-  spanProcessor: new BatchSpanProcessor(traceExporter),
+  ...(traceExporter ? { spanProcessor: new BatchSpanProcessor(traceExporter) } : {}),
   instrumentations: [
     getNodeAutoInstrumentations({
       "@opentelemetry/instrumentation-fs": { enabled: false },

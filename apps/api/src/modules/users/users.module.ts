@@ -16,10 +16,13 @@ import { UserMongooseSchema, UserSchema } from "./infrastructure/schemas/user.mo
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { WelcomeEmailListener } from "./application/listeners/welcome-email.listener";
 
+import { OutboxModule } from "../../infrastructure/outbox/outbox.module";
+
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: UserMongooseSchema.name, schema: UserSchema }]),
     EventEmitterModule,
+    OutboxModule,
   ],
   controllers: [UsersController],
   providers: [

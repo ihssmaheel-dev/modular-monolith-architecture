@@ -71,7 +71,7 @@ export class UsersRepository extends BaseRepository<User, UserMongooseSchema> {
           $inc: { authVersion: 1 },
           $unset: { passwordResetTokenHash: "", passwordResetExpiresAt: "" },
         },
-        { new: true },
+        { returnDocument: "after" },
       )
       .exec();
     return ok(user ? this.toDomain(user as LeanUserDocument) : null);
@@ -79,7 +79,7 @@ export class UsersRepository extends BaseRepository<User, UserMongooseSchema> {
 
   async incrementAuthVersion(userId: string): Promise<Result<User | null, never>> {
     const user = await this.model
-      .findByIdAndUpdate(userId, { $inc: { authVersion: 1 } }, { new: true })
+      .findByIdAndUpdate(userId, { $inc: { authVersion: 1 } }, { returnDocument: "after" })
       .exec();
     return ok(user ? this.toDomain(user as LeanUserDocument) : null);
   }

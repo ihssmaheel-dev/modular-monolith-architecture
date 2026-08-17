@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const FileIdParamSchema = z.object({ id: z.string() });
+
 export const ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",

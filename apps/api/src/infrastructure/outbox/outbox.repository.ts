@@ -65,7 +65,7 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxEventMon
             $or: [{ nextAttemptAt: { $exists: false } }, { nextAttemptAt: { $lte: new Date() } }],
           },
           { $set: { status: "PROCESSING", lockedAt: new Date() } },
-          { sort: { createdAt: 1 }, new: true },
+          { sort: { createdAt: 1 }, returnDocument: "after" },
         )
         .lean()
         .exec();

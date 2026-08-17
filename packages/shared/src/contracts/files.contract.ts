@@ -6,6 +6,7 @@ import {
   PresignedUrlResponseSchema,
   FileListResponseSchema,
   DownloadUrlResponseSchema,
+  FileIdParamSchema,
 } from "../schemas/file.schema";
 import { MessageResponseSchema } from "../schemas/auth.schema";
 import { PaginationQuerySchema } from "../schemas/pagination.schema";
@@ -39,6 +40,7 @@ export const filesContract = {
   getDownloadUrl: {
     method: "GET" as const,
     path: "/files/:id/download-url",
+    pathParams: contractSchema(FileIdParamSchema),
     responses: {
       200: contractSchema(DownloadUrlResponseSchema),
       404: contractSchema(MessageResponseSchema),
@@ -48,6 +50,7 @@ export const filesContract = {
   getById: {
     method: "GET" as const,
     path: "/files/:id",
+    pathParams: contractSchema(FileIdParamSchema),
     responses: {
       200: contractSchema(FileMetadataSchema),
       404: contractSchema(MessageResponseSchema),
@@ -71,6 +74,7 @@ export const filesContract = {
   delete: {
     method: "DELETE" as const,
     path: "/files/:id",
+    pathParams: contractSchema(FileIdParamSchema),
     responses: {
       204: c.noBody(),
       404: contractSchema(MessageResponseSchema),
