@@ -25,7 +25,7 @@
     "db:migrate:down": "pnpm --filter api db:migrate:down",
     "db:migrate:dev": "pnpm --filter api db:migrate:dev",
     "db:seed": "pnpm --filter api db:seed",
-    "docker:up": "docker compose -f docker/docker-compose.yml up -d --wait mongodb redis minio mailpit",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d --wait postgres redis minio mailpit",
     "docker:init": "docker compose -f docker/docker-compose.yml run --rm minio-init",
     "docker:down": "docker compose -f docker/docker-compose.yml down",
     "docker:prod": "docker compose -f docker/docker-compose.prod.yml up -d --wait",

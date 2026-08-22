@@ -4,7 +4,7 @@ A production-ready modular monolith built with NestJS, featuring clean architect
 
 ## Tech Stack
 
-- **Backend:** NestJS 11 + Fastify 5 + MongoDB/Mongoose 9 + Redis/BullMQ
+- **Backend:** NestJS 11 + Fastify 5 + Postgres 16 + Drizzle ORM 0.44 + pg 8.13 + Redis/BullMQ
 - **Frontend:** React 19 + Vite + Tailwind CSS 4
 - **Mobile:** React Native + Expo + NativeWind
 - **Shared:** TypeScript 5.5 + Zod 4 + ts-rest v3

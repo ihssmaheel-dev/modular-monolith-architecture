@@ -101,13 +101,47 @@ fs.writeFileSync(
 );
 
 const repositoryContent = `import { Injectable } from "@nestjs/common";
+import { DatabaseService } from "../../../infrastructure/database";
+import { TenantContextService } from "../../../infrastructure/database";
+import { BaseRepository } from "../../../infrastructure/database";
+import { ${moduleName}Table, type ${pascalName}Row } from "./schemas/${moduleName}.schema";
+import { ${pascalName} } from "../../domain/entities/${moduleName}.entity";
 
 @Injectable()
-export class ${pascalName}Repository {}
+export class ${pascalName}Repository extends BaseRepository<${pascalName}, ${pascalName}Row> {
+  constructor(database: DatabaseService, tenantContext: TenantContextService) {
+    super(${moduleName}Table, database, tenantContext, true);
+  }
+
+  protected toDomain(row: ${pascalName}Row): ${pascalName} {
+    return ${pascalName}.fromPersistence(row as unknown as never);
+  }
+}
 `;
 fs.writeFileSync(
   path.join(basePath, "infrastructure", `${moduleName}.repository.ts`),
   repositoryContent,
+);
+
+const schemaContent = `import { pgTable, text, timestamp, index } from "drizzle-orm/pg-core";
+
+export const ${moduleName}Table = pgTable(
+  "${moduleName}",
+  {
+    id: text("id").primaryKey(),
+    tenantId: text("tenant_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => [index("${moduleName}_tenant_id_idx").on(t.tenantId)],
+);
+
+export type ${pascalName}Row = typeof ${moduleName}Table.$inferSelect;
+`;
+fs.writeFileSync(
+  path.join(basePath, "infrastructure/schemas", `${moduleName}.schema.ts`),
+  schemaContent,
 );
 
 console.log(`Successfully generated strict architecture for module '${moduleName}'!`);

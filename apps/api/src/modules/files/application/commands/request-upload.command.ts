@@ -63,9 +63,6 @@ export class RequestUploadCommand {
   }
 
   private async createTransfer(fileKey: string, contentType: string) {
-    if (!this.storage.usesDirectTransfer()) {
-      return ok({ uploadMode: "proxy" as const, uploadUrl: this.proxyUploadUrl(fileKey) });
-    }
     const result = await this.storage.getPresignedUploadUrl(fileKey, contentType);
     if (result.isErr()) return err(result.error);
     const expiresAt = new Date(Date.now() + PRESIGNED_UPLOAD_TTL_SECONDS * 1_000);
@@ -74,12 +71,6 @@ export class RequestUploadCommand {
       uploadUrl: result.value,
       expiresAt: expiresAt.toISOString(),
     });
-  }
-
-  private proxyUploadUrl(fileKey: string): string {
-    const url = new URL("/api/files/gridfs/upload", env.API_URL);
-    url.searchParams.set("fileKey", fileKey);
-    return url.toString();
   }
 
   private buildKey(input: RequestUploadInput, userId: string): string {

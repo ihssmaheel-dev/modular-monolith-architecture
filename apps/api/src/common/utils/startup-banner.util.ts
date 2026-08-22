@@ -5,23 +5,22 @@ import { env } from "../../config/env";
 import { RedisService } from "../../infrastructure/redis/redis.service";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 
-export function printStartupBanner(app: INestApplication, _logger: PinoLoggerService): void {
+export function printStartupBanner(app: INestApplication, logger: PinoLoggerService): void {
   const redisService = app.get(RedisService);
   const redisConnected = !!redisService.getClient();
   const redisStatus = redisConnected ? green("[OK] Connected") : yellow("[!] Disabled (Optional)");
-  const mongoStatus = green("[OK] Connected"); // Mongoose throws if offline
+  const postgresStatus = green("[OK] Connected");
 
   const bannerContent = `
 ${bold(blue("API SERVER IS RUNNING"))}
 ${dim("----------------------------")}
 ${bold("Environment")} : ${cyan(env.NODE_ENV)}
 ${bold("Port")}        : ${cyan(env.PORT.toString())}
-${bold("MongoDB")}     : ${mongoStatus}
+${bold("Postgres")}    : ${postgresStatus}
 ${bold("Redis")}       : ${redisStatus}
 ${bold("Storage")}     : ${cyan(env.STORAGE_DRIVER.toUpperCase())}
 ${bold("Email")}       : ${cyan(env.EMAIL_DRIVER.toUpperCase())}
   `.trim();
 
-  // Bypass Pino so the ANSI colors render natively in the terminal
-  console.log("\n" + bannerContent + "\n");
+  logger.info({}, "\n" + bannerContent + "\n");
 }

@@ -1,41 +1,30 @@
 import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { FlattenMaps, Model } from "mongoose";
-import { ClsService } from "nestjs-cls";
-import { TenantScopedRepository } from "../../../infrastructure/database";
-import { FileEntity } from "../domain/entities/file.entity";
-import { FileMongooseSchema } from "./schemas/file.mongoose.schema";
-
-type LeanFileDocument = FlattenMaps<FileMongooseSchema> & {
-  _id: { toString(): string };
-  createdAt?: Date;
-  updatedAt?: Date;
-};
+import { DatabaseService } from "../../../infrastructure/database";
+import { TenantContextService } from "../../../infrastructure/database";
+import { BaseRepository } from "../../../infrastructure/database";
+import { files, type FileRow } from "./schemas/file.schema";
+import type { FileEntity } from "../domain/entities/file.entity";
 
 @Injectable()
-export class FilesRepository extends TenantScopedRepository<FileEntity, FileMongooseSchema> {
-  constructor(
-    @InjectModel(FileMongooseSchema.name) model: Model<FileMongooseSchema>,
-    cls: ClsService,
-  ) {
-    super(model, cls);
+export class FilesRepository extends BaseRepository<FileEntity, FileRow> {
+  constructor(database: DatabaseService, tenantContext: TenantContextService) {
+    super(files, database, tenantContext, true);
   }
 
-  protected toDomain(value: unknown): FileEntity {
-    const doc = value as LeanFileDocument;
+  protected toDomain(row: FileRow): FileEntity {
     return {
-      id: doc._id.toString(),
-      key: doc.key,
-      fileName: doc.fileName,
-      contentType: doc.contentType,
-      fileSize: doc.fileSize,
-      bucket: doc.bucket,
-      parentId: doc.parentId,
-      parentType: doc.parentType as FileEntity["parentType"],
-      uploadedBy: doc.uploadedBy,
-      status: doc.status as FileEntity["status"],
-      createdAt: doc.createdAt ?? new Date(),
-      updatedAt: doc.updatedAt ?? new Date(),
+      id: row.id,
+      key: row.key,
+      fileName: row.fileName,
+      contentType: row.contentType,
+      fileSize: row.fileSize,
+      bucket: row.bucket,
+      parentId: row.parentId ?? undefined,
+      parentType: row.parentType as FileEntity["parentType"],
+      uploadedBy: row.uploadedBy,
+      status: row.status as FileEntity["status"],
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     };
   }
 

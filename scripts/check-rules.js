@@ -46,6 +46,9 @@ function checkFile(file) {
   ) {
     report(file, "Mongoose schema files must use the .mongoose.schema.ts suffix");
   }
+  if (fileName.includes("mongoose") || fileName.includes("mongo")) {
+    report(file, "Mongo/Mongoose files are forbidden — use Drizzle schemas (infrastructure/schemas/*.schema.ts)");
+  }
 
   const forbidden = [
     [/\bas\s+any\b|:\s*any\b|<any>|\bany\[\]/, "explicit any is forbidden"],
@@ -60,7 +63,11 @@ function checkFile(file) {
   if (/\/(application|domain)\//.test(`/${name}`) && /\bthrow\b/.test(source)) {
     report(file, "application/domain code must return Result instead of throwing");
   }
-  if (name.endsWith("mongoose.schema.ts")) {
+  if (
+    name.includes("/infrastructure/schemas/") &&
+    name.endsWith(".schema.ts") &&
+    source.includes("pgTable")
+  ) {
     if (/\b(index|unique)\s*:\s*true|Schema\.index\s*\(/.test(source)) {
       report(file, "database indexes must be declared only in migrations");
     }
@@ -120,18 +127,18 @@ function checkTenantRepositories() {
     const infrastructure = path.join(modulesDirectory, entry.name, "infrastructure");
     if (!fs.existsSync(infrastructure)) continue;
     const files = walk(infrastructure);
-    const schemas = files.filter((file) => file.endsWith("mongoose.schema.ts"));
+    const schemas = files.filter((file) => file.endsWith(".schema.ts"));
     const isTenantOwned = schemas.some((file) =>
       fs.readFileSync(file, "utf8").includes("tenantId"),
     );
     if (!isTenantOwned) continue;
     for (const file of files.filter((value) => value.endsWith(".repository.ts"))) {
       const source = fs.readFileSync(file, "utf8");
-      if (!/extends\s+TenantScopedRepository/.test(source)) {
-        report(file, "tenant-owned repositories must extend TenantScopedRepository");
-      }
-      if (/this\.model\./.test(source)) {
-        report(file, "tenant-owned repositories must not bypass scoped base methods");
+      const isTenantScoped =
+        /extends\s+TenantScopedRepository/.test(source) ||
+        (/extends\s+(DrizzleBaseRepository|BaseRepository)/.test(source) && /super\([^)]*,\s*true/.test(source));
+      if (!isTenantScoped) {
+        report(file, "tenant-owned repositories must extend TenantScopedRepository or BaseRepository with tenantScoped=true");
       }
     }
   }

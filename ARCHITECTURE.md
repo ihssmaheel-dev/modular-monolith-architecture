@@ -76,7 +76,7 @@ We deploy as a single, easily hosted Node.js process using **NestJS 11**. Howeve
 
 - `auth` does not know how `users` works inside.
 - Modules communicate exclusively through Application-layer Commands/Queries or Domain Events.
-- **Never** directly import another module's Infrastructure Repository or Mongoose schema.
+- **Never** directly import another module's Infrastructure Repository or Drizzle pgTable.
 
 Every domain module strictly separates our codebase into 4 Clean Architecture layers, enforcing the Dependency Rule (inner layers cannot know about outer layers).
 
@@ -131,7 +131,7 @@ sequenceDiagram
     participant A as 2. Application (Command)
     participant D as 3. Domain (Entity)
     participant I as 4. Infrastructure (Repository)
-    participant DB as MongoDB
+    participant DB as Postgres
 
     User->>C: POST /notes { title: "Hello" }
     C->>C: Validates payload using shared Zod schema
@@ -139,7 +139,7 @@ sequenceDiagram
     A->>D: Note.create(data)
     D-->>A: Returns pure Note Entity
     A->>I: repository.create(Note)
-    I->>DB: Saves to MongoDB
+    I->>DB: Saves to Postgres
     DB-->>I: Success
     I-->>A: Returns Success
     A-->>C: Returns Result (ok or err)
@@ -163,14 +163,14 @@ sequenceDiagram
 ### Layer 3: Domain Layer (`domain/`)
 
 - **What it is:** Pure business logic. Entities, Value Objects, Domain Events.
-- **The Rule:** Zero framework dependencies. No NestJS, no Mongoose, no HTTP. Just pure TypeScript classes.
-- **Why?** If you change your database from MongoDB to PostgreSQL tomorrow, your business logic should not change. The Domain Layer ensures your business rules are protected.
+- **The Rule:** Zero framework dependencies. No NestJS, no Drizzle, no HTTP. Just pure TypeScript classes.
+- **Why?** If you change your database from Postgres to PostgreSQL tomorrow, your business logic should not change. The Domain Layer ensures your business rules are protected.
 
 ### Layer 4: Infrastructure Layer (`infrastructure/`)
 
-- **What it is:** The dirty work. MongoDB schemas, Repositories, Redis drivers, Email clients.
+- **What it is:** The dirty work. Postgres schemas, Repositories, Redis drivers, Email clients.
 - **The Rule:** No business logic allowed.
-- **Why?** The Application layer asks to save data. The Infrastructure layer knows _how_ to save it to MongoDB. Repositories map Mongoose database models back into pristine Domain Entities before handing them back to the Application layer.
+- **Why?** The Application layer asks to save data. The Infrastructure layer knows _how_ to save it to Postgres. Repositories map Drizzle database models back into pristine Domain Entities before handing them back to the Application layer.
 
 ---
 
@@ -198,7 +198,7 @@ When building a new feature (like "Invoices"), follow this perfect flow:
 
 - [ ] **Shared:** Define the Zod schema and ts-rest contract in `packages/shared`.
 - [ ] **Domain:** Create an `Invoice` pure TypeScript class in `domain/entities`.
-- [ ] **Infrastructure:** Create a Mongoose schema and an `InvoicesRepository` in `infrastructure/`.
+- [ ] **Infrastructure:** Create a Drizzle pgTable and an `InvoicesRepository` in `infrastructure/`.
 - [ ] **Application:** Create a specific `CreateInvoiceCommand` in `application/commands/` that returns a `Result`.
 - [ ] **Presentation:** Create an `InvoicesController` that calls the command, handles the `Result`, and maps it to HTTP.
 - [ ] **Text:** Put all user-facing English text inside `packages/shared/src/i18n/locales/en.json`.
@@ -209,7 +209,7 @@ When building a new feature (like "Invoices"), follow this perfect flow:
 The rules defined in `ai_instructions/` are supreme. `pnpm rules:check` runs
 dependency-cruiser together with repository convention checks, and CI blocks violations.
 
-Dependency-cruiser enforces that domain code cannot depend on outer layers or NestJS/Mongoose,
-controllers cannot import module infrastructure, application code cannot import Mongoose schemas,
+Dependency-cruiser enforces that domain code cannot depend on outer layers or NestJS/Drizzle,
+controllers cannot import module infrastructure, application code cannot import Drizzle pgTables,
 modules cannot import another module's infrastructure or schemas, and dependency cycles fail the build.
 Shared contracts and cross-cutting technical services remain intentional, documented exceptions.

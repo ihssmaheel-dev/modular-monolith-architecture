@@ -1,6 +1,4 @@
 import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { NoteMongooseSchema, NoteSchema } from "./infrastructure/schemas/note.mongoose.schema";
 import { NotesRepository } from "./infrastructure/notes.repository";
 import { CreateNoteCommand } from "./application/commands/create-note.command";
 import { UpdateNoteCommand } from "./application/commands/update-note.command";
@@ -11,7 +9,6 @@ import { NotesRealtimeListener } from "./application/listeners/notes-realtime.li
 import { NotesController } from "./presentation/notes.controller";
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: NoteMongooseSchema.name, schema: NoteSchema }])],
   controllers: [NotesController],
   providers: [
     NotesRepository,

@@ -1,113 +1,99 @@
-import { Injectable, OnApplicationShutdown } from "@nestjs/common";
-import { InjectConnection } from "@nestjs/mongoose";
-import type { ClientSession, Connection } from "mongoose";
+import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { err, ok, type Result } from "neverthrow";
 import { ClsService } from "nestjs-cls";
 import { PinoLoggerService } from "../logger/logger.service";
+import { env } from "../../config/env";
 import type { TransactionError } from "./database.types";
 
+export type Database = NodePgDatabase;
+export type DrizzleDb = Database;
+
 @Injectable()
-export class DatabaseService implements OnApplicationShutdown {
+export class DatabaseService implements OnModuleDestroy {
+  private readonly pool: Pool;
+  private readonly db: DrizzleDb;
+
   constructor(
-    @InjectConnection() private readonly connection: Connection,
     private readonly logger: PinoLoggerService,
     private readonly cls: ClsService,
-  ) {}
+  ) {
+    this.logger = logger.child({ module: "DatabaseService" });
+    this.pool = new Pool({
+      connectionString: env.DATABASE_URL,
+      max: env.DB_MAX_POOL_SIZE,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    });
+
+    this.pool.on("error", (error) => {
+      this.logger.error({ error: String(error) }, "Postgres pool error");
+    });
+
+    this.db = drizzle(this.pool);
+    this.logger.info({}, "Postgres pool initialized");
+  }
+
+  getDb(): DrizzleDb {
+    return this.db;
+  }
+
+  getPool(): Pool {
+    return this.pool;
+  }
 
   isConnected(): boolean {
-    return this.connection.readyState === 1;
+    return true;
   }
 
   async withTransaction<T>(fn: () => Promise<T>): Promise<Result<T, TransactionError>> {
-    return this.useSession((session) => this.runTransaction(session, fn));
+    try {
+      const result = await this.db.transaction(async (tx: DrizzleDb) => {
+        const current = this.cls.isActive() ? this.cls.get() : {};
+        return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, fn);
+      });
+      return ok(result);
+    } catch (error) {
+      this.logger.error({ error: String(error) }, "Transaction failed");
+      return err({ type: "TRANSACTION_FAILED" });
+    }
   }
 
   async withResultTransaction<T, E>(
     fn: () => Promise<Result<T, E>>,
   ): Promise<Result<T, E | TransactionError>> {
-    return this.useSession((session) => this.runResultTransaction(session, fn));
-  }
-
-  private async runTransaction<T>(
-    session: ClientSession,
-    fn: () => Promise<T>,
-  ): Promise<Result<T, never>> {
-    session.startTransaction();
     try {
-      const result = await fn();
-      await session.commitTransaction();
-      return ok(result);
+      const result = await this.db.transaction(async (tx: DrizzleDb) => {
+        const current = this.cls.isActive() ? this.cls.get() : {};
+        return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, async () => {
+          const inner = await fn();
+          if (inner.isErr()) {
+            throw inner.error;
+          }
+          return inner.value;
+        });
+      });
+      return ok(result as T);
     } catch (error) {
-      await this.abortTransaction(session);
-      throw error;
-    }
-  }
-
-  private async runResultTransaction<T, E>(
-    session: ClientSession,
-    fn: () => Promise<Result<T, E>>,
-  ): Promise<Result<T, E>> {
-    session.startTransaction();
-    try {
-      const result = await fn();
-      if (result.isErr()) {
-        await this.abortTransaction(session);
-        return err(result.error);
+      if (error && typeof error === "object" && "type" in (error as Record<string, unknown>)) {
+        const typed = error as E;
+        return err(typed);
       }
-      await session.commitTransaction();
-      return ok(result.value);
-    } catch (error) {
-      await this.abortTransaction(session);
-      throw error;
+      this.logger.error({ error: String(error) }, "Transaction failed");
+      return err({ type: "TRANSACTION_FAILED" } as TransactionError);
     }
   }
 
-  private async useSession<T, E>(
-    callback: (session: ClientSession) => Promise<Result<T, E>>,
-  ): Promise<Result<T, E | TransactionError>> {
-    let session: ClientSession | undefined;
-    try {
-      const activeSession = await this.connection.startSession();
-      session = activeSession;
-      const current = this.cls.isActive() ? this.cls.get() : {};
-      const context = Object.assign({}, current, { mongoSession: activeSession });
-      return await this.cls.runWith(context, () => callback(activeSession));
-    } catch (error) {
-      this.logTransactionFailure(error);
-      return err({ type: "TRANSACTION_FAILED" });
-    } finally {
-      if (session) await this.endSession(session);
+  getTx(): DrizzleDb | undefined {
+    if (this.cls.isActive()) {
+      return this.cls.get("databaseTx" as never) as DrizzleDb | undefined;
     }
+    return undefined;
   }
 
-  private async abortTransaction(session: ClientSession): Promise<void> {
-    try {
-      await session.abortTransaction();
-    } catch (error) {
-      this.logger.error({ error: errorMessage(error) }, "Transaction abort failed");
-    }
+  async onModuleDestroy(): Promise<void> {
+    await this.pool.end();
+    this.logger.info({}, "Postgres pool closed");
   }
-
-  private async endSession(session: ClientSession): Promise<void> {
-    try {
-      await session.endSession();
-    } catch (error) {
-      this.logger.error({ error: errorMessage(error) }, "Database session cleanup failed");
-    }
-  }
-
-  private logTransactionFailure(error: unknown): void {
-    this.logger.error({ error: errorMessage(error) }, "Transaction failed");
-  }
-
-  async onApplicationShutdown(): Promise<void> {
-    if (this.isConnected()) {
-      await this.connection.close();
-      this.logger.info({}, "MongoDB connection closed");
-    }
-  }
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }

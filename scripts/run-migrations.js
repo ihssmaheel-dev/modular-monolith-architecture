@@ -1,11 +1,1 @@
-const tsNode = require("ts-node");
-
-tsNode.register({
-  transpileOnly: true,
-  compilerOptions: {
-    module: "commonjs",
-    moduleResolution: "node",
-  },
-});
-
-require("migrate-mongo/bin/migrate-mongo.js");
+console.log("Mongo migrations removed — use: pnpm --filter api db:migrate (drizzle-kit)"); process.exit(0);

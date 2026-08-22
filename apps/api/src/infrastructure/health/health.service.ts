@@ -7,20 +7,24 @@ import {
   HealthIndicatorResult,
   HealthIndicator,
 } from "@nestjs/terminus";
-import { InjectConnection } from "@nestjs/mongoose";
-import { Connection } from "mongoose";
+import { DatabaseService } from "../database";
 import { RedisService } from "../redis/redis.service";
+import { sql } from "drizzle-orm";
 
 @Injectable()
-export class MongoHealthIndicator extends HealthIndicator {
-  constructor(@InjectConnection() private readonly connection: Connection) {
+export class PostgresHealthIndicator extends HealthIndicator {
+  constructor(private readonly database: DatabaseService) {
     super();
   }
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
-    const readyState = this.connection.readyState;
-    const isConnected = readyState === 1;
-    return isConnected ? this.getStatus(key, true) : this.getStatus(key, false, { readyState });
+    try {
+      const db = this.database.getDb();
+      await (db as unknown as { execute: (q: unknown) => Promise<void> }).execute(sql`SELECT 1`);
+      return this.getStatus(key, true);
+    } catch (error) {
+      return this.getStatus(key, false, { error: String(error) });
+    }
   }
 }
 
@@ -41,8 +45,7 @@ export class RedisHealthIndicator extends HealthIndicator {
       }
       const pong = await client.ping();
       return pong === "PONG" ? this.getStatus(key, true) : this.getStatus(key, false, { pong });
-    } catch (error) {
-      // Return healthy but degraded so K8s doesn't kill the pod
+    } catch {
       return this.getStatus(key, true, {
         message: this.i18n.t("api.health.redisDown"),
       });
@@ -54,14 +57,14 @@ export class RedisHealthIndicator extends HealthIndicator {
 export class AppHealthService {
   constructor(
     private readonly health: HealthCheckService,
-    private readonly mongo: MongoHealthIndicator,
+    private readonly postgres: PostgresHealthIndicator,
     private readonly redis: RedisHealthIndicator,
   ) {}
 
   @HealthCheck()
   check(): Promise<HealthCheckResult> {
     return this.health.check([
-      () => this.mongo.isHealthy("mongo"),
+      () => this.postgres.isHealthy("postgres"),
       () => this.redis.isHealthy("redis"),
     ]);
   }
@@ -69,7 +72,7 @@ export class AppHealthService {
   @HealthCheck()
   checkReadiness(): Promise<HealthCheckResult> {
     return this.health.check([
-      () => this.mongo.isHealthy("mongo"),
+      () => this.postgres.isHealthy("postgres"),
       () => this.redis.isHealthy("redis"),
     ]);
   }

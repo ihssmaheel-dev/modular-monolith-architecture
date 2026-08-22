@@ -20,7 +20,7 @@ export class VerifyUserCredentialsQuery {
     const passwordValid = await verify(result.value.passwordHash, password);
     if (!passwordValid) return ok(null);
 
-    const userResult = await this.getUserById.execute(result.value._id.toString());
+    const userResult = await this.getUserById.execute(result.value.id);
     if (userResult.isErr()) return ok(null);
     return ok(userResult.value);
   }

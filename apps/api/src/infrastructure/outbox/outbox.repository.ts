@@ -1,9 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model, FlattenMaps } from "mongoose";
-import { ClsService } from "nestjs-cls";
-import { OutboxEventMongooseSchema } from "./schemas/outbox-event.mongoose.schema";
-import { BaseRepository } from "../database";
+import { eq, and, or, isNull, lte, lt } from "drizzle-orm";
+import { DatabaseService, TenantContextService, BaseRepository } from "../database";
+import { outboxEvents, type OutboxRow } from "./schemas/outbox.schema";
 
 export interface OutboxEvent {
   id: string;
@@ -19,77 +17,61 @@ export interface OutboxEvent {
   updatedAt: Date;
 }
 
-type LeanOutboxDocument = FlattenMaps<OutboxEventMongooseSchema> & {
-  _id: { toString(): string };
-  createdAt?: Date;
-  updatedAt?: Date;
-};
-
 @Injectable()
-export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxEventMongooseSchema> {
-  constructor(
-    @InjectModel(OutboxEventMongooseSchema.name) model: Model<OutboxEventMongooseSchema>,
-    cls: ClsService,
-  ) {
-    super(model, cls);
+export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxRow> {
+  constructor(database: DatabaseService, tenantContext: TenantContextService) {
+    super(outboxEvents, database, tenantContext, false);
   }
 
-  protected toDomain(value: unknown): OutboxEvent {
-    const doc = value as LeanOutboxDocument;
+  protected toDomain(row: OutboxRow): OutboxEvent {
     return {
-      id: doc._id.toString(),
-      tenantId: doc.tenantId,
-      topic: doc.topic,
-      payload: doc.payload,
-      status: doc.status as OutboxEvent["status"],
-      error: doc.error,
-      attempts: doc.attempts ?? 0,
-      nextAttemptAt: doc.nextAttemptAt,
-      lockedAt: doc.lockedAt,
-      createdAt: doc.createdAt ?? new Date(),
-      updatedAt: doc.updatedAt ?? new Date(),
+      id: row.id,
+      tenantId: row.tenantId ?? undefined,
+      topic: row.topic,
+      payload: row.payload,
+      status: row.status as OutboxEvent["status"],
+      error: row.error ?? undefined,
+      attempts: row.attempts,
+      nextAttemptAt: row.nextAttemptAt ?? undefined,
+      lockedAt: row.lockedAt ?? undefined,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     };
   }
 
-  /**
-   * Atomically locks pending events for processing.
-   */
   async lockPendingEvents(limit: number): Promise<OutboxEvent[]> {
-    // In multi-node setups, findOneAndUpdate is safe
+    const db = this.getDb();
     const events: OutboxEvent[] = [];
     for (let i = 0; i < limit; i++) {
-      const doc = await this.model
-        .findOneAndUpdate(
-          {
-            status: "PENDING",
-            $or: [{ nextAttemptAt: { $exists: false } }, { nextAttemptAt: { $lte: new Date() } }],
-          },
-          { $set: { status: "PROCESSING", lockedAt: new Date() } },
-          { sort: { createdAt: 1 }, returnDocument: "after" },
+      const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<OutboxRow[]> } } } })
+        .update(outboxEvents)
+        .set({ status: "PROCESSING", lockedAt: new Date(), updatedAt: new Date() })
+        .where(
+          and(
+            eq(outboxEvents.status, "PENDING"),
+            or(isNull(outboxEvents.nextAttemptAt), lte(outboxEvents.nextAttemptAt, new Date())),
+          ),
         )
-        .lean()
-        .exec();
-
-      if (!doc) break; // No more pending events
-      events.push(this.toDomain(doc as LeanOutboxDocument));
+        .returning();
+      if (!rows[0]) break;
+      events.push(this.toDomain(rows[0]));
+      if (events.length >= limit) break;
     }
     return events;
   }
 
-  /**
-   * Counts the total number of pending outbox events.
-   */
   async countPendingEvents(): Promise<number> {
-    return this.model.countDocuments({ status: "PENDING" }).exec();
+    const result = await this.count({ status: "PENDING" });
+    return result.isOk() ? result.value : 0;
   }
 
   async recoverStaleLocks(lockedBefore: Date): Promise<number> {
-    const result = await this.model
-      .updateMany(
-        { status: "PROCESSING", lockedAt: { $lt: lockedBefore } },
-        { $set: { status: "PENDING" }, $unset: { lockedAt: "" } },
-      )
-      .exec();
-    return result.modifiedCount;
+    const db = this.getDb();
+    const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<OutboxRow[]> } } } })
+      .update(outboxEvents)
+      .set({ status: "PENDING", lockedAt: null, updatedAt: new Date() })
+      .where(and(eq(outboxEvents.status, "PROCESSING"), lt(outboxEvents.lockedAt, lockedBefore)))
+      .returning();
+    return rows.length;
   }
 }

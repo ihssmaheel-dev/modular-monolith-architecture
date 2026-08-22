@@ -1,43 +1,30 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { FlattenMaps, Model } from "mongoose";
-import { ClsService } from "nestjs-cls";
-import { Result } from "neverthrow";
-import type { TenantRole } from "@repo/shared";
-import {
-  BaseRepository,
-  type PaginatedResult,
-  type PaginationOptions,
-} from "../../../infrastructure/database";
+import { Injectable } from "@nestjs/common";
+import { eq } from "drizzle-orm";
+import { ok, type Result } from "neverthrow";
+import { DatabaseService } from "../../../infrastructure/database";
+import { TenantContextService } from "../../../infrastructure/database";
+import { BaseRepository } from "../../../infrastructure/database";
+import { memberships, type MembershipRow } from "./schemas/tenancy.schema";
 import { Membership } from "../domain/entities/tenancy.entity";
-import { MembershipMongooseSchema } from "./schemas/tenancy.mongoose.schema";
-
-type LeanMembership = FlattenMaps<MembershipMongooseSchema> & {
-  _id: { toString(): string };
-  createdAt?: Date;
-  updatedAt?: Date;
-};
+import type { TenantRole } from "@repo/shared";
+import type { PaginatedResult, PaginationOptions } from "../../../infrastructure/database";
 
 @Injectable()
-export class MembershipsRepository extends BaseRepository<Membership, MembershipMongooseSchema> {
-  constructor(
-    @InjectModel(MembershipMongooseSchema.name) model: Model<MembershipMongooseSchema>,
-    @Inject(ClsService) cls: ClsService,
-  ) {
-    super(model, cls);
+export class MembershipsRepository extends BaseRepository<Membership, MembershipRow> {
+  constructor(database: DatabaseService, tenantContext: TenantContextService) {
+    super(memberships, database, tenantContext, false);
   }
 
-  protected toDomain(value: unknown): Membership {
-    const doc = value as LeanMembership;
+  protected toDomain(row: MembershipRow): Membership {
     return Membership.fromPersistence({
-      id: doc._id.toString(),
-      tenantId: doc.tenantId,
-      userId: doc.userId,
-      userEmail: doc.userEmail,
-      userName: doc.userName,
-      role: doc.role as TenantRole,
-      createdAt: doc.createdAt ?? new Date(),
-      updatedAt: doc.updatedAt ?? new Date(),
+      id: row.id,
+      tenantId: row.tenantId,
+      userId: row.userId,
+      userEmail: row.userEmail,
+      userName: row.userName,
+      role: row.role as TenantRole,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     });
   }
 
@@ -49,18 +36,12 @@ export class MembershipsRepository extends BaseRepository<Membership, Membership
     return this.findOne({ tenantId, userEmail: email });
   }
 
-  paginateForUser(
-    userId: string,
-    options: PaginationOptions,
-  ): Promise<Result<PaginatedResult<Membership>, never>> {
-    return this.paginate({ userId }, { ...options, sort: { createdAt: -1 } });
+  paginateForUser(userId: string, options: PaginationOptions): Promise<Result<PaginatedResult<Membership>, never>> {
+    return this.paginate({ userId }, options);
   }
 
-  paginateForTenant(
-    tenantId: string,
-    options: PaginationOptions,
-  ): Promise<Result<PaginatedResult<Membership>, never>> {
-    return this.paginate({ tenantId }, { ...options, sort: { createdAt: 1 } });
+  paginateForTenant(tenantId: string, options: PaginationOptions): Promise<Result<PaginatedResult<Membership>, never>> {
+    return this.paginate({ tenantId }, options);
   }
 
   countOwners(tenantId: string): Promise<Result<number, never>> {
@@ -68,34 +49,37 @@ export class MembershipsRepository extends BaseRepository<Membership, Membership
   }
 
   hasOwnerMembership(userId: string): Promise<Result<boolean, never>> {
-    return this.exists({ userId, role: "owner" });
+    return this.exists({ userId, role: "owner" } as unknown as Record<string, unknown>);
   }
 
-  updateRole(
-    tenantId: string,
-    userId: string,
-    role: TenantRole,
-  ): Promise<Result<Membership | null, { type: "CONFLICT" }>> {
+  updateRole(tenantId: string, userId: string, role: TenantRole): Promise<Result<Membership | null, { type: "CONFLICT" }>> {
     return this.updateOne({ tenantId, userId }, { role });
   }
 
   async remove(tenantId: string, userId: string): Promise<Result<boolean, never>> {
     const membership = await this.findMembership(tenantId, userId);
-    if (membership.isErr() || !membership.value) return membership.map(() => false);
+    if (membership.isErr() || !membership.value) return ok(false);
     return this.deleteById(membership.value.data.id);
   }
 
-  async updateUserSnapshot(
-    userId: string,
-    changes: { email?: string; name?: string },
-  ): Promise<void> {
+  async updateUserSnapshot(userId: string, changes: { email?: string; name?: string }): Promise<void> {
     const update: Record<string, string> = {};
     if (changes.email) update.userEmail = changes.email;
     if (changes.name) update.userName = changes.name;
-    if (Object.keys(update).length > 0) await this.model.updateMany({ userId }, { $set: update });
+    if (Object.keys(update).length === 0) return;
+    const db = this.getDb();
+    await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => Promise<void> } } })
+      .update(memberships)
+      .set({ ...update, updatedAt: new Date() })
+      .where(eq(memberships.userId, userId));
   }
 
   async removeUser(userId: string): Promise<void> {
-    await this.model.deleteMany({ userId });
+    const db = this.getDb();
+    await (db as unknown as { delete: (t: unknown) => { where: (c: unknown) => Promise<void> } }).delete(memberships).where(eq(memberships.userId, userId));
+  }
+
+  private exists(filter: Record<string, unknown>): Promise<Result<boolean, never>> {
+    return this.count(filter).then((r) => r.map((c) => c > 0));
   }
 }

@@ -1,6 +1,5 @@
 import { DynamicModule, Global, Module } from "@nestjs/common";
 import { EventEmitterModule } from "@nestjs/event-emitter";
-import { MongooseModule } from "@nestjs/mongoose";
 import { env } from "../../config/env";
 import { AcceptInvitationCommand } from "./application/commands/accept-invitation.command";
 import { CreateOrganizationCommand } from "./application/commands/create-organization.command";
@@ -17,23 +16,9 @@ import { CanDeleteUserQuery } from "./application/queries/can-delete-user.query"
 import { InvitationsRepository } from "./infrastructure/invitations.repository";
 import { MembershipsRepository } from "./infrastructure/memberships.repository";
 import { OrganizationsRepository } from "./infrastructure/organizations.repository";
-import {
-  InvitationMongooseSchema,
-  InvitationSchema,
-  MembershipMongooseSchema,
-  MembershipSchema,
-  OrganizationMongooseSchema,
-  OrganizationSchema,
-} from "./infrastructure/schemas/tenancy.mongoose.schema";
 import { MembershipsController } from "./presentation/memberships.controller";
 import { OrganizationsController } from "./presentation/organizations.controller";
 import { TenancyStatusController } from "./presentation/tenancy-status.controller";
-
-const tenancyModels = MongooseModule.forFeature([
-  { name: OrganizationMongooseSchema.name, schema: OrganizationSchema },
-  { name: MembershipMongooseSchema.name, schema: MembershipSchema },
-  { name: InvitationMongooseSchema.name, schema: InvitationSchema },
-]);
 
 const providers = [
   OrganizationsRepository,
@@ -61,7 +46,7 @@ export class TenancyModule {
       env.TENANCY_MODE === "multi" ? [OrganizationsController, MembershipsController] : [];
     return {
       module: TenancyModule,
-      imports: [tenancyModels, EventEmitterModule],
+      imports: [EventEmitterModule],
       controllers: [TenancyStatusController, ...domainControllers],
       providers,
       exports: [ResolveTenantAccessQuery, CanDeleteUserQuery],

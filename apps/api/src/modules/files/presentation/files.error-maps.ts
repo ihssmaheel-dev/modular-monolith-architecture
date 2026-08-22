@@ -25,16 +25,8 @@ export const CONFIRM_UPLOAD_ERRORS: ErrorMap = {
   },
 };
 
-export const GRIDFS_TRANSFER_ERRORS: ErrorMap = {
-  ...FILE_NOT_FOUND_ERRORS,
-  UPLOAD_IN_PROGRESS: { status: HttpStatus.CONFLICT, i18nKey: "api.error.conflict" },
-  PROXY_TRANSFER_UNAVAILABLE: { status: HttpStatus.NOT_FOUND, i18nKey: "api.file.notFound" },
-  UPLOAD_FAILED: {
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    i18nKey: "api.error.uploadFailed",
-  },
-  FILE_TOO_LARGE: { status: HttpStatus.PAYLOAD_TOO_LARGE, i18nKey: "api.error.fileTooLarge" },
-};
+// Removed GridFS transfer errors — S3 presigned URLs only
+
 
 export const DOWNLOAD_ERRORS: ErrorMap = {
   ...FILE_NOT_FOUND_ERRORS,

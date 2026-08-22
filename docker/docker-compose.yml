@@ -1,40 +1,20 @@
 services:
-  mongodb:
-    image: mongo:7
-    container_name: monorepo-mongodb
+  postgres:
+    image: postgres:16-alpine
+    container_name: monorepo-postgres
     ports:
-      - "27017:27017"
+      - "5432:5432"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
     volumes:
-      - mongodb_data:/data/db
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        - CMD-SHELL
-        - 'mongosh --quiet --username "$${MONGO_INITDB_ROOT_USERNAME}" --password "$${MONGO_INITDB_ROOT_PASSWORD}" --authenticationDatabase admin --eval "quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)"'
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  mongodb-replica:
-    image: mongo:7
-    container_name: monorepo-mongodb-replica
-    profiles: ["multi"]
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27018"]
-    ports:
-      - "127.0.0.1:27018:27018"
-    volumes:
-      - mongodb_replica_data:/data/db
-      - ./mongo-init-replica.js:/docker-entrypoint-initdb.d/replica.js:ro
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - 'mongosh --quiet --port 27018 --eval "quit(rs.status().myState === 1 ? 0 : 2)"'
-      interval: 5s
-      timeout: 5s
-      retries: 12
 
   redis:
     image: redis:7-alpine
@@ -62,13 +42,13 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   minio-init:
-    image: minio/minio:latest
+    image: minio/mc:latest
     entrypoint: /bin/sh
     command:
       - -c
@@ -90,7 +70,6 @@ services:
       retries: 5
 
 volumes:
-  mongodb_data:
-  mongodb_replica_data:
+  postgres_data:
   redis_data:
   minio_data:

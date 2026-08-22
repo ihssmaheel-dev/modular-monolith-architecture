@@ -17,7 +17,7 @@ export default defineConfig({
         "src/**/*.module.ts",
         "src/**/index.ts",
         "src/**/*.types.ts",
-        "src/**/*.mongoose.schema.ts",
+        "src/**/schemas/*.schema.ts",
       ],
       reporter: ["text", "json-summary"],
     },

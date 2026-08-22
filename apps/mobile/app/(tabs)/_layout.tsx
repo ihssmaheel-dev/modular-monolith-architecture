@@ -58,7 +58,7 @@ export default function TabsLayout() {
         options={{
           title: t("home.title"),
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={tabIcons.index} size={size} color={color as any} />
+            <Ionicons name={tabIcons.index} size={size} color={color as string} />
           ),
         }}
       />
@@ -67,7 +67,7 @@ export default function TabsLayout() {
         options={{
           title: t("users.title"),
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={tabIcons.users} size={size} color={color as any} />
+            <Ionicons name={tabIcons.users} size={size} color={color as string} />
           ),
         }}
       />
@@ -76,7 +76,7 @@ export default function TabsLayout() {
         options={{
           title: t("settings.title"),
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={tabIcons.settings} size={size} color={color as any} />
+            <Ionicons name={tabIcons.settings} size={size} color={color as string} />
           ),
         }}
       />

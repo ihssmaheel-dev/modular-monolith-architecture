@@ -1,39 +1,26 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { FlattenMaps, Model } from "mongoose";
-import { ClsService } from "nestjs-cls";
-import { Result } from "neverthrow";
+import { Injectable } from "@nestjs/common";
+import { inArray } from "drizzle-orm";
+import { DatabaseService } from "../../../infrastructure/database";
+import { TenantContextService } from "../../../infrastructure/database";
 import { BaseRepository } from "../../../infrastructure/database";
+import { organizations, type OrganizationRow } from "./schemas/tenancy.schema";
 import { Organization } from "../domain/entities/tenancy.entity";
-import { OrganizationMongooseSchema } from "./schemas/tenancy.mongoose.schema";
-
-type LeanOrganization = FlattenMaps<OrganizationMongooseSchema> & {
-  _id: { toString(): string };
-  createdAt?: Date;
-  updatedAt?: Date;
-};
+import type { Result } from "neverthrow";
 
 @Injectable()
-export class OrganizationsRepository extends BaseRepository<
-  Organization,
-  OrganizationMongooseSchema
-> {
-  constructor(
-    @InjectModel(OrganizationMongooseSchema.name) model: Model<OrganizationMongooseSchema>,
-    @Inject(ClsService) cls: ClsService,
-  ) {
-    super(model, cls);
+export class OrganizationsRepository extends BaseRepository<Organization, OrganizationRow> {
+  constructor(database: DatabaseService, tenantContext: TenantContextService) {
+    super(organizations, database, tenantContext, false);
   }
 
-  protected toDomain(value: unknown): Organization {
-    const doc = value as LeanOrganization;
+  protected toDomain(row: OrganizationRow): Organization {
     return Organization.fromPersistence({
-      id: doc._id.toString(),
-      name: doc.name,
-      slug: doc.slug,
-      createdBy: doc.createdBy,
-      createdAt: doc.createdAt ?? new Date(),
-      updatedAt: doc.updatedAt ?? new Date(),
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      createdBy: row.createdBy,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     });
   }
 
@@ -41,8 +28,13 @@ export class OrganizationsRepository extends BaseRepository<
     return this.findOne({ slug });
   }
 
-  findByIds(ids: string[]): Promise<Result<Organization[], never>> {
-    if (ids.length === 0) return this.find({ _id: { $in: [] } });
-    return this.find({ _id: { $in: ids } });
+  async findByIds(ids: string[]): Promise<Result<Organization[], never>> {
+    if (ids.length === 0) return this.find({ id: "__none__" } as unknown as Record<string, unknown>);
+    const db = this.getDb();
+    const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<OrganizationRow[]> } } })
+      .select()
+      .from(organizations)
+      .where(inArray(organizations.id, ids));
+    return { isOk: () => true, isErr: () => false, value: rows.map((r) => this.toDomain(r)), error: undefined } as unknown as Result<Organization[], never>;
   }
 }

@@ -10,7 +10,7 @@ export interface CircuitBreakerOptions {
 }
 
 export class CircuitBreaker<E> {
-  private breaker: OpossumCircuitBreaker<[() => Promise<Result<any, E>>], Result<any, E>>;
+  private breaker: OpossumCircuitBreaker<[() => Promise<Result<unknown, E>>], Result<unknown, E>>;
   private readonly fallbackError: E;
   private readonly onStateChange?: (state: CircuitBreakerState) => void;
 
@@ -18,7 +18,7 @@ export class CircuitBreaker<E> {
     this.fallbackError = fallbackError;
     this.onStateChange = options.onStateChange;
 
-    this.breaker = new OpossumCircuitBreaker(async (action: () => Promise<Result<any, E>>) => {
+    this.breaker = new OpossumCircuitBreaker(async (action: () => Promise<Result<unknown, E>>) => {
       const result = await action();
       if (result.isErr()) {
         throw result.error;
@@ -39,15 +39,15 @@ export class CircuitBreaker<E> {
 
   async execute<T>(action: () => Promise<Result<T, E>>): Promise<Result<T, E>> {
     try {
-      const result = await (this.breaker as any).fire(action);
-      return result as Result<T, E>;
-    } catch (e: any) {
-      // Opossum throws its own error when the circuit is open (usually with code 'EOPENBREAKER' or message 'Breaker is open')
-      if (e && (e.code === 'EOPENBREAKER' || e.message?.includes('Breaker is open'))) {
+      const breaker = this.breaker as unknown as { fire: (a: () => Promise<Result<unknown, E>>) => Promise<Result<T, E>> };
+      const result = await breaker.fire(action);
+      return result;
+    } catch (e: unknown) {
+      const error = e as { code?: string; message?: string };
+      if (error && (error.code === "EOPENBREAKER" || error.message?.includes("Breaker is open"))) {
         return err(this.fallbackError);
       }
-      // Otherwise, this is the underlying error we threw from the action when it returned a Result.err
-      return err(e);
+      return err(error as E);
     }
   }
 
