@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq, and, or, isNull, lte, lt } from "drizzle-orm";
+import { eq, and, lt } from "drizzle-orm";
 import { DatabaseService, TenantContextService, BaseRepository } from "../database";
 import { outboxEvents, type OutboxRow } from "./schemas/outbox.schema";
 
@@ -40,24 +40,21 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxRow> {
   }
 
   async lockPendingEvents(limit: number): Promise<OutboxEvent[]> {
-    const db = this.getDb();
-    const events: OutboxEvent[] = [];
-    for (let i = 0; i < limit; i++) {
-      const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<OutboxRow[]> } } } })
-        .update(outboxEvents)
-        .set({ status: "PROCESSING", lockedAt: new Date(), updatedAt: new Date() })
-        .where(
-          and(
-            eq(outboxEvents.status, "PENDING"),
-            or(isNull(outboxEvents.nextAttemptAt), lte(outboxEvents.nextAttemptAt, new Date())),
-          ),
-        )
-        .returning();
-      if (!rows[0]) break;
-      events.push(this.toDomain(rows[0]));
-      if (events.length >= limit) break;
-    }
-    return events;
+    const pool = this.database.getPool();
+    const { rows } = await pool.query(
+      `WITH locked AS (
+        SELECT id FROM outbox_events
+        WHERE status = 'PENDING' AND (next_attempt_at IS NULL OR next_attempt_at <= NOW())
+        ORDER BY created_at ASC
+        LIMIT $1
+        FOR UPDATE SKIP LOCKED
+      )
+      UPDATE outbox_events SET status = 'PROCESSING', locked_at = NOW(), updated_at = NOW()
+      WHERE id IN (SELECT id FROM locked)
+      RETURNING *`,
+      [limit],
+    );
+    return (rows as OutboxRow[]).map((r) => this.toDomain(r as OutboxRow));
   }
 
   async countPendingEvents(): Promise<number> {

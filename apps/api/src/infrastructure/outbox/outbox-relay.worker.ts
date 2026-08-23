@@ -62,8 +62,10 @@ export class OutboxRelayWorker {
     try {
       await this.eventEmitter.emitAsync(event.topic, event.payload);
       await this.repository.updateById(event.id, {
-        $set: { status: "PUBLISHED" },
-        $unset: { lockedAt: "", nextAttemptAt: "", error: "" },
+        status: "PUBLISHED",
+        lockedAt: null,
+        nextAttemptAt: null,
+        error: null,
       });
       this.recordLatency(event);
     } catch (error) {
@@ -76,13 +78,11 @@ export class OutboxRelayWorker {
     const isExhausted = attempts >= MAX_ATTEMPTS;
     const delay = RETRY_BASE_DELAY_MS * RETRY_MULTIPLIER ** Math.max(0, attempts - 1);
     await this.repository.updateById(event.id, {
-      $set: {
-        status: isExhausted ? "FAILED" : "PENDING",
-        attempts,
-        error: error instanceof Error ? error.message : String(error),
-        nextAttemptAt: new Date(Date.now() + delay),
-      },
-      $unset: { lockedAt: "" },
+      status: isExhausted ? "FAILED" : "PENDING",
+      attempts,
+      error: error instanceof Error ? error.message : String(error),
+      nextAttemptAt: new Date(Date.now() + delay),
+      lockedAt: null,
     });
     this.logger.error({ eventId: event.id, attempts, error }, "Outbox event delivery failed");
   }

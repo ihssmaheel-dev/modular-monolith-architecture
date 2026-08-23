@@ -1,6 +1,6 @@
 import { Controller, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { RequirePermissions, requireAuthenticatedUser } from "../../../common";
+import { Idempotent, RequirePermissions, requireAuthenticatedUser } from "../../../common";
 import { filesContract } from "@repo/shared";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import { RequestUploadCommand } from "../application/commands/request-upload.command";
@@ -33,6 +33,7 @@ export class FilesController {
   ) {}
 
   @TsRestHandler(filesContract.requestUpload)
+  @Idempotent()
   @RequirePermissions("files:write")
   requestUpload(@Req() req: FastifyRequest) {
     return tsRestHandler(filesContract.requestUpload, async ({ body }) => {
@@ -45,6 +46,7 @@ export class FilesController {
   }
 
   @TsRestHandler(filesContract.confirmUpload)
+  @Idempotent()
   @RequirePermissions("files:write")
   confirmUpload(@Req() req: FastifyRequest) {
     return tsRestHandler(filesContract.confirmUpload, async ({ body }) => {
@@ -108,6 +110,7 @@ export class FilesController {
   }
 
   @TsRestHandler(filesContract.delete)
+  @Idempotent()
   @RequirePermissions("files:delete")
   delete(@Req() req: FastifyRequest) {
     return tsRestHandler(filesContract.delete, async ({ params: { id } }) => {

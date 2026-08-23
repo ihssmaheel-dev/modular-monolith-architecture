@@ -1,6 +1,6 @@
 import { Controller, Req, HttpStatus } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { RequirePermissions, TenantAgnostic } from "../../../common";
+import { Idempotent, RequirePermissions, TenantAgnostic } from "../../../common";
 import { usersContract } from "@repo/shared";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 import { GetUsersQuery } from "../application/queries/get-users.query";
@@ -63,6 +63,7 @@ export class UsersController {
   }
 
   @TsRestHandler(usersContract.create)
+  @Idempotent()
   @RequirePermissions("users:write")
   create(@Req() req: FastifyRequest) {
     return tsRestHandler(usersContract.create, async ({ body }) => {
@@ -89,6 +90,7 @@ export class UsersController {
   }
 
   @TsRestHandler(usersContract.update)
+  @Idempotent()
   @RequirePermissions("users:write")
   update(@Req() req: FastifyRequest) {
     return tsRestHandler(usersContract.update, async ({ params: { id }, body }) => {
@@ -111,6 +113,7 @@ export class UsersController {
   }
 
   @TsRestHandler(usersContract.delete)
+  @Idempotent()
   @RequirePermissions("users:write")
   delete(@Req() req: FastifyRequest) {
     return tsRestHandler(usersContract.delete, async ({ params: { id } }) => {

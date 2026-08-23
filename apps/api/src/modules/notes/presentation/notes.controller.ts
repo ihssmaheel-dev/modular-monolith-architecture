@@ -90,6 +90,7 @@ export class NotesController {
   }
 
   @TsRestHandler(notesContract.updateNote)
+  @Idempotent()
   @RequirePermissions("notes:write")
   update(@Req() req: FastifyRequest) {
     return tsRestHandler(notesContract.updateNote, async ({ params: { id }, body }) => {
@@ -112,6 +113,7 @@ export class NotesController {
   }
 
   @TsRestHandler(notesContract.deleteNote)
+  @Idempotent()
   @RequirePermissions("notes:write")
   delete(@Req() req: FastifyRequest) {
     return tsRestHandler(notesContract.deleteNote, async ({ params: { id } }) => {

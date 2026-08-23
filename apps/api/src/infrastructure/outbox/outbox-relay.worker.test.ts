@@ -48,7 +48,7 @@ describe("OutboxRelayWorker", () => {
     expect(emitter.emitAsync).toHaveBeenCalledWith(EVENT.topic, EVENT.payload);
     expect(repository.updateById).toHaveBeenCalledWith(
       EVENT.id,
-      expect.objectContaining({ $set: { status: "PUBLISHED" } }),
+      expect.objectContaining({ status: "PUBLISHED" }),
     );
     expect(metrics.recordHistogram).toHaveBeenCalled();
   });
@@ -61,7 +61,8 @@ describe("OutboxRelayWorker", () => {
     expect(repository.updateById).toHaveBeenCalledWith(
       EVENT.id,
       expect.objectContaining({
-        $set: expect.objectContaining({ status: "PENDING", attempts: 1 }),
+        status: "PENDING",
+        attempts: 1,
       }),
     );
   });
