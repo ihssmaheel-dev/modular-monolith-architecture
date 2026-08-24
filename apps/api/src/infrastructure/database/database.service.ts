@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { Inject, Injectable, OnModuleDestroy, Optional } from "@nestjs/common";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { err, ok, type Result } from "neverthrow";
@@ -17,9 +17,11 @@ export class DatabaseService implements OnModuleDestroy {
   private readonly pool: Pool;
   private readonly db: DrizzleDb;
 
+  private readonly logger: PinoLoggerService;
+
   constructor(
-    private readonly logger: PinoLoggerService,
-    private readonly cls: ClsService,
+    @Inject(PinoLoggerService) logger: PinoLoggerService,
+    @Optional() @Inject(ClsService) private readonly cls?: ClsService,
   ) {
     this.logger = logger.child({ module: "DatabaseService" });
     this.pool = new Pool({
@@ -80,14 +82,17 @@ export class DatabaseService implements OnModuleDestroy {
   async withTransaction<T>(fn: () => Promise<T>): Promise<Result<T, TransactionError>> {
     try {
       const result = await this.db.transaction(async (tx: DrizzleDb) => {
-        const current = this.cls.isActive() ? this.cls.get() : {};
+        const current = this.cls?.isActive() ? this.cls.get() : {};
         const tenantId = (current as { tenantId?: string })?.tenantId;
         if (tenantId && typeof (tx as unknown as { execute?: unknown }).execute === "function") {
           await (tx as unknown as { execute: (q: unknown) => Promise<void> }).execute(
             sql`SET LOCAL app.current_tenant = ${tenantId}`,
           );
         }
-        return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, fn);
+        if (this.cls) {
+          return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, fn);
+        }
+        return fn();
       });
       return ok(result);
     } catch (error) {
@@ -101,20 +106,24 @@ export class DatabaseService implements OnModuleDestroy {
   ): Promise<Result<T, E | TransactionError>> {
     try {
       const result = await this.db.transaction(async (tx: DrizzleDb) => {
-        const current = this.cls.isActive() ? this.cls.get() : {};
+        const current = this.cls?.isActive() ? this.cls.get() : {};
         const tenantId = (current as { tenantId?: string })?.tenantId;
         if (tenantId && typeof (tx as unknown as { execute?: unknown }).execute === "function") {
           await (tx as unknown as { execute: (q: unknown) => Promise<void> }).execute(
             sql`SET LOCAL app.current_tenant = ${tenantId}`,
           );
         }
-        return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, async () => {
+        const run = async () => {
           const inner = await fn();
           if (inner.isErr()) {
             throw inner.error;
           }
           return inner.value;
-        });
+        };
+        if (this.cls) {
+          return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, run);
+        }
+        return run();
       });
       return ok(result as T);
     } catch (error) {
@@ -128,7 +137,7 @@ export class DatabaseService implements OnModuleDestroy {
   }
 
   getTx(): DrizzleDb | undefined {
-    if (this.cls.isActive()) {
+    if (this.cls?.isActive()) {
       return this.cls.get("databaseTx" as never) as DrizzleDb | undefined;
     }
     return undefined;

@@ -1,13 +1,12 @@
 import { NestFactory } from "@nestjs/core";
-
 import { hash } from "@node-rs/argon2";
-import { AppModule } from "../app.module";
 import { env } from "../config/env";
 import { PinoLoggerService } from "../infrastructure/logger/logger.service";
 import { UsersRepository } from "../modules/users/infrastructure/users.repository";
+import { SeedModule } from "./seed.module";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.createApplicationContext(AppModule);
+  const app = await NestFactory.createApplicationContext(SeedModule);
   const logger = app.get(PinoLoggerService).child({ module: "DatabaseSeed" });
 
   try {
@@ -38,7 +37,11 @@ async function bootstrap(): Promise<void> {
     logger.info({ userId: result.value.id }, "Administrative user created");
   } catch (error) {
     process.exitCode = 1;
-    logger.error({ error }, "Database seed failed");
+    const details =
+      error instanceof Error
+        ? { message: error.message, stack: error.stack, name: error.name }
+        : { error: JSON.stringify(error) };
+    logger.error(details, "Database seed failed");
   } finally {
     await app.close();
   }
