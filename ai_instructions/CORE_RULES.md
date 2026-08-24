@@ -13,7 +13,7 @@ Supreme laws of this codebase. These are never negotiable.
 | Monorepo | Turborepo + pnpm |
 | Backend | NestJS 11 + Fastify 5 |
 | Validation | Zod 4 |
-| API Contract | ts-rest + Swagger UI |
+| API Contract | oRPC + Swagger UI |
 | Database | PostgreSQL 16 + Drizzle ORM |
 | Cache & Queues | Redis (ioredis) + BullMQ |
 | Email Templating | React Email |

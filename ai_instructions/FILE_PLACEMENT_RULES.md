@@ -47,7 +47,7 @@ packages/shared/src/
 │   ├── users.schema.ts        ← User-related Zod schemas
 │   └── index.ts               ← Re-exports all schemas
 ├── contracts/
-│   ├── users.contract.ts      ← ts-rest contract for users API
+│   ├── users.contract.ts      ← oRPC contract for users API (oc.route)
 │   └── index.ts
 ├── types/
 │   ├── user.types.ts          ← Shared TypeScript types
@@ -123,7 +123,7 @@ packages/api-client/src/
 ### Rules
 - Client uses `createApiClient(baseUrl)` pattern.
 - No `process.env` at import time.
-- Uses ts-rest contracts from `packages/shared`.
+- Uses oRPC contracts (`oc.router`) from `packages/shared` via `RPCLink` + `createORPCClient`.
 
 ---
 
@@ -451,7 +451,7 @@ docs/
 |---------------------|---------------|
 | Zod schema | `packages/shared/src/schemas/[domain].schema.ts` |
 | TypeScript type | `packages/shared/src/types/[domain].types.ts` |
-| ts-rest contract | `packages/shared/src/contracts/[domain].contract.ts` |
+| oRPC contract | `packages/shared/src/contracts/[domain].contract.ts` |
 | Shared constant | `packages/shared/src/constants/[category].ts` |
 | Permission | `packages/shared/src/permissions/[domain].permissions.ts` |
 | Pure utility | `packages/shared/src/utils/[name].ts` |

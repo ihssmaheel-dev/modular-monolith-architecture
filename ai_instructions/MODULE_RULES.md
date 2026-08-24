@@ -38,7 +38,7 @@ Do not skip folders. Do not add extra folders beyond this structure.
 ### `presentation/`
 - Controllers only.
 - Extremely thin.
-- Validate input via Zod / ts-rest.
+- Validate input via Zod schemas from `packages/shared` (or oRPC contract `oc.route().input().output()`).
 - Call application commands/queries.
 - Map `Result` → HTTP response.
 - No business logic. No database access. No state.
@@ -162,7 +162,7 @@ export class AppModule {}
 
 1. Create the folder structure above in `modules/[name]/`.
 2. Define Zod schemas in `packages/shared/src/schemas/`.
-3. Define ts-rest contract in `packages/shared/src/contracts/`.
+3. Define oRPC contract (`oc.route().input().output()`) in `packages/shared/src/contracts/`.
 4. Implement domain entities in `domain/entities/`.
 5. Implement repository in `infrastructure/`.
 6. Implement use-cases in `application/commands/` and `application/queries/`.
@@ -175,9 +175,9 @@ export class AppModule {}
 
 ## Controller Rules
 
-- **Use ts-rest strictly**: Controllers must use `@Controller()` and `@TsRestHandler(contract)` from `@ts-rest/nest`.
-- **Never use standard decorators**: Do NOT use `@Get()`, `@Post()`, `@Body()`, or `@Query()`. The ts-rest contract handles all routing and validation.
-- Validate input automatically via the ts-rest Zod contract definitions.
+- **Use standard Nest decorators**: Controllers use `@Controller()` with `@Post()`, `@Get()`, `@Body()`, `@Query()` etc., validated via Zod schemas from `packages/shared` (or oRPC `oc.route().input()`).
+- Validate input via Zod schemas from `packages/shared` before calling application layer.
+- `apiContract` (`oc.router` in `packages/shared`) is for client (`packages/api-client` via `RPCLink` + `createORPCClient`) and OpenAPI (`@orpc/openapi`), not a Nest handler.
 - **Protect mutations with Idempotency**: All critical POST, PUT, or DELETE endpoints (e.g., payments, resource creation) MUST be protected using the `@Idempotent()` decorator. The client is required to send an `idempotency-key` header to prevent duplicate processing.
 - Call exactly one application command/query per route.
 - Map Result to HTTP:

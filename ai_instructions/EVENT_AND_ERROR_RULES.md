@@ -58,7 +58,7 @@ export class CreateUserCommand {
 // modules/presentation/users.controller.ts
 // constructor(private readonly createUserCommand: CreateUserCommand) {}
 
-  // ts-rest handler — no @Post(), @Body(), etc.
+  // Nest handler — uses @Post(), @Body() validated via Zod / oRPC
   async create(body: any) {
     const result = await this.createUserCommand.execute(body);
 
