@@ -17,7 +17,7 @@ export function Header() {
 
   const handleLogout = async () => {
     try {
-      await api.auth.logout({});
+      await api.auth.logout();
     } catch {
       // Ignore network errors — clear local state regardless
     }

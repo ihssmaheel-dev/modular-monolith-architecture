@@ -84,7 +84,12 @@ export const AcceptInvitationSchema = z.object({ token: z.string().min(32).max(2
 
 export type CreateOrganizationInput = z.infer<typeof CreateOrganizationSchema>;
 export type OrganizationResponse = z.infer<typeof OrganizationResponseSchema>;
+export type OrganizationListResponse = z.infer<typeof OrganizationListResponseSchema>;
+export type TenantStatusResponse = z.infer<typeof TenantStatusResponseSchema>;
 export type MemberResponse = z.infer<typeof MemberResponseSchema>;
+export type MemberListResponse = z.infer<typeof MemberListResponseSchema>;
 export type InviteMemberInput = z.infer<typeof InviteMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof UpdateMemberSchema>;
 export type InvitationResponse = z.infer<typeof InvitationResponseSchema>;
+export type InvitationListResponse = z.infer<typeof InvitationListResponseSchema>;
+export type AcceptInvitationInput = z.infer<typeof AcceptInvitationSchema>;

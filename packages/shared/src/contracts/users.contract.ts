@@ -1,4 +1,4 @@
-import { initContract, type AppRouter } from "@ts-rest/core";
+import { oc } from "@orpc/contract";
 import {
   CreateUserSchema,
   UpdateUserSchema,
@@ -6,56 +6,28 @@ import {
   UserListResponseSchema,
   UserIdParamSchema,
 } from "../schemas/user.schema";
-import { MessageResponseSchema } from "../schemas/auth.schema";
 import { PaginationQuerySchema } from "../schemas/pagination.schema";
-import { contractSchema } from "./contract-schema";
+import { z } from "zod";
 
-const c = initContract();
-
-export const usersContract = {
-  list: {
-    method: "GET" as const,
-    path: "/users",
-    query: contractSchema(PaginationQuerySchema),
-    responses: {
-      200: contractSchema(UserListResponseSchema),
-    },
-  },
-  getById: {
-    method: "GET" as const,
-    path: "/users/:id",
-    pathParams: contractSchema(UserIdParamSchema),
-    responses: {
-      200: contractSchema(UserResponseSchema),
-      404: contractSchema(MessageResponseSchema),
-    },
-  },
-  create: {
-    method: "POST" as const,
-    path: "/users",
-    body: contractSchema(CreateUserSchema),
-    responses: {
-      201: contractSchema(UserResponseSchema),
-      409: contractSchema(MessageResponseSchema),
-    },
-  },
-  update: {
-    method: "PATCH" as const,
-    path: "/users/:id",
-    pathParams: contractSchema(UserIdParamSchema),
-    body: contractSchema(UpdateUserSchema),
-    responses: {
-      200: contractSchema(UserResponseSchema),
-      404: contractSchema(MessageResponseSchema),
-    },
-  },
-  delete: {
-    method: "DELETE" as const,
-    path: "/users/:id",
-    pathParams: contractSchema(UserIdParamSchema),
-    responses: {
-      204: c.noBody(),
-      404: contractSchema(MessageResponseSchema),
-    },
-  },
-} as const satisfies AppRouter;
+export const usersContract = oc.prefix("/users").router({
+  list: oc
+    .route({ method: "GET", path: "/", summary: "List users" })
+    .input(PaginationQuerySchema)
+    .output(UserListResponseSchema),
+  getById: oc
+    .route({ method: "GET", path: "/:id", summary: "Get user by ID" })
+    .input(UserIdParamSchema)
+    .output(UserResponseSchema),
+  create: oc
+    .route({ method: "POST", path: "/", summary: "Create user" })
+    .input(CreateUserSchema)
+    .output(UserResponseSchema),
+  update: oc
+    .route({ method: "PATCH", path: "/:id", summary: "Update user" })
+    .input(UserIdParamSchema.and(UpdateUserSchema))
+    .output(UserResponseSchema),
+  delete: oc
+    .route({ method: "DELETE", path: "/:id", summary: "Delete user" })
+    .input(UserIdParamSchema)
+    .output(z.undefined().or(z.null()).or(z.void())),
+});

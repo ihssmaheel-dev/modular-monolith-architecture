@@ -31,3 +31,6 @@ export const NoteListResponseSchema = z.object({
 export type CreateNoteDto = z.infer<typeof CreateNoteSchema>;
 export type UpdateNoteDto = z.infer<typeof UpdateNoteSchema>;
 export type NoteResponseDto = z.infer<typeof NoteResponseSchema>;
+export type NoteResponse = NoteResponseDto;
+export type NoteListResponseDto = z.infer<typeof NoteListResponseSchema>;
+export type NoteListResponse = NoteListResponseDto;

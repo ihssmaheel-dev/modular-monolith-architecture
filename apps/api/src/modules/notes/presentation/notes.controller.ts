@@ -1,8 +1,13 @@
-import { Controller, HttpStatus, Req } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import { RequirePermissions, Idempotent, requireAuthenticatedUser } from "../../../common";
-import { notesContract } from "@repo/shared";
-import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
+import {
+  type CreateNoteDto,
+  type UpdateNoteDto,
+  type PaginationQuery,
+  type NoteResponseDto,
+  type NoteListResponseDto,
+} from "@repo/shared";
 import { CreateNoteCommand } from "../application/commands/create-note.command";
 import { UpdateNoteCommand } from "../application/commands/update-note.command";
 import { DeleteNoteCommand } from "../application/commands/delete-note.command";
@@ -23,115 +28,102 @@ export class NotesController {
     private readonly i18n: I18nService,
   ) {}
 
-  @TsRestHandler(notesContract.getNotes)
+  @Get()
   @RequirePermissions("notes:read")
-  list(@Req() req: FastifyRequest) {
-    return tsRestHandler(notesContract.getNotes, async ({ query }) => {
-      const { page, limit } = query;
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.getNotesQuery.execute(
-        {
-          page,
-          limit,
-        },
-        actor,
-      );
-      const val = handleResult(result, {}, this.i18n, lang);
-      return {
-        status: 200 as const,
-        body: {
-          items: val.items.map(toNoteResponse),
-          total: val.total,
-          page: val.page,
-          limit: val.limit,
-          totalPages: val.totalPages,
-        },
-      };
-    });
+  async list(
+    @Query() query: PaginationQuery,
+    @Req() req: FastifyRequest,
+  ): Promise<NoteListResponseDto> {
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 20);
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.getNotesQuery.execute({ page, limit }, actor);
+    const val = handleResult(result, {}, this.i18n, lang);
+    return {
+      items: val.items.map(toNoteResponse),
+      total: val.total,
+      page: val.page,
+      limit: val.limit,
+      totalPages: val.totalPages,
+    };
   }
 
-  @TsRestHandler(notesContract.getNoteById)
+  @Get(":id")
   @RequirePermissions("notes:read")
-  getById(@Req() req: FastifyRequest) {
-    return tsRestHandler(notesContract.getNoteById, async ({ params: { id } }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.getNoteByIdQuery.execute(id, actor);
-      const note = handleResult(
-        result,
-        {
-          NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-        },
-        this.i18n,
-        lang,
-      );
-      return {
-        status: 200 as const,
-        body: toNoteResponse(note),
-      };
-    });
+  async getById(
+    @Param("id") id: string,
+    @Req() req: FastifyRequest,
+  ): Promise<NoteResponseDto> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.getNoteByIdQuery.execute(id, actor);
+    const note = handleResult(
+      result,
+      {
+        NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+      },
+      this.i18n,
+      lang,
+    );
+    return toNoteResponse(note);
   }
 
-  @TsRestHandler(notesContract.createNote)
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
   @Idempotent()
   @RequirePermissions("notes:write")
-  create(@Req() req: FastifyRequest) {
-    return tsRestHandler(notesContract.createNote, async ({ body }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.createNoteCommand.execute(body, actor);
-      const note = handleResult(result, {}, this.i18n, lang);
-      return {
-        status: 201 as const,
-        body: toNoteResponse(note),
-      };
-    });
+  async create(
+    @Body() body: CreateNoteDto,
+    @Req() req: FastifyRequest,
+  ): Promise<NoteResponseDto> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.createNoteCommand.execute(body, actor);
+    const note = handleResult(result, {}, this.i18n, lang);
+    return toNoteResponse(note);
   }
 
-  @TsRestHandler(notesContract.updateNote)
+  @Patch(":id")
   @Idempotent()
   @RequirePermissions("notes:write")
-  update(@Req() req: FastifyRequest) {
-    return tsRestHandler(notesContract.updateNote, async ({ params: { id }, body }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.updateNoteCommand.execute(id, body, actor);
-      const note = handleResult(
-        result,
-        {
-          NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-        },
-        this.i18n,
-        lang,
-      );
-      return {
-        status: 200 as const,
-        body: toNoteResponse(note),
-      };
-    });
+  async update(
+    @Param("id") id: string,
+    @Body() body: UpdateNoteDto,
+    @Req() req: FastifyRequest,
+  ): Promise<NoteResponseDto> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.updateNoteCommand.execute(id, body, actor);
+    const note = handleResult(
+      result,
+      {
+        NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+      },
+      this.i18n,
+      lang,
+    );
+    return toNoteResponse(note);
   }
 
-  @TsRestHandler(notesContract.deleteNote)
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
   @RequirePermissions("notes:write")
-  delete(@Req() req: FastifyRequest) {
-    return tsRestHandler(notesContract.deleteNote, async ({ params: { id } }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.deleteNoteCommand.execute(id, actor);
-      handleResult(
-        result,
-        {
-          NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
-        },
-        this.i18n,
-        lang,
-      );
-      return {
-        status: 204 as const,
-        body: undefined,
-      };
-    });
+  async delete(
+    @Param("id") id: string,
+    @Req() req: FastifyRequest,
+  ): Promise<void> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.deleteNoteCommand.execute(id, actor);
+    handleResult(
+      result,
+      {
+        NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+      },
+      this.i18n,
+      lang,
+    );
   }
 }

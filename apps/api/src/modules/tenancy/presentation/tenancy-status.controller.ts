@@ -1,18 +1,15 @@
-import { Controller } from "@nestjs/common";
-import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
-import { tenancyContract } from "@repo/shared";
+import { Controller, Get, HttpCode, HttpStatus } from "@nestjs/common";
 import { Public, TenantAgnostic } from "../../../common";
 import { env } from "../../../config/env";
+import type { TenantStatusResponse } from "@repo/shared";
 
 @Controller("tenancy")
 @TenantAgnostic()
 export class TenancyStatusController {
-  @TsRestHandler(tenancyContract.status)
+  @Get("status")
+  @HttpCode(HttpStatus.OK)
   @Public()
-  status() {
-    return tsRestHandler(tenancyContract.status, async () => ({
-      status: 200 as const,
-      body: { mode: env.TENANCY_MODE, header: "x-tenant-id" as const },
-    }));
+  status(): TenantStatusResponse {
+    return { mode: env.TENANCY_MODE, header: "x-tenant-id" };
   }
 }

@@ -4,20 +4,21 @@ import { useQueryState, parseAsInteger } from "nuqs";
 import { api } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Button } from "@repo/ui";
+import type { UserListResponse } from "@repo/shared";
 
 function UsersPage() {
   const { t } = useTranslation();
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const [limit] = useQueryState("limit", parseAsInteger.withDefault(10));
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<UserListResponse>({
     queryKey: ["users", { page, limit }],
     queryFn: async () => {
       const result = await api.users.list({
         query: { page, limit },
       });
       if (result.status !== 200) throw new Error("USERS_FETCH_FAILED");
-      return result.body;
+      return result.body as UserListResponse;
     },
     staleTime: 5 * 60 * 1000,
   });

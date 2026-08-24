@@ -1,8 +1,8 @@
-import { type AppRouter } from "@ts-rest/core";
-import { membershipRoutes } from "./memberships.contract";
-import { organizationRoutes } from "./organizations.contract";
+import { oc } from "@orpc/contract";
+import { organizationsContract } from "./organizations.contract";
+import { membershipsContract } from "./memberships.contract";
 
-export const tenancyContract = {
-  ...organizationRoutes,
-  ...membershipRoutes,
-} as const satisfies AppRouter;
+export const tenancyContract = oc.router({
+  ...organizationsContract,
+  ...membershipsContract,
+});

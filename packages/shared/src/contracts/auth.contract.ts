@@ -1,4 +1,4 @@
-import { initContract, type AppRouter } from "@ts-rest/core";
+import { oc } from "@orpc/contract";
 import {
   RegisterSchema,
   LoginSchema,
@@ -8,62 +8,29 @@ import {
   AuthResponseSchema,
   MessageResponseSchema,
 } from "../schemas/auth.schema";
-import { contractSchema } from "./contract-schema";
 
-const c = initContract();
-
-export const authContract = {
-  register: {
-    method: "POST" as const,
-    path: "/auth/register",
-    body: contractSchema(RegisterSchema),
-    responses: {
-      201: contractSchema(AuthResponseSchema),
-      409: contractSchema(MessageResponseSchema),
-    },
-  },
-  login: {
-    method: "POST" as const,
-    path: "/auth/login",
-    body: contractSchema(LoginSchema),
-    responses: {
-      200: contractSchema(AuthResponseSchema),
-      401: contractSchema(MessageResponseSchema),
-    },
-  },
-  logout: {
-    method: "POST" as const,
-    path: "/auth/logout",
-    body: c.noBody(),
-    responses: {
-      200: contractSchema(MessageResponseSchema),
-      401: contractSchema(MessageResponseSchema),
-    },
-  },
-  refresh: {
-    method: "POST" as const,
-    path: "/auth/refresh",
-    body: contractSchema(RefreshTokenSchema),
-    responses: {
-      200: contractSchema(AuthResponseSchema),
-      401: contractSchema(MessageResponseSchema),
-    },
-  },
-  forgotPassword: {
-    method: "POST" as const,
-    path: "/auth/forgot-password",
-    body: contractSchema(ForgotPasswordSchema),
-    responses: {
-      200: contractSchema(MessageResponseSchema),
-    },
-  },
-  resetPassword: {
-    method: "POST" as const,
-    path: "/auth/reset-password",
-    body: contractSchema(ResetPasswordSchema),
-    responses: {
-      200: contractSchema(MessageResponseSchema),
-      401: contractSchema(MessageResponseSchema),
-    },
-  },
-} as const satisfies AppRouter;
+export const authContract = oc.prefix("/auth").router({
+  register: oc
+    .route({ method: "POST", path: "/register", summary: "Register a new user" })
+    .input(RegisterSchema)
+    .output(AuthResponseSchema),
+  login: oc
+    .route({ method: "POST", path: "/login", summary: "Log in an existing user" })
+    .input(LoginSchema)
+    .output(AuthResponseSchema),
+  logout: oc
+    .route({ method: "POST", path: "/logout", summary: "Log out user" })
+    .output(MessageResponseSchema),
+  refresh: oc
+    .route({ method: "POST", path: "/refresh", summary: "Refresh access token" })
+    .input(RefreshTokenSchema)
+    .output(AuthResponseSchema),
+  forgotPassword: oc
+    .route({ method: "POST", path: "/forgot-password", summary: "Request password reset" })
+    .input(ForgotPasswordSchema)
+    .output(MessageResponseSchema),
+  resetPassword: oc
+    .route({ method: "POST", path: "/reset-password", summary: "Reset user password" })
+    .input(ResetPasswordSchema)
+    .output(MessageResponseSchema),
+});

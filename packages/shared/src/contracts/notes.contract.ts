@@ -1,4 +1,4 @@
-import { initContract, type AppRouter } from "@ts-rest/core";
+import { oc } from "@orpc/contract";
 import {
   CreateNoteSchema,
   NoteListResponseSchema,
@@ -6,61 +6,28 @@ import {
   UpdateNoteSchema,
   NoteIdParamSchema,
 } from "../schemas/note.schema";
-import { MessageResponseSchema } from "../schemas/auth.schema";
 import { PaginationQuerySchema } from "../schemas/pagination.schema";
-import { contractSchema } from "./contract-schema";
+import { z } from "zod";
 
-const c = initContract();
-
-export const notesContract = {
-  createNote: {
-    method: "POST" as const,
-    path: "/notes",
-    responses: {
-      201: contractSchema(NoteResponseSchema),
-      400: contractSchema(MessageResponseSchema),
-    },
-    body: contractSchema(CreateNoteSchema),
-    summary: "Create a new note",
-  },
-  getNotes: {
-    method: "GET" as const,
-    path: "/notes",
-    responses: {
-      200: contractSchema(NoteListResponseSchema),
-    },
-    query: contractSchema(PaginationQuerySchema),
-    summary: "Get paginated notes",
-  },
-  getNoteById: {
-    method: "GET" as const,
-    path: "/notes/:id",
-    pathParams: contractSchema(NoteIdParamSchema),
-    responses: {
-      200: contractSchema(NoteResponseSchema),
-      404: contractSchema(MessageResponseSchema),
-    },
-    summary: "Get a note by ID",
-  },
-  updateNote: {
-    method: "PATCH" as const,
-    path: "/notes/:id",
-    pathParams: contractSchema(NoteIdParamSchema),
-    responses: {
-      200: contractSchema(NoteResponseSchema),
-      404: contractSchema(MessageResponseSchema),
-    },
-    body: contractSchema(UpdateNoteSchema),
-    summary: "Update a note",
-  },
-  deleteNote: {
-    method: "DELETE" as const,
-    path: "/notes/:id",
-    pathParams: contractSchema(NoteIdParamSchema),
-    responses: {
-      204: c.noBody(),
-      404: contractSchema(MessageResponseSchema),
-    },
-    summary: "Delete a note",
-  },
-} as const satisfies AppRouter;
+export const notesContract = oc.prefix("/notes").router({
+  list: oc
+    .route({ method: "GET", path: "/", summary: "Get paginated notes" })
+    .input(PaginationQuerySchema)
+    .output(NoteListResponseSchema),
+  getById: oc
+    .route({ method: "GET", path: "/:id", summary: "Get a note by ID" })
+    .input(NoteIdParamSchema)
+    .output(NoteResponseSchema),
+  create: oc
+    .route({ method: "POST", path: "/", summary: "Create a new note" })
+    .input(CreateNoteSchema)
+    .output(NoteResponseSchema),
+  update: oc
+    .route({ method: "PATCH", path: "/:id", summary: "Update a note" })
+    .input(NoteIdParamSchema.and(UpdateNoteSchema))
+    .output(NoteResponseSchema),
+  delete: oc
+    .route({ method: "DELETE", path: "/:id", summary: "Delete a note" })
+    .input(NoteIdParamSchema)
+    .output(z.undefined().or(z.null()).or(z.void())),
+});

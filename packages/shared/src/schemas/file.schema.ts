@@ -66,4 +66,5 @@ export type RequestUploadInput = z.infer<typeof RequestUploadSchema>;
 export type ConfirmUploadInput = z.infer<typeof ConfirmUploadSchema>;
 export type FileMetadataResponse = z.infer<typeof FileMetadataSchema>;
 export type PresignedUrlResponse = z.infer<typeof PresignedUrlResponseSchema>;
+export type DownloadUrlResponse = z.infer<typeof DownloadUrlResponseSchema>;
 export type FileListResponse = z.infer<typeof FileListResponseSchema>;
