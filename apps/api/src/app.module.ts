@@ -31,6 +31,7 @@ import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor
 import { TracingInterceptor } from "./infrastructure/tracing/tracing.interceptor";
 import {
   AuthGuard,
+  CsrfGuard,
   PermissionsGuard,
   IdempotencyInterceptor,
   RateLimitGuard,
@@ -73,6 +74,10 @@ import {
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
     },
     {
       provide: APP_GUARD,

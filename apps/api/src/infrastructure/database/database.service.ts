@@ -7,6 +7,8 @@ import { PinoLoggerService } from "../logger/logger.service";
 import { env } from "../../config/env";
 import type { TransactionError } from "./database.types";
 
+import { sql } from "drizzle-orm";
+
 export type Database = NodePgDatabase;
 export type DrizzleDb = Database;
 
@@ -79,6 +81,12 @@ export class DatabaseService implements OnModuleDestroy {
     try {
       const result = await this.db.transaction(async (tx: DrizzleDb) => {
         const current = this.cls.isActive() ? this.cls.get() : {};
+        const tenantId = (current as { tenantId?: string })?.tenantId;
+        if (tenantId && typeof (tx as unknown as { execute?: unknown }).execute === "function") {
+          await (tx as unknown as { execute: (q: unknown) => Promise<void> }).execute(
+            sql`SET LOCAL app.current_tenant = ${tenantId}`,
+          );
+        }
         return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, fn);
       });
       return ok(result);
@@ -94,6 +102,12 @@ export class DatabaseService implements OnModuleDestroy {
     try {
       const result = await this.db.transaction(async (tx: DrizzleDb) => {
         const current = this.cls.isActive() ? this.cls.get() : {};
+        const tenantId = (current as { tenantId?: string })?.tenantId;
+        if (tenantId && typeof (tx as unknown as { execute?: unknown }).execute === "function") {
+          await (tx as unknown as { execute: (q: unknown) => Promise<void> }).execute(
+            sql`SET LOCAL app.current_tenant = ${tenantId}`,
+          );
+        }
         return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, async () => {
           const inner = await fn();
           if (inner.isErr()) {

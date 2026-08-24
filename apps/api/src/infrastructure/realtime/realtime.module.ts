@@ -5,6 +5,7 @@ import { RealtimeStreamConsumer } from "./streams/realtime-stream.consumer";
 import { RealtimeStreamRouter } from "./streams/realtime-stream.router";
 import { RealtimeSseController } from "./transports/realtime-sse.controller";
 import { RealtimeWebsocketGateway } from "./transports/realtime-websocket.gateway";
+import { RealtimeAuthListener } from "./listeners/realtime-auth.listener";
 
 @Global()
 @Module({
@@ -14,6 +15,7 @@ import { RealtimeWebsocketGateway } from "./transports/realtime-websocket.gatewa
     RealtimeStreamConsumer,
     RealtimeStreamRouter,
     RealtimeWebsocketGateway,
+    RealtimeAuthListener,
     RealtimeService,
   ],
   exports: [RealtimeService],

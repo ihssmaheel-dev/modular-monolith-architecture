@@ -75,7 +75,8 @@ async function bootstrap() {
     origin:
       env.NODE_ENV === "production" ? [env.CLIENT_URL] : [env.CLIENT_URL, "http://localhost:3000"],
     credentials: true,
-    allowedHeaders: "authorization,content-type,x-tenant-id,idempotency-key,accept-language",
+    allowedHeaders:
+      "authorization,content-type,x-tenant-id,idempotency-key,accept-language,x-xsrf-token,x-csrf-token",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     maxAge: 86400,
   });
