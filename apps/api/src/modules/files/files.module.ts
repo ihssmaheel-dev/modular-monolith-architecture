@@ -6,6 +6,7 @@ import { DeleteFileCommand } from "./application/commands/delete-file.command";
 import { GetFileByIdQuery } from "./application/queries/get-file-by-id.query";
 import { GetFileDownloadUrlQuery } from "./application/queries/get-file-download-url.query";
 import { ListFilesByParentQuery } from "./application/queries/list-files-by-parent.query";
+import { FileCleanupWorker } from "./application/workers/file-cleanup.worker";
 import { FilesRepository } from "./infrastructure/files.repository";
 
 @Module({
@@ -17,6 +18,7 @@ import { FilesRepository } from "./infrastructure/files.repository";
     GetFileByIdQuery,
     GetFileDownloadUrlQuery,
     ListFilesByParentQuery,
+    FileCleanupWorker,
     FilesRepository,
   ],
   exports: [
@@ -26,6 +28,7 @@ import { FilesRepository } from "./infrastructure/files.repository";
     GetFileByIdQuery,
     GetFileDownloadUrlQuery,
     ListFilesByParentQuery,
+    FileCleanupWorker,
     FilesRepository,
   ],
 })

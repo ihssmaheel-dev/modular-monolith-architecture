@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { and, eq, lt } from "drizzle-orm";
 import { DatabaseService } from "../../../infrastructure/database";
 import { TenantContextService } from "../../../infrastructure/database";
 import { BaseRepository } from "../../../infrastructure/database";
@@ -40,5 +41,18 @@ export class FilesRepository extends BaseRepository<FileEntity, FileRow> {
 
   async claimPendingUpload(key: string) {
     return this.updateOne({ key, status: "pending" }, { status: "uploading" });
+  }
+
+  async findPendingFilesBefore(cutoff: Date): Promise<FileEntity[]> {
+    const db = this.getDb();
+    const rows = await (
+      db as unknown as {
+        select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<FileRow[]> } };
+      }
+    )
+      .select()
+      .from(files)
+      .where(and(eq(files.status, "pending"), lt(files.createdAt, cutoff)));
+    return (rows ?? []).map((r) => this.toDomain(r));
   }
 }

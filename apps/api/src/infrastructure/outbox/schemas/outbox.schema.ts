@@ -1,6 +1,12 @@
 import { pgTable, text, timestamp, pgEnum, integer, index, jsonb } from "drizzle-orm/pg-core";
 
-export const outboxStatusEnum = pgEnum("outbox_status", ["PENDING", "PROCESSING", "PUBLISHED", "FAILED"]);
+export const outboxStatusEnum = pgEnum("outbox_status", [
+  "PENDING",
+  "PROCESSING",
+  "PUBLISHED",
+  "FAILED",
+  "DEAD_LETTER",
+]);
 
 export const outboxEvents = pgTable(
   "outbox_events",

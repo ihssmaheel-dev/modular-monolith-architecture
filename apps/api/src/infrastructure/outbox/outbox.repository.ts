@@ -8,7 +8,7 @@ export interface OutboxEvent {
   tenantId?: string;
   topic: string;
   payload: unknown;
-  status: "PENDING" | "PROCESSING" | "PUBLISHED" | "FAILED";
+  status: "PENDING" | "PROCESSING" | "PUBLISHED" | "FAILED" | "DEAD_LETTER";
   error?: string;
   attempts: number;
   nextAttemptAt?: Date;
