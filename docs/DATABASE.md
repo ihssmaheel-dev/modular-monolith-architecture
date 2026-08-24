@@ -8,41 +8,35 @@ its public `index.ts` barrel and do not import its internal files.
 ```text
 database/
 ├── context/                  tenant context backed by CLS
-├── plugins/                  global Mongoose audit and metrics plugins
 ├── repositories/             shared repository primitives and query helpers
-├── database-connection.factory.ts
 ├── database.module.ts        connection and provider ownership
 ├── database.service.ts       transactions and connection lifecycle
 ├── database.types.ts
 └── index.ts                  supported public API
 ```
 
-`DatabaseModule` is global and owns the Mongoose root connection. `AppModule` imports it but does
-not configure MongoDB directly. Connection pool and timeout values come from the validated
-environment configuration.
-
-The connection factory installs audit and database metrics plugins once for every schema. Plugins
-are internal implementation details and must not be imported by feature modules.
+`DatabaseModule` is global and owns the Postgres `pg.Pool` and Drizzle client. `AppModule` imports it
+but does not configure Postgres directly. Connection pool and timeout values come from the validated
+environment configuration (`DATABASE_URL`, `DB_MAX_POOL_SIZE`).
 
 ## Repository usage
 
-Use `BaseRepository` for global collections and `TenantScopedRepository` for tenant-owned
-collections:
+Use `BaseRepository` for global tables and `BaseRepository` with `tenantScoped=true` for tenant-owned
+tables:
 
 ```ts
-import { BaseRepository, TenantScopedRepository } from "../../../infrastructure/database";
+import { BaseRepository } from "../../../infrastructure/database";
 ```
 
-Repository reads are lean by default, paginate with a bounded page size, inherit the active Mongo
-session, and exclude soft-deleted documents unless explicitly requested. Updates and physical
-deletes follow the same soft-delete policy.
+Repository reads paginate with a bounded page size, inherit the active Postgres transaction from CLS,
+and exclude soft-deleted records unless explicitly requested. Updates and physical deletes follow the
+same soft-delete policy.
 
 Tenant-scoped repositories derive `tenantId` from trusted CLS context in multi-tenant mode. They
-overwrite caller-provided tenant filters and fail closed when no tenant is active. Feature
-repositories must not use `this.model` directly because that bypasses repository scoping.
+overwrite caller-provided tenant filters and fail closed when no tenant is active.
 
-Indexes belong only in `migrations/`; never declare `index: true`, `unique: true`, or
-`Schema.index()` in a Mongoose schema.
+Indexes belong in schema definitions and migrations (`migrations/pg/`); schema files declare Drizzle
+indexes using `pgTable(..., (t) => [...])`.
 
 ## Transactions
 
@@ -56,12 +50,9 @@ const result = await database.withResultTransaction(async () => {
 });
 ```
 
-The service creates a session, places it in CLS for all repository calls, commits successful
-results, aborts errors, and always closes the session. Transactions return
-`{ type: "TRANSACTION_FAILED" }` for infrastructure failures.
-
-MongoDB transactions require a replica set or managed cluster. The optional local replica set is
-documented in `docs/TENANCY.md`.
+The service creates a Postgres transaction via Drizzle, places it in CLS (`databaseTx`) for all
+repository calls, commits successful results, aborts errors, and automatically handles rollback.
+Transactions return `{ type: "TRANSACTION_FAILED" }` for infrastructure failures.
 
 ## Adding database capabilities
 

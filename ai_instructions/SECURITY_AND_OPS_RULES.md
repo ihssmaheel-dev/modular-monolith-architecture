@@ -64,8 +64,8 @@ export const env = loadEnv();
 ### Input
 - Validate all input with Zod at the API boundary.
 - Sanitize HTML output if rendering user content.
-- No raw MongoDB queries from user input.
-- Parameterized queries only. Never concatenate user input into queries.
+- No raw SQL queries from user input.
+- Parameterized queries only (Drizzle query builder handles this by default). Never concatenate user input into queries.
 
 ### Authorization
 - Check permissions at the application layer, not just the controller.
@@ -109,35 +109,20 @@ export const env = loadEnv();
 
 ### When to Add an Index
 Add an index when:
-- A field is used in `find()` queries frequently.
-- A field is used in `sort()` or `order()` operations.
-- A field is used in `where` / filter clauses.
-- A compound query uses multiple fields together.
+- A column is used in filters (`where` clauses) frequently.
+- A column is used in `order by` / sort operations.
+- A compound query uses multiple columns together.
+- Foreign keys / tenant IDs require fast lookups.
 
 ### Rules
-- Every index must be defined in a migration (via `migrate-mongo`).
-- Never add indexes directly in Mongoose schema without a migration.
-- Use compound indexes for multi-field queries.
-- Prefer sparse indexes for fields with many null values.
-- Name indexes descriptively: `users_email_unique`, `orders_userId_createdAt`.
-
-### Examples
-
-```typescript
-// Good: compound index for common query
-collection.createIndex({ userId: 1, createdAt: -1 });
-
-// Good: unique index
-collection.createIndex({ email: 1 }, { unique: true });
-
-// Good: sparse index for optional field
-collection.createIndex({ deletedAt: 1 }, { sparse: true });
-```
+- Declare indexes in Drizzle schemas (`*.schema.ts`) and generate SQL migrations via `drizzle-kit`.
+- Use compound indexes for multi-column queries (`index("idx_name").on(t.tenantId, t.createdAt)`).
+- Name indexes descriptively: `users_email_unique`, `orders_tenant_created_at_idx`.
 
 ### Anti-Patterns
-- No indexes on small collections (<1000 documents) unless growth is expected.
-- No over-indexing. Every index slows writes.
-- No unused indexes. Monitor with MongoDB profiler.
+- No indexes on tiny static lookup tables unless growth is expected.
+- No over-indexing. Every index slows write throughput.
+- No unused indexes. Monitor query plans with `EXPLAIN ANALYZE`.
 
 ---
 

@@ -8,6 +8,7 @@ vi.mock("pg", () => {
     Pool: class {
       on = vi.fn();
       end = vi.fn();
+      query = vi.fn();
     },
   };
 });

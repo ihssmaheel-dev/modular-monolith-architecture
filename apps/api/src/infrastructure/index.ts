@@ -24,3 +24,6 @@ export { RateLimitService } from "./rate-limit/rate-limit.service";
 export { WafModule } from "./waf/waf.module";
 export { I18nModule } from "./i18n/i18n.module";
 export { I18nService } from "./i18n/i18n.service";
+export { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
+export { FeatureFlagsService } from "./feature-flags/feature-flags.service";
+export type { FeatureFlagContext, FeatureFlagProvider } from "./feature-flags/feature-flags.types";

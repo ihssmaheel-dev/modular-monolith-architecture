@@ -6,6 +6,7 @@ import {
   HealthCheckResult,
   HealthIndicatorResult,
   HealthIndicator,
+  MemoryHealthIndicator,
 } from "@nestjs/terminus";
 import { DatabaseService } from "../database";
 import { RedisService } from "../redis/redis.service";
@@ -54,16 +55,40 @@ export class RedisHealthIndicator extends HealthIndicator {
 }
 
 @Injectable()
+export class OutboxHealthIndicator extends HealthIndicator {
+  constructor(private readonly database: DatabaseService) {
+    super();
+  }
+
+  async isHealthy(key: string): Promise<HealthIndicatorResult> {
+    try {
+      const db = this.database.getDb();
+      const result = await (
+        db as unknown as { execute: (q: unknown) => Promise<Array<{ count: string | number }>> }
+      ).execute(sql`SELECT count(*)::int AS count FROM outbox_events WHERE status = 'PENDING'`);
+      const pendingCount = Number(result[0]?.count ?? 0);
+      const isHealthy = pendingCount < 5000;
+      return this.getStatus(key, isHealthy, { pendingCount });
+    } catch (error) {
+      return this.getStatus(key, false, { error: String(error) });
+    }
+  }
+}
+
+@Injectable()
 export class AppHealthService {
   constructor(
     private readonly health: HealthCheckService,
+    private readonly memory: MemoryHealthIndicator,
     private readonly postgres: PostgresHealthIndicator,
     private readonly redis: RedisHealthIndicator,
+    private readonly outbox: OutboxHealthIndicator,
   ) {}
 
   @HealthCheck()
   check(): Promise<HealthCheckResult> {
     return this.health.check([
+      () => this.memory.checkHeap("memory_heap", 500 * 1024 * 1024),
       () => this.postgres.isHealthy("postgres"),
       () => this.redis.isHealthy("redis"),
     ]);
@@ -74,6 +99,7 @@ export class AppHealthService {
     return this.health.check([
       () => this.postgres.isHealthy("postgres"),
       () => this.redis.isHealthy("redis"),
+      () => this.outbox.isHealthy("outbox_queue"),
     ]);
   }
 }

@@ -6,23 +6,22 @@ Write efficient code. Performance is not optional — it's a design constraint.
 
 ## Database Queries
 
-### MongoDB / Mongoose
-- **Always add indexes** for fields used in `find()`, `sort()`, `where`, and compound queries.
-- **Use `select()`** to fetch only needed fields. Never fetch full documents when you need 2 fields.
-- **Use `lean()`** for read-only queries. Returns plain objects, not Mongoose documents.
-- **Use `cursor()`** for large result sets. Don't load thousands of documents into memory.
-- **Batch writes** with `insertMany()` or `bulkWrite()` instead of looping `save()`.
-- **Use `countDocuments()`** instead of `find().length` for counting.
+### PostgreSQL / Drizzle ORM
+- **Always add indexes** for columns used in filters, joins, sorts, and compound conditions.
+- **Select specific columns** when full entity rows are not needed.
+- **Batch writes** with `insert().values([...])` instead of looping single inserts.
+- **Use `sql<number>count(*)`** for efficient counts.
+- **Always use connection pooling** (`pg.Pool`) with bounded `max` pool size.
 
 ```typescript
 // Bad
-const users = await this.model.find({ role: "admin" });
+const users = await db.select().from(usersTable);
 const count = users.length;
 
 // Good
-const [users, count] = await Promise.all([
-  this.model.find({ role: "admin" }).select("email name").lean(),
-  this.model.countDocuments({ role: "admin" }),
+const [users, [{ count }]] = await Promise.all([
+  db.select({ email: usersTable.email, name: usersTable.name }).from(usersTable).where(eq(usersTable.role, "admin")),
+  db.select({ count: sql<number>`count(*)` }).from(usersTable).where(eq(usersTable.role, "admin")),
 ]);
 ```
 
@@ -155,7 +154,7 @@ export class ImportService {
 ### Rules
 - Worker files must be plain `.js` or `.ts` (Piscina handles transpilation).
 - Worker functions must be exported as named exports.
-- Don't send Mongoose documents to workers — serialize to plain objects first.
+- Don't send complex classes to workers — serialize to plain objects or strings first.
 - Workers must not import NestJS modules or services.
 - Workers can import pure utility functions from `packages/shared`.
 - Set `maxThreads` based on workload: I/O-heavy = more threads, CPU-heavy = `os.cpus().length`.
@@ -215,7 +214,7 @@ export class ImportService {
 
 ### Startup
 - Validate env vars once at startup (already done in `config/env.ts`).
-- Lazy-connect to Redis/MongoDB. Don't block app start unless required.
+- Lazy-connect to Redis/Postgres. Don't block app start unless required.
 
 ---
 

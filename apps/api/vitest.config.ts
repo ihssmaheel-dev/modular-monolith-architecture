@@ -20,6 +20,12 @@ export default defineConfig({
         "src/**/schemas/*.schema.ts",
       ],
       reporter: ["text", "json-summary"],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
     },
   },
   resolve: {

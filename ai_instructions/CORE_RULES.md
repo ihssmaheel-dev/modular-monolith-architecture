@@ -14,7 +14,7 @@ Supreme laws of this codebase. These are never negotiable.
 | Backend | NestJS 11 + Fastify 5 |
 | Validation | Zod 4 |
 | API Contract | ts-rest + Swagger UI |
-| Database | MongoDB + Mongoose 9 |
+| Database | PostgreSQL 16 + Drizzle ORM |
 | Cache & Queues | Redis (ioredis) + BullMQ |
 | Email Templating | React Email |
 | Worker Threads | Piscina 5 |
@@ -32,7 +32,7 @@ Supreme laws of this codebase. These are never negotiable.
 
 1. Use microservices — we are a modular monolith.
 2. Add packages without checking `PACKAGE_POLICY.md`.
-3. Import another module's Mongoose model.
+3. Import another module's Drizzle schema or repository.
 4. Put business logic in `infrastructure/`.
 5. Throw in application/domain layers — use `Result`.
 6. Duplicate schemas/types — use `packages/shared`.
@@ -54,7 +54,7 @@ Supreme laws of this codebase. These are never negotiable.
 3. Write thin controllers — delegate, don't decide.
 4. Use `I18nService` for backend error messages.
 5. Use `useTranslation()` for frontend text.
-6. Index MongoDB fields used in queries.
+6. Index database columns used in queries.
 7. Paginate list endpoints — never return unbounded arrays.
 8. Keep files under 150 lines, functions under 30 lines.
 9. Use Pino logger with structured context.

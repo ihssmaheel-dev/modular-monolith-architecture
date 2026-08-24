@@ -12,6 +12,45 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: super-secret-test-access-token-key-32chars
+      JWT_REFRESH_SECRET: super-secret-test-refresh-token-key-32chars
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: uploads
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -43,11 +82,14 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Architecture Rules Check
+        run: pnpm run rules:check
+
       - name: Lint
         run: pnpm run lint
 
-      - name: Test
-        run: pnpm run test
+      - name: Unit Tests
+        run: pnpm test:unit
 
       - name: Build
         run: pnpm run build

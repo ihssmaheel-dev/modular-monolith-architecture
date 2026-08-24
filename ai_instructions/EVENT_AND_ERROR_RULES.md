@@ -98,7 +98,7 @@ Domain errors stay internal. Controllers translate them to safe HTTP responses:
 return { status: 404, body: { message: "User not found" } };
 
 // Bad — leaks internal details
-return { status: 404, body: { message: `User ${id} not found in MongoDB collection users` } };
+return { status: 404, body: { message: `User ${id} not found in database table users` } };
 ```
 
 Never expose:

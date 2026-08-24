@@ -24,9 +24,9 @@ The command:
 1. Verifies Node, pnpm, Docker, and Compose.
 2. Copies each app's `.env.example` to `.env` only when the destination is missing.
 3. Installs the locked dependencies with `pnpm install --frozen-lockfile`.
-4. Starts MongoDB, Redis, MinIO, and Mailpit and waits for ready services.
+4. Starts Postgres, Redis, MinIO, and Mailpit and waits for ready services.
 5. Creates the local MinIO bucket idempotently.
-6. Applies pending MongoDB migrations.
+6. Applies pending PostgreSQL migrations via `drizzle-kit`.
 7. Builds the complete monorepo.
 
 It never overwrites an existing `.env` and does not create an administrator automatically.
@@ -46,18 +46,14 @@ Stop infrastructure with `pnpm docker:down`.
 
 ## Database migrations
 
-The API reads `MONGODB_URI` from `apps/api/.env`. Migration files live in `migrations/` and are the
-only place indexes may be defined.
+The API reads `DATABASE_URL` from `apps/api/.env`. Migration files live in `migrations/pg/`.
 
 ```sh
-pnpm db:migrate:status  # show applied and pending migrations
-pnpm db:migrate         # apply every pending migration
-pnpm db:migrate:down    # roll back exactly one migration
+pnpm --filter api db:migrate:status  # check schema status
+pnpm --filter api db:migrate         # apply every pending migration
+pnpm --filter api db:generate        # generate new migration from schemas
+pnpm --filter api db:migrate:dev     # push schema changes directly in dev
 ```
-
-Create migrations as `migrations/YYYYMMDDHHMMSS-descriptive-name.ts`. Every migration must provide
-safe `up` and `down` functions. Review the target database before running a rollback in a shared
-environment.
 
 ## Database seeding
 
@@ -83,7 +79,7 @@ pnpm rules:check
 pnpm build
 ```
 
-Integration and E2E tests require `TEST_MONGODB_URI` in `apps/api/.env`; its database name must
+Integration and E2E tests require `TEST_DATABASE_URL` in `apps/api/.env`; its database name must
 contain `test`. Run one API test with:
 
 ```sh
@@ -103,23 +99,21 @@ Useful runtime checks:
 
 ```sh
 docker compose -f docker/docker-compose.yml ps
-docker compose -f docker/docker-compose.yml logs mongodb redis minio mailpit
-pnpm db:migrate:status
+docker compose -f docker/docker-compose.yml logs postgres redis minio mailpit
+pnpm --filter api db:migrate:status
 ```
 
 ## Troubleshooting
 
 - **`docker` is unavailable:** install/start Docker and confirm `docker compose version` succeeds.
-- **A port is occupied:** check `3000`, `5173`, `6379`, `8025`, `9000`, `9001`, and `27017`, then
+- **A port is occupied:** check `3000`, `5173`, `5432`, `6379`, `8025`, `9000`, `9001`, then
   stop the conflicting process.
 - **Environment validation fails:** compare the relevant `.env` with its `.env.example`; access and
   refresh JWT secrets must differ and contain at least 32 characters.
-- **MongoDB authentication fails:** use the example URI including `authSource=admin`.
-- **Integration tests are skipped:** set `TEST_MONGODB_URI` and keep `test` in the database name.
+- **PostgreSQL authentication fails:** verify `DATABASE_URL` matches credentials in `docker-compose.yml`.
+- **Integration tests are skipped:** set `TEST_DATABASE_URL` and keep `test` in the database name.
 - **Emails do not appear:** keep `EMAIL_DRIVER=smtp`, `SMTP_HOST=localhost`, and `SMTP_PORT=1025`,
   then inspect Mailpit at `http://localhost:8025`.
-- **Multi-tenant transactions fail:** use the replica-set profile described in
-  [TENANCY.md](./TENANCY.md).
 - **Local data must be reset:** `docker compose -f docker/docker-compose.yml down -v` permanently
   deletes the local Docker volumes; run it only when that data is disposable.
 

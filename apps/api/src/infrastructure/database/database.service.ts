@@ -31,6 +31,34 @@ export class DatabaseService implements OnModuleDestroy {
       this.logger.error({ error: String(error) }, "Postgres pool error");
     });
 
+    if (typeof this.pool.query === "function") {
+      const originalQuery = this.pool.query.bind(this.pool);
+      // @ts-expect-error wrapping pg pool query for slow query observability
+      this.pool.query = async (...args: Parameters<typeof originalQuery>) => {
+        const start = performance.now();
+        try {
+          const result = await originalQuery(...args);
+          const durationMs = performance.now() - start;
+          if (durationMs > 100) {
+            const sqlText = typeof args[0] === "string" ? args[0] : (args[0] as { text?: string })?.text ?? "SQL";
+            this.logger.warn(
+              { sql: sqlText.slice(0, 500), durationMs: Math.round(durationMs) },
+              "Slow database query detected (>100ms)",
+            );
+          }
+          return result;
+        } catch (err) {
+          const durationMs = performance.now() - start;
+          const sqlText = typeof args[0] === "string" ? args[0] : (args[0] as { text?: string })?.text ?? "SQL";
+          this.logger.error(
+            { sql: sqlText.slice(0, 500), durationMs: Math.round(durationMs), error: String(err) },
+            "Database query failed",
+          );
+          throw err;
+        }
+      };
+    }
+
     this.db = drizzle(this.pool);
     this.logger.info({}, "Postgres pool initialized");
   }

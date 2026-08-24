@@ -50,7 +50,7 @@ Do not skip folders. Do not add extra folders beyond this structure.
 - `commands/` for write operations (create, update, delete).
 - `queries/` for read operations (list, getById, search).
 - `listeners/` for domain event handlers (welcome email, analytics, notifications).
-- Never directly accesses Mongoose. Goes through repository.
+- Never directly accesses database driver. Goes through repository.
 
 ### Strict CQRS (Command Query Responsibility Segregation)
 
@@ -73,9 +73,9 @@ Every domain module **must** implement a strict CQRS architecture. We do not use
 
 ### `infrastructure/`
 - Domain-specific persistence and adapters only.
-- `schemas/` — Mongoose schemas.
+- `schemas/` — Drizzle pgTable schemas (`[domain].schema.ts`).
 - `[domain].repository.ts` — data access implementation.
-- Mappers between Mongoose documents and domain entities.
+- Mappers between Drizzle table rows and domain entities.
 - External API adapters used by this domain only.
 - Never contains business logic.
 
@@ -85,8 +85,8 @@ Every domain module **must** implement a strict CQRS architecture. We do not use
 
 | Location | Responsibility |
 |----------|----------------|
-| `src/infrastructure/` | Cross-cutting: Redis connection, BullMQ root config, MinIO client, email transport, logger, mongoose connection |
-| `modules/[domain]/infrastructure/` | Domain-specific: Mongoose schemas, repositories, mappers, external API adapters |
+| `src/infrastructure/` | Cross-cutting: Redis connection, BullMQ root config, MinIO/S3 client, email transport, logger, Postgres connection |
+| `modules/[domain]/infrastructure/` | Domain-specific: Drizzle schemas, repositories, mappers, external API adapters |
 
 ### Shared Infrastructure Modules
 
@@ -102,13 +102,13 @@ All shared infrastructure modules:
 
 | Module | Responsibility |
 |--------|---------------|
-| `database/` | Mongoose connection, base repository, plugins |
+| `database/` | Postgres connection (pg.Pool), Drizzle client, base repository, transactions |
 | `logger/` | Pino logger with CLS enrichment |
 | `redis/` | ioredis connection |
 | `queue/` | BullMQ root config |
 | `workers/` | Piscina worker pools |
 | `cache/` | Redis caching (cache-aside pattern) |
-| `storage/` | S3/GridFS file storage |
+| `storage/` | S3 / MinIO file storage |
 | `email/` | SMTP/Resend email transport |
 | `realtime/` | WebSocket gateway and streams |
 | `session/` | Session management |
@@ -194,5 +194,5 @@ export class AppModule {}
 
 1. **Preferred:** Application command/query calls another module's command/query.
 2. **Allowed:** Domain events (in-process via EventEmitter2).
-3. **Never:** Direct import of another module's repository or Mongoose model.
+3. **Never:** Direct import of another module's repository or Drizzle schema.
 4. **Never:** Shared mutable state between modules.

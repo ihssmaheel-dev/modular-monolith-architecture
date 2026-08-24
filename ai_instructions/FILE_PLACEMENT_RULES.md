@@ -186,7 +186,7 @@ apps/api/src/common/
 ```
 apps/api/src/infrastructure/
 ├── database/
-│   ├── database.module.ts     ← Mongoose connection
+│   ├── database.module.ts     ← Postgres pool & Drizzle client
 │   └── database.service.ts
 ├── logger/
 │   ├── logger.module.ts       ← Pino logger
@@ -254,7 +254,7 @@ apps/api/src/modules/
     │       └── index.ts
     └── infrastructure/
         ├── schemas/
-        │   ├── [domain].mongoose-schema.ts
+        │   ├── [domain].schema.ts
         │   └── index.ts
         └── [domain].repository.ts
 ```
@@ -395,16 +395,18 @@ components/
 
 ```
 migrations/
-├── 20240101000000-create-users.ts
-├── 20240102000000-add-email-index.ts
-└── migrate-mongo-config.ts
+└── pg/
+    ├── 0000_orange_deadpool.sql
+    ├── 0001_audit_immutable.sql
+    ├── README.md
+    └── meta/
 ```
 
 ### Rules
-- Timestamp prefix: `YYYYMMDDHHMMSS-`.
-- Descriptive name: `create-[table]`, `add-[field]-index`.
-- One migration per schema change.
-- Every index must be in a migration.
+- Managed via `drizzle-kit` from `drizzle.config.ts`.
+- Generate: `pnpm --filter api db:generate`.
+- Apply: `pnpm --filter api db:migrate`.
+- Check status: `pnpm --filter api db:migrate:status`.
 
 ---
 
@@ -433,7 +435,7 @@ docs/
 | `process.env` outside `config/env.ts` | `config/env.ts` only |
 | Business logic in controller | `application/` command/query layer |
 | Business logic in repository | `domain/` entity or value object |
-| Mongoose import in domain layer | `infrastructure/` layer only |
+| ORM/DB driver in domain layer | `infrastructure/` layer only |
 | Test file far from source | Co-locate with source file |
 | Utility in random location | `packages/shared/src/utils/` or nearest `lib/` |
 | Component in routes folder | `components/` folder |
@@ -482,7 +484,7 @@ docs/
 | Value object | `apps/api/src/modules/[domain]/domain/value-objects/` |
 | Domain event | `apps/api/src/modules/[domain]/domain/events/` |
 | Domain error | `apps/api/src/modules/[domain]/domain/errors/` |
-| Mongoose schema | `apps/api/src/modules/[domain]/infrastructure/schemas/` |
+| Drizzle schema | `apps/api/src/modules/[domain]/infrastructure/schemas/` |
 | Repository | `apps/api/src/modules/[domain]/infrastructure/` |
 | Backend unit test | Co-locate with source: `[name].test.ts` |
 | Backend integration test | Co-locate with source: `[name].integration.test.ts` |
@@ -496,7 +498,7 @@ docs/
 | Mobile component | `apps/mobile/components/` |
 | Mobile hook | `apps/mobile/hooks/` |
 | Mobile store | `apps/mobile/stores/` |
-| DB migration | `migrations/YYYYMMDDHHMMSS-[name].ts` |
+| DB migration | `migrations/pg/` |
 | Docker config | `docker/` |
 | Documentation | `docs/` |
 

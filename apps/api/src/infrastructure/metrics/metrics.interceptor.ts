@@ -14,9 +14,9 @@ export class MetricsInterceptor implements NestInterceptor {
     const res = ctx.getResponse<FastifyReply>();
 
     const method = req.method;
-    // We use routeOptions.url if available, falling back to req.url
-    // This prevents high cardinality if URL contains IDs (e.g. /users/123 -> /users/:id)
-    const route = req.routeOptions?.url ?? req.url;
+    // We strictly use routeOptions.url if available, falling back to a fixed string
+    // to prevent high-cardinality explosion in Prometheus from raw URLs with parameter values.
+    const route = req.routeOptions?.url ?? "unmatched_route";
 
     const startTime = process.hrtime();
 

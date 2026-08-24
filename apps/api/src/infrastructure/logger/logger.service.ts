@@ -6,6 +6,7 @@ import { env } from "../../config/env";
 
 export interface LogContext {
   userId?: string;
+  tenantId?: string;
   requestId?: string;
   trace_id?: string;
   span_id?: string;
@@ -22,24 +23,38 @@ export class PinoLoggerService implements OnModuleDestroy {
       transport:
         env.NODE_ENV !== "production"
           ? { target: "pino-pretty", options: { colorize: true } }
-          : {
-              target: "pino-loki",
-              options: {
-                batching: true,
-                interval: 5,
-                host: env.LOKI_HOST,
-                labels: { application: "api-service" },
-              },
-            },
+          : env.LOKI_HOST && !env.LOKI_HOST.includes("localhost")
+            ? {
+                target: "pino-loki",
+                options: {
+                  batching: true,
+                  interval: 5,
+                  host: env.LOKI_HOST,
+                  labels: { application: "api-service" },
+                },
+              }
+            : undefined,
     });
   }
 
   private enrichContext(context: LogContext): LogContext {
-    const requestId = this.cls.get("requestId");
     const enriched = { ...context };
 
-    if (requestId && !enriched.requestId) {
-      enriched.requestId = requestId;
+    if (this.cls.isActive()) {
+      const requestId = this.cls.get("requestId");
+      if (requestId && !enriched.requestId) {
+        enriched.requestId = requestId;
+      }
+
+      const tenantId = this.cls.get("tenantId");
+      if (tenantId && !enriched.tenantId) {
+        enriched.tenantId = tenantId;
+      }
+
+      const userId = this.cls.get("userId");
+      if (userId && !enriched.userId) {
+        enriched.userId = userId;
+      }
     }
 
     const span = trace.getActiveSpan();

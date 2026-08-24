@@ -35,7 +35,7 @@ Ask these questions in order:
 4. **No global state managers beyond Zustand.** If you think you need Redux, MobX, or Jotai, justify why Zustand is insufficient.
 5. **No UI component libraries beyond shadcn/ui.** No MUI, no Ant Design, no Chakra. Extend shadcn/ui if needed. Exception: `@react-email/components` is allowed exclusively in `packages/email`.
 6. **No CSS frameworks beyond Tailwind.** No CSS Modules, no Styled Components, no Emotion.
-7. **No ORMs beyond Mongoose.** No Prisma, no TypeORM, no Drizzle.
+7. **No ORMs beyond Drizzle.** No Prisma, no TypeORM, no Mongoose.
 8. **No test frameworks beyond Vitest.** No Jest, no Mocha, no Jasmine.
 
 ---

@@ -6,21 +6,18 @@ startup. Never commit `.env` files or real credentials.
 
 ## API core and connectivity
 
-| Variable                              | Default / purpose                                                  |
-| ------------------------------------- | ------------------------------------------------------------------ |
-| `NODE_ENV`                            | `development`; one of `development`, `test`, `production`          |
-| `PORT`                                | `3000`; API listener port                                          |
-| `LOG_LEVEL`                           | `info`; Pino level from `fatal` through `trace`                    |
-| `TENANCY_MODE`                        | `single`; choose `single` or `multi` before production data exists |
-| `CLIENT_URL`                          | `http://localhost:5173`; allowed browser origin                    |
-| `API_URL`                             | `http://localhost:3000`; externally reachable API origin           |
-| `MONGODB_URI`                         | Local authenticated MongoDB connection string                      |
-| `MONGODB_MAX_POOL_SIZE`               | `10`; maximum Mongo connections                                    |
-| `MONGODB_MIN_POOL_SIZE`               | `2`; minimum Mongo connections                                     |
-| `MONGODB_SERVER_SELECTION_TIMEOUT_MS` | `5000`; initial/server selection timeout                           |
-| `MONGODB_HEARTBEAT_FREQUENCY_MS`      | `10000`; Mongo topology heartbeat interval                         |
-| `REDIS_URL`                           | `redis://localhost:6379` locally; required in production           |
-| `TEST_MONGODB_URI`                    | Integration/E2E database; its name must contain `test`             |
+| Variable                  | Default / purpose                                                  |
+| ------------------------- | ------------------------------------------------------------------ |
+| `NODE_ENV`                | `development`; one of `development`, `test`, `production`          |
+| `PORT`                    | `3000`; API listener port                                          |
+| `LOG_LEVEL`               | `info`; Pino level from `fatal` through `trace`                    |
+| `TENANCY_MODE`            | `single`; choose `single` or `multi` before production data exists |
+| `CLIENT_URL`              | `http://localhost:5173`; allowed browser origin                    |
+| `API_URL`                 | `http://localhost:3000`; externally reachable API origin           |
+| `DATABASE_URL`            | Local PostgreSQL connection string (e.g. `postgres://...`)         |
+| `DB_MAX_POOL_SIZE`        | `10`; maximum PostgreSQL connections in pool                       |
+| `REDIS_URL`               | `redis://localhost:6379` locally; required in production           |
+| `TEST_DATABASE_URL`       | Integration/E2E database; its name must contain `test`             |
 
 ## Authentication, security, and observability
 
@@ -41,7 +38,7 @@ startup. Never commit `.env` files or real credentials.
 
 | Variable               | Default / purpose                              |
 | ---------------------- | ---------------------------------------------- |
-| `STORAGE_DRIVER`       | `s3`; choose `s3` or `gridfs`                  |
+| `STORAGE_DRIVER`       | `s3`                                           |
 | `S3_ENDPOINT`          | `http://localhost:9000`; local MinIO endpoint  |
 | `S3_REGION`            | `us-east-1`                                    |
 | `S3_BUCKET`            | `uploads`                                      |
@@ -79,9 +76,8 @@ computer's LAN address and allow that origin/network as appropriate.
 
 ## Production Docker Compose
 
-`docker/.env.prod.example` also defines `MONGO_USER`, `MONGO_PASSWORD`, `MONGO_DB`, `MINIO_USER`,
-and `MINIO_PASSWORD` for container initialization. URL-encode database credentials embedded in
-`MONGODB_URI`. Generate unique production secrets; never reuse the committed local defaults.
+`docker/.env.prod.example` also defines `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `MINIO_USER`,
+and `MINIO_PASSWORD` for container initialization. Generate unique production secrets; never reuse the committed local defaults.
 
 When adding an API variable, update the shared Zod schema, every applicable example, this reference,
 and deployment configuration in the same change.
