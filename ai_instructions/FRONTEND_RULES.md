@@ -27,6 +27,7 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 9. **Environment variables** use `import.meta.env.VITE_*` (Vite convention). Never `process.env`.
 10. **All user-facing text** must use i18n via `useTranslation()` hook. Never hardcode strings.
 11. **Translation keys** follow the structure in `I18N_RULES.md`. Import from `@repo/shared`.
+12. **UI Access Gating** uses `<Can do="..." resource={...}>` from `@/components/shared/Can` and `useAuthorization()` / `usePermissions()` hooks.
 
 ### File Locations
 
@@ -37,9 +38,12 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 | TanStack Query client | `apps/web/src/lib/query-client.ts` |
 | i18n initialization | `apps/web/src/lib/i18n/index.ts` |
 | File upload hook | `apps/web/src/hooks/use-file-upload.ts` |
+| Authorization hooks | `apps/web/src/hooks/use-authorization.ts`, `use-permissions.ts` |
 | TanStack Query hooks | `apps/web/src/hooks/use-*.ts` |
 | Auth store | `apps/web/src/stores/auth.store.ts` |
+| Tenant store | `apps/web/src/stores/tenant.store.ts` |
 | UI store | `apps/web/src/stores/ui.store.ts` |
+| UI Permission Gate | `apps/web/src/components/shared/Can.tsx` |
 | Upload components | `apps/web/src/components/features/` (not `packages/ui`) |
 
 ### Performance
@@ -143,7 +147,7 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 
 ### Rules
 1. **Never import UI components** from `packages/ui`. Email clients do not support standard web CSS.
-2. **Use `@react-email/components`** primitives (Html, Head, Body, Container, Tailwind).
+2. **Use `react-email`** primitives (Html, Head, Body, Container, Tailwind).
 3. **Use the `npm run dev` server** within `packages/email` to preview templates locally.
 4. **Export templates** and a `render` function wrapper so the backend can consume them securely.
 

@@ -121,7 +121,8 @@ All shared infrastructure modules:
 | `audit/` | Audit logging to database |
 | `outbox/` | Transactional outbox for reliable events |
 | `security/` | Account lockout, cross-cutting security |
-| `swagger/` | OpenAPI/Swagger setup |
+| `api-docs/` | Interactive Scalar API Reference & OpenAPI 3.1 setup |
+| `authorization/` | Fine-Grained Authorization engine (RBAC + ReBAC + ABAC) & policies |
 
 Rules for shared infrastructure:
 - Must be `@Global()` if used across multiple modules.
@@ -176,9 +177,11 @@ export class AppModule {}
 ## Controller Rules
 
 - **Use standard Nest decorators**: Controllers use `@Controller()` with `@Post()`, `@Get()`, `@Body()`, `@Query()` etc., validated via Zod schemas from `packages/shared` (or oRPC `oc.route().input()`).
+- **Enforce Fine-Grained Authorization**: Protect endpoints with `@RequirePermission('...')` to enforce RBAC action vocabulary and multi-tenant scoping.
 - Validate input via Zod schemas from `packages/shared` before calling application layer.
 - `apiContract` (`oc.router` in `packages/shared`) is for client (`packages/api-client` via `RPCLink` + `createORPCClient`) and OpenAPI (`@orpc/openapi`), not a Nest handler.
 - **Protect mutations with Idempotency**: All critical POST, PUT, or DELETE endpoints (e.g., payments, resource creation) MUST be protected using the `@Idempotent()` decorator. The client is required to send an `idempotency-key` header to prevent duplicate processing.
+- **Domain Policies Registration**: If a domain module has domain-specific access rules, implement `OnModuleInit` in `[domain].module.ts` and call `this.authService.registerPolicies([domain]Policies)`.
 - Call exactly one application command/query per route.
 - Map Result to HTTP:
   - `ok(value)` → Return `{ status: 200, body: value }`

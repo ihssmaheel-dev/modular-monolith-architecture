@@ -13,10 +13,11 @@ Supreme laws of this codebase. These are never negotiable.
 | Monorepo | Turborepo + pnpm |
 | Backend | NestJS 11 + Fastify 5 |
 | Validation | Zod 4 |
-| API Contract | oRPC + Swagger UI |
+| API Contract | oRPC + Scalar API Reference (@scalar/fastify-api-reference) |
+| Authorization | Fine-Grained Authorization (RBAC + ReBAC + ABAC) |
 | Database | PostgreSQL 16 + Drizzle ORM |
 | Cache & Queues | Redis (ioredis) + BullMQ |
-| Email Templating | React Email |
+| Email Templating | React Email (react-email) |
 | Worker Threads | Piscina 5 |
 | Result Type | neverthrow 8 |
 | Web | React 19 + Vite + TanStack Router + TanStack Query + Zustand + shadcn/ui + Tailwind 4 |

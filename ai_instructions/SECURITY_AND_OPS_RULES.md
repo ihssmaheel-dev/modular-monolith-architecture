@@ -67,10 +67,14 @@ export const env = loadEnv();
 - No raw SQL queries from user input.
 - Parameterized queries only (Drizzle query builder handles this by default). Never concatenate user input into queries.
 
-### Authorization
-- Check permissions at the application layer, not just the controller.
-- Use the permission system in `packages/shared/src/permissions/`.
-- Deny by default. Allow only what is explicitly permitted.
+### Authorization (Fine-Grained Authorization / FGA)
+- **Hybrid FGA Engine**: Enforce access via unified **RBAC + ReBAC + ABAC** evaluation.
+- **Action Vocabulary**: Use explicit permission action strings (`notes:create`, `files:upload`, `team:invite`, `billing:manage`).
+- **Endpoint Fast-Guard**: Protect HTTP controllers with `@RequirePermission('...')` to reject unauthorized requests at the presentation boundary.
+- **Application & Domain Protection**: In CQRS command/query handlers or domain policies, use `AuthorizationService.check({ principal, action, resource, context })` or `AuthorizationService.assert(...)`.
+- **ReBAC & Ownership**: Resource ownership (`resource.ownerId === principal.id`) grants full author access within the tenant boundary.
+- **Tenant Isolation**: Cross-tenant resource access is strictly forbidden (`TENANT_MISMATCH`).
+- **Closed-World Default Deny**: Deny by default. Allow only what is explicitly permitted by superadmin, ownership, matching policy, or role.
 
 ### Rate Limiting
 - Apply rate limiting to public endpoints.

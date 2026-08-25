@@ -56,7 +56,12 @@ packages/shared/src/
 │   ├── errors.ts              ← Error code constants
 │   └── index.ts
 ├── permissions/
-│   ├── users.permissions.ts   ← Permission definitions
+│   ├── index.ts               ← Action vocabulary & wildcard matcher
+│   └── permissions.test.ts
+├── authorization/
+│   ├── types.ts               ← Principal, ResourceDescriptor, Policy types
+│   ├── evaluator.ts           ← Pure FGA engine (RBAC + ReBAC + ABAC)
+│   ├── authorization.test.ts  ← FGA test suite
 │   └── index.ts
 ├── utils/
 │   ├── date.ts                ← Pure utility functions
@@ -215,7 +220,8 @@ apps/api/src/infrastructure/
 - Must implement `OnModuleDestroy` for cleanup.
 - No business logic. Pure technical concern.
 - Worker tasks are pure functions. No NestJS imports.
-- Swagger/OpenAPI setup goes in `infrastructure/swagger/`.
+- Interactive API Reference setup goes in `infrastructure/api-docs/`.
+- Fine-Grained Authorization setup goes in `infrastructure/authorization/`.
 
 ---
 
@@ -441,7 +447,7 @@ docs/
 | Component in routes folder | `components/` folder |
 | Store in components folder | `stores/` folder |
 | Hook in components folder | `hooks/` folder |
-| Swagger in config folder | `infrastructure/swagger/` |
+| API Docs in config folder | `infrastructure/api-docs/` |
 
 ---
 
@@ -453,15 +459,19 @@ docs/
 | TypeScript type | `packages/shared/src/types/[domain].types.ts` |
 | oRPC contract | `packages/shared/src/contracts/[domain].contract.ts` |
 | Shared constant | `packages/shared/src/constants/[category].ts` |
-| Permission | `packages/shared/src/permissions/[domain].permissions.ts` |
+| Action permission | `packages/shared/src/permissions/[domain].permissions.ts` |
+| Pure FGA evaluator | `packages/shared/src/authorization/` |
 | Pure utility | `packages/shared/src/utils/[name].ts` |
 | i18n translations | `packages/shared/src/i18n/locales/[locale].json` |
 | UI component | `packages/ui/src/components/[Name]/[Name].tsx` |
 | API client helper | `packages/api-client/src/` |
 | Env config | `apps/api/src/config/env.ts` |
-| Swagger setup | `apps/api/src/infrastructure/swagger/` |
+| API Docs setup | `apps/api/src/infrastructure/api-docs/` |
+| Authorization service | `apps/api/src/infrastructure/authorization/` |
+| Domain policies | `apps/api/src/modules/[domain]/application/[domain].policies.ts` |
 | Exception filter | `apps/api/src/common/filters/` |
 | Auth guard | `apps/api/src/common/guards/` |
+| Permissions guard | `apps/api/src/common/guards/permissions.guard.ts` |
 | Validation pipe | `apps/api/src/common/pipes/` |
 | Database connection | `apps/api/src/infrastructure/database/` |
 | Logger | `apps/api/src/infrastructure/logger/` |

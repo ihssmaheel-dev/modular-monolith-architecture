@@ -4,10 +4,11 @@ A production-ready modular monolith built with NestJS, featuring clean architect
 
 ## Tech Stack
 
-- **Backend:** NestJS 11 + Fastify 5 + Postgres 16 + Drizzle ORM 0.44 + pg 8.13 + Redis/BullMQ
-- **Frontend:** React 19 + Vite + Tailwind CSS 4
+- **Backend:** NestJS 11 + Fastify 5 + Postgres 16 + Drizzle ORM + Redis/BullMQ + oRPC
+- **Frontend:** React 19 + Vite + TanStack Router + TanStack Query + Tailwind CSS 4
 - **Mobile:** React Native + Expo + NativeWind
-- **Shared:** TypeScript 5.5 + Zod 4 + ts-rest v3
+- **Shared:** TypeScript 5.5 + Zod 4 Standard Schemas + oRPC Contracts + Unified FGA Engine
+- **Documentation:** Interactive Scalar API Reference (@scalar/fastify-api-reference)
 - **Infrastructure:** Docker + Turborepo + pnpm workspaces
 
 ## Prerequisites
@@ -26,24 +27,24 @@ pnpm bootstrap
 pnpm dev
 ```
 
-See the [developer bootstrap guide](./docs/DEVELOPMENT.md) for focused app commands and local
-service URLs.
+See the [developer bootstrap guide](./docs/DEVELOPMENT.md) for focused app commands and local service URLs.
 
 ## Project Structure
 
 ```
 ├── apps/
-│   ├── api/          # NestJS backend
-│   ├── web/          # React frontend
-│   └── mobile/       # React Native app
+│   ├── api/          # NestJS backend (Modular Monolith + CQRS + FGA)
+│   ├── web/          # React frontend (TanStack Router + Query + <Can>)
+│   └── mobile/       # React Native Expo app
 ├── packages/
-│   ├── shared/       # Shared schemas, types, contracts
+│   ├── shared/       # Shared schemas, types, contracts, authorization evaluator
 │   ├── ui/           # Shared UI components (web)
-│   ├── api-client/   # Type-safe API client
-│   ├── email/        # Email templates
+│   ├── api-client/   # Type-safe API client (oRPC + TanStack Query)
+│   ├── email/        # Email templates (React Email)
 │   └── eslint-config/ # Shared ESLint config
+├── scripts/          # Full-Stack Vertical Slice Generator (pnpm generate:feature)
 ├── docker/           # Docker Compose files
-└── ai_instructions/  # Architecture rules
+└── ai_instructions/  # Mandatory Architecture rules
 ```
 
 ## Available Scripts
@@ -51,12 +52,14 @@ service URLs.
 ```bash
 # Development
 pnpm dev              # Start all apps
-pnpm dev:api          # Start API only
-pnpm dev:web          # Start web only
+pnpm dev:api          # Start API only (port 4000)
+pnpm dev:web          # Start web only (port 5173)
+
+# Full-Stack Vertical Slice Generator
+pnpm generate:feature <module> <feature>  # Scaffolds all 7 layers automatically
 
 # Build
 pnpm build            # Build all packages
-pnpm build:api        # Build API only
 
 # Testing
 pnpm test             # Run all tests
@@ -68,68 +71,54 @@ pnpm test:e2e         # E2E tests only
 pnpm db:migrate       # Run migrations
 pnpm db:seed          # Seed database
 
-# Code Quality
+# Code Quality & Architecture
 pnpm lint             # Lint all packages
 pnpm format:check     # Verify formatting
-pnpm rules:check      # Enforce architecture rules
+pnpm rules:check      # Enforce strict architecture rules
 
 # Docker
 pnpm docker:up        # Start infrastructure
 pnpm docker:down      # Stop infrastructure
 ```
 
-## API Documentation
+## Interactive API Documentation (Scalar)
 
-Optional single-/multi-tenant setup is documented in [docs/TENANCY.md](./docs/TENANCY.md).
-Database boundaries, repositories, and transactions are documented in
-[docs/DATABASE.md](./docs/DATABASE.md).
-Environment variables are documented in [docs/ENVIRONMENT.md](./docs/ENVIRONMENT.md), and new
-backend modules in [docs/NEW_MODULE.md](./docs/NEW_MODULE.md).
-
-When running in development mode, Swagger UI is available at:
+When running the API in development mode, the interactive **Scalar API Reference** is available at:
 
 ```
-http://localhost:3000/api/docs
+http://localhost:4000/api/docs
 ```
+
+- Live interactive request testing ("Try It Out").
+- Multi-language SDK code generation (TypeScript, Python, cURL, Go, Ruby, Java, Swift).
+- Raw OpenAPI 3.1 specifications available at `/api/docs/openapi.json` and `/api/docs/openapi.yaml`.
+
+## Fine-Grained Authorization (FGA)
+
+The architecture includes a unified hybrid authorization engine:
+- **RBAC**: Action vocabulary strings (`notes:create`, `team:invite`, `billing:manage`) with role bundling.
+- **ReBAC**: Relationship & ownership checks (`user → owner → resource`).
+- **ABAC**: Declarative policy predicates (tenant boundaries, department matching, amount limits).
+- **Backend Guard**: `@RequirePermission('notes:create')` and `AuthorizationService.check({ principal, action, resource, context })`.
+- **Frontend Gating**: `<Can do="notes:update" resource={note}><EditButton /></Can>`.
 
 ## Health Checks
 
 - **Liveness:** `GET /api/health/live`
 - **Readiness:** `GET /api/health/ready`
 
-## Environment Variables
-
-Copy `.env.example` to `.env` in the respective app directories and configure:
-
-```bash
-# Required
-JWT_SECRET=your-secret-key
-JWT_REFRESH_SECRET=your-refresh-secret
-CLIENT_URL=http://localhost:5173
-
-# Optional
-CDN_ENABLED=false
-CDN_DOMAIN=
-```
-
 ## Architecture
 
 This project follows **Clean Architecture** with **CQRS pattern**:
 
-- **Presentation:** Controllers, resolvers, mappers
-- **Application:** Commands, queries, handlers
-- **Domain:** Entities, value objects, domain services
-- **Infrastructure:** Repositories, external services
+- **Presentation:** Controllers, resolvers, mappers, `@RequirePermission` guards
+- **Application:** Commands, queries, handlers, domain policies, event listeners
+- **Domain:** Entities, value objects, domain events, domain errors
+- **Infrastructure:** Repositories, database service, external adapters
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed documentation.
-
-## Contributing
-
-1. Create a feature branch from `main`
-2. Make your changes following the architecture rules
-3. Run tests and linting
-4. Submit a pull request
 
 ## License
 
 MIT
+
