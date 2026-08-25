@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "../lib/utils";
 import { Spinner } from "./spinner";
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_MB } from "@repo/shared";
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_MB } from "@repo/contracts";
 
 export interface FileUploadProps {
   onUpload: (file: File) => Promise<void>;

@@ -1,4 +1,4 @@
-import type { Policy } from "@repo/shared";
+import type { Policy } from "@repo/authorization";
 
 export const notePolicies: Policy[] = [
   {

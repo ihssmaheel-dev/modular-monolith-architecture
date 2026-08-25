@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ok } from "neverthrow";
 import type { Queue } from "bullmq";
-import type { EmailJobData } from "@repo/shared";
+import type { EmailJobData } from "@repo/contracts";
 import { EmailService } from "../../../../infrastructure/email/email.service";
 import { I18nService } from "../../../../infrastructure/i18n/i18n.service";
 import { PinoLoggerService } from "../../../../infrastructure/logger/logger.service";

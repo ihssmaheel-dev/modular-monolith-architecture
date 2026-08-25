@@ -1,7 +1,7 @@
 const path = require("path");
 const { writeFileIfMissing, appendExportIfMissing } = require("./utils");
 
-function generateContracts({ sharedPath, feature, Feature, featurePlural, FeaturePlural }) {
+function generateContracts({ contractsPath, feature, Feature, featurePlural, FeaturePlural }) {
   const schemaContent = `import { z } from "zod";
 
 export const Create${Feature}Schema = z.object({
@@ -72,15 +72,15 @@ export const ${featurePlural}Contract = oc.prefix("/${featurePlural}").router({
 });
 `;
 
-  writeFileIfMissing(path.join(sharedPath, "src", "schemas", `${feature}.schema.ts`), schemaContent);
-  writeFileIfMissing(path.join(sharedPath, "src", "contracts", `${featurePlural}.contract.ts`), contractContent);
+  writeFileIfMissing(path.join(contractsPath, "src", "schemas", `${feature}.schema.ts`), schemaContent);
+  writeFileIfMissing(path.join(contractsPath, "src", "contracts", `${featurePlural}.contract.ts`), contractContent);
 
   appendExportIfMissing(
-    path.join(sharedPath, "src", "schemas", "index.ts"),
+    path.join(contractsPath, "src", "schemas", "index.ts"),
     `export * from "./${feature}.schema";`,
   );
   appendExportIfMissing(
-    path.join(sharedPath, "src", "contracts", "index.ts"),
+    path.join(contractsPath, "src", "contracts", "index.ts"),
     `export * from "./${featurePlural}.contract";`,
   );
 }

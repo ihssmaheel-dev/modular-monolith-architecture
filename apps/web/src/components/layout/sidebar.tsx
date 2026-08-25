@@ -3,7 +3,7 @@ import { useUIStore } from "@/stores/ui.store";
 import { LayoutDashboard, Users, Settings, FileText, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Can } from "@/components/shared/Can";
-import type { Permission } from "@repo/shared";
+import type { Permission } from "@repo/authorization";
 
 interface NavItem {
   to: "/" | "/users" | "/notes" | "/settings";

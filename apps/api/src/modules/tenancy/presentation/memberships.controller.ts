@@ -6,16 +6,7 @@ import {
   TenantAgnostic,
   requireAuthenticatedUser,
 } from "../../../common";
-import {
-  type AcceptInvitationInput,
-  type InviteMemberInput,
-  type UpdateMemberInput,
-  type PaginationQuery,
-  type MemberResponse,
-  type MemberListResponse,
-  type InvitationResponse,
-  type InvitationListResponse,
-} from "@repo/shared";
+import { type AcceptInvitationInput, type InviteMemberInput, type UpdateMemberInput, type PaginationQuery, type MemberResponse, type MemberListResponse, type InvitationResponse, type InvitationListResponse } from "@repo/contracts";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
 import { AcceptInvitationCommand } from "../application/commands/accept-invitation.command";

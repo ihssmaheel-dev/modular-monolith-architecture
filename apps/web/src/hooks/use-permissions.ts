@@ -1,10 +1,6 @@
 import { useMemo } from "react";
 import { useAuthStore } from "@/stores/auth.store";
-import {
-  hasPermission,
-  resolveUserPermissions,
-  type Permission,
-} from "@repo/shared";
+import { hasPermission, resolveUserPermissions, type Permission } from "@repo/authorization";
 
 export function usePermissions() {
   const user = useAuthStore((state) => state.user);

@@ -4,12 +4,8 @@ import {
   PERMISSIONS_KEY,
   type PermissionRequirement,
 } from "../decorators/permissions.decorator";
-import {
-  hasPermission,
-  resolveUserPermissions,
-  type Permission,
-  type TenantContext,
-} from "@repo/shared";
+import { type TenantContext } from "@repo/contracts";
+import { hasPermission, resolveUserPermissions, type Permission } from "@repo/authorization";
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {

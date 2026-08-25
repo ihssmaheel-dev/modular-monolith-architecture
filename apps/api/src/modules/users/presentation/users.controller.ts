@@ -1,13 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import { Idempotent, RequirePermission, TenantAgnostic } from "../../../common";
-import {
-  type CreateUserInput,
-  type UpdateUserInput,
-  type PaginationQuery,
-  type UserResponse,
-  type UserListResponse,
-} from "@repo/shared";
+import { type CreateUserInput, type UpdateUserInput, type PaginationQuery, type UserResponse, type UserListResponse } from "@repo/contracts";
 import { GetUsersQuery } from "../application/queries/get-users.query";
 import { GetUserByIdQuery } from "../application/queries/get-user-by-id.query";
 import { CreateUserCommand } from "../application/commands/create-user.command";

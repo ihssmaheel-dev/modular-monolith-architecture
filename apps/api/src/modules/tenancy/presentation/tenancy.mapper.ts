@@ -1,4 +1,4 @@
-import type { TenantRole } from "@repo/shared";
+import type { TenantRole } from "@repo/contracts";
 import type { Invitation, Membership, Organization } from "../domain/entities/tenancy.entity";
 
 export function toOrganizationResponse(organization: Organization, role: TenantRole) {

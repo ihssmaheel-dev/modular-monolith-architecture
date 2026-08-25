@@ -1,4 +1,4 @@
-import { type UserRole } from "@repo/shared";
+import { type UserRole } from "@repo/contracts";
 import { randomUUID } from "crypto";
 
 export interface UserData {

@@ -10,7 +10,7 @@ function generateFrontend({
 }) {
   const hooksContent = `import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import type { Create${Feature}Dto, PaginationQuery } from "@repo/shared";
+import type { Create${Feature}Dto, PaginationQuery } from "@repo/contracts";
 
 export const ${featurePlural}Keys = {
   all: ["${featurePlural}"] as const,
@@ -114,7 +114,7 @@ export function Create${Feature}Form() {
 
   const listContent = `import { Button, Card } from "@repo/ui";
 import { use${FeaturePlural}, useDelete${Feature} } from "../../../hooks/use-${featurePlural}";
-import type { ${Feature}ResponseDto } from "@repo/shared";
+import type { ${Feature}ResponseDto } from "@repo/contracts";
 
 export function ${FeaturePlural}List() {
   const { data, isLoading, isError } = use${FeaturePlural}();

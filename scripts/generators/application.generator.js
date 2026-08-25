@@ -11,7 +11,7 @@ function generateApplication({
   const createCmd = `import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { type Result } from "neverthrow";
-import type { AuthenticatedUser, Create${Feature}Dto } from "@repo/shared";
+import type { AuthenticatedUser, Create${Feature}Dto } from "@repo/contracts";
 import { ${Feature} } from "../../domain/entities/${feature}.entity";
 import { ${Feature}CreatedEvent } from "../../domain/events/${feature}.events";
 import { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
@@ -70,7 +70,7 @@ describe("Create${Feature}Command", () => {
   const updateCmd = `import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { err, type Result } from "neverthrow";
-import type { AuthenticatedUser, Update${Feature}Dto } from "@repo/shared";
+import type { AuthenticatedUser, Update${Feature}Dto } from "@repo/contracts";
 import { ${Feature} } from "../../domain/entities/${feature}.entity";
 import { ${Feature}UpdatedEvent } from "../../domain/events/${feature}.events";
 import { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
@@ -144,7 +144,7 @@ describe("Update${Feature}Command", () => {
   const deleteCmd = `import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { err, ok, type Result } from "neverthrow";
-import type { AuthenticatedUser } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
 import { ${Feature}DeletedEvent } from "../../domain/events/${feature}.events";
 import { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
 
@@ -202,7 +202,7 @@ describe("Delete${Feature}Command", () => {
 
   const getByIdQuery = `import { Injectable } from "@nestjs/common";
 import { err, ok, type Result } from "neverthrow";
-import type { AuthenticatedUser } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
 import { ${Feature} } from "../../domain/entities/${feature}.entity";
 import { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
 
@@ -247,7 +247,7 @@ describe("Get${Feature}ByIdQuery", () => {
 
   const listQuery = `import { Injectable } from "@nestjs/common";
 import type { Result } from "neverthrow";
-import type { AuthenticatedUser, PaginationQuery } from "@repo/shared";
+import type { AuthenticatedUser, PaginationQuery } from "@repo/contracts";
 import type { PaginatedResult } from "../../../../infrastructure/database";
 import { ${Feature} } from "../../domain/entities/${feature}.entity";
 import { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";

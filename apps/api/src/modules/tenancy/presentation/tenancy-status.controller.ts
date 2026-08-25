@@ -1,7 +1,7 @@
 import { Controller, Get, HttpCode, HttpStatus } from "@nestjs/common";
 import { Public, TenantAgnostic } from "../../../common";
 import { env } from "../../../config/env";
-import type { TenantStatusResponse } from "@repo/shared";
+import type { TenantStatusResponse } from "@repo/contracts";
 
 @Controller("tenancy")
 @TenantAgnostic()

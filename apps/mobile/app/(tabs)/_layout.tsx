@@ -2,7 +2,7 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAuthStore } from "../../stores/auth.store";
-import { colors } from "@repo/shared";
+import { colors } from "@repo/design-tokens";
 import { useTranslation } from "react-i18next";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];

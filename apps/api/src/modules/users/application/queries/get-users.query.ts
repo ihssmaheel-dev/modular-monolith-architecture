@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
 import { User } from "../../domain/entities/user.entity";
 import { UsersRepository } from "../../infrastructure/users.repository";
-import { paginate } from "@repo/shared";
+import { paginate } from "@repo/contracts";
 
 @Injectable()
 export class GetUsersQuery {

@@ -1,6 +1,6 @@
 import { env } from "../../../config/env";
 import { FileEntity } from "../domain/entities/file.entity";
-import type { FileMetadataResponse } from "@repo/shared";
+import type { FileMetadataResponse } from "@repo/contracts";
 
 export function toFileResponse(file: FileEntity): FileMetadataResponse {
   const baseUrl =

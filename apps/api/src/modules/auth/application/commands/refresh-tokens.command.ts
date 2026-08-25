@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
-import type { AuthResponse } from "@repo/shared";
+import type { AuthResponse } from "@repo/contracts";
 import type { AuthError } from "../../domain/errors/auth.errors";
 import { GetUserByIdQuery } from "../../../users/application/queries/get-user-by-id.query";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.utils";

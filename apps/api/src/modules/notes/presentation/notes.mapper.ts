@@ -1,4 +1,4 @@
-import { NoteResponseDto } from "@repo/shared";
+import { NoteResponseDto } from "@repo/contracts";
 import { Note } from "../domain/entities/note.entity";
 
 export function toNoteResponse(note: Note): NoteResponseDto {

@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ClsService } from "nestjs-cls";
-import type { AuthenticatedUser, TenantContext } from "@repo/shared";
+import type { AuthenticatedUser, TenantContext } from "@repo/contracts";
 import { env } from "../../config/env";
 import { ResolveTenantAccessQuery } from "../../modules/tenancy/application/queries/resolve-tenant-access.query";
 import { TENANT_AGNOSTIC_KEY } from "../decorators/tenant-agnostic.decorator";

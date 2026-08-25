@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { AuthResponse } from "@repo/shared";
+import type { AuthResponse } from "@repo/contracts";
 
 type AuthUser = AuthResponse["user"];
 

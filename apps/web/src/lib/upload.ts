@@ -1,5 +1,5 @@
 import type { ApiClient } from "@repo/api-client";
-import { RequestUploadSchema, type FileMetadataResponse } from "@repo/shared";
+import { RequestUploadSchema, type FileMetadataResponse } from "@repo/contracts";
 
 export interface UploadProgress {
   loaded: number;

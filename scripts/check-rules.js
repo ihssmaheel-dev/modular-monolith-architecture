@@ -89,7 +89,7 @@ function leafKeys(value, prefix = "") {
 }
 
 function checkLocaleParity() {
-  const localeDirectory = path.join(ROOT, "packages/shared/src/i18n/locales");
+  const localeDirectory = path.join(ROOT, "packages/i18n/src/locales");
   const locales = ["en", "es", "fr"].map((locale) => {
     const file = path.join(localeDirectory, `${locale}.json`);
     return { locale, file, keys: new Set(leafKeys(JSON.parse(fs.readFileSync(file, "utf8")))) };
@@ -104,7 +104,7 @@ function checkLocaleParity() {
 }
 
 function checkTranslationUsage() {
-  const englishFile = path.join(ROOT, "packages/shared/src/i18n/locales/en.json");
+  const englishFile = path.join(ROOT, "packages/i18n/src/locales/en.json");
   const englishKeys = new Set(leafKeys(JSON.parse(fs.readFileSync(englishFile, "utf8"))));
   const translationPattern = /\b(?:t|translate)\(\s*["'`]([^"'`]+)["'`]/g;
 

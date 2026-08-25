@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { err, ok } from "neverthrow";
-import type { AuthenticatedUser, Locale } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
+import type { Locale } from "@repo/i18n";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { TenantContextService } from "../../../../infrastructure/database";

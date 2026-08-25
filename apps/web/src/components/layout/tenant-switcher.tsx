@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Button, Input } from "@repo/ui";
-import { TenantStatusResponseSchema, type OrganizationResponse } from "@repo/shared";
+import { TenantStatusResponseSchema, type OrganizationResponse } from "@repo/contracts";
 import { api } from "@/lib/api";
 import { useTenantStore } from "@/stores/tenant.store";
 

@@ -1,10 +1,4 @@
-import type {
-  CreateNoteDto,
-  NoteListResponseDto,
-  NoteResponseDto,
-  PaginationQuery,
-  UpdateNoteDto,
-} from "@repo/shared";
+import type { CreateNoteDto, NoteListResponseDto, NoteResponseDto, PaginationQuery, UpdateNoteDto } from "@repo/contracts";
 import type { FetchFn } from "../types";
 
 export function createNotesClient(fetchFn: FetchFn) {

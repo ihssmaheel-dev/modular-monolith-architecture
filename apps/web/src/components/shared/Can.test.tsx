@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Can } from "./Can";
 import { useAuthStore } from "@/stores/auth.store";
-import { Permissions } from "@repo/shared";
+import { Permissions } from "@repo/authorization";
 
 describe("<Can /> Component", () => {
   beforeEach(() => {

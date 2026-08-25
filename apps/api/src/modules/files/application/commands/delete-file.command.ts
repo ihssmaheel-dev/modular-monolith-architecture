@@ -3,7 +3,7 @@ import { ok, err, Result } from "neverthrow";
 import { StorageService } from "../../../../infrastructure/storage/storage.service";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
-import type { AuthenticatedUser } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
 
 @Injectable()
 export class DeleteFileCommand {

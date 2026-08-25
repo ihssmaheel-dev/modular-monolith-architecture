@@ -1,5 +1,5 @@
 import { NestFastifyApplication } from "@nestjs/platform-fastify";
-import { apiContract } from "@repo/shared";
+import { apiContract } from "@repo/contracts";
 import { env } from "../../config/env";
 
 export async function setupApiDocs(app: NestFastifyApplication): Promise<void> {

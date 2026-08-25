@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreateNoteSchema, type CreateNoteDto } from "@repo/shared";
+import { CreateNoteSchema, type CreateNoteDto } from "@repo/contracts";
 import { api } from "@/lib/api";
 import { getResponseMessage } from "@/lib/api-response";
 import {

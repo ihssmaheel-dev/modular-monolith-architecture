@@ -1,11 +1,5 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
-import {
-  evaluateAuthorization,
-  type AuthorizationDecision,
-  type AuthorizationRequest,
-  type Policy,
-  type Principal,
-} from "@repo/shared";
+import { evaluateAuthorization, type AuthorizationDecision, type AuthorizationRequest, type Policy, type Principal } from "@repo/authorization";
 import { defaultFoundationalPolicies } from "./policies";
 
 @Injectable()

@@ -37,7 +37,10 @@ See the [developer bootstrap guide](./docs/DEVELOPMENT.md) for focused app comma
 │   ├── web/          # React frontend (TanStack Router + Query + <Can>)
 │   └── mobile/       # React Native Expo app
 ├── packages/
-│   ├── shared/       # Shared schemas, types, contracts, authorization evaluator
+│   ├── contracts/     # Zod 4 Schemas, oRPC API contracts, and DTO types
+│   ├── authorization/ # Fine-Grained Authorization engine (RBAC + ReBAC + ABAC)
+│   ├── i18n/          # Locales (en, es, fr) & internationalization config
+│   ├── design-tokens/ # Theme color palettes, spacing, and typography scales
 │   ├── ui/           # Shared UI components (web)
 │   ├── api-client/   # Type-safe API client (oRPC + TanStack Query)
 │   ├── email/        # Email templates (React Email)

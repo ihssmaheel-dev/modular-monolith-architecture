@@ -12,7 +12,7 @@ import {
   Spinner,
 } from "@repo/ui";
 import { Can } from "@/components/shared/Can";
-import type { NoteResponseDto } from "@repo/shared";
+import type { NoteResponseDto } from "@repo/contracts";
 
 export function NotesList() {
   const { t } = useTranslation();

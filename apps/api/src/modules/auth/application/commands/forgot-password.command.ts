@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { MILLISECONDS_PER_MINUTE, PASSWORD_RESET_TTL_MINUTES } from "@repo/shared";
+import { MILLISECONDS_PER_MINUTE, PASSWORD_RESET_TTL_MINUTES } from "@repo/contracts";
 import { ok, Result } from "neverthrow";
 import { generateSecureToken, hashPasswordResetToken } from "../utils/password.utils";
 import type { AuthError } from "../../domain/errors/auth.errors";

@@ -14,7 +14,7 @@ function generateClient({
   ${Feature}ResponseDto,
   PaginationQuery,
   Update${Feature}Dto,
-} from "@repo/shared";
+} from "@repo/contracts";
 import type { FetchFn } from "../types";
 
 export function create${FeaturePlural}Client(fetchFn: FetchFn) {

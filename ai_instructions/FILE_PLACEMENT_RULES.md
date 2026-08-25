@@ -38,50 +38,25 @@ Before creating any file, answer these questions in order:
 
 ## packages/shared/
 
-Single source of truth for schemas, types, contracts, constants, permissions, utils, and i18n translations.
+Focused capability packages: `@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/design-tokens`.
 
-```
-packages/shared/src/
-├── schemas/
-│   ├── env.schema.ts          ← Environment variable schema
-│   ├── users.schema.ts        ← User-related Zod schemas
-│   └── index.ts               ← Re-exports all schemas
-├── contracts/
-│   ├── users.contract.ts      ← oRPC contract for users API (oc.route)
-│   └── index.ts
-├── types/
-│   ├── user.types.ts          ← Shared TypeScript types
-│   └── index.ts
-├── constants/
-│   ├── errors.ts              ← Error code constants
-│   └── index.ts
-├── permissions/
-│   ├── index.ts               ← Action vocabulary & wildcard matcher
-│   └── permissions.test.ts
-├── authorization/
-│   ├── types.ts               ← Principal, ResourceDescriptor, Policy types
-│   ├── evaluator.ts           ← Pure FGA engine (RBAC + ReBAC + ABAC)
-│   ├── authorization.test.ts  ← FGA test suite
-│   └── index.ts
-├── utils/
-│   ├── date.ts                ← Pure utility functions
-│   └── index.ts
-├── i18n/
-│   ├── locales/
-│   │   ├── en.json            ← English translations
-│   │   ├── es.json            ← Spanish translations
-│   │   └── fr.json            ← French translations
-│   └── index.ts               ← i18n config and exports
-└── index.ts                   ← Main barrel export
-```
+### 1. `@repo/contracts` (`packages/contracts/src/`)
+- Schemas (`schemas/*.schema.ts`): Zod 4 schemas & DTOs
+- Contracts (`contracts/*.contract.ts`): oRPC route definitions
+- Types (`types/*.types.ts`): Request/Response type interfaces
+- Constants (`constants/*.ts`): Shared error codes & pagination defaults
 
-### Rules
-- Every subfolder must have an `index.ts` barrel export.
-- Schema file name matches domain: `users.schema.ts` for user schemas.
-- Contract file name matches domain: `users.contract.ts` for user API contract.
-- Types file name matches domain: `user.types.ts` for user types.
-- No business logic. Pure data definitions only.
-- If a type or schema is used by only one module, it still belongs here if it crosses module boundaries.
+### 2. `@repo/authorization` (`packages/authorization/src/`)
+- Types (`types.ts`): Principal, ResourceDescriptor, Policy, Decision
+- Permissions (`permissions.ts`): Action vocabulary & wildcard resolver
+- Evaluator (`evaluator.ts`): Pure FGA engine (RBAC + ReBAC + ABAC)
+
+### 3. `@repo/i18n` (`packages/i18n/src/`)
+- Locales (`locales/*.json`): en.json, es.json, fr.json
+- Config (`index.ts`): Locale definitions & keys
+
+### 4. `@repo/design-tokens` (`packages/design-tokens/src/`)
+- Colors (`colors.ts`): Color tokens, typography, spacing, radius scales
 
 ---
 

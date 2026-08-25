@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
 import { AuthorizationService } from "./authorization.service";
-import type { Principal } from "@repo/shared";
+import type { Principal } from "@repo/authorization";
 
 describe("AuthorizationService", () => {
   let service: AuthorizationService;

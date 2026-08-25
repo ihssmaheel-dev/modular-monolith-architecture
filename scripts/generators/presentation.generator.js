@@ -10,7 +10,7 @@ function generatePresentation({
   featurePlural,
   FeaturePlural,
 }) {
-  const mapperContent = `import type { ${Feature}ResponseDto } from "@repo/shared";
+  const mapperContent = `import type { ${Feature}ResponseDto } from "@repo/contracts";
 import type { ${Feature} } from "../domain/entities/${feature}.entity";
 
 export function to${Feature}Response(entity: ${Feature}): ${Feature}ResponseDto {
@@ -49,7 +49,7 @@ import type {
   ${Feature}ResponseDto,
   PaginationQuery,
   Update${Feature}Dto,
-} from "@repo/shared";
+} from "@repo/contracts";
 import { Create${Feature}Command } from "../application/commands/create-${feature}.command";
 import { Update${Feature}Command } from "../application/commands/update-${feature}.command";
 import { Delete${Feature}Command } from "../application/commands/delete-${feature}.command";

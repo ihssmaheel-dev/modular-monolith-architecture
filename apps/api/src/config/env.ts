@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { envSchema, type Env } from "@repo/shared";
+import { envSchema, type Env } from "@repo/contracts";
 
 function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);

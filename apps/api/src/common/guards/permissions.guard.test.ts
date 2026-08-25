@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { PermissionsGuard } from "./permissions.guard";
-import { Permissions } from "@repo/shared";
+import { Permissions } from "@repo/authorization";
 
 function createMockContext(user?: { role: string }, tenant?: { role?: string }) {
   const request = { user, tenant };

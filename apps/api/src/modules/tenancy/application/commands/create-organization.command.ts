@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { err, ok, type Result } from "neverthrow";
-import type { AuthenticatedUser, CreateOrganizationInput } from "@repo/shared";
+import type { AuthenticatedUser, CreateOrganizationInput } from "@repo/contracts";
 import { DatabaseService } from "../../../../infrastructure/database";
 import type { Membership, Organization } from "../../domain/entities/tenancy.entity";
 import type { TenancyError } from "../../domain/errors/tenancy.errors";

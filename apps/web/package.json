@@ -14,7 +14,10 @@
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
     "@repo/api-client": "workspace:*",
-    "@repo/shared": "workspace:*",
+    "@repo/authorization": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/design-tokens": "workspace:*",
+    "@repo/i18n": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tanstack/react-query": "^5.102.2",
     "@tanstack/react-query-devtools": "^5.102.2",

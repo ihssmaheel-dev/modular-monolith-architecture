@@ -1,13 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import { RequirePermission, Idempotent, requireAuthenticatedUser } from "../../../common";
-import {
-  type CreateNoteDto,
-  type UpdateNoteDto,
-  type PaginationQuery,
-  type NoteResponseDto,
-  type NoteListResponseDto,
-} from "@repo/shared";
+import { type CreateNoteDto, type UpdateNoteDto, type PaginationQuery, type NoteResponseDto, type NoteListResponseDto } from "@repo/contracts";
 import { CreateNoteCommand } from "../application/commands/create-note.command";
 import { UpdateNoteCommand } from "../application/commands/update-note.command";
 import { DeleteNoteCommand } from "../application/commands/delete-note.command";

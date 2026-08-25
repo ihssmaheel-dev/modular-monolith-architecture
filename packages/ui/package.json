@@ -11,7 +11,8 @@
     "build": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/shared": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/design-tokens": "workspace:*",
     "clsx": "^2.1.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

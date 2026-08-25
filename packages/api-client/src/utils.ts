@@ -1,4 +1,4 @@
-import { AuthResponseSchema, type AuthResponse } from "@repo/shared";
+import { AuthResponseSchema, type AuthResponse } from "@repo/contracts";
 import type { ApiClientOptions } from "./types";
 
 export function createIdempotencyKey(): string {

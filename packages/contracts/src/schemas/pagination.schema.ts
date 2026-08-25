@@ -7,3 +7,10 @@ export const PaginationQuerySchema = z.object({
 });
 
 export type PaginationQuery = z.infer<typeof PaginationQuerySchema>;
+
+export function paginate(page = 1, limit = DEFAULT_PAGE_LIMIT) {
+  const p = Math.max(1, page || 1);
+  const l = Math.min(MAX_PAGE_LIMIT, Math.max(1, limit || DEFAULT_PAGE_LIMIT));
+  const skip = (p - 1) * l;
+  return { page: p, limit: l, skip };
+}

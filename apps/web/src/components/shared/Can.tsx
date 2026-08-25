@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useAuthorization } from "@/hooks/use-authorization";
-import type { Permission } from "@repo/shared";
+import type { Permission } from "@repo/authorization";
 
 export interface CanProps {
   do?: Permission | Permission[] | string | string[];

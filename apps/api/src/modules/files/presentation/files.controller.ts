@@ -1,14 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import { Idempotent, RequirePermission, requireAuthenticatedUser } from "../../../common";
-import {
-  type RequestUploadInput,
-  type ConfirmUploadInput,
-  type PresignedUrlResponse,
-  type FileMetadataResponse,
-  type DownloadUrlResponse,
-  type FileListResponse,
-} from "@repo/shared";
+import { type RequestUploadInput, type ConfirmUploadInput, type PresignedUrlResponse, type FileMetadataResponse, type DownloadUrlResponse, type FileListResponse } from "@repo/contracts";
 import { RequestUploadCommand } from "../application/commands/request-upload.command";
 import { ConfirmUploadCommand } from "../application/commands/confirm-upload.command";
 import { DeleteFileCommand } from "../application/commands/delete-file.command";

@@ -1,14 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useAuthStore } from "@/stores/auth.store";
 import { useTenantStore } from "@/stores/tenant.store";
-import {
-  evaluateAuthorization,
-  type AuthorizationDecision,
-  type AuthorizationRequest,
-  type Permission,
-  type Policy,
-  type Principal,
-} from "@repo/shared";
+import { evaluateAuthorization, type AuthorizationDecision, type AuthorizationRequest, type Permission, type Policy, type Principal } from "@repo/authorization";
 
 export function useAuthorization(customPolicies: Policy[] = []) {
   const user = useAuthStore((state) => state.user);

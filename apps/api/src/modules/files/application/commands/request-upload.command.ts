@@ -5,7 +5,7 @@ import { env } from "../../../../config/env";
 import { StorageService } from "../../../../infrastructure/storage/storage.service";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
-import type { RequestUploadInput } from "@repo/shared";
+import type { RequestUploadInput } from "@repo/contracts";
 import { TenantContextService } from "../../../../infrastructure/database";
 
 const PRESIGNED_UPLOAD_TTL_SECONDS = 3_600;

@@ -14,7 +14,7 @@ import { I18nService } from "./infrastructure/i18n/i18n.service";
 import { env } from "./config/env";
 import { setupApiDocs } from "./infrastructure/api-docs";
 import { printStartupBanner } from "./common/utils/startup-banner.util";
-import { MAX_FILE_SIZE_BYTES } from "@repo/shared";
+import { MAX_FILE_SIZE_BYTES } from "@repo/contracts";
 
 // Configure high-performance global HTTP agent
 setGlobalDispatcher(

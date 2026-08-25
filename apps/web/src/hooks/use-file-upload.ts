@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { uploadFile, type UploadProgress } from "@/lib/upload";
 import type { ApiClient } from "@repo/api-client";
-import type { FileMetadataResponse } from "@repo/shared";
+import type { FileMetadataResponse } from "@repo/contracts";
 import { useTranslation } from "react-i18next";
 
 export interface UseFileUploadReturn {

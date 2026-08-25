@@ -1,4 +1,4 @@
-import { hasPermission, resolveUserPermissions } from "../permissions";
+import { hasPermission, resolveUserPermissions } from "./permissions";
 import type {
   AuthorizationDecision,
   AuthorizationRequest,

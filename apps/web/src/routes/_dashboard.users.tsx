@@ -4,7 +4,7 @@ import { useQueryState, parseAsInteger } from "nuqs";
 import { api } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Button } from "@repo/ui";
-import type { UserListResponse } from "@repo/shared";
+import type { UserListResponse } from "@repo/contracts";
 
 function UsersPage() {
   const { t } = useTranslation();

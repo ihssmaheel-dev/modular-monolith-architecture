@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { err, ok, type Result } from "neverthrow";
-import type { AuthenticatedUser, TenantRole } from "@repo/shared";
+import type { AuthenticatedUser, TenantRole } from "@repo/contracts";
 import type { Organization } from "../../domain/entities/tenancy.entity";
 import type { TenancyError } from "../../domain/errors/tenancy.errors";
 import { MembershipsRepository } from "../../infrastructure/memberships.repository";

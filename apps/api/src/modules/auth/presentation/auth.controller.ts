@@ -4,15 +4,7 @@ import { err } from "neverthrow";
 import { Public, TenantAgnostic, requireAuthenticatedUser } from "../../../common";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
-import {
-  type RegisterInput,
-  type LoginInput,
-  type RefreshTokenInput,
-  type ForgotPasswordInput,
-  type ResetPasswordInput,
-  type AuthResponse,
-  type MessageResponse,
-} from "@repo/shared";
+import { type RegisterInput, type LoginInput, type RefreshTokenInput, type ForgotPasswordInput, type ResetPasswordInput, type AuthResponse, type MessageResponse } from "@repo/contracts";
 import { ForgotPasswordCommand } from "../application/commands/forgot-password.command";
 import { LoginCommand } from "../application/commands/login.command";
 import { LogoutCommand } from "../application/commands/logout.command";

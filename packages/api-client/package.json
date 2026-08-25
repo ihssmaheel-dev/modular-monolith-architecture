@@ -14,7 +14,7 @@
     "@orpc/client": "^1.15.0",
     "@orpc/contract": "^1.15.0",
     "@orpc/tanstack-query": "^1.15.0",
-    "@repo/shared": "workspace:*"
+    "@repo/contracts": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^7.0.2"

@@ -65,7 +65,10 @@ Supreme laws of this codebase. These are never negotiable.
 
 ## Single Source of Truth
 
-`packages/shared` — every Zod schema, type, constant, permission, contract, and i18n translation.
+- **`@repo/contracts`**: Zod 4 schemas, DTO types, oRPC contracts, and error constants.
+- **`@repo/authorization`**: FGA types, action permissions vocabulary, and pure evaluator.
+- **`@repo/i18n`**: Multi-language locale dictionaries (JSON) and locale config.
+- **`@repo/design-tokens`**: Visual theme design tokens (colors, typography, spacing, radius).
 
 ---
 

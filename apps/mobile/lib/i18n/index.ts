@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { locales, DEFAULT_LOCALE, type Locale } from "@repo/shared";
+import { locales, DEFAULT_LOCALE, type Locale } from "@repo/i18n";
 
 const STORAGE_KEY = "app-locale";
 

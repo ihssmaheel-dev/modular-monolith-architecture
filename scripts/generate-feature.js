@@ -34,7 +34,7 @@ console.log("=======================================================\n");
 
 const rootPath = path.resolve(__dirname, "..");
 const modulePath = path.join(rootPath, "apps", "api", "src", "modules", moduleName);
-const sharedPath = path.join(rootPath, "packages", "shared");
+const contractsPath = path.join(rootPath, "packages", "contracts");
 const clientPath = path.join(rootPath, "packages", "api-client");
 const webPath = path.join(rootPath, "apps", "web");
 
@@ -46,7 +46,7 @@ const context = {
   Feature,
   featurePlural,
   FeaturePlural,
-  sharedPath,
+  contractsPath,
   clientPath,
   webPath,
 };
@@ -60,7 +60,7 @@ generateInfrastructure(context);
 console.log("\n3. Generating Application Layer (Commands, Queries, Listeners, Vitest Tests)...");
 generateApplication(context);
 
-console.log("\n4. Generating Contracts & Schemas (@repo/shared)...");
+console.log("\n4. Generating Contracts & Schemas (@repo/contracts)...");
 generateContracts(context);
 
 console.log("\n5. Generating API Client SDK (@repo/api-client)...");

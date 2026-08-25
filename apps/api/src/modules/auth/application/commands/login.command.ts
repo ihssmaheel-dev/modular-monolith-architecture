@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
 import { z } from "zod";
-import { LoginSchema } from "@repo/shared";
-import type { AuthResponse } from "@repo/shared";
+import { LoginSchema } from "@repo/contracts";
+import type { AuthResponse } from "@repo/contracts";
 import type { AuthError } from "../../domain/errors/auth.errors";
 import { VerifyUserCredentialsQuery } from "../../../users/application/queries/verify-user-credentials.query";
 import { signAccessToken, signRefreshToken } from "../utils/jwt.utils";

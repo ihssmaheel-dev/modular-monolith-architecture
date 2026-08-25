@@ -1,4 +1,4 @@
-import type { AuthResponse } from "@repo/shared";
+import type { AuthResponse } from "@repo/contracts";
 
 export interface ApiClientOptions {
   getAccessToken?: () => string | null;

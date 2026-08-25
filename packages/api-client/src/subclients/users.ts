@@ -1,10 +1,4 @@
-import type {
-  CreateUserInput,
-  PaginationQuery,
-  UpdateUserInput,
-  UserListResponse,
-  UserResponse,
-} from "@repo/shared";
+import type { CreateUserInput, PaginationQuery, UpdateUserInput, UserListResponse, UserResponse } from "@repo/contracts";
 import type { FetchFn } from "../types";
 
 export function createUsersClient(fetchFn: FetchFn) {
