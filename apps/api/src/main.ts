@@ -1,8 +1,5 @@
 import { setGlobalDispatcher, Agent } from "undici";
 import "./tracing";
-
-// Increase MaxListeners to handle 11+ graceful shutdown handlers (DB, Redis, Queue, etc.)
-process.setMaxListeners(20);
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import { WsAdapter } from "@nestjs/platform-ws";
@@ -18,6 +15,9 @@ import { env } from "./config/env";
 import { setupApiDocs } from "./infrastructure/api-docs";
 import { printStartupBanner } from "./common/utils/startup-banner.util";
 import { MAX_FILE_SIZE_BYTES } from "@repo/contracts";
+
+// Prevent MaxListenersExceededWarning from 11+ shutdown handlers (DB, Redis, Queue, etc.)
+process.setMaxListeners(0);
 
 // Configure high-performance global HTTP agent
 setGlobalDispatcher(
@@ -62,13 +62,18 @@ async function bootstrap() {
     hook: "onRequest",
   });
 
+  // Register API docs BEFORE global prefix/versioning so /api/docs is not versioned
+  if (env.NODE_ENV !== "production") {
+    await setupApiDocs(app);
+  }
+
   app.useWebSocketAdapter(new WsAdapter(app));
 
   const logger = app.get(PinoLoggerService);
   const i18n = app.get(I18nService);
   app.useGlobalFilters(new AllExceptionsFilter(logger, i18n));
 
-  app.setGlobalPrefix("api", { exclude: ["metrics"] });
+  app.setGlobalPrefix("api", { exclude: ["metrics", "docs", "api/docs"] });
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: "1",
@@ -85,10 +90,6 @@ async function bootstrap() {
   });
 
   app.enableShutdownHooks();
-
-  if (env.NODE_ENV !== "production") {
-    await setupApiDocs(app);
-  }
 
   await app.listen(env.PORT, "0.0.0.0");
 

@@ -17,14 +17,21 @@ export async function setupApiDocs(app: NestFastifyApplication): Promise<void> {
       servers: [{ url: `${env.API_URL}/api` }],
     });
 
-    // Scalar is a Fastify plugin — register directly on the Fastify instance
-    // to avoid Nest global prefix/versioning interference. It will be served
-    // at exactly /api/docs (matching the banner) regardless of Nest prefix.
     const fastify = app.getHttpAdapter().getInstance();
+
+    // Expose raw OpenAPI JSON at /api/docs/json for debugging and for Scalar URL reference
+    fastify.get("/api/docs/json", async (_req, reply) => {
+      reply.type("application/json").send(document);
+    });
+
+    // Scalar is a Fastify plugin — register directly on the Fastify instance
+    // BEFORE Nest global prefix/versioning so /api/docs is not versioned.
+    // Serve at exactly /api/docs (matching banner) regardless of Nest prefix.
     await fastify.register(fastifyApiReference as unknown as never, {
       routePrefix: "/api/docs",
       configuration: {
         spec: {
+          // Use content directly (also available via /api/docs/json)
           content: document,
         },
         theme: "kepler",
