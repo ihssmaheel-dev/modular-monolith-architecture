@@ -1,13 +1,16 @@
 import { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { apiContract } from "@repo/contracts";
 import { env } from "../../config/env";
+import { Zod4SchemaConverter } from "./zod-schema-converter";
 
 export async function setupApiDocs(app: NestFastifyApplication): Promise<void> {
   try {
     const { OpenAPIGenerator } = await import("@orpc/openapi");
     const { default: fastifyApiReference } = await import("@scalar/fastify-api-reference");
 
-    const generator = new OpenAPIGenerator();
+    const generator = new OpenAPIGenerator({
+      schemaConverters: [new Zod4SchemaConverter()],
+    });
     const document = await generator.generate(apiContract, {
       info: {
         title: "Enterprise Modular Monolith API",
@@ -30,13 +33,11 @@ export async function setupApiDocs(app: NestFastifyApplication): Promise<void> {
     await fastify.register(fastifyApiReference as unknown as never, {
       routePrefix: "/api/docs",
       configuration: {
-        spec: {
-          // Use content directly (also available via /api/docs/json)
-          content: document,
-        },
+        content: document,
         theme: "kepler",
         darkMode: true,
         showSidebar: true,
+        pageTitle: "API Reference | Enterprise Modular Monolith",
         metaData: {
           title: "API Reference | Enterprise Modular Monolith",
         },
