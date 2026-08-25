@@ -16,15 +16,13 @@
     "clean": "rm -rf dist .react-email"
   },
   "dependencies": {
-    "@react-email/components": "^1.0.12",
-    "@react-email/render": "^2.1.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-email": "6.9.2"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^19.2.18",
-    "react-email": "6.9.2",
     "typescript": "^7.0.2"
   }
 }

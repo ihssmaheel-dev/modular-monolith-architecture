@@ -1,13 +1,12 @@
 import { Inject, Injectable, OnModuleDestroy, Optional } from "@nestjs/common";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
+import { sql } from "drizzle-orm";
 import { Pool } from "pg";
 import { err, ok, type Result } from "neverthrow";
 import { ClsService } from "nestjs-cls";
 import { PinoLoggerService } from "../logger/logger.service";
 import { env } from "../../config/env";
 import type { TransactionError } from "./database.types";
-
-import { sql } from "drizzle-orm";
 
 export type Database = NodePgDatabase;
 export type DrizzleDb = Database;
@@ -16,7 +15,6 @@ export type DrizzleDb = Database;
 export class DatabaseService implements OnModuleDestroy {
   private readonly pool: Pool;
   private readonly db: DrizzleDb;
-
   private readonly logger: PinoLoggerService;
 
   constructor(
@@ -30,7 +28,6 @@ export class DatabaseService implements OnModuleDestroy {
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
     });
-
     this.pool.on("error", (error) => {
       this.logger.error({ error: String(error) }, "Postgres pool error");
     });
