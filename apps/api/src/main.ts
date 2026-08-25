@@ -1,5 +1,8 @@
 import { setGlobalDispatcher, Agent } from "undici";
 import "./tracing";
+
+// Increase MaxListeners to handle 11+ graceful shutdown handlers (DB, Redis, Queue, etc.)
+process.setMaxListeners(20);
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import { WsAdapter } from "@nestjs/platform-ws";
