@@ -1,6 +1,10 @@
 {
   "extends": "../../packages/typescript-config/nestjs.json",
   "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "outDir": "./dist",
     "rootDir": "../../",
 

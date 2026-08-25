@@ -5,7 +5,7 @@ import {
   HealthCheck,
   HealthCheckResult,
   HealthIndicatorResult,
-  HealthIndicator,
+  HealthIndicatorService,
   MemoryHealthIndicator,
 } from "@nestjs/terminus";
 import { DatabaseService } from "../database";
@@ -13,41 +13,43 @@ import { RedisService } from "../redis/redis.service";
 import { sql } from "drizzle-orm";
 
 @Injectable()
-export class PostgresHealthIndicator extends HealthIndicator {
-  constructor(private readonly database: DatabaseService) {
-    super();
-  }
+export class PostgresHealthIndicator {
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly healthIndicatorService: HealthIndicatorService,
+  ) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
+    const session = this.healthIndicatorService.check(key);
     try {
       const db = this.database.getDb();
       await (db as unknown as { execute: (q: unknown) => Promise<void> }).execute(sql`SELECT 1`);
-      return this.getStatus(key, true);
+      return session.up();
     } catch (error) {
-      return this.getStatus(key, false, { error: String(error) });
+      return session.down({ error: String(error) });
     }
   }
 }
 
 @Injectable()
-export class RedisHealthIndicator extends HealthIndicator {
+export class RedisHealthIndicator {
   constructor(
     private readonly redis: RedisService,
     private readonly i18n: I18nService,
-  ) {
-    super();
-  }
+    private readonly healthIndicatorService: HealthIndicatorService,
+  ) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
+    const session = this.healthIndicatorService.check(key);
     try {
       const client = this.redis.getClient();
       if (!client) {
-        return this.getStatus(key, true, { message: this.i18n.t("api.health.redisUnconfigured") });
+        return session.up({ message: this.i18n.t("api.health.redisUnconfigured") });
       }
       const pong = await client.ping();
-      return pong === "PONG" ? this.getStatus(key, true) : this.getStatus(key, false, { pong });
+      return pong === "PONG" ? session.up() : session.down({ pong });
     } catch {
-      return this.getStatus(key, true, {
+      return session.up({
         message: this.i18n.t("api.health.redisDown"),
       });
     }
@@ -55,12 +57,14 @@ export class RedisHealthIndicator extends HealthIndicator {
 }
 
 @Injectable()
-export class OutboxHealthIndicator extends HealthIndicator {
-  constructor(private readonly database: DatabaseService) {
-    super();
-  }
+export class OutboxHealthIndicator {
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly healthIndicatorService: HealthIndicatorService,
+  ) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
+    const session = this.healthIndicatorService.check(key);
     try {
       const db = this.database.getDb();
       const result = await (
@@ -68,9 +72,9 @@ export class OutboxHealthIndicator extends HealthIndicator {
       ).execute(sql`SELECT count(*)::int AS count FROM outbox_events WHERE status = 'PENDING'`);
       const pendingCount = Number(result[0]?.count ?? 0);
       const isHealthy = pendingCount < 5000;
-      return this.getStatus(key, isHealthy, { pendingCount });
+      return isHealthy ? session.up({ pendingCount }) : session.down({ pendingCount });
     } catch (error) {
-      return this.getStatus(key, false, { error: String(error) });
+      return session.down({ error: String(error) });
     }
   }
 }
