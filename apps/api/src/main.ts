@@ -12,7 +12,7 @@ import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { PinoLoggerService } from "./infrastructure/logger/logger.service";
 import { I18nService } from "./infrastructure/i18n/i18n.service";
 import { env } from "./config/env";
-import { setupSwagger } from "./infrastructure/swagger/swagger";
+import { setupApiDocs } from "./infrastructure/api-docs";
 import { printStartupBanner } from "./common/utils/startup-banner.util";
 import { MAX_FILE_SIZE_BYTES } from "@repo/shared";
 
@@ -84,7 +84,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   if (env.NODE_ENV !== "production") {
-    await setupSwagger(app);
+    await setupApiDocs(app);
   }
 
   await app.listen(env.PORT, "0.0.0.0");

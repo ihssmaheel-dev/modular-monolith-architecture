@@ -1,10 +1,11 @@
 import { NestFastifyApplication } from "@nestjs/platform-fastify";
-import { SwaggerModule } from "@nestjs/swagger";
 import { apiContract } from "@repo/shared";
 import { env } from "../../config/env";
 
-export async function setupSwagger(app: NestFastifyApplication): Promise<void> {
+export async function setupApiDocs(app: NestFastifyApplication): Promise<void> {
   const { OpenAPIGenerator } = await import("@orpc/openapi");
+  const { default: fastifyApiReference } = await import("@scalar/fastify-api-reference");
+
   const generator = new OpenAPIGenerator();
   const document = await generator.generate(apiContract, {
     info: {
@@ -15,5 +16,18 @@ export async function setupSwagger(app: NestFastifyApplication): Promise<void> {
     servers: [{ url: `${env.API_URL}/api` }],
   });
 
-  SwaggerModule.setup("api/docs", app, document as Parameters<typeof SwaggerModule.setup>[2]);
+  await app.register(fastifyApiReference as unknown as never, {
+    routePrefix: "/api/docs",
+    configuration: {
+      spec: {
+        content: document,
+      },
+      theme: "kepler",
+      darkMode: true,
+      showSidebar: true,
+      metaData: {
+        title: "API Reference | Enterprise Modular Monolith",
+      },
+    },
+  });
 }

@@ -20,6 +20,7 @@ ${bold("Postgres")}    : ${postgresStatus}
 ${bold("Redis")}       : ${redisStatus}
 ${bold("Storage")}     : ${cyan(env.STORAGE_DRIVER.toUpperCase())}
 ${bold("Email")}       : ${cyan(env.EMAIL_DRIVER.toUpperCase())}
+${bold("API Docs")}    : ${cyan(`${env.API_URL}/api/docs`)}
   `.trim();
 
   logger.info({}, "\n" + bannerContent + "\n");
