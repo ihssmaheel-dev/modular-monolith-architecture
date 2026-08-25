@@ -1,4 +1,6 @@
-import { Module } from "@nestjs/common";
+import { Module, type OnModuleInit } from "@nestjs/common";
+import { AuthorizationService } from "../../infrastructure/authorization";
+import { filePolicies } from "./application/files.policies";
 import { FilesController } from "./presentation/files.controller";
 import { RequestUploadCommand } from "./application/commands/request-upload.command";
 import { ConfirmUploadCommand } from "./application/commands/confirm-upload.command";
@@ -32,4 +34,10 @@ import { FilesRepository } from "./infrastructure/files.repository";
     FilesRepository,
   ],
 })
-export class FilesModule {}
+export class FilesModule implements OnModuleInit {
+  constructor(private readonly authService: AuthorizationService) {}
+
+  onModuleInit(): void {
+    this.authService.registerPolicies(filePolicies);
+  }
+}

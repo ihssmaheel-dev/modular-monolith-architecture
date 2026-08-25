@@ -27,3 +27,5 @@ export { I18nService } from "./i18n/i18n.service";
 export { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 export { FeatureFlagsService } from "./feature-flags/feature-flags.service";
 export type { FeatureFlagContext, FeatureFlagProvider } from "./feature-flags/feature-flags.types";
+export { AuthorizationModule, AuthorizationService } from "./authorization";
+export { setupApiDocs } from "./api-docs";

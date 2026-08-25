@@ -6,3 +6,4 @@ export * from "./permissions/index";
 export * from "./utils/index";
 export * from "./design-tokens/index";
 export * from "./i18n/index";
+export * from "./authorization/index";

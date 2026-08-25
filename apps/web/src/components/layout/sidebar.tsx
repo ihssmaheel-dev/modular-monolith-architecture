@@ -2,17 +2,22 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useUIStore } from "@/stores/ui.store";
 import { LayoutDashboard, Users, Settings, FileText, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/components/shared/Can";
+import type { Permission } from "@repo/shared";
 
-const navItems = [
-  { to: "/", labelKey: "dashboard.title", icon: LayoutDashboard },
-  { to: "/users", labelKey: "users.title", icon: Users },
-  { to: "/notes", labelKey: "notes.title", icon: FileText },
-  { to: "/settings", labelKey: "settings.title", icon: Settings },
-] as const satisfies ReadonlyArray<{
+interface NavItem {
   to: "/" | "/users" | "/notes" | "/settings";
   labelKey: string;
   icon: LucideIcon;
-}>;
+  permission?: Permission;
+}
+
+const navItems: readonly NavItem[] = [
+  { to: "/", labelKey: "dashboard.title", icon: LayoutDashboard },
+  { to: "/users", labelKey: "users.title", icon: Users, permission: "users:read" },
+  { to: "/notes", labelKey: "notes.title", icon: FileText, permission: "notes:read" },
+  { to: "/settings", labelKey: "settings.title", icon: Settings },
+];
 
 export function Sidebar() {
   const { t } = useTranslation();
@@ -33,7 +38,7 @@ export function Sidebar() {
           const isActive =
             location.pathname === item.to || location.pathname.startsWith(item.to + "/");
           const Icon = item.icon;
-          return (
+          const link = (
             <Link
               key={item.to}
               to={item.to}
@@ -47,6 +52,16 @@ export function Sidebar() {
               {t(item.labelKey)}
             </Link>
           );
+
+          if (item.permission) {
+            return (
+              <Can key={item.to} do={item.permission}>
+                {link}
+              </Can>
+            );
+          }
+
+          return link;
         })}
       </nav>
     </aside>

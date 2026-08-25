@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { Idempotent, RequirePermissions, requireAuthenticatedUser } from "../../../common";
+import { Idempotent, RequirePermission, requireAuthenticatedUser } from "../../../common";
 import {
   type RequestUploadInput,
   type ConfirmUploadInput,
@@ -41,7 +41,7 @@ export class FilesController {
   @Post("upload-url")
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
-  @RequirePermissions("files:write")
+  @RequirePermission("files:upload")
   async requestUpload(
     @Body() body: RequestUploadInput,
     @Req() req: FastifyRequest,
@@ -55,7 +55,7 @@ export class FilesController {
   @Post("confirm")
   @HttpCode(HttpStatus.OK)
   @Idempotent()
-  @RequirePermissions("files:write")
+  @RequirePermission("files:upload")
   async confirmUpload(
     @Body() body: ConfirmUploadInput,
     @Req() req: FastifyRequest,
@@ -68,7 +68,7 @@ export class FilesController {
   }
 
   @Get(":id/download-url")
-  @RequirePermissions("files:read")
+  @RequirePermission("files:read")
   async getDownloadUrl(
     @Param("id") id: string,
     @Req() req: FastifyRequest,
@@ -80,7 +80,7 @@ export class FilesController {
   }
 
   @Get(":id")
-  @RequirePermissions("files:read")
+  @RequirePermission("files:read")
   async getById(
     @Param("id") id: string,
     @Req() req: FastifyRequest,
@@ -93,7 +93,7 @@ export class FilesController {
   }
 
   @Get()
-  @RequirePermissions("files:read")
+  @RequirePermission("files:read")
   async listByParent(
     @Query() query: { parentType: "note" | "user" | "general"; parentId?: string; page?: number; limit?: number },
     @Req() req: FastifyRequest,
@@ -120,7 +120,7 @@ export class FilesController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
-  @RequirePermissions("files:delete")
+  @RequirePermission("files:delete")
   async delete(
     @Param("id") id: string,
     @Req() req: FastifyRequest,

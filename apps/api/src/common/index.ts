@@ -16,5 +16,3 @@ export * from "./interceptors/request-id.interceptor";
 export * from "./utils/request-user.utils";
 export * from "./utils/access-token.utils";
 export * from "./utils/magic-bytes.utils";
-export { Public, IS_PUBLIC_KEY } from "./decorators/public.decorator";
-export { RequirePermissions, PERMISSIONS_KEY } from "./decorators/permissions.decorator";

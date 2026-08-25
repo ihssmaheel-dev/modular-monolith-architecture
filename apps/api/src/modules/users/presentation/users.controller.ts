@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { Idempotent, RequirePermissions, TenantAgnostic } from "../../../common";
+import { Idempotent, RequirePermission, TenantAgnostic } from "../../../common";
 import {
   type CreateUserInput,
   type UpdateUserInput,
@@ -30,7 +30,7 @@ export class UsersController {
   ) {}
 
   @Get()
-  @RequirePermissions("users:read")
+  @RequirePermission("users:read")
   async list(
     @Query() query: PaginationQuery,
     @Req() req: FastifyRequest,
@@ -45,7 +45,7 @@ export class UsersController {
   }
 
   @Get(":id")
-  @RequirePermissions("users:read")
+  @RequirePermission("users:read")
   async getById(
     @Param("id") id: string,
     @Req() req: FastifyRequest,
@@ -66,7 +66,7 @@ export class UsersController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
-  @RequirePermissions("users:write")
+  @RequirePermission("users:write")
   async create(
     @Body() body: CreateUserInput,
     @Req() req: FastifyRequest,
@@ -91,7 +91,7 @@ export class UsersController {
 
   @Patch(":id")
   @Idempotent()
-  @RequirePermissions("users:write")
+  @RequirePermission("users:write")
   async update(
     @Param("id") id: string,
     @Body() body: UpdateUserInput,
@@ -114,7 +114,7 @@ export class UsersController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
-  @RequirePermissions("users:write")
+  @RequirePermission("users:delete")
   async delete(
     @Param("id") id: string,
     @Req() req: FastifyRequest,

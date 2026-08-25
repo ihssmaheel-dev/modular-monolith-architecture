@@ -5,11 +5,20 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => k
 vi.mock("@/lib/api", () => ({ api: { notes: { getNotes: vi.fn(), deleteNote: vi.fn() } } }));
 
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/stores/auth.store";
 import { NotesList } from "./NotesList";
 
 describe("NotesList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useAuthStore.getState().login({
+      user: {
+        id: "u1",
+        email: "user@test.com",
+        name: "Test User",
+        role: "user",
+      },
+    });
   });
 
   it("renders notes returned by the API", async () => {

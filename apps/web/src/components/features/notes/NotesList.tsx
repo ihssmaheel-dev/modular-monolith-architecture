@@ -11,7 +11,8 @@ import {
   Button,
   Spinner,
 } from "@repo/ui";
-import { NoteResponseDto } from "@repo/shared";
+import { Can } from "@/components/shared/Can";
+import type { NoteResponseDto } from "@repo/shared";
 
 export function NotesList() {
   const { t } = useTranslation();
@@ -68,9 +69,11 @@ export function NotesList() {
               <p className="whitespace-pre-wrap">{note.content}</p>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button variant="destructive" size="sm" onClick={() => handleDelete(note.id)}>
-                {t("common.delete")}
-              </Button>
+              <Can do="notes:delete">
+                <Button variant="destructive" size="sm" onClick={() => handleDelete(note.id)}>
+                  {t("common.delete")}
+                </Button>
+              </Can>
             </CardFooter>
           </Card>
         ))

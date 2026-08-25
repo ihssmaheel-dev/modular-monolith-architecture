@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post
 import type { FastifyRequest } from "fastify";
 import {
   Idempotent,
-  RequirePermissions,
+  RequirePermission,
   TenantAgnostic,
   requireAuthenticatedUser,
 } from "../../../common";
@@ -40,7 +40,7 @@ export class MembershipsController {
   ) {}
 
   @Get("members")
-  @RequirePermissions("members:read")
+  @RequirePermission("team:read")
   async listMemberPage(
     @Query() query: PaginationQuery,
     @Req() request: FastifyRequest,
@@ -55,7 +55,7 @@ export class MembershipsController {
 
   @Patch("members/:userId")
   @Idempotent()
-  @RequirePermissions("members:write")
+  @RequirePermission("team:manage")
   async update(
     @Param("userId") userId: string,
     @Body() body: UpdateMemberInput,
@@ -68,7 +68,7 @@ export class MembershipsController {
   @Delete("members/:userId")
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
-  @RequirePermissions("members:write")
+  @RequirePermission("team:remove")
   async remove(
     @Param("userId") userId: string,
     @Req() request: FastifyRequest,
@@ -79,7 +79,7 @@ export class MembershipsController {
   @Post("invitations")
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
-  @RequirePermissions("invitations:write")
+  @RequirePermission("team:invite")
   async invite(
     @Body() body: InviteMemberInput,
     @Req() request: FastifyRequest,
@@ -91,7 +91,7 @@ export class MembershipsController {
   }
 
   @Get("invitations")
-  @RequirePermissions("invitations:read")
+  @RequirePermission("team:read")
   async listInvitationPage(
     @Query() query: PaginationQuery,
     @Req() request: FastifyRequest,

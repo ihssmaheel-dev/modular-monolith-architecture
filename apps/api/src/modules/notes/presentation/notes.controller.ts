@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { RequirePermissions, Idempotent, requireAuthenticatedUser } from "../../../common";
+import { RequirePermission, Idempotent, requireAuthenticatedUser } from "../../../common";
 import {
   type CreateNoteDto,
   type UpdateNoteDto,
@@ -29,7 +29,7 @@ export class NotesController {
   ) {}
 
   @Get()
-  @RequirePermissions("notes:read")
+  @RequirePermission("notes:read")
   async list(
     @Query() query: PaginationQuery,
     @Req() req: FastifyRequest,
@@ -50,7 +50,7 @@ export class NotesController {
   }
 
   @Get(":id")
-  @RequirePermissions("notes:read")
+  @RequirePermission("notes:read")
   async getById(
     @Param("id") id: string,
     @Req() req: FastifyRequest,
@@ -72,7 +72,7 @@ export class NotesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
-  @RequirePermissions("notes:write")
+  @RequirePermission("notes:create")
   async create(
     @Body() body: CreateNoteDto,
     @Req() req: FastifyRequest,
@@ -86,7 +86,7 @@ export class NotesController {
 
   @Patch(":id")
   @Idempotent()
-  @RequirePermissions("notes:write")
+  @RequirePermission("notes:update")
   async update(
     @Param("id") id: string,
     @Body() body: UpdateNoteDto,
@@ -109,7 +109,7 @@ export class NotesController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
-  @RequirePermissions("notes:write")
+  @RequirePermission("notes:delete")
   async delete(
     @Param("id") id: string,
     @Req() req: FastifyRequest,
