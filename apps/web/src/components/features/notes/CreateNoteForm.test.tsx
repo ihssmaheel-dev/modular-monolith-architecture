@@ -5,7 +5,15 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => k
 vi.mock("@/lib/api", () => ({ api: { notes: { createNote: vi.fn() } } }));
 
 import { api } from "@/lib/api";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CreateNoteForm } from "./CreateNoteForm";
+
+function renderWithClient(ui: React.ReactElement) {
+  const testClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  return render(<QueryClientProvider client={testClient}>{ui}</QueryClientProvider>);
+}
 
 describe("CreateNoteForm", () => {
   beforeEach(() => {
@@ -18,7 +26,7 @@ describe("CreateNoteForm", () => {
       body: { id: "note-1", title: "Title", content: "Content", createdAt: "2026-01-01" },
     } as never);
     const onSuccess = vi.fn();
-    render(<CreateNoteForm onSuccess={onSuccess} />);
+    renderWithClient(<CreateNoteForm onSuccess={onSuccess} />);
 
     fireEvent.change(screen.getByLabelText("notes.noteTitle"), { target: { value: "Title" } });
     fireEvent.change(screen.getByLabelText("notes.content"), { target: { value: "Content" } });
@@ -39,7 +47,7 @@ describe("CreateNoteForm", () => {
       status: 400,
       body: { message: "Title is required" },
     } as never);
-    render(<CreateNoteForm />);
+    renderWithClient(<CreateNoteForm />);
 
     fireEvent.change(screen.getByLabelText("notes.noteTitle"), { target: { value: "Title" } });
     fireEvent.change(screen.getByLabelText("notes.content"), { target: { value: "Content" } });

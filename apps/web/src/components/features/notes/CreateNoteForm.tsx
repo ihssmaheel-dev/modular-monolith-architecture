@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateNoteSchema, type CreateNoteDto } from "@repo/contracts";
-import { api } from "@/lib/api";
-import { getResponseMessage } from "@/lib/api-response";
+import { useCreateNote } from "@/hooks/use-notes";
 import {
   Card,
   CardHeader,
@@ -19,12 +18,13 @@ import {
 export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
+  const createMutation = useCreateNote();
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CreateNoteDto>({
     resolver: zodResolver(CreateNoteSchema),
     defaultValues: { title: "", content: "" },
@@ -32,16 +32,13 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const onSubmit = async (data: CreateNoteDto) => {
     setError(null);
-
-    const { status, body } = await api.notes.createNote({
-      body: data,
-    });
-
-    if (status === 201) {
+    try {
+      await createMutation.mutateAsync(data);
       reset();
       onSuccess?.();
-    } else {
-      setError(getResponseMessage(body) ?? t("api.note.createFailed"));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : t("api.note.createFailed");
+      setError(msg);
     }
   };
 
@@ -78,8 +75,8 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
           {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? t("notes.creating") : t("notes.createButton")}
+          <Button type="submit" disabled={createMutation.isPending} className="w-full">
+            {createMutation.isPending ? t("notes.creating") : t("notes.createButton")}
           </Button>
         </CardFooter>
       </form>

@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { api } from "@/lib/api";
 import {
   Card,
   CardHeader,
@@ -12,47 +10,26 @@ import {
   Spinner,
 } from "@repo/ui";
 import { Can } from "@/components/shared/Can";
-import type { NoteResponseDto } from "@repo/contracts";
+import { useNotes, useDeleteNote } from "@/hooks/use-notes";
 
 export function NotesList() {
   const { t } = useTranslation();
-  const [notes, setNotes] = useState<NoteResponseDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, isError } = useNotes();
+  const deleteMutation = useDeleteNote();
 
-  const fetchNotes = useCallback(async () => {
-    setLoading(true);
-    const { status, body } = await api.notes.getNotes({
-      query: { page: 1, limit: 50 },
-    });
+  const notes = data?.items ?? [];
 
-    if (status === 200) {
-      setNotes(body.items);
-      setError(null);
-    } else {
-      setError(t("api.note.fetchFailed"));
-    }
-    setLoading(false);
-  }, [t]);
-
-  useEffect(() => {
-    void fetchNotes();
-  }, [fetchNotes]);
-
-  const handleDelete = async (id: string) => {
-    const { status } = await api.notes.deleteNote({ params: { id } });
-    if (status === 204) {
-      setNotes((current) => current.filter((note) => note.id !== id));
-    }
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
-  if (loading)
+  if (isLoading)
     return (
       <div className="flex justify-center p-8">
         <Spinner label={t("common.loading")} />
       </div>
     );
-  if (error) return <div className="text-destructive text-center p-8">{error}</div>;
+  if (isError) return <div className="text-destructive text-center p-8">{t("api.note.fetchFailed")}</div>;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">

@@ -6,7 +6,15 @@ vi.mock("@/lib/api", () => ({ api: { notes: { getNotes: vi.fn(), deleteNote: vi.
 
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth.store";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NotesList } from "./NotesList";
+
+function renderWithClient(ui: React.ReactElement) {
+  const testClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  return render(<QueryClientProvider client={testClient}>{ui}</QueryClientProvider>);
+}
 
 describe("NotesList", () => {
   beforeEach(() => {
@@ -26,7 +34,7 @@ describe("NotesList", () => {
       status: 200,
       body: { items: [note()], total: 1, page: 1, limit: 50, totalPages: 1 },
     } as never);
-    render(<NotesList />);
+    renderWithClient(<NotesList />);
 
     expect(await screen.findByText("First note")).toBeTruthy();
     expect(screen.getByText("Note content")).toBeTruthy();
@@ -34,12 +42,17 @@ describe("NotesList", () => {
   });
 
   it("removes a note after a successful deletion", async () => {
-    vi.mocked(api.notes.getNotes).mockResolvedValue({
-      status: 200,
-      body: { items: [note()], total: 1, page: 1, limit: 50, totalPages: 1 },
-    } as never);
+    vi.mocked(api.notes.getNotes)
+      .mockResolvedValueOnce({
+        status: 200,
+        body: { items: [note()], total: 1, page: 1, limit: 50, totalPages: 1 },
+      } as never)
+      .mockResolvedValueOnce({
+        status: 200,
+        body: { items: [], total: 0, page: 1, limit: 50, totalPages: 0 },
+      } as never);
     vi.mocked(api.notes.deleteNote).mockResolvedValue({ status: 204, body: undefined } as never);
-    render(<NotesList />);
+    renderWithClient(<NotesList />);
 
     await screen.findByText("First note");
     fireEvent.click(screen.getByRole("button", { name: "common.delete" }));
@@ -55,7 +68,7 @@ describe("NotesList", () => {
       status: 500,
       body: { message: "Failed" },
     } as never);
-    render(<NotesList />);
+    renderWithClient(<NotesList />);
 
     expect(await screen.findByText("api.note.fetchFailed")).toBeTruthy();
   });
