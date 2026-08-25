@@ -6,7 +6,6 @@ import { WsAdapter } from "@nestjs/platform-ws";
 import helmet from "@fastify/helmet";
 import compress from "@fastify/compress";
 import cookie from "@fastify/cookie";
-import { VersioningType } from "@nestjs/common";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { PinoLoggerService } from "./infrastructure/logger/logger.service";
@@ -74,11 +73,6 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(logger, i18n));
 
   app.setGlobalPrefix("api", { exclude: ["metrics", "docs", "api/docs"] });
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: "1",
-    prefix: "v",
-  });
   app.enableCors({
     origin:
       env.NODE_ENV === "production" ? [env.CLIENT_URL] : [env.CLIENT_URL, "http://localhost:3000"],
