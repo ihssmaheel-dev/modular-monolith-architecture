@@ -1,6 +1,7 @@
 import { eq, and, isNull, sql } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { ok, type Result } from "neverthrow";
+import { env } from "../../../config/env";
 import { DatabaseService } from "../database.service";
 import { TenantContextService } from "../context/tenant-context.service";
 import type { BaseFindOptions, Id } from "./repository.types";
@@ -25,20 +26,33 @@ export abstract class BaseReadRepository<TEntity, TRow> {
     return ctx.tenantId ? { tenantId: ctx.tenantId } : undefined;
   }
 
+  protected isTenantIsolationRequired(): boolean {
+    return this.tenantScoped && env.TENANCY_MODE === "multi";
+  }
+
+  protected hasMissingTenantContext(): boolean {
+    return this.isTenantIsolationRequired() && !this.tenantFilter();
+  }
+
   async findById(id: Id, _options: BaseFindOptions = {}): Promise<Result<TEntity | null, never>> {
+    if (this.hasMissingTenantContext()) return ok(null);
     const db = this.getDb();
-    const idCol = (this.table as unknown as Record<string, { name: string }>)["id"];
+    const tenantFilter = this.tenantFilter();
+    const filter: Record<string, unknown> = tenantFilter
+      ? { id: id as string, ...tenantFilter }
+      : { id: id as string };
+    const conditions = this.buildConditions(filter);
     const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<TRow[]> } } })
       .select()
       .from(this.table)
-      .where(eq(idCol as unknown as Parameters<typeof eq>[0], id as string));
+      .where(conditions);
     const row = rows[0] ?? null;
     if (!row) return ok(null);
-    if ((row as unknown as Record<string, unknown>)["deletedAt"]) return ok(null);
     return ok(this.toDomain(row));
   }
 
   async findOne(filter: Record<string, unknown>): Promise<Result<TEntity | null, never>> {
+    if (this.hasMissingTenantContext()) return ok(null);
     const db = this.getDb();
     const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
     const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => { limit: (n: number) => Promise<TRow[]> } } } })
@@ -51,6 +65,7 @@ export abstract class BaseReadRepository<TEntity, TRow> {
   }
 
   async find(filter: Record<string, unknown> = {}): Promise<Result<TEntity[], never>> {
+    if (this.hasMissingTenantContext()) return ok([]);
     const db = this.getDb();
     const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
     const query = (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<TRow[]> } } }).select().from(this.table);
@@ -61,6 +76,7 @@ export abstract class BaseReadRepository<TEntity, TRow> {
   }
 
   async count(filter: Record<string, unknown> = {}): Promise<Result<number, never>> {
+    if (this.hasMissingTenantContext()) return ok(0);
     const db = this.getDb();
     const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
     const result = await (db as unknown as { select: (v: unknown) => { from: (t: unknown) => { where: (c: unknown) => Promise<{ count: number }[]> } } })

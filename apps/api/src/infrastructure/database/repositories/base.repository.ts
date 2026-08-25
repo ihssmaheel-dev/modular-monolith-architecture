@@ -26,6 +26,11 @@ export abstract class BaseRepository<TEntity, TRow> extends BaseReadRepository<T
   }
 
   async paginate(filter: Record<string, unknown> = {}, options: PaginationOptions = {}): Promise<Result<PaginatedResult<TEntity>, never>> {
+    if (this.hasMissingTenantContext()) {
+      const page = options.page ?? 1;
+      const limit = options.limit ?? 20;
+      return ok({ items: [], total: 0, page, limit, totalPages: 1, hasNextPage: false, hasPrevPage: false });
+    }
     const db = this.getDb();
     const page = options.page ?? 1;
     const limit = options.limit ?? 20;
@@ -57,18 +62,32 @@ export abstract class BaseRepository<TEntity, TRow> extends BaseReadRepository<T
   }
 
   async updateById(id: Id, update: Record<string, unknown>): Promise<Result<TEntity | null, { type: "CONFLICT" }>> {
+    if (this.hasMissingTenantContext()) return ok(null);
     const db = this.getDb();
     const idCol = (this.table as unknown as Record<string, unknown>)["id"] as Parameters<typeof eq>[0];
+    const tenantFilter = this.tenantFilter();
+    const tenantClause =
+      tenantFilter && (this.table as unknown as Record<string, unknown>)["tenantId"]
+        ? eq(
+            (this.table as unknown as Record<string, unknown>)["tenantId"] as Parameters<typeof eq>[0],
+            tenantFilter["tenantId"] as string,
+          )
+        : undefined;
+    const baseClause = eq(idCol, id as string);
+    const whereClause = tenantClause ? and(baseClause, tenantClause) : baseClause;
     const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<TRow[]> } } } })
       .update(this.table)
       .set({ ...update, updatedAt: new Date() } as unknown as Record<string, unknown>)
-      .where(eq(idCol, id as string))
+      .where(whereClause)
       .returning();
     const row = rows[0] ?? null;
-    return ok(row ? this.toDomain(row) : null);
+    if (!row) return ok(null);
+    if ((row as unknown as Record<string, unknown>)["deletedAt"]) return ok(null);
+    return ok(this.toDomain(row));
   }
 
   async updateOne(filter: Record<string, unknown>, update: Record<string, unknown>): Promise<Result<TEntity | null, { type: "CONFLICT" }>> {
+    if (this.hasMissingTenantContext()) return ok(null);
     const db = this.getDb();
     const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
     const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<TRow[]> } } } })
@@ -80,20 +99,49 @@ export abstract class BaseRepository<TEntity, TRow> extends BaseReadRepository<T
   }
 
   async softDeleteById(id: Id): Promise<Result<TEntity | null, never>> {
+    if (this.hasMissingTenantContext()) return ok(null);
     const db = this.getDb();
     const idCol = (this.table as unknown as Record<string, unknown>)["id"] as Parameters<typeof eq>[0];
+    const tenantFilter = this.tenantFilter();
+    const tenantClause =
+      tenantFilter && (this.table as unknown as Record<string, unknown>)["tenantId"]
+        ? eq(
+            (this.table as unknown as Record<string, unknown>)["tenantId"] as Parameters<typeof eq>[0],
+            tenantFilter["tenantId"] as string,
+          )
+        : undefined;
+    const deletedClause = isNull((this.table as unknown as Record<string, unknown>)["deletedAt"] as Parameters<typeof isNull>[0]);
+    const whereClause = tenantClause
+      ? and(eq(idCol, id as string), tenantClause, deletedClause)
+      : and(eq(idCol, id as string), deletedClause);
     const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<TRow[]> } } } })
       .update(this.table)
       .set({ deletedAt: new Date(), updatedAt: new Date() } as unknown as Record<string, unknown>)
-      .where(and(eq(idCol, id as string), isNull((this.table as unknown as Record<string, unknown>)["deletedAt"] as Parameters<typeof isNull>[0])))
+      .where(whereClause)
       .returning();
     return ok(rows[0] ? this.toDomain(rows[0]) : null);
   }
 
   async deleteById(id: Id): Promise<Result<boolean, never>> {
+    if (this.hasMissingTenantContext()) return ok(false);
     const db = this.getDb();
     const idCol = (this.table as unknown as Record<string, unknown>)["id"] as Parameters<typeof eq>[0];
-    await (db as unknown as { delete: (t: unknown) => { where: (c: unknown) => Promise<void> } }).delete(this.table).where(eq(idCol, id as string));
+    const tenantFilter = this.tenantFilter();
+    const tenantClause =
+      tenantFilter && (this.table as unknown as Record<string, unknown>)["tenantId"]
+        ? eq(
+            (this.table as unknown as Record<string, unknown>)["tenantId"] as Parameters<typeof eq>[0],
+            tenantFilter["tenantId"] as string,
+          )
+        : undefined;
+    const whereClause = tenantClause ? and(eq(idCol, id as string), tenantClause) : eq(idCol, id as string);
+    await (db as unknown as { delete: (t: unknown) => { where: (c: unknown) => Promise<void> } }).delete(this.table).where(whereClause);
     return ok(true);
+  }
+}
+
+export abstract class TenantScopedRepository<TEntity, TRow> extends BaseRepository<TEntity, TRow> {
+  constructor(table: import("drizzle-orm/pg-core").PgTable, database: import("../database.service").DatabaseService, tenantContext: import("../context/tenant-context.service").TenantContextService) {
+    super(table, database, tenantContext, true);
   }
 }

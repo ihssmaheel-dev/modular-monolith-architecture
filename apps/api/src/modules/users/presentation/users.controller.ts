@@ -1,7 +1,18 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
+import { z } from "zod";
 import { Idempotent, RequirePermission, TenantAgnostic } from "../../../common";
-import { type CreateUserInput, type UpdateUserInput, type PaginationQuery, type UserResponse, type UserListResponse } from "@repo/contracts";
+import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
+import {
+  type CreateUserInput,
+  type UpdateUserInput,
+  type PaginationQuery,
+  type UserResponse,
+  type UserListResponse,
+  CreateUserSchema,
+  UpdateUserSchema,
+  PaginationQuerySchema,
+} from "@repo/contracts";
 import { GetUsersQuery } from "../application/queries/get-users.query";
 import { GetUserByIdQuery } from "../application/queries/get-user-by-id.query";
 import { CreateUserCommand } from "../application/commands/create-user.command";
@@ -26,7 +37,7 @@ export class UsersController {
   @Get()
   @RequirePermission("users:read")
   async list(
-    @Query() query: PaginationQuery,
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
     @Req() req: FastifyRequest,
   ): Promise<UserListResponse> {
     const page = Number(query.page ?? 1);
@@ -41,7 +52,7 @@ export class UsersController {
   @Get(":id")
   @RequirePermission("users:read")
   async getById(
-    @Param("id") id: string,
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Req() req: FastifyRequest,
   ): Promise<UserResponse> {
     const lang = req?.headers["accept-language"];
@@ -62,7 +73,7 @@ export class UsersController {
   @Idempotent()
   @RequirePermission("users:write")
   async create(
-    @Body() body: CreateUserInput,
+    @Body(new ZodValidationPipe(CreateUserSchema)) body: CreateUserInput,
     @Req() req: FastifyRequest,
   ): Promise<UserResponse> {
     const lang = req?.headers["accept-language"];
@@ -87,8 +98,8 @@ export class UsersController {
   @Idempotent()
   @RequirePermission("users:write")
   async update(
-    @Param("id") id: string,
-    @Body() body: UpdateUserInput,
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
+    @Body(new ZodValidationPipe(UpdateUserSchema)) body: UpdateUserInput,
     @Req() req: FastifyRequest,
   ): Promise<UserResponse> {
     const lang = req?.headers["accept-language"];
@@ -110,7 +121,7 @@ export class UsersController {
   @Idempotent()
   @RequirePermission("users:delete")
   async delete(
-    @Param("id") id: string,
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Req() req: FastifyRequest,
   ): Promise<void> {
     const lang = req?.headers["accept-language"];

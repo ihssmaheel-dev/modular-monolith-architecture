@@ -2,9 +2,23 @@ import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { err } from "neverthrow";
 import { Public, TenantAgnostic, requireAuthenticatedUser } from "../../../common";
+import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
-import { type RegisterInput, type LoginInput, type RefreshTokenInput, type ForgotPasswordInput, type ResetPasswordInput, type AuthResponse, type MessageResponse } from "@repo/contracts";
+import {
+  type RegisterInput,
+  type LoginInput,
+  type RefreshTokenInput,
+  type ForgotPasswordInput,
+  type ResetPasswordInput,
+  type AuthResponse,
+  type MessageResponse,
+  RegisterSchema,
+  LoginSchema,
+  RefreshTokenSchema,
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
+} from "@repo/contracts";
 import { ForgotPasswordCommand } from "../application/commands/forgot-password.command";
 import { LoginCommand } from "../application/commands/login.command";
 import { LogoutCommand } from "../application/commands/logout.command";
@@ -33,7 +47,7 @@ export class AuthController {
   @Public()
   @AuthRateLimit("register")
   async register(
-    @Body() body: RegisterInput,
+    @Body(new ZodValidationPipe(RegisterSchema)) body: RegisterInput,
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<AuthResponse> {
@@ -54,7 +68,7 @@ export class AuthController {
   @Public()
   @AuthRateLimit("login")
   async login(
-    @Body() body: LoginInput,
+    @Body(new ZodValidationPipe(LoginSchema)) body: LoginInput,
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<AuthResponse> {
@@ -83,7 +97,7 @@ export class AuthController {
   @Public()
   @AuthRateLimit("refresh")
   async refresh(
-    @Body() body: RefreshTokenInput,
+    @Body(new ZodValidationPipe(RefreshTokenSchema)) body: RefreshTokenInput,
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<AuthResponse> {
@@ -103,7 +117,7 @@ export class AuthController {
   @Public()
   @AuthRateLimit("forgotPassword")
   async forgotPassword(
-    @Body() body: ForgotPasswordInput,
+    @Body(new ZodValidationPipe(ForgotPasswordSchema)) body: ForgotPasswordInput,
     @Req() req: FastifyRequest,
   ): Promise<MessageResponse> {
     const lang = req.headers["accept-language"];
@@ -116,7 +130,7 @@ export class AuthController {
   @Public()
   @AuthRateLimit("resetPassword")
   async resetPassword(
-    @Body() body: ResetPasswordInput,
+    @Body(new ZodValidationPipe(ResetPasswordSchema)) body: ResetPasswordInput,
     @Req() req: FastifyRequest,
   ): Promise<MessageResponse> {
     const lang = req.headers["accept-language"];

@@ -6,17 +6,16 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 
 ## File Size Limits
 
-| File Type | Max Lines | Action if Exceeded |
-|-----------|-----------|-------------------|
-| Any file | 150 | Split by responsibility |
-| Command / Query | 150 | Extract helper methods or split |
-| Controller | 150 | Extract route handlers into commands/queries |
-| Component | 150 | Extract sub-components or hooks |
-| Utility / Helper | 150 | Split by concern |
-| Type / Schema | 150 | Split into separate files by domain |
-| Test file | 300 | Split by describe block |
+| File Type / Location | Max Lines | Action if Exceeded |
+|----------------------|-----------|-------------------|
+| Any file (`apps/*`, `packages/contracts`, `packages/authorization`, `packages/i18n`, `packages/design-tokens`, `packages/api-client`) | 150 | Split by responsibility |
+| Command / Query / Controller / Feature Component / Utility / Type / Schema | 150 | Extract helper methods or split |
+| UI Component (`packages/ui/src/components/*`) | 250 | One shadcn component family per file; if >250 extract sub-component (shadcn primitives group ~10 related exports by design) |
+| Email Template (`packages/email/src/*`) | 250 | One template per file |
+| Test file (`*.test.ts`, `*.spec.ts`) | 300 | Split by describe block |
 
-**If a file feels hard to read, it is too big.** Split it. The hard limit is 150 lines for all non-test files.
+**How we count:** `source.trimEnd().split(/\r?\n/).length` — trailing final newline is not counted.  
+**If a file feels hard to read, it is too big.** Split it. The hard limit is **150 for app code, 250 for UI/email kit, 300 for tests**.
 
 ---
 

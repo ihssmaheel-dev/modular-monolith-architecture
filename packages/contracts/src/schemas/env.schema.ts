@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+// Dev-only fallbacks — pnpm bootstrap generates cryptographically strong secrets into apps/api/.env
+// and these defaults are rejected in production via superRefine below.
 const DEFAULT_JWT_SECRET = "your-super-secret-jwt-key-change-in-prod";
 const DEFAULT_REFRESH_SECRET = "your-super-secret-refresh-key-change-in-prod";
 

@@ -1,7 +1,18 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
+import { z } from "zod";
 import { RequirePermission, Idempotent, requireAuthenticatedUser } from "../../../common";
-import { type CreateNoteDto, type UpdateNoteDto, type PaginationQuery, type NoteResponseDto, type NoteListResponseDto } from "@repo/contracts";
+import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
+import {
+  type CreateNoteDto,
+  type UpdateNoteDto,
+  type PaginationQuery,
+  type NoteResponseDto,
+  type NoteListResponseDto,
+  CreateNoteSchema,
+  UpdateNoteSchema,
+  PaginationQuerySchema,
+} from "@repo/contracts";
 import { CreateNoteCommand } from "../application/commands/create-note.command";
 import { UpdateNoteCommand } from "../application/commands/update-note.command";
 import { DeleteNoteCommand } from "../application/commands/delete-note.command";
@@ -25,7 +36,7 @@ export class NotesController {
   @Get()
   @RequirePermission("notes:read")
   async list(
-    @Query() query: PaginationQuery,
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
     @Req() req: FastifyRequest,
   ): Promise<NoteListResponseDto> {
     const page = Number(query.page ?? 1);
@@ -46,7 +57,7 @@ export class NotesController {
   @Get(":id")
   @RequirePermission("notes:read")
   async getById(
-    @Param("id") id: string,
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Req() req: FastifyRequest,
   ): Promise<NoteResponseDto> {
     const lang = req?.headers["accept-language"];
@@ -68,7 +79,7 @@ export class NotesController {
   @Idempotent()
   @RequirePermission("notes:create")
   async create(
-    @Body() body: CreateNoteDto,
+    @Body(new ZodValidationPipe(CreateNoteSchema)) body: CreateNoteDto,
     @Req() req: FastifyRequest,
   ): Promise<NoteResponseDto> {
     const lang = req?.headers["accept-language"];
@@ -82,8 +93,8 @@ export class NotesController {
   @Idempotent()
   @RequirePermission("notes:update")
   async update(
-    @Param("id") id: string,
-    @Body() body: UpdateNoteDto,
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
+    @Body(new ZodValidationPipe(UpdateNoteSchema)) body: UpdateNoteDto,
     @Req() req: FastifyRequest,
   ): Promise<NoteResponseDto> {
     const lang = req?.headers["accept-language"];
@@ -105,7 +116,7 @@ export class NotesController {
   @Idempotent()
   @RequirePermission("notes:delete")
   async delete(
-    @Param("id") id: string,
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Req() req: FastifyRequest,
   ): Promise<void> {
     const lang = req?.headers["accept-language"];

@@ -28,12 +28,19 @@ function isTest(file) {
   return /\.(test|spec)\.[jt]sx?$/.test(file);
 }
 
+function getLineLimit(name, isTestFile) {
+  if (isTestFile) return 300;
+  if (name.startsWith("packages/ui/")) return 250;
+  if (name.startsWith("packages/email/")) return 250;
+  return 150;
+}
+
 function checkFile(file) {
   const name = relative(file);
   const fileName = path.basename(file);
   const source = fs.readFileSync(file, "utf8");
-  const lineCount = source.split(/\r?\n/).length;
-  const limit = isTest(file) ? 300 : 150;
+  const lineCount = source.trimEnd().split(/\r?\n/).length;
+  const limit = getLineLimit(name, isTest(file));
   if (!name.endsWith("routeTree.gen.ts") && lineCount > limit) {
     report(file, `${lineCount} lines exceeds the ${limit}-line limit`);
   }
