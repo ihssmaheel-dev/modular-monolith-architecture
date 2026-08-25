@@ -75,10 +75,22 @@ async function bootstrap() {
   app.setGlobalPrefix("api", { exclude: ["metrics", "docs", "api/docs"] });
   app.enableCors({
     origin:
-      env.NODE_ENV === "production" ? [env.CLIENT_URL] : [env.CLIENT_URL, "http://localhost:3000"],
+      env.NODE_ENV === "production"
+        ? [env.CLIENT_URL]
+        : (origin, callback) => {
+            if (
+              !origin ||
+              /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
+              origin === env.CLIENT_URL
+            ) {
+              callback(null, true);
+            } else {
+              callback(null, false);
+            }
+          },
     credentials: true,
     allowedHeaders:
-      "authorization,content-type,x-tenant-id,idempotency-key,accept-language,x-xsrf-token,x-csrf-token",
+      "authorization,content-type,accept,origin,x-requested-with,x-tenant-id,idempotency-key,accept-language,x-xsrf-token,x-csrf-token,scalar-origin",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     maxAge: 86400,
   });

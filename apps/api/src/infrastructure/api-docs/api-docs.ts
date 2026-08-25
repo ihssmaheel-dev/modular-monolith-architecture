@@ -17,7 +17,10 @@ export async function setupApiDocs(app: NestFastifyApplication): Promise<void> {
         version: "1.0.0",
         description: "Auto-generated OpenAPI 3.1 Documentation via oRPC and Zod 4 schemas.",
       },
-      servers: [{ url: `${env.API_URL}/api` }],
+      servers: [
+        { url: "/api", description: "Default API server (relative)" },
+        { url: `${env.API_URL}/api`, description: "Direct API server" },
+      ],
     });
 
     const fastify = app.getHttpAdapter().getInstance();
