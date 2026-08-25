@@ -36,7 +36,7 @@ Supreme laws of this codebase. These are never negotiable.
 3. Import another module's Drizzle schema or repository.
 4. Put business logic in `infrastructure/`.
 5. Throw in application/domain layers — use `Result`.
-6. Duplicate schemas/types — use `packages/shared`.
+6. Duplicate schemas/types — use `@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/design-tokens`.
 7. Use `any` in production code.
 8. Skip Zod validation on API inputs.
 9. Import `packages/ui` from mobile.

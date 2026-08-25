@@ -68,7 +68,7 @@ function processOrder(order: Order): Result<Order, OrderError> {
 ### Extract Don't Duplicate
 - If you copy-paste more than 3 lines, extract a function.
 - If two components share logic, extract a hook or utility.
-- Shared code goes in `packages/shared` or the nearest `utils/` folder.
+- Shared code goes in capability packages (`@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/design-tokens`) or the nearest `lib/` or `utils/` folder.
 
 ### Naming
 - Functions: `verbNoun` — `createUser`, `validateEmail`, `fetchOrders`.
@@ -106,15 +106,15 @@ Use `Promise.all()` for independent async operations:
 
 ```typescript
 // Bad — sequential (slow)
-const user = await this.userModel.findById(id);
-const orders = await this.orderModel.find({ userId: id });
-const notifications = await this.notifModel.find({ userId: id });
+const user = await this.userRepository.findById(id);
+const orders = await this.orderRepository.findByUserId(id);
+const notifications = await this.notifRepository.findByUserId(id);
 
 // Good — parallel (fast)
 const [user, orders, notifications] = await Promise.all([
-  this.userModel.findById(id),
-  this.orderModel.find({ userId: id }),
-  this.notifModel.find({ userId: id }),
+  this.userRepository.findById(id),
+  this.orderRepository.findByUserId(id),
+  this.notifRepository.findByUserId(id),
 ]);
 ```
 
@@ -122,8 +122,8 @@ const [user, orders, notifications] = await Promise.all([
 Only use sequential awaits when later operations depend on earlier results:
 
 ```typescript
-const user = await this.userModel.findById(id);    // need user.id
-const orders = await this.orderModel.find({ userId: user.id }); // depends on user
+const user = await this.userRepository.findById(id);    // need user.id
+const orders = await this.orderRepository.findByUserId(user.id); // depends on user
 ```
 
 ### Error Handling
@@ -214,7 +214,7 @@ import { CreateUserInput, UserError } from "../types";
 - Export at the bottom of the file.
 
 ### Constants
-- Domain constants live in `packages/shared/src/constants/`.
+- Domain constants live in `packages/contracts/src/constants/`.
 - Module-level constants live at the top of the file.
 - No hardcoded strings in business logic.
 

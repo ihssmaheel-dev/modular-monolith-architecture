@@ -9,25 +9,27 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 ### Stack
 - React 19 + Vite
 - TanStack Router (type-safe routing)
-- TanStack Query (server state)
+- TanStack Query v5 (server state + offline persistence)
 - Zustand (client state)
-- React Hook Form + Zod (forms)
-- Tailwind + shadcn/ui via `packages/ui`
+- React Hook Form + Zod 4 (forms)
+- Radix UI headless primitives + Tailwind CSS v4 via `packages/ui`
 
 ### Rules
 
 1. **All server state** goes through TanStack Query. No exceptions.
 2. **Client state** goes through Zustand. No Redux, no MobX, no Jotai.
-3. **Forms** use React Hook Form with Zod validation schemas from `packages/shared`.
+3. **Forms** use React Hook Form with Zod validation schemas from `@repo/contracts`.
 4. **Routing** uses TanStack Router. No React Router.
 5. **Components** are imported from `packages/ui` when available. Extend there, not here.
 6. **API calls** go through `packages/api-client`. Never call fetch/axios directly.
-7. **Styling** uses Tailwind. No inline styles, no CSS modules, no styled-components.
+7. **Styling** uses Tailwind CSS v4. No inline styles, no CSS modules, no styled-components.
 8. **No `any` types.** Use `unknown` if the type is unclear.
 9. **Environment variables** use `import.meta.env.VITE_*` (Vite convention). Never `process.env`.
 10. **All user-facing text** must use i18n via `useTranslation()` hook. Never hardcode strings.
-11. **Translation keys** follow the structure in `I18N_RULES.md`. Import from `@repo/shared`.
+11. **Translation keys** follow the structure in `I18N_RULES.md`. Import from `@repo/i18n`.
 12. **UI Access Gating** uses `<Can do="..." resource={...}>` from `@/components/shared/Can` and `useAuthorization()` / `usePermissions()` hooks.
+13. **Optimistic Mutations**: Use `useOptimisticMutation` (`apps/web/src/hooks/use-optimistic-mutation.ts`) for instant UI updates with automatic rollback on network failure.
+14. **Offline Cache & Tenant Purging**: Query cache persists to `localStorage` (24h TTL) and is automatically purged upon `logout()` or `selectTenant()` to prevent data bleeding.
 
 ### File Locations
 
@@ -35,11 +37,12 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 |------|-------|
 | API client instance | `apps/web/src/lib/api.ts` |
 | S3 presigned upload utility | `apps/web/src/lib/upload.ts` |
-| TanStack Query client | `apps/web/src/lib/query-client.ts` |
+| TanStack Query client & persistence | `apps/web/src/lib/query-client.ts` |
 | i18n initialization | `apps/web/src/lib/i18n/index.ts` |
 | File upload hook | `apps/web/src/hooks/use-file-upload.ts` |
 | Authorization hooks | `apps/web/src/hooks/use-authorization.ts`, `use-permissions.ts` |
-| TanStack Query hooks | `apps/web/src/hooks/use-*.ts` |
+| Optimistic mutation hook | `apps/web/src/hooks/use-optimistic-mutation.ts` |
+| Entity query & mutation hooks | `apps/web/src/hooks/use-[entity].ts` |
 | Auth store | `apps/web/src/stores/auth.store.ts` |
 | Tenant store | `apps/web/src/stores/tenant.store.ts` |
 | UI store | `apps/web/src/stores/ui.store.ts` |
@@ -76,13 +79,13 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 - NativeWind
 - TanStack Query
 - Zustand
-- Same Zod schemas from `packages/shared`
+- Same Zod schemas from `@repo/contracts`
 
 ### Rules
 
 1. **Never import `packages/ui`.** It is web-only. Mobile has different primitives.
 2. **API calls** go through `packages/api-client`. Same client as web.
-3. **Forms** use the same Zod schemas from `packages/shared`.
+3. **Forms** use the same Zod schemas from `@repo/contracts`.
 4. **Styling** uses NativeWind (Tailwind for React Native).
 5. **Navigation** uses Expo Router. No React Navigation directly.
 6. **State management** follows the same pattern: TanStack Query for server state, Zustand for client state.
@@ -121,18 +124,18 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 ## packages/ui (Web-Only)
 
 ### Purpose
-- Shared web UI components built on shadcn/ui.
-- Design tokens (colors, spacing, radius, typography).
+- Shared accessible web UI component kit built on headless Radix UI primitives and Tailwind CSS v4 design tokens.
+- Design tokens (colors, spacing, radius, typography) from `@repo/design-tokens`.
 - Web-only. Do not use in mobile.
 
 ### Rules
 
-1. **Every component** must be generic and composable.
+1. **Every component** must be generic, composable, and accessible.
 2. **No business logic** in UI components. Pure presentational.
 3. **No API calls.** Components receive data via props.
 4. **No state management.** Components are controlled.
-5. **All components** use Tailwind for styling.
-6. **Extend shadcn/ui.** Do not replace it.
+5. **All components** use Tailwind CSS v4 design tokens for styling.
+6. **Accessible & composable**: Composed with Radix primitives (`@radix-ui/react-*`), `lucide-react` icons, and `cn()` utility.
 7. **Exports** go through `packages/ui/src/index.ts`.
 8. **Flat file structure** — one component per file in `components/`, no sub-folders.
 9. **No upload utilities, hooks, or stores** — those belong in `apps/web/src/`.
@@ -155,7 +158,7 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 
 ## Shared Visual Language
 
-- Colors, spacing, radius, typography can be shared via `packages/shared` or `tailwind-config`.
+- Colors, spacing, radius, typography are shared via `@repo/design-tokens`.
 - Mobile and web should look consistent but are not required to share component code.
 - Design tokens are the bridge between platforms.
 

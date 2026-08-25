@@ -1,127 +1,182 @@
 # Modular Monolith Architecture
 
-A production-ready modular monolith built with NestJS, featuring clean architecture, CQRS pattern, and type-safe APIs.
+A production-grade, highly scalable TypeScript modular monolith architecture designed for enterprise-ready applications. Built with NestJS, Fastify, PostgreSQL, Drizzle ORM, TanStack Router & Query, Radix UI & Tailwind CSS v4, Fine-Grained Authorization (FGA), and full local observability.
+
+---
 
 ## Tech Stack
 
-- **Backend:** NestJS 11 + Fastify 5 + Postgres 16 + Drizzle ORM + Redis/BullMQ + oRPC
-- **Frontend:** React 19 + Vite + TanStack Router + TanStack Query + Tailwind CSS 4
+- **Backend:** NestJS 11 + Fastify 5 + PostgreSQL 16 + Drizzle ORM + Redis 7 + BullMQ + oRPC
+- **Frontend:** React 19 + Vite + TanStack Router + TanStack Query v5 + Radix UI + Tailwind CSS v4
 - **Mobile:** React Native + Expo + NativeWind
-- **Shared:** TypeScript 5.5 + Zod 4 Standard Schemas + oRPC Contracts + Unified FGA Engine
-- **Documentation:** Interactive Scalar API Reference (@scalar/fastify-api-reference)
-- **Infrastructure:** Docker + Turborepo + pnpm workspaces
+- **Capability Packages:**
+  - `@repo/contracts`: Zod 4 schemas, oRPC type-safe API contracts, DTO types, pagination & error constants
+  - `@repo/authorization`: Fine-Grained Authorization engine (RBAC + ReBAC + ABAC) & action vocabulary
+  - `@repo/i18n`: Multi-language JSON locale dictionaries (en, es, fr) & locale resolver
+  - `@repo/design-tokens`: Theme color palettes, spacing, typography, and radius scales
+  - `@repo/ui`: Headless accessible Radix UI component kit styled with Tailwind CSS v4
+  - `@repo/api-client`: Type-safe client factory with oRPC and RPCLink
+  - `@repo/email`: React Email templates with isolated HTML renderer
+- **Observability:** Grafana + Prometheus + Loki + Promtail + Jaeger + Postgres & Redis Exporters
+- **Documentation:** Interactive Scalar API Reference (`@scalar/fastify-api-reference`) & OpenAPI 3.1
+- **Tooling & Monorepo:** Turborepo + pnpm workspaces + TypeScript 7 + Vitest 4
+
+---
 
 ## Prerequisites
 
-- Node.js >= 20.0.0
-- pnpm >= 9.0.0
-- Docker with Compose v2.17+
+- **Node.js**: `>= 20.0.0`
+- **pnpm**: `>= 9.0.0`
+- **Docker**: Docker Engine with Docker Compose v2.17+
+
+---
 
 ## Quick Start
 
 ```bash
-# Install, configure, start infrastructure, migrate, and build
+# 1. Install dependencies, configure env, start core services, migrate & seed DB, and build
 pnpm bootstrap
 
-# Start the applications
+# 2. Start all applications in development mode
 pnpm dev
 ```
 
-See the [developer bootstrap guide](./docs/DEVELOPMENT.md) for focused app commands and local service URLs.
+---
 
 ## Project Structure
 
-```
+```text
 ├── apps/
-│   ├── api/          # NestJS backend (Modular Monolith + CQRS + FGA)
-│   ├── web/          # React frontend (TanStack Router + Query + <Can>)
-│   └── mobile/       # React Native Expo app
+│   ├── api/             # NestJS Fastify backend (Modular Monolith + CQRS + FGA + Drizzle)
+│   ├── web/             # React 19 frontend (TanStack Router + Query + Optimistic UI + Radix)
+│   └── mobile/          # React Native Expo app (NativeWind + Expo Router)
 ├── packages/
-│   ├── contracts/     # Zod 4 Schemas, oRPC API contracts, and DTO types
-│   ├── authorization/ # Fine-Grained Authorization engine (RBAC + ReBAC + ABAC)
-│   ├── i18n/          # Locales (en, es, fr) & internationalization config
-│   ├── design-tokens/ # Theme color palettes, spacing, and typography scales
-│   ├── ui/           # Shared UI components (web)
-│   ├── api-client/   # Type-safe API client (oRPC + TanStack Query)
-│   ├── email/        # Email templates (React Email)
-│   └── eslint-config/ # Shared ESLint config
-├── scripts/          # Full-Stack Vertical Slice Generator (pnpm generate:feature)
-├── docker/           # Docker Compose files
-└── ai_instructions/  # Mandatory Architecture rules
+│   ├── contracts/       # Zod 4 Schemas, oRPC API contracts, DTO types, and constants
+│   ├── authorization/   # Pure FGA Evaluator (RBAC + ReBAC + ABAC) & Action Vocabulary
+│   ├── i18n/            # Multi-language locale dictionaries (en, es, fr) & config
+│   ├── design-tokens/   # Visual design tokens (colors, radius, typography, spacing)
+│   ├── ui/              # Radix UI + Tailwind CSS v4 component kit (web)
+│   ├── api-client/      # Type-safe API client (oRPC + TanStack Query)
+│   ├── email/           # Email templates (React Email)
+│   └── typescript-config/ # Base TypeScript configurations
+├── scripts/             # Full-Stack Vertical Slice Generator (pnpm generate:feature)
+├── docker/              # Docker Compose services & Observability configuration
+└── ai_instructions/     # Architectural laws & guidelines
 ```
+
+---
 
 ## Available Scripts
 
+### Development & Apps
 ```bash
-# Development
-pnpm dev              # Start all apps
-pnpm dev:api          # Start API only (port 4000)
-pnpm dev:web          # Start web only (port 5173)
-
-# Full-Stack Vertical Slice Generator
-pnpm generate:feature <module> <feature>  # Scaffolds all 7 layers automatically
-
-# Build
-pnpm build            # Build all packages
-
-# Testing
-pnpm test             # Run all tests
-pnpm test:unit        # Unit tests only
-pnpm test:integration # Integration tests only
-pnpm test:e2e         # E2E tests only
-
-# Database
-pnpm db:migrate       # Run migrations
-pnpm db:seed          # Seed database
-
-# Code Quality & Architecture
-pnpm lint             # Lint all packages
-pnpm format:check     # Verify formatting
-pnpm rules:check      # Enforce strict architecture rules
-
-# Docker
-pnpm docker:up        # Start infrastructure
-pnpm docker:down      # Stop infrastructure
+pnpm dev              # Start all apps concurrently
+pnpm dev:api          # Build dependencies and start API (http://localhost:3000)
+pnpm dev:web          # Build dependencies and start Web (http://localhost:5173)
+pnpm dev:mobile       # Start Expo mobile app
 ```
 
-## Interactive API Documentation (Scalar)
-
-When running the API in development mode, the interactive **Scalar API Reference** is available at:
-
-```
-http://localhost:4000/api/docs
+### Full-Stack Vertical Slice Generator
+```bash
+# Automatically scaffolds all 7 layers (Contracts, Backend, Frontend, UI, Tests)
+pnpm generate:feature <module> <feature>
 ```
 
-- Live interactive request testing ("Try It Out").
-- Multi-language SDK code generation (TypeScript, Python, cURL, Go, Ruby, Java, Swift).
-- Raw OpenAPI 3.1 specifications available at `/api/docs/openapi.json` and `/api/docs/openapi.yaml`.
+### Build & Verification
+```bash
+pnpm build            # Build all packages & apps with Turborepo
+pnpm lint             # Lint all workspaces
+pnpm format           # Format code with Prettier
+pnpm format:check     # Check formatting
+pnpm rules:check      # Enforce strict architectural boundaries and dependency-cruiser rules
+```
 
-## Fine-Grained Authorization (FGA)
+### Testing
+```bash
+pnpm test             # Run test suite
+pnpm test:unit        # Run unit tests across all packages
+pnpm test:integration # Run repository & database integration tests
+pnpm test:e2e         # Run end-to-end tests
+```
 
-The architecture includes a unified hybrid authorization engine:
-- **RBAC**: Action vocabulary strings (`notes:create`, `team:invite`, `billing:manage`) with role bundling.
-- **ReBAC**: Relationship & ownership checks (`user → owner → resource`).
-- **ABAC**: Declarative policy predicates (tenant boundaries, department matching, amount limits).
-- **Backend Guard**: `@RequirePermission('notes:create')` and `AuthorizationService.check({ principal, action, resource, context })`.
-- **Frontend Gating**: `<Can do="notes:update" resource={note}><EditButton /></Can>`.
+### Database & Migrations (PostgreSQL + Drizzle ORM)
+```bash
+pnpm db:generate      # Generate SQL migrations from Drizzle schemas
+pnpm db:migrate       # Apply pending migrations to PostgreSQL
+pnpm db:migrate:status# Inspect migration status
+pnpm db:seed          # Seed database with initial development data
+pnpm db:studio        # Open Drizzle Studio database viewer
+```
+
+### Docker & Infrastructure
+```bash
+pnpm docker:up        # Start PostgreSQL, Redis, MinIO, Mailpit, pgAdmin
+pnpm docker:down      # Stop core infrastructure
+pnpm docker:logs      # View infrastructure logs
+```
+
+### Local Observability Stack (One-Command)
+```bash
+pnpm observability:up   # Start Grafana, Prometheus, Loki, Promtail, Jaeger, Exporters
+pnpm observability:down # Stop observability stack
+pnpm observability:logs # Tail telemetry logs
+```
+
+---
+
+## Local Service Directory
+
+| Service | Local URL / Port | Credentials / Purpose |
+| :--- | :--- | :--- |
+| **Web Application** | `http://localhost:5173` | React 19 Client |
+| **API Backend** | `http://localhost:3000` | Fastify API Server |
+| **Scalar API Reference** | `http://localhost:3000/api/docs` | Interactive OpenAPI 3.1 Docs |
+| **Grafana Dashboard** | `http://localhost:3001` | `admin / admin` (API, DB, Redis metrics) |
+| **Jaeger Trace Viewer** | `http://localhost:16686` | OpenTelemetry Distributed Traces |
+| **Prometheus Metrics** | `http://localhost:9090` | Time-series Metrics Server |
+| **Loki Log Engine** | `http://localhost:3100` | High-performance Log Aggregator |
+| **Mailpit Web UI** | `http://localhost:8025` | Local SMTP Email Inbox (`:1025`) |
+| **MinIO Console** | `http://localhost:9001` | `minioadmin / minioadmin` (S3: `:9000`) |
+| **pgAdmin 4** | `http://localhost:5050` | `admin@example.com / admin` |
+
+---
+
+## Key Architectural Patterns
+
+### 1. Clean Architecture & CQRS
+Every domain module in `apps/api/src/modules/[domain]/` adheres to CQRS:
+- **`presentation/`**: Thin Fastify controllers mapping input/output via `@repo/contracts`.
+- **`application/`**: Single-responsibility `commands/`, `queries/`, and domain event `listeners/`. All return `neverthrow` `Result<T, E>`.
+- **`domain/`**: Pure `entities/`, `value-objects/`, `events/`, and domain `errors/`.
+- **`infrastructure/`**: Drizzle table schemas and repositories.
+
+### 2. Fine-Grained Authorization (FGA)
+Unified **RBAC + ReBAC + ABAC** engine:
+- **Action Vocabulary**: Granular permissions (e.g., `notes:create`, `team:invite`, `billing:manage`).
+- **Relationship-Based Access Control**: Resource ownership (`resource.ownerId === principal.id`).
+- **Attribute-Based Access Control**: Dynamic policy predicates (tenant scoping, department matching).
+- **Backend Protection**: Controller `@RequirePermission('notes:create')` and application `AuthorizationService.check(...)`.
+- **Frontend Gating**: Declarative `<Can do="notes:update" resource={note}><EditButton /></Can>` and `useAuthorization()` hooks.
+
+### 3. Optimistic UI & Offline Persistence
+- **0ms Immediate UI**: `useOptimisticMutation` provides instant mutation feedback with automatic cache snapshotting and rollback on network failure.
+- **24-Hour Offline Cache**: Persists query cache to `localStorage` using `@tanstack/react-query-persist-client`.
+- **Tenant-Safe Cache Purging**: Automatically purges in-memory and persisted query caches on `logout()` and `selectTenant()` to prevent cross-session and cross-tenant data leaks.
+
+### 4. Headless Component Kit (`@repo/ui`)
+Accessible, composable UI primitives powered by Radix UI and Tailwind CSS v4:
+- Modal Dialogs, Dropdown Menus, Popovers, Tooltips, Tabs, Accordions, Date/DateRange Pickers, Comboboxes, Multi-Select Tagged Dropdowns, and TanStack Data Tables.
+
+---
 
 ## Health Checks
 
 - **Liveness:** `GET /api/health/live`
 - **Readiness:** `GET /api/health/ready`
+- **Prometheus Metrics:** `GET /metrics`
 
-## Architecture
-
-This project follows **Clean Architecture** with **CQRS pattern**:
-
-- **Presentation:** Controllers, resolvers, mappers, `@RequirePermission` guards
-- **Application:** Commands, queries, handlers, domain policies, event listeners
-- **Domain:** Entities, value objects, domain events, domain errors
-- **Infrastructure:** Repositories, database service, external adapters
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed documentation.
+---
 
 ## License
 
 MIT
-

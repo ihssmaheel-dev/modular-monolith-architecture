@@ -14,7 +14,7 @@ Every environment variable must be validated with Zod at startup. No `process.en
 Create `apps/api/src/config/env.ts` loading a strictly-typed schema:
 
 ```typescript
-import { envSchema, type Env } from "@repo/shared";
+import { envSchema, type Env } from "@repo/contracts";
 
 function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
@@ -31,7 +31,7 @@ export const env = loadEnv();
 ```
 
 ### Rules
-- **Schema first**: Define all environment variables in `packages/shared/src/schemas/env.schema.ts`.
+- **Schema first**: Define all environment variables in `packages/contracts/src/schemas/env.schema.ts`.
 - **Provide safe defaults** for local development (e.g., `PORT: z.coerce.number().default(3000)`).
 - **Never hardcode URLs or TTLs**: Dynamically consume `env.CLIENT_URL`, `env.API_URL`, and `env.JWT_EXPIRES_IN`.
 - Validate once at startup, use `env` everywhere.
@@ -136,6 +136,13 @@ Add an index when:
 - The monolithic backend exports distributed traces via the `TracingModule`.
 - HTTP endpoints and Database queries are automatically instrumented.
 - For extremely heavy backend workflows (like large batch processing), wrap the logic in a custom trace span using standard OpenTelemetry SDKs.
+
+### Local Observability Stack (`docker/docker-compose.observability.yml`)
+- Single command startup: `pnpm observability:up`.
+- **Grafana** (`http://localhost:3001` admin/admin): Pre-configured dashboards for API performance, Postgres, and Redis.
+- **Prometheus** (`http://localhost:9090`): Scrapes `/metrics` from Fastify API, Postgres exporter (`:9187`), and Redis exporter (`:9121`).
+- **Jaeger** (`http://localhost:16686`): Receives OpenTelemetry OTLP traces (`:4318` HTTP / `:4317` gRPC).
+- **Loki** (`http://localhost:3100`) + **Promtail**: Docker log aggregator with automatic `traceId` correlation linking directly into Jaeger waterfalls.
 
 ### Standard Application Logging
 Tool: Pino (locked stack). Fast, structured, JSON output.

@@ -26,20 +26,20 @@ const [users, [{ count }]] = await Promise.all([
 ```
 
 ### N+1 Prevention
-- Never query inside a loop. Use `findById` with `$in` for batch lookups.
-- If you need related data, aggregate or populate — don't loop queries.
+- Never query inside a loop. Use `inArray()` for batch lookups.
+- If you need related data, join or batch in parallel — don't loop queries.
 
 ```typescript
 // Bad
 for (const order of orders) {
-  const user = await this.userModel.findById(order.userId);
+  const user = await this.userRepository.findById(order.userId);
   order.user = user;
 }
 
 // Good
 const userIds = orders.map((o) => o.userId);
-const users = await this.userModel.find({ _id: { $in: userIds } }).lean();
-const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+const users = await this.db.select().from(usersTable).where(inArray(usersTable.id, userIds));
+const userMap = new Map(users.map((u) => [u.id, u]));
 ```
 
 ---
@@ -56,7 +56,7 @@ async getUser(id: string): Promise<User | null> {
   const cached = await this.redis.get(`user:${id}`);
   if (cached) return JSON.parse(cached);
 
-  const user = await this.userModel.findById(id).lean();
+  const user = await this.userRepository.findById(id);
   if (user) await this.redis.set(`user:${id}`, JSON.stringify(user), "EX", 3600);
   return user;
 }
@@ -156,7 +156,7 @@ export class ImportService {
 - Worker functions must be exported as named exports.
 - Don't send complex classes to workers — serialize to plain objects or strings first.
 - Workers must not import NestJS modules or services.
-- Workers can import pure utility functions from `packages/shared`.
+- Workers can import pure utility functions from `@repo/contracts`.
 - Set `maxThreads` based on workload: I/O-heavy = more threads, CPU-heavy = `os.cpus().length`.
 
 ---
