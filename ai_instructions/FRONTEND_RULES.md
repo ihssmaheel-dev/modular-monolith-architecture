@@ -30,6 +30,8 @@ Rules for `apps/web`, `apps/mobile`, and `packages/ui`.
 12. **UI Access Gating** uses `<Can do="..." resource={...}>` from `@/components/shared/Can` and `useAuthorization()` / `usePermissions()` hooks.
 13. **Optimistic Mutations**: Use `useOptimisticMutation` (`apps/web/src/hooks/use-optimistic-mutation.ts`) for instant UI updates with automatic rollback on network failure.
 14. **Offline Cache & Tenant Purging**: Query cache persists to `localStorage` (24h TTL) and is automatically purged upon `logout()` or `selectTenant()` to prevent data bleeding.
+15. **Semantic Theming Only**: Never hardcode arbitrary hex/RGB colors (`bg-[#ffffff]`, `text-[#000]`). Use standard semantic CSS variables (`bg-primary`, `bg-card`, `border-border`, `ring-ring`) so all presets from `ui.shadcn.com/create` apply cleanly (see `THEMING_AND_UI_RULES.md`).
+16. **Self-Hosted Typography**: All typography must use `@fontsource-variable/*` npm packages. External Google Fonts `<link>` tags in HTML are strictly prohibited.
 
 ### File Locations
 

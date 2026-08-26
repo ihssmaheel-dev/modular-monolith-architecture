@@ -220,5 +220,22 @@ If you are asked to build a new feature (like "Invoices"), use this simple check
 - [ ] **AuthZ:** Did I add the action to `packages/authorization/src/permissions.ts` and policies in `application/invoices.policies.ts` (`OnModuleInit` register)?
 - [ ] **Text:** Did I put all the English text inside `packages/i18n/src/locales/en.json` (and `es.json`/`fr.json`)?
 - [ ] **Frontend:** Did I build the UI using components from `packages/ui` and `packages/api-client` (`useOptimisticMutation`) and translate text using `useTranslation()`? Tip: `pnpm generate:feature invoices invoice` scaffolds all layers.
+- [ ] **Theming:** Did I use semantic CSS variables (`bg-primary`, `bg-card`, `border-border`) and avoid hardcoded hex colors?
+
+---
+
+## 6. Theming, Dynamic Presets & Self-Hosted Typography
+
+### 1-Click Re-Skinning with shadcn Presets
+Our UI layer uses Tailwind CSS v4 `@theme inline` with pure semantic tokens. If you copy a theme from **[ui.shadcn.com/create](https://ui.shadcn.com/create)** or **[ui.shadcn.com/themes](https://ui.shadcn.com/themes)** (OKLCH or HSL) and paste it into `apps/web/src/index.css`, **the entire app re-skins instantly**.
+
+### Proportional Radius Scaling
+Instead of static pixels, a single `--radius` CSS variable controls all curves across the app:
+- `rounded-sm`: calc(`--radius` * 0.6) for buttons, inputs, badges.
+- `rounded-md`: calc(`--radius` * 0.8) for cards and dropdowns.
+- `rounded-lg`: `--radius` for modals and dialogs.
+
+### 100% Offline & Air-Gapped Typography
+All fonts (**Geist & Geist Mono**) are bundled locally via `@fontsource-variable/*` npm packages with **zero external CDN requests**.
 
 If you checked all those boxes, you have written **perfect, clean, enterprise-grade code**. Welcome to the team!

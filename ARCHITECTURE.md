@@ -214,6 +214,24 @@ When building a new feature (like "Invoices"), follow this perfect flow:
 - [ ] **AuthZ:** Add action vocabulary in `packages/authorization/src/permissions.ts` and policies in `application/invoices.policies.ts`, register via `OnModuleInit`.
 - [ ] **Text:** Put all user-facing English text inside `packages/i18n/src/locales/en.json` (and `es.json`/`fr.json`), use `I18nService.t()` (backend) and `useTranslation()` (frontend).
 - [ ] **Frontend:** Build the UI using components from `packages/ui` and hooks (`useOptimisticMutation`) via `packages/api-client`; translate text using `useTranslation()`. Generate the slice fast with `pnpm generate:feature invoices invoice`.
+- [ ] **Theming:** Use semantic tokens (`bg-primary`, `bg-card`, `border-border`) and proportional `--radius`. Never hardcode raw hex colors.
+
+---
+
+## 7. Theming & Cross-Platform UI Architecture
+
+Our UI architecture guarantees **100% theme reactivity and instant preset re-skinning**:
+
+1. **Modern `@theme inline` (Tailwind CSS v4)**:
+   - Direct CSS variable bindings support OKLCH, HSL, RGB, and Hex presets from [ui.shadcn.com/create](https://ui.shadcn.com/create).
+2. **Proportional Radius Engine**:
+   - Master `--radius` scales `--radius-sm` (buttons/inputs), `--radius-md` (cards/menus), and `--radius-lg` (modals).
+3. **Self-Hosted Typography**:
+   - Self-hosted **Geist & Geist Mono** via `@fontsource-variable/*` (zero external CDN requests, 100% offline & air-gapped compliant).
+4. **`@repo/design-tokens` Cross-Platform Bridge**:
+   - Single source of truth for React Native mobile `StyleSheet` objects, transactional email HTML (`packages/email`), and backend SVG/PDF rendering.
+
+---
 
 ## Enforcement
 
