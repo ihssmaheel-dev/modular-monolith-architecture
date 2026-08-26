@@ -8,7 +8,8 @@
     "build": "tsc --noEmit",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "lint": "eslint \"app/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"hooks/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"stores/**/*.{ts,tsx}\""
+    "lint": "eslint app components hooks lib stores",
+    "lint:fix": "eslint app components hooks lib stores --fix"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
@@ -34,8 +35,11 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
+    "eslint": "^10.9.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "tailwindcss": "^4.3.3",
-    "typescript": "^7.0.2"
+    "typescript": "^5.8.2"
   }
 }

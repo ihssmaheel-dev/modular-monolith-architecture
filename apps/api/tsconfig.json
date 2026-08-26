@@ -1,13 +1,14 @@
 {
   "extends": "../../packages/typescript-config/nestjs.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "bundler",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "declaration": false,
+    "declarationMap": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./dist",
     "rootDir": "../../",
-
     "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"]
