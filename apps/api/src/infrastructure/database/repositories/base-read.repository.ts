@@ -1,75 +1,102 @@
-import type { Model } from "mongoose";
-import type { ClsService } from "nestjs-cls";
-import type { Result } from "neverthrow";
-import {
-  countEntities,
-  entityExists,
-  findEntities,
-  findEntityById,
-  findOneEntity,
-} from "./repository-read";
-import type { RepositoryScope } from "./repository-scope";
+import { eq, and, isNull, sql } from "drizzle-orm";
+import type { PgTable } from "drizzle-orm/pg-core";
+import { ok, type Result } from "neverthrow";
+import { env } from "../../../config/env";
+import { DatabaseService } from "../database.service";
+import { TenantContextService } from "../context/tenant-context.service";
 import type { BaseFindOptions, Id } from "./repository.types";
 
-export abstract class BaseReadRepository<TEntity, TDocument> {
+export abstract class BaseReadRepository<TEntity, TRow> {
   constructor(
-    protected readonly model: Model<TDocument>,
-    protected readonly cls?: ClsService,
-    protected readonly repositoryScope: RepositoryScope = "global",
+    protected readonly table: PgTable,
+    protected readonly database: DatabaseService,
+    protected readonly tenantContext: TenantContextService,
+    protected readonly tenantScoped: boolean = false,
   ) {}
 
-  protected abstract toDomain(document: unknown): TEntity;
+  protected abstract toDomain(row: TRow): TEntity;
 
-  findById(id: Id, options: BaseFindOptions = {}): Promise<Result<TEntity | null, never>> {
-    return findEntityById(
-      this.model,
-      this.cls,
-      (value) => this.toDomain(value),
-      this.repositoryScope,
-      id,
-      options,
-    );
+  protected getDb() {
+    return this.database.getTx() ?? this.database.getDb();
   }
 
-  findOne(
-    filter: Record<string, unknown>,
-    options: BaseFindOptions = {},
-  ): Promise<Result<TEntity | null, never>> {
-    return findOneEntity(
-      this.model,
-      this.cls,
-      (value) => this.toDomain(value),
-      this.repositoryScope,
-      filter,
-      options,
-    );
+  protected tenantFilter(): Record<string, unknown> | undefined {
+    if (!this.tenantScoped) return undefined;
+    const ctx = this.tenantContext.get();
+    return ctx.tenantId ? { tenantId: ctx.tenantId } : undefined;
   }
 
-  find(
-    filter: Record<string, unknown> = {},
-    options: BaseFindOptions = {},
-  ): Promise<Result<TEntity[], never>> {
-    return findEntities(
-      this.model,
-      this.cls,
-      (value) => this.toDomain(value),
-      this.repositoryScope,
-      filter,
-      options,
-    );
+  protected isTenantIsolationRequired(): boolean {
+    return this.tenantScoped && env.TENANCY_MODE === "multi";
   }
 
-  exists(
-    filter: Record<string, unknown>,
-    options: Pick<BaseFindOptions, "includeDeleted" | "onlyDeleted" | "session"> = {},
-  ): Promise<Result<boolean, never>> {
-    return entityExists(this.model, this.cls, this.repositoryScope, filter, options);
+  protected hasMissingTenantContext(): boolean {
+    return this.isTenantIsolationRequired() && !this.tenantFilter();
   }
 
-  count(
-    filter: Record<string, unknown> = {},
-    options: Pick<BaseFindOptions, "includeDeleted" | "onlyDeleted" | "session"> = {},
-  ): Promise<Result<number, never>> {
-    return countEntities(this.model, this.cls, this.repositoryScope, filter, options);
+  async findById(id: Id, _options: BaseFindOptions = {}): Promise<Result<TEntity | null, never>> {
+    if (this.hasMissingTenantContext()) return ok(null);
+    const db = this.getDb();
+    const tenantFilter = this.tenantFilter();
+    const filter: Record<string, unknown> = tenantFilter
+      ? { id: id as string, ...tenantFilter }
+      : { id: id as string };
+    const conditions = this.buildConditions(filter);
+    const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<TRow[]> } } })
+      .select()
+      .from(this.table)
+      .where(conditions);
+    const row = rows[0] ?? null;
+    if (!row) return ok(null);
+    return ok(this.toDomain(row));
+  }
+
+  async findOne(filter: Record<string, unknown>): Promise<Result<TEntity | null, never>> {
+    if (this.hasMissingTenantContext()) return ok(null);
+    const db = this.getDb();
+    const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
+    const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => { limit: (n: number) => Promise<TRow[]> } } } })
+      .select()
+      .from(this.table)
+      .where(conditions)
+      .limit(1);
+    const row = rows[0] ?? null;
+    return ok(row ? this.toDomain(row) : null);
+  }
+
+  async find(filter: Record<string, unknown> = {}): Promise<Result<TEntity[], never>> {
+    if (this.hasMissingTenantContext()) return ok([]);
+    const db = this.getDb();
+    const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
+    const query = (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<TRow[]> } } }).select().from(this.table);
+    const rows = conditions
+      ? await (query as unknown as { where: (c: unknown) => Promise<TRow[]> }).where(conditions)
+      : await (query as unknown as Promise<TRow[]>);
+    return ok(rows.map((r) => this.toDomain(r)));
+  }
+
+  async count(filter: Record<string, unknown> = {}): Promise<Result<number, never>> {
+    if (this.hasMissingTenantContext()) return ok(0);
+    const db = this.getDb();
+    const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
+    const result = await (db as unknown as { select: (v: unknown) => { from: (t: unknown) => { where: (c: unknown) => Promise<{ count: number }[]> } } })
+      .select({ count: sql<number>`count(*)` })
+      .from(this.table)
+      .where(conditions);
+    return ok(Number(result[0]?.count ?? 0));
+  }
+
+  protected buildConditions(filter: Record<string, unknown>): unknown {
+    const cols = this.table as unknown as Record<string, unknown>;
+    const clauses: unknown[] = [];
+    for (const [key, value] of Object.entries(filter)) {
+      const col = cols[key] as Parameters<typeof eq>[0] | undefined;
+      if (col) clauses.push(eq(col, value as string));
+    }
+    const deletedAt = cols["deletedAt"] as unknown;
+    if (deletedAt) clauses.push(isNull(deletedAt as Parameters<typeof isNull>[0]));
+    if (clauses.length === 0) return undefined;
+    if (clauses.length === 1) return clauses[0];
+    return and(...(clauses as Parameters<typeof and>));
   }
 }

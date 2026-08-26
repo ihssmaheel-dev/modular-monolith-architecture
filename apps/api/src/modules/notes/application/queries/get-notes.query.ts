@@ -3,7 +3,7 @@ import { Result } from "neverthrow";
 import { Note } from "../../domain/entities/note.entity";
 import { NotesRepository } from "../../infrastructure/notes.repository";
 import type { PaginatedResult } from "../../../../infrastructure/database";
-import type { AuthenticatedUser } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
 
 @Injectable()
 export class GetNotesQuery {

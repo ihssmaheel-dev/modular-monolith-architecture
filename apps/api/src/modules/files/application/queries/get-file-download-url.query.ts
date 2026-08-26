@@ -4,7 +4,7 @@ import { StorageService } from "../../../../infrastructure/storage/storage.servi
 import { env } from "../../../../config/env";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
-import type { AuthenticatedUser } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
 
 interface DownloadUrlResult {
   downloadUrl: string;

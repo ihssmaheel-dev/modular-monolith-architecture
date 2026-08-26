@@ -1,36 +1,25 @@
 import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model, FlattenMaps } from "mongoose";
-import { ClsService } from "nestjs-cls";
+import { DatabaseService } from "../../../infrastructure/database";
+import { TenantContextService } from "../../../infrastructure/database";
+import { BaseRepository } from "../../../infrastructure/database";
+import { notes, type NoteRow } from "./schemas/note.schema";
 import { Note } from "../domain/entities/note.entity";
-import { NoteMongooseSchema } from "./schemas/note.mongoose.schema";
-import { TenantScopedRepository } from "../../../infrastructure/database";
-
-type LeanNoteDocument = FlattenMaps<NoteMongooseSchema> & {
-  _id: { toString(): string };
-  createdAt?: Date;
-  updatedAt?: Date;
-};
 
 @Injectable()
-export class NotesRepository extends TenantScopedRepository<Note, NoteMongooseSchema> {
-  constructor(
-    @InjectModel(NoteMongooseSchema.name) model: Model<NoteMongooseSchema>,
-    cls: ClsService,
-  ) {
-    super(model, cls);
+export class NotesRepository extends BaseRepository<Note, NoteRow> {
+  constructor(database: DatabaseService, tenantContext: TenantContextService) {
+    super(notes, database, tenantContext, true);
   }
 
-  protected toDomain(value: unknown): Note {
-    const doc = value as LeanNoteDocument;
+  protected toDomain(row: NoteRow): Note {
     return Note.fromPersistence({
-      id: doc._id.toString(),
-      title: doc.title,
-      content: doc.content,
-      createdBy: doc.createdBy,
-      createdAt: doc.createdAt ?? new Date(),
-      updatedAt: doc.updatedAt ?? new Date(),
-      tenantId: doc.tenantId,
+      id: row.id,
+      title: row.title,
+      content: row.content,
+      createdBy: row.createdBy ?? undefined,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      tenantId: row.tenantId ?? undefined,
     });
   }
 }

@@ -14,7 +14,7 @@ Every environment variable must be validated with Zod at startup. No `process.en
 Create `apps/api/src/config/env.ts` loading a strictly-typed schema:
 
 ```typescript
-import { envSchema, type Env } from "@repo/shared";
+import { envSchema, type Env } from "@repo/contracts";
 
 function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
@@ -31,7 +31,7 @@ export const env = loadEnv();
 ```
 
 ### Rules
-- **Schema first**: Define all environment variables in `packages/shared/src/schemas/env.schema.ts`.
+- **Schema first**: Define all environment variables in `packages/contracts/src/schemas/env.schema.ts`.
 - **Provide safe defaults** for local development (e.g., `PORT: z.coerce.number().default(3000)`).
 - **Never hardcode URLs or TTLs**: Dynamically consume `env.CLIENT_URL`, `env.API_URL`, and `env.JWT_EXPIRES_IN`.
 - Validate once at startup, use `env` everywhere.
@@ -64,13 +64,17 @@ export const env = loadEnv();
 ### Input
 - Validate all input with Zod at the API boundary.
 - Sanitize HTML output if rendering user content.
-- No raw MongoDB queries from user input.
-- Parameterized queries only. Never concatenate user input into queries.
+- No raw SQL queries from user input.
+- Parameterized queries only (Drizzle query builder handles this by default). Never concatenate user input into queries.
 
-### Authorization
-- Check permissions at the application layer, not just the controller.
-- Use the permission system in `packages/shared/src/permissions/`.
-- Deny by default. Allow only what is explicitly permitted.
+### Authorization (Fine-Grained Authorization / FGA)
+- **Hybrid FGA Engine**: Enforce access via unified **RBAC + ReBAC + ABAC** evaluation.
+- **Action Vocabulary**: Use explicit permission action strings (`notes:create`, `files:upload`, `team:invite`, `billing:manage`).
+- **Endpoint Fast-Guard**: Protect HTTP controllers with `@RequirePermission('...')` to reject unauthorized requests at the presentation boundary.
+- **Application & Domain Protection**: In CQRS command/query handlers or domain policies, use `AuthorizationService.check({ principal, action, resource, context })` or `AuthorizationService.assert(...)`.
+- **ReBAC & Ownership**: Resource ownership (`resource.ownerId === principal.id`) grants full author access within the tenant boundary.
+- **Tenant Isolation**: Cross-tenant resource access is strictly forbidden (`TENANT_MISMATCH`).
+- **Closed-World Default Deny**: Deny by default. Allow only what is explicitly permitted by superadmin, ownership, matching policy, or role.
 
 ### Rate Limiting
 - Apply rate limiting to public endpoints.
@@ -109,35 +113,20 @@ export const env = loadEnv();
 
 ### When to Add an Index
 Add an index when:
-- A field is used in `find()` queries frequently.
-- A field is used in `sort()` or `order()` operations.
-- A field is used in `where` / filter clauses.
-- A compound query uses multiple fields together.
+- A column is used in filters (`where` clauses) frequently.
+- A column is used in `order by` / sort operations.
+- A compound query uses multiple columns together.
+- Foreign keys / tenant IDs require fast lookups.
 
 ### Rules
-- Every index must be defined in a migration (via `migrate-mongo`).
-- Never add indexes directly in Mongoose schema without a migration.
-- Use compound indexes for multi-field queries.
-- Prefer sparse indexes for fields with many null values.
-- Name indexes descriptively: `users_email_unique`, `orders_userId_createdAt`.
-
-### Examples
-
-```typescript
-// Good: compound index for common query
-collection.createIndex({ userId: 1, createdAt: -1 });
-
-// Good: unique index
-collection.createIndex({ email: 1 }, { unique: true });
-
-// Good: sparse index for optional field
-collection.createIndex({ deletedAt: 1 }, { sparse: true });
-```
+- Declare indexes in Drizzle schemas (`*.schema.ts`) and generate SQL migrations via `drizzle-kit`.
+- Use compound indexes for multi-column queries (`index("idx_name").on(t.tenantId, t.createdAt)`).
+- Name indexes descriptively: `users_email_unique`, `orders_tenant_created_at_idx`.
 
 ### Anti-Patterns
-- No indexes on small collections (<1000 documents) unless growth is expected.
-- No over-indexing. Every index slows writes.
-- No unused indexes. Monitor with MongoDB profiler.
+- No indexes on tiny static lookup tables unless growth is expected.
+- No over-indexing. Every index slows write throughput.
+- No unused indexes. Monitor query plans with `EXPLAIN ANALYZE`.
 
 ---
 
@@ -147,6 +136,13 @@ collection.createIndex({ deletedAt: 1 }, { sparse: true });
 - The monolithic backend exports distributed traces via the `TracingModule`.
 - HTTP endpoints and Database queries are automatically instrumented.
 - For extremely heavy backend workflows (like large batch processing), wrap the logic in a custom trace span using standard OpenTelemetry SDKs.
+
+### Local Observability Stack (`docker/docker-compose.observability.yml`)
+- Single command startup: `pnpm observability:up`.
+- **Grafana** (`http://localhost:3001` admin/admin): Pre-configured dashboards for API performance, Postgres, and Redis.
+- **Prometheus** (`http://localhost:9090`): Scrapes `/metrics` from Fastify API, Postgres exporter (`:9187`), and Redis exporter (`:9121`).
+- **Jaeger** (`http://localhost:16686`): Receives OpenTelemetry OTLP traces (`:4318` HTTP / `:4317` gRPC).
+- **Loki** (`http://localhost:3100`) + **Promtail**: Docker log aggregator with automatic `traceId` correlation linking directly into Jaeger waterfalls.
 
 ### Standard Application Logging
 Tool: Pino (locked stack). Fast, structured, JSON output.

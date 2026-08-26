@@ -2,13 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { ok, err, Result } from "neverthrow";
 import { z } from "zod";
-import { UpdateNoteSchema } from "@repo/shared";
+import { UpdateNoteSchema } from "@repo/contracts";
 import { Note } from "../../domain/entities/note.entity";
 import { NoteNotFound } from "../../domain/errors/note.errors";
 import { NoteUpdatedEvent } from "../../domain/events/note.events";
 import { NotesRepository } from "../../infrastructure/notes.repository";
 import { GetNoteByIdQuery } from "../queries/get-note-by-id.query";
-import type { AuthenticatedUser } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
 
 @Injectable()
 export class UpdateNoteCommand {

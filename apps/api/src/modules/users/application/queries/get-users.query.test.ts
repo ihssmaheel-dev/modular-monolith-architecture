@@ -3,10 +3,10 @@ import { GetUsersQuery } from "./get-users.query";
 import { UsersRepository } from "../../infrastructure/users.repository";
 import { User } from "../../domain/entities/user.entity";
 import { ok } from "neverthrow";
-import * as shared from "@repo/shared";
+import * as contracts from "@repo/contracts";
 
-vi.mock("@repo/shared", async () => {
-  const actual = await vi.importActual("@repo/shared");
+vi.mock("@repo/contracts", async () => {
+  const actual = await vi.importActual("@repo/contracts");
   return {
     ...actual,
     paginate: vi.fn(),
@@ -35,7 +35,7 @@ describe("GetUsersQuery", () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    vi.mocked(shared.paginate).mockReturnValue({ page: 2, limit: 5, skip: 5 });
+    vi.mocked(contracts.paginate).mockReturnValue({ page: 2, limit: 5, skip: 5 });
     vi.mocked(repository.paginate).mockResolvedValue(
       ok({
         items: [user],

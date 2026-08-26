@@ -31,8 +31,7 @@ RUN pnpm turbo build --filter=web...
 
 # Stage 3: Runner (Nginx)
 FROM nginx:alpine AS runner
-# Copy custom nginx config if needed, otherwise use default
-# COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built assets from installer stage
 COPY --from=installer /app/apps/web/dist /usr/share/nginx/html

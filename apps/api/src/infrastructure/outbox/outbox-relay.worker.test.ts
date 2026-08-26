@@ -48,7 +48,7 @@ describe("OutboxRelayWorker", () => {
     expect(emitter.emitAsync).toHaveBeenCalledWith(EVENT.topic, EVENT.payload);
     expect(repository.updateById).toHaveBeenCalledWith(
       EVENT.id,
-      expect.objectContaining({ $set: { status: "PUBLISHED" } }),
+      expect.objectContaining({ status: "PUBLISHED" }),
     );
     expect(metrics.recordHistogram).toHaveBeenCalled();
   });
@@ -61,8 +61,33 @@ describe("OutboxRelayWorker", () => {
     expect(repository.updateById).toHaveBeenCalledWith(
       EVENT.id,
       expect.objectContaining({
-        $set: expect.objectContaining({ status: "PENDING", attempts: 1 }),
+        status: "PENDING",
+        attempts: 1,
       }),
+    );
+  });
+
+  it("moves event to DEAD_LETTER status when max attempts are exceeded", async () => {
+    const exhaustedEvent: OutboxEvent = { ...EVENT, id: "event-exhausted", attempts: 4 };
+    vi.mocked(repository.lockPendingEvents).mockResolvedValueOnce([exhaustedEvent]);
+    vi.mocked(emitter.emitAsync).mockRejectedValue(new Error("permanent error"));
+    metrics.incrementCounter = vi.fn();
+
+    await worker.relayEvents();
+
+    expect(repository.updateById).toHaveBeenCalledWith(
+      exhaustedEvent.id,
+      expect.objectContaining({
+        status: "DEAD_LETTER",
+        attempts: 5,
+        nextAttemptAt: null,
+      }),
+    );
+    expect(metrics.incrementCounter).toHaveBeenCalledWith(
+      "outbox_dead_letter_total",
+      expect.any(String),
+      1,
+      { topic: exhaustedEvent.topic },
     );
   });
 });

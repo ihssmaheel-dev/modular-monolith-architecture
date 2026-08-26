@@ -7,7 +7,7 @@ import type { PinoLoggerService } from "../logger/logger.service";
 const mockGet = vi.fn();
 const mockSetex = vi.fn();
 const mockDel = vi.fn();
-const mockKeys = vi.fn();
+const mockScan = vi.fn();
 
 vi.mock("../../config/env", () => ({
   env: {
@@ -33,7 +33,7 @@ describe("CacheService", () => {
           get: mockGet,
           setex: mockSetex,
           del: mockDel,
-          keys: mockKeys,
+          scan: mockScan,
         }),
       } as unknown as RedisService,
       {
@@ -90,10 +90,10 @@ describe("CacheService", () => {
   });
 
   it("should delete keys by pattern", async () => {
-    mockKeys.mockResolvedValue(["key1", "key2"]);
+    mockScan.mockResolvedValueOnce(["0", ["key1", "key2"]]);
     mockDel.mockResolvedValue(2);
     await service.delPattern("key*");
-    expect(mockKeys).toHaveBeenCalledWith("key*");
+    expect(mockScan).toHaveBeenCalledWith("0", "MATCH", "key*", "COUNT", 100);
     expect(mockDel).toHaveBeenCalledWith("key1", "key2");
   });
 });

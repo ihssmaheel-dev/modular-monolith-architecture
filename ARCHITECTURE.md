@@ -24,49 +24,58 @@ graph TD
     end
 
     subgraph Shared Packages
-        S[packages/shared<br>Zod Schemas, API Contracts, Locales]
+        S[packages/contracts<br>Zod Schemas, oRPC Contracts, DTOs]
+        AuthZ[packages/authorization<br>FGA + Permissions]
+        I18N[packages/i18n<br>Locales]
+        Tokens[packages/design-tokens<br>Theme]
         UI[packages/ui<br>React Components]
+        Client[packages/api-client<br>oRPC Client]
     end
 
     W -->|Imports Types & Contracts| S
     W -->|Imports Components| UI
+    W -->|Imports AuthZ + i18n| AuthZ
+    W -->|Uses| Client
     M -->|Imports Types & Contracts| S
     A -->|Imports Types & Contracts| S
+    A -->|Uses| AuthZ
 
-    W -->|100% Type-Safe HTTP Requests| A
-    M -->|100% Type-Safe HTTP Requests| A
+    W -->|oRPC + REST via api-client| A
+    M -->|oRPC + REST via api-client| A
 ```
 
 ### Why a Monorepo?
 
-By sharing a package called `packages/shared`, the backend and frontend speak the exact same language. If the backend changes an API rule, the frontend will show a red compiler error instantly before the code is even run. No more broken APIs!
+By sharing capability packages (`@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/design-tokens`), the backend and frontend speak the exact same language. If the backend changes an API rule, the frontend will show a red compiler error instantly before the code is even run. No more broken APIs!
 
 ---
 
-## 2. The Single Source of Truth (`packages/shared`)
+## 2. The Single Source of Truth (`packages/contracts`, `authorization`, `i18n`, `design-tokens`)
 
-This is the most important folder in the project. It holds all the rules for our data.
+This is the most important layer in the project. It holds all the rules for our data.
 
-- **Zod Schemas**: Rules for what data should look like (e.g., `Email must be a string`).
-- **ts-rest Contracts**: The exact blueprints for our API endpoints (e.g., `POST /users requires this body`).
-- **Locales (i18n)**: All the text shown to users (e.g., `en.json` containing `"userNotFound": "User not found"`).
+- **Zod Schemas (`@repo/contracts`)**: Rules for what data should look like (e.g., `Email must be a string`).
+- **oRPC Contracts (`@repo/contracts`)**: The exact blueprints for our API endpoints (`oc.route().input().output()`).
+- **Permissions & Evaluator (`@repo/authorization`)**: Action vocabulary (`notes:create`, `team:invite`) and pure FGA engine (RBAC + ReBAC + ABAC).
+- **Locales (`@repo/i18n`)**: All the text shown to users (`en.json` containing `"api.user.notFound": "User not found"`), consumed via `I18nService` (backend) and `useTranslation()` (frontend).
+- **Design Tokens (`@repo/design-tokens`)**: Colors, spacing, typography shared by web and mobile.
 
 ### The Rule
 
-We never write validation logic twice. The backend uses these Zod schemas to validate incoming data. The frontend uses the _exact same_ Zod schemas to validate forms before submitting. All user-facing text is pulled from the `i18n` locales to prevent hardcoded English strings.
+We never write validation logic twice. The backend uses these Zod schemas (via `ZodValidationPipe` + `AllExceptionsFilter`) to validate incoming data. The frontend uses the _exact same_ Zod schemas to validate forms before submitting. All user-facing text is pulled from `@repo/i18n` to prevent hardcoded strings. All error messages go through `I18nService.t()`.
 
 ---
 
 ## 3. The Frontend (`apps/web` & `apps/mobile`)
 
-- **Web Core**: React 19, Vite, TanStack Router.
-- **Mobile Core**: React Native, Expo, Expo Router.
-- **State Management**: Zustand (global state) and TanStack Query (server state).
-- **UI Components**: Built using `@repo/ui` (shadcn/ui + Tailwind CSS v4).
+- **Web Core**: React 19, Vite, TanStack Router, TanStack Query v5 (offline persisted 24h), Zustand, React Hook Form + Zod 4, shadcn/ui + Tailwind CSS v4.
+- **Mobile Core**: React Native, Expo, Expo Router, NativeWind, TanStack Query, Zustand.
+- **State Management**: Zustand (client state) and TanStack Query (server state) with optimistic mutations (`useOptimisticMutation`) and tenant-safe cache purging.
+- **UI Components**: Built using `@repo/ui` (Radix UI headless + Tailwind CSS v4, web-only).
 
 ### How does it work?
 
-We use a generated API client powered by `@ts-rest/react-query`. It reads the contracts from `packages/shared` and knows exactly what the backend expects and returns. We achieve **100% end-to-end type safety**.
+We use `@repo/api-client` (`createApiClient` -> `RPCLink + createORPCClient + createTanstackQueryUtils`) powered by oRPC contracts from `@repo/contracts`. It reads the `oc.router` and knows exactly what the backend expects and returns. We achieve **100% end-to-end type safety**. Frontend never calls `fetch` directly; all calls go through `packages/api-client` with auto `idempotency-key`, `x-tenant-id`, `accept-language`, and `401 -> refresh` handling.
 
 ---
 
@@ -76,7 +85,7 @@ We deploy as a single, easily hosted Node.js process using **NestJS 11**. Howeve
 
 - `auth` does not know how `users` works inside.
 - Modules communicate exclusively through Application-layer Commands/Queries or Domain Events.
-- **Never** directly import another module's Infrastructure Repository or Mongoose schema.
+- **Never** directly import another module's Infrastructure Repository or Drizzle pgTable.
 
 Every domain module strictly separates our codebase into 4 Clean Architecture layers, enforcing the Dependency Rule (inner layers cannot know about outer layers).
 
@@ -131,7 +140,7 @@ sequenceDiagram
     participant A as 2. Application (Command)
     participant D as 3. Domain (Entity)
     participant I as 4. Infrastructure (Repository)
-    participant DB as MongoDB
+    participant DB as Postgres
 
     User->>C: POST /notes { title: "Hello" }
     C->>C: Validates payload using shared Zod schema
@@ -139,7 +148,7 @@ sequenceDiagram
     A->>D: Note.create(data)
     D-->>A: Returns pure Note Entity
     A->>I: repository.create(Note)
-    I->>DB: Saves to MongoDB
+    I->>DB: Saves to Postgres
     DB-->>I: Success
     I-->>A: Returns Success
     A-->>C: Returns Result (ok or err)
@@ -148,29 +157,30 @@ sequenceDiagram
 
 ### Layer 1: Presentation Layer (`presentation/`)
 
-- **What it is:** The front door of the backend. It contains Controllers and Mappers.
-- **The Rule:** Controllers are stupid. They parse HTTP requests, call the Application layer, and map results to HTTP responses.
-- **Why?** Controllers should _never_ make business decisions. If they do, you can't reuse that logic for a cron job or message queue.
+- **What it is:** The front door of the backend. It contains Controllers and Mappers, protected by `@RequirePermission` (FGA), `@Idempotent`, `@Public`/`@TenantAgnostic`, and `ZodValidationPipe` (from `@repo/contracts` schemas).
+- **The Rule:** Controllers are thin. They validate HTTP requests (Zod), call exactly one Application command/query, and map `Result<T,E>` to HTTP via `handleResult` + `I18nService`.
+- **Why?** Controllers should _never_ make business decisions. If they do, you can't reuse that logic for a queue worker, cron job, or WebSocket gateway.
 
 ### Layer 2: Application Layer (`application/`)
 
-- **What it is:** Orchestrates use cases. Interacts with Repositories. Emits Events.
+- **What it is:** Orchestrates use cases. Interacts with Repositories (never Drizzle schemas). Emits Domain Events or enqueues via `OutboxService`/`BullMQ`.
 - **The Rule:** Strict **CQRS**. We do not use monolithic "God Services". Every single use-case in this application is broken down into an isolated class:
-  - **Commands:** Mutate state (e.g., `CreateUserCommand`).
-  - **Queries:** Read state without mutating (e.g., `GetUserByIdQuery`).
-- **Why?** Flat services are globally banned. Isolated commands keep files small, testable, and highly specific.
+  - **Commands:** Mutate state (e.g., `CreateUserCommand`) -> `Result<T,E>`.
+  - **Queries:** Read state without mutating (e.g., `GetUserByIdQuery`) -> `Result<T,E>`.
+  - **Listeners:** React to events (`welcome-email.listener`, `notes-realtime.listener`) — idempotent, never throw.
+- **Why?** Flat services are globally banned. Isolated commands keep files `<150 lines`, testable, and highly specific.
 
 ### Layer 3: Domain Layer (`domain/`)
 
-- **What it is:** Pure business logic. Entities, Value Objects, Domain Events.
-- **The Rule:** Zero framework dependencies. No NestJS, no Mongoose, no HTTP. Just pure TypeScript classes.
-- **Why?** If you change your database from MongoDB to PostgreSQL tomorrow, your business logic should not change. The Domain Layer ensures your business rules are protected.
+- **What it is:** Pure business logic. Entities, Value Objects, Domain Events, Errors.
+- **The Rule:** Zero framework dependencies. No NestJS, no Drizzle, no HTTP. Just pure TypeScript classes and `neverthrow` types.
+- **Why?** If you change Postgres tomorrow, your business logic should not change. The Domain Layer ensures your business rules are protected.
 
 ### Layer 4: Infrastructure Layer (`infrastructure/`)
 
-- **What it is:** The dirty work. MongoDB schemas, Repositories, Redis drivers, Email clients.
-- **The Rule:** No business logic allowed.
-- **Why?** The Application layer asks to save data. The Infrastructure layer knows _how_ to save it to MongoDB. Repositories map Mongoose database models back into pristine Domain Entities before handing them back to the Application layer.
+- **What it is:** The dirty work. Drizzle `pgTable` schemas, Repositories (`BaseRepository`/`TenantScopedRepository`), Redis/BullMQ, Piscina workers, S3/MinIO, Email (Resend/SMTP via CircuitBreaker), Realtime (WS/SSE), Outbox, Audit, Metrics, Tracing.
+- **The Rule:** No business logic allowed. `cross-cutting` infra lives in `src/infrastructure/*` (`@Global()`), `domain-specific` infra lives in `modules/[domain]/infrastructure/*`.
+- **Why?** The Application layer asks to save data. The Infrastructure layer knows _how_ to save it to Postgres. Repositories map Drizzle rows back into pristine Domain Entities before handing them back. Tenant isolation is app-enforced via `BaseRepository` + `TenantContextService` (CLS `tenantId`) — `findById/updateById/softDelete/delete` are all tenant-scoped.
 
 ---
 
@@ -196,20 +206,39 @@ Thrown exceptions act like hidden GOTO statements that crash apps unexpectedly. 
 
 When building a new feature (like "Invoices"), follow this perfect flow:
 
-- [ ] **Shared:** Define the Zod schema and ts-rest contract in `packages/shared`.
-- [ ] **Domain:** Create an `Invoice` pure TypeScript class in `domain/entities`.
-- [ ] **Infrastructure:** Create a Mongoose schema and an `InvoicesRepository` in `infrastructure/`.
-- [ ] **Application:** Create a specific `CreateInvoiceCommand` in `application/commands/` that returns a `Result`.
-- [ ] **Presentation:** Create an `InvoicesController` that calls the command, handles the `Result`, and maps it to HTTP.
-- [ ] **Text:** Put all user-facing English text inside `packages/shared/src/i18n/locales/en.json`.
-- [ ] **Frontend:** Build the UI using components from `packages/ui` and translate text using `useTranslation()`.
+- [ ] **Contracts:** Define the Zod schema and oRPC contract (`oc.route().input().output()`) in `packages/contracts/src/schemas` + `contracts`.
+- [ ] **Domain:** Create an `Invoice` pure TypeScript class in `modules/invoices/domain/entities` (no framework deps).
+- [ ] **Infrastructure:** Create a Drizzle `pgTable` in `modules/invoices/infrastructure/schemas` and an `InvoicesRepository extends TenantScopedRepository` in `infrastructure/`.
+- [ ] **Application:** Create a specific `CreateInvoiceCommand` in `application/commands/` that returns a `Result<T,E>` and dispatches via `OutboxService` if critical.
+- [ ] **Presentation:** Create an `InvoicesController` in `presentation/` that validates via `ZodValidationPipe` (schemas from `@repo/contracts`), calls the command, handles the `Result` via `handleResult` + `I18nService`, and maps to HTTP; protect with `@RequirePermission` + `@Idempotent`.
+- [ ] **AuthZ:** Add action vocabulary in `packages/authorization/src/permissions.ts` and policies in `application/invoices.policies.ts`, register via `OnModuleInit`.
+- [ ] **Text:** Put all user-facing English text inside `packages/i18n/src/locales/en.json` (and `es.json`/`fr.json`), use `I18nService.t()` (backend) and `useTranslation()` (frontend).
+- [ ] **Frontend:** Build the UI using components from `packages/ui` and hooks (`useOptimisticMutation`) via `packages/api-client`; translate text using `useTranslation()`. Generate the slice fast with `pnpm generate:feature invoices invoice`.
+- [ ] **Theming:** Use semantic tokens (`bg-primary`, `bg-card`, `border-border`) and proportional `--radius`. Never hardcode raw hex colors.
+
+---
+
+## 7. Theming & Cross-Platform UI Architecture
+
+Our UI architecture guarantees **100% theme reactivity and instant preset re-skinning**:
+
+1. **Modern `@theme inline` (Tailwind CSS v4)**:
+   - Direct CSS variable bindings support OKLCH, HSL, RGB, and Hex presets from [ui.shadcn.com/create](https://ui.shadcn.com/create).
+2. **Proportional Radius Engine**:
+   - Master `--radius` scales `--radius-sm` (buttons/inputs), `--radius-md` (cards/menus), and `--radius-lg` (modals).
+3. **Self-Hosted Typography**:
+   - Self-hosted **Geist & Geist Mono** via `@fontsource-variable/*` (zero external CDN requests, 100% offline & air-gapped compliant).
+4. **`@repo/design-tokens` Cross-Platform Bridge**:
+   - Single source of truth for React Native mobile `StyleSheet` objects, transactional email HTML (`packages/email`), and backend SVG/PDF rendering.
+
+---
 
 ## Enforcement
 
 The rules defined in `ai_instructions/` are supreme. `pnpm rules:check` runs
 dependency-cruiser together with repository convention checks, and CI blocks violations.
 
-Dependency-cruiser enforces that domain code cannot depend on outer layers or NestJS/Mongoose,
-controllers cannot import module infrastructure, application code cannot import Mongoose schemas,
+Dependency-cruiser enforces that domain code cannot depend on outer layers or NestJS/Drizzle,
+controllers cannot import module infrastructure, application code cannot import Drizzle pgTables,
 modules cannot import another module's infrastructure or schemas, and dependency cycles fail the build.
 Shared contracts and cross-cutting technical services remain intentional, documented exceptions.

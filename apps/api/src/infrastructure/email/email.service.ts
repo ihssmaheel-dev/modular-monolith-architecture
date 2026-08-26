@@ -7,27 +7,7 @@ import { SmtpDriver } from "./drivers/smtp.driver";
 import { CircuitBreaker } from "../../common/utils/circuit-breaker";
 import { Bulkhead } from "../../common/utils/bulkhead";
 import { MetricsService } from "../metrics/metrics.service";
-
-export interface EmailError {
-  code: "SEND_FAILED" | "INVALID_ADDRESS" | "CONFIG_ERROR" | "CIRCUIT_OPEN" | "BULKHEAD_REJECTED";
-  message: string;
-}
-
-export interface SendEmailParams {
-  to: string | string[];
-  subject: string;
-  html: string;
-  text?: string;
-}
-
-export interface SendEmailResult {
-  id: string;
-  provider: "resend" | "smtp";
-}
-
-export interface EmailDriver {
-  send(recipients: string[], params: SendEmailParams): Promise<Result<SendEmailResult, EmailError>>;
-}
+import type { EmailDriver, EmailError, SendEmailParams, SendEmailResult } from "./email.types";
 
 @Injectable()
 export class EmailService {

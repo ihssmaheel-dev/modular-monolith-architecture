@@ -6,17 +6,16 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 
 ## File Size Limits
 
-| File Type | Max Lines | Action if Exceeded |
-|-----------|-----------|-------------------|
-| Any file | 150 | Split by responsibility |
-| Command / Query | 150 | Extract helper methods or split |
-| Controller | 150 | Extract route handlers into commands/queries |
-| Component | 150 | Extract sub-components or hooks |
-| Utility / Helper | 150 | Split by concern |
-| Type / Schema | 150 | Split into separate files by domain |
-| Test file | 300 | Split by describe block |
+| File Type / Location | Max Lines | Action if Exceeded |
+|----------------------|-----------|-------------------|
+| Any file (`apps/*`, `packages/contracts`, `packages/authorization`, `packages/i18n`, `packages/design-tokens`, `packages/api-client`) | 150 | Split by responsibility |
+| Command / Query / Controller / Feature Component / Utility / Type / Schema | 150 | Extract helper methods or split |
+| UI Component (`packages/ui/src/components/*`) | 250 | One shadcn component family per file; if >250 extract sub-component (shadcn primitives group ~10 related exports by design) |
+| Email Template (`packages/email/src/*`) | 250 | One template per file |
+| Test file (`*.test.ts`, `*.spec.ts`) | 300 | Split by describe block |
 
-**If a file feels hard to read, it is too big.** Split it. The hard limit is 150 lines for all non-test files.
+**How we count:** `source.trimEnd().split(/\r?\n/).length` — trailing final newline is not counted.  
+**If a file feels hard to read, it is too big.** Split it. The hard limit is **150 for app code, 250 for UI/email kit, 300 for tests**.
 
 ---
 
@@ -68,7 +67,7 @@ function processOrder(order: Order): Result<Order, OrderError> {
 ### Extract Don't Duplicate
 - If you copy-paste more than 3 lines, extract a function.
 - If two components share logic, extract a hook or utility.
-- Shared code goes in `packages/shared` or the nearest `utils/` folder.
+- Shared code goes in capability packages (`@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/design-tokens`) or the nearest `lib/` or `utils/` folder.
 
 ### Naming
 - Functions: `verbNoun` — `createUser`, `validateEmail`, `fetchOrders`.
@@ -106,15 +105,15 @@ Use `Promise.all()` for independent async operations:
 
 ```typescript
 // Bad — sequential (slow)
-const user = await this.userModel.findById(id);
-const orders = await this.orderModel.find({ userId: id });
-const notifications = await this.notifModel.find({ userId: id });
+const user = await this.userRepository.findById(id);
+const orders = await this.orderRepository.findByUserId(id);
+const notifications = await this.notifRepository.findByUserId(id);
 
 // Good — parallel (fast)
 const [user, orders, notifications] = await Promise.all([
-  this.userModel.findById(id),
-  this.orderModel.find({ userId: id }),
-  this.notifModel.find({ userId: id }),
+  this.userRepository.findById(id),
+  this.orderRepository.findByUserId(id),
+  this.notifRepository.findByUserId(id),
 ]);
 ```
 
@@ -122,8 +121,8 @@ const [user, orders, notifications] = await Promise.all([
 Only use sequential awaits when later operations depend on earlier results:
 
 ```typescript
-const user = await this.userModel.findById(id);    // need user.id
-const orders = await this.orderModel.find({ userId: user.id }); // depends on user
+const user = await this.userRepository.findById(id);    // need user.id
+const orders = await this.orderRepository.findByUserId(user.id); // depends on user
 ```
 
 ### Error Handling
@@ -214,7 +213,7 @@ import { CreateUserInput, UserError } from "../types";
 - Export at the bottom of the file.
 
 ### Constants
-- Domain constants live in `packages/shared/src/constants/`.
+- Domain constants live in `packages/contracts/src/constants/`.
 - Module-level constants live at the top of the file.
 - No hardcoded strings in business logic.
 

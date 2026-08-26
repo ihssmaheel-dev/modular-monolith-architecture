@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@repo/shared";
+import { DEFAULT_LOCALE, type Locale } from "@repo/i18n";
 
 export class UserCreatedEvent {
   constructor(

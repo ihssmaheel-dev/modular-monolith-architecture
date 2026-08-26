@@ -38,7 +38,7 @@ Do not skip folders. Do not add extra folders beyond this structure.
 ### `presentation/`
 - Controllers only.
 - Extremely thin.
-- Validate input via Zod / ts-rest.
+- Validate input via Zod schemas from `@repo/contracts` (or oRPC contract `oc.route().input().output()`).
 - Call application commands/queries.
 - Map `Result` → HTTP response.
 - No business logic. No database access. No state.
@@ -50,7 +50,7 @@ Do not skip folders. Do not add extra folders beyond this structure.
 - `commands/` for write operations (create, update, delete).
 - `queries/` for read operations (list, getById, search).
 - `listeners/` for domain event handlers (welcome email, analytics, notifications).
-- Never directly accesses Mongoose. Goes through repository.
+- Never directly accesses database driver. Goes through repository.
 
 ### Strict CQRS (Command Query Responsibility Segregation)
 
@@ -73,9 +73,9 @@ Every domain module **must** implement a strict CQRS architecture. We do not use
 
 ### `infrastructure/`
 - Domain-specific persistence and adapters only.
-- `schemas/` — Mongoose schemas.
+- `schemas/` — Drizzle pgTable schemas (`[domain].schema.ts`).
 - `[domain].repository.ts` — data access implementation.
-- Mappers between Mongoose documents and domain entities.
+- Mappers between Drizzle table rows and domain entities.
 - External API adapters used by this domain only.
 - Never contains business logic.
 
@@ -85,8 +85,8 @@ Every domain module **must** implement a strict CQRS architecture. We do not use
 
 | Location | Responsibility |
 |----------|----------------|
-| `src/infrastructure/` | Cross-cutting: Redis connection, BullMQ root config, MinIO client, email transport, logger, mongoose connection |
-| `modules/[domain]/infrastructure/` | Domain-specific: Mongoose schemas, repositories, mappers, external API adapters |
+| `src/infrastructure/` | Cross-cutting: Redis connection, BullMQ root config, MinIO/S3 client, email transport, logger, Postgres connection |
+| `modules/[domain]/infrastructure/` | Domain-specific: Drizzle schemas, repositories, mappers, external API adapters |
 
 ### Shared Infrastructure Modules
 
@@ -102,13 +102,13 @@ All shared infrastructure modules:
 
 | Module | Responsibility |
 |--------|---------------|
-| `database/` | Mongoose connection, base repository, plugins |
+| `database/` | Postgres connection (pg.Pool), Drizzle client, base repository, transactions |
 | `logger/` | Pino logger with CLS enrichment |
 | `redis/` | ioredis connection |
 | `queue/` | BullMQ root config |
 | `workers/` | Piscina worker pools |
 | `cache/` | Redis caching (cache-aside pattern) |
-| `storage/` | S3/GridFS file storage |
+| `storage/` | S3 / MinIO file storage |
 | `email/` | SMTP/Resend email transport |
 | `realtime/` | WebSocket gateway and streams |
 | `session/` | Session management |
@@ -121,7 +121,8 @@ All shared infrastructure modules:
 | `audit/` | Audit logging to database |
 | `outbox/` | Transactional outbox for reliable events |
 | `security/` | Account lockout, cross-cutting security |
-| `swagger/` | OpenAPI/Swagger setup |
+| `api-docs/` | Interactive Scalar API Reference & OpenAPI 3.1 setup |
+| `authorization/` | Fine-Grained Authorization engine (RBAC + ReBAC + ABAC) & policies |
 
 Rules for shared infrastructure:
 - Must be `@Global()` if used across multiple modules.
@@ -161,8 +162,8 @@ export class AppModule {}
 ## Creating a New Module
 
 1. Create the folder structure above in `modules/[name]/`.
-2. Define Zod schemas in `packages/shared/src/schemas/`.
-3. Define ts-rest contract in `packages/shared/src/contracts/`.
+2. Define Zod schemas in `packages/contracts/src/schemas/`.
+3. Define oRPC contract (`oc.route().input().output()`) in `packages/contracts/src/contracts/`.
 4. Implement domain entities in `domain/entities/`.
 5. Implement repository in `infrastructure/`.
 6. Implement use-cases in `application/commands/` and `application/queries/`.
@@ -175,10 +176,12 @@ export class AppModule {}
 
 ## Controller Rules
 
-- **Use ts-rest strictly**: Controllers must use `@Controller()` and `@TsRestHandler(contract)` from `@ts-rest/nest`.
-- **Never use standard decorators**: Do NOT use `@Get()`, `@Post()`, `@Body()`, or `@Query()`. The ts-rest contract handles all routing and validation.
-- Validate input automatically via the ts-rest Zod contract definitions.
+- **Use standard Nest decorators**: Controllers use `@Controller()` with `@Post()`, `@Get()`, `@Body()`, `@Query()` etc., validated via Zod schemas from `@repo/contracts` (or oRPC `oc.route().input()`).
+- **Enforce Fine-Grained Authorization**: Protect endpoints with `@RequirePermission('...')` to enforce RBAC action vocabulary and multi-tenant scoping.
+- Validate input via Zod schemas from `@repo/contracts` before calling application layer.
+- `apiContract` (`oc.router` in `@repo/contracts`) is for client (`packages/api-client` via `RPCLink` + `createORPCClient`) and OpenAPI (`@orpc/openapi`), not a Nest handler.
 - **Protect mutations with Idempotency**: All critical POST, PUT, or DELETE endpoints (e.g., payments, resource creation) MUST be protected using the `@Idempotent()` decorator. The client is required to send an `idempotency-key` header to prevent duplicate processing.
+- **Domain Policies Registration**: If a domain module has domain-specific access rules, implement `OnModuleInit` in `[domain].module.ts` and call `this.authService.registerPolicies([domain]Policies)`.
 - Call exactly one application command/query per route.
 - Map Result to HTTP:
   - `ok(value)` → Return `{ status: 200, body: value }`
@@ -194,5 +197,5 @@ export class AppModule {}
 
 1. **Preferred:** Application command/query calls another module's command/query.
 2. **Allowed:** Domain events (in-process via EventEmitter2).
-3. **Never:** Direct import of another module's repository or Mongoose model.
+3. **Never:** Direct import of another module's repository or Drizzle schema.
 4. **Never:** Shared mutable state between modules.

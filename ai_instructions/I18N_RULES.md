@@ -6,10 +6,10 @@ Rules for multi-language support across backend and frontend.
 
 ## Single Source of Truth
 
-All translations live in `packages/shared/src/i18n/locales/`. One JSON file per language.
+All translations live in `packages/i18n/src/locales/`. One JSON file per language.
 
 ```
-packages/shared/src/i18n/
+packages/i18n/src/
 ├── locales/
 │   ├── en.json    ← English (default)
 │   ├── es.json    ← Spanish
@@ -63,7 +63,7 @@ return { status: 409, body: { message: "Email already taken" } };
 ### Web (`apps/web`)
 
 - Use `react-i18next` for all user-facing text.
-- Import translations from `@repo/shared`.
+- Import translations from `@repo/i18n`.
 - Store user language preference in `localStorage`.
 - Auto-detect browser language on first visit.
 - Never hardcode strings in components.
@@ -121,10 +121,10 @@ return <h1>Dashboard</h1>;
 
 ## Adding a New Language
 
-1. Create `packages/shared/src/i18n/locales/{locale}.json`.
+1. Create `packages/i18n/src/locales/{locale}.json`.
 2. Copy structure from `en.json`.
 3. Translate all values (not keys).
-4. Add locale to `SUPPORTED_LOCALES` in `packages/shared/src/i18n/index.ts`.
+4. Add locale to `SUPPORTED_LOCALES` in `packages/i18n/src/index.ts`.
 5. Add locale to resources in `apps/web/src/lib/i18n/index.ts`.
 6. Add locale to resources in `apps/mobile/lib/i18n/index.ts`.
 
@@ -144,7 +144,7 @@ return <h1>Dashboard</h1>;
 |-----------|------------------|
 | Hardcoded string in component | Use `t("key")` |
 | Hardcoded error in controller | Use `I18nService.t("api.error.*")` |
-| Translations in command/query file | Use files in `packages/shared` |
+| Translations in command/query file | Use files in `packages/i18n` |
 | Missing locale file | Add to all supported locales |
 | Console.log for debugging | Use logger, never expose to users |
 | Translation key typo | Keys are type-checked via TypeScript |

@@ -76,6 +76,10 @@ export class RealtimeService {
       });
   }
 
+  disconnectUser(userId: string): number {
+    return this.registry.disconnectUser(userId);
+  }
+
   getUserCount(): number {
     return this.registry.getUserCount();
   }

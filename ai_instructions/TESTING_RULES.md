@@ -10,7 +10,7 @@ Test contract for the codebase. Quality without ceremony.
 |---------------|-----------|------|--------------|
 | `domain/` | Unit | Vitest | Entities, value objects, business rules. Pure logic. |
 | `application/` | Unit | Vitest | Use cases, service logic. Mock repository. |
-| `infrastructure/` | Integration | Vitest + real Mongo/Redis (testcontainers or local docker) | Repositories, adapters. Real Mongo/Redis. |
+| `infrastructure/` | Integration | Vitest + real Postgres/Redis (testcontainers or local docker) | Repositories, adapters. Real Postgres/Redis. |
 | `presentation/` + full flows | E2E | Supertest (API), Playwright (web), Maestro (mobile) | API endpoints, user journeys. |
 
 ---
@@ -25,7 +25,7 @@ Test contract for the codebase. Quality without ceremony.
 - One test file per source file, co-located next to it.
 
 ### Integration Tests (infrastructure)
-- Use real MongoDB and Redis (via testcontainers or local docker).
+- Use real PostgreSQL and Redis (via testcontainers or local docker).
 - Test repository CRUD, query correctness, data mapping.
 - Clean up data between tests.
 - Run in CI with docker services.
@@ -175,7 +175,7 @@ describe("UsersService", () => {
 
 ## What NOT to Test
 
-- Framework internals (NestJS, Mongoose, React).
+- Framework internals (NestJS, Drizzle ORM, React).
 - Third-party library behavior.
 - Trivial getters/setters.
 - Type-only code.

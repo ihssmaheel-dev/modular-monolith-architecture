@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "../redis/redis.service";
+import { MetricsService } from "../metrics/metrics.service";
+import { PinoLoggerService } from "../logger/logger.service";
 
 const SLIDING_WINDOW_LOG_PREFIX = "ratelimit:";
 const DEFAULT_MAX_REQUESTS = 100;
@@ -19,7 +21,15 @@ export interface RateLimitResult {
 
 @Injectable()
 export class RateLimitService {
-  constructor(private readonly redis: RedisService) {}
+  constructor(
+    private readonly redis: RedisService,
+    private readonly metrics: MetricsService,
+    logger: PinoLoggerService,
+  ) {
+    this.logger = logger.child({ module: "RateLimitService" });
+  }
+
+  private readonly logger: PinoLoggerService;
 
   async check(key: string, config: RateLimitConfig = {}): Promise<RateLimitResult> {
     const windowSeconds = config.windowSeconds ?? DEFAULT_WINDOW_SECONDS;
@@ -30,7 +40,16 @@ export class RateLimitService {
 
     const client = this.redis.getClient();
     if (!client) {
-      // If Redis is down, gracefully bypass rate limiting
+      this.metrics.incrementCounter("rate_limit_redis_unavailable", "Redis unavailable for rate limiting", 1, { key });
+      this.logger.warn({ key }, "Rate limit Redis unavailable");
+      const isAuth = key.includes("/auth/") || key.includes("auth:");
+      if (isAuth) {
+        return {
+          allowed: false,
+          remaining: 0,
+          resetAt: Math.ceil((now + windowSeconds * MS_PER_SECOND) / MS_PER_SECOND),
+        };
+      }
       return {
         allowed: true,
         remaining: maxRequests,

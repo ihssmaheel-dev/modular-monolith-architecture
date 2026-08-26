@@ -8,7 +8,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@repo/shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@repo/contracts": path.resolve(__dirname, "../../packages/contracts/src"),
+      "@repo/authorization": path.resolve(__dirname, "../../packages/authorization/src"),
+      "@repo/i18n": path.resolve(__dirname, "../../packages/i18n/src"),
+      "@repo/design-tokens": path.resolve(__dirname, "../../packages/design-tokens/src"),
       "@repo/api-client": path.resolve(__dirname, "../../packages/api-client/src"),
     },
   },
@@ -22,6 +25,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ["@repo/shared", "@repo/api-client"],
+    exclude: ["@repo/contracts", "@repo/authorization", "@repo/i18n", "@repo/design-tokens", "@repo/api-client"],
   },
 });

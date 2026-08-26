@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import type { AuthenticatedUser } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
 import { env } from "../../config/env";
 
 export function verifyAccessToken(token: string): AuthenticatedUser | null {

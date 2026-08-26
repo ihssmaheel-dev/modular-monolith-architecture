@@ -1,8 +1,18 @@
-import { Controller, Req, HttpStatus } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { RequirePermissions, TenantAgnostic } from "../../../common";
-import { usersContract } from "@repo/shared";
-import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
+import { z } from "zod";
+import { Idempotent, RequirePermission, TenantAgnostic } from "../../../common";
+import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
+import {
+  type CreateUserInput,
+  type UpdateUserInput,
+  type PaginationQuery,
+  type UserResponse,
+  type UserListResponse,
+  CreateUserSchema,
+  UpdateUserSchema,
+  PaginationQuerySchema,
+} from "@repo/contracts";
 import { GetUsersQuery } from "../application/queries/get-users.query";
 import { GetUserByIdQuery } from "../application/queries/get-user-by-id.query";
 import { CreateUserCommand } from "../application/commands/create-user.command";
@@ -10,7 +20,6 @@ import { UpdateUserCommand } from "../application/commands/update-user.command";
 import { DeleteUserCommand } from "../application/commands/delete-user.command";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
 import { handleResult } from "../../../common/utils/presentation.utils";
-
 import { toUserResponse } from "./users.mapper";
 
 @Controller("users")
@@ -25,113 +34,109 @@ export class UsersController {
     private readonly i18n: I18nService,
   ) {}
 
-  @TsRestHandler(usersContract.list)
-  @RequirePermissions("users:read")
-  list(@Req() req: FastifyRequest) {
-    return tsRestHandler(usersContract.list, async ({ query }) => {
-      const { page, limit } = query;
-      const lang = req?.headers["accept-language"];
-      const result = await this.getUsersQuery.execute(page, limit);
-      const val = handleResult(result, {}, this.i18n, lang);
-      const { users, total, page: p, limit: l } = val;
-      return {
-        status: 200 as const,
-        body: { users: users.map(toUserResponse), total, page: p, limit: l },
-      };
-    });
+  @Get()
+  @RequirePermission("users:read")
+  async list(
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
+    @Req() req: FastifyRequest,
+  ): Promise<UserListResponse> {
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 20);
+    const lang = req?.headers["accept-language"];
+    const result = await this.getUsersQuery.execute(page, limit);
+    const val = handleResult(result, {}, this.i18n, lang);
+    const { users, total, page: p, limit: l } = val;
+    return { users: users.map(toUserResponse), total, page: p, limit: l };
   }
 
-  @TsRestHandler(usersContract.getById)
-  @RequirePermissions("users:read")
-  getById(@Req() req: FastifyRequest) {
-    return tsRestHandler(usersContract.getById, async ({ params: { id } }) => {
-      const lang = req?.headers["accept-language"];
-      const result = await this.getUserByIdQuery.execute(id);
-      const user = handleResult(
-        result,
-        {
-          USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
-        },
-        this.i18n,
-        lang,
-      );
-      return {
-        status: 200 as const,
-        body: toUserResponse(user),
-      };
-    });
+  @Get(":id")
+  @RequirePermission("users:read")
+  async getById(
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
+    @Req() req: FastifyRequest,
+  ): Promise<UserResponse> {
+    const lang = req?.headers["accept-language"];
+    const result = await this.getUserByIdQuery.execute(id);
+    const user = handleResult(
+      result,
+      {
+        USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+      },
+      this.i18n,
+      lang,
+    );
+    return toUserResponse(user);
   }
 
-  @TsRestHandler(usersContract.create)
-  @RequirePermissions("users:write")
-  create(@Req() req: FastifyRequest) {
-    return tsRestHandler(usersContract.create, async ({ body }) => {
-      const lang = req?.headers["accept-language"];
-      const locale = this.i18n.getLocale(req.headers["accept-language"]);
-      const result = await this.createUserCommand.execute(body, locale);
-      const user = handleResult(
-        result,
-        {
-          EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
-          TRANSACTION_FAILED: {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            i18nKey: "api.error.transactionFailed",
-          },
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Idempotent()
+  @RequirePermission("users:write")
+  async create(
+    @Body(new ZodValidationPipe(CreateUserSchema)) body: CreateUserInput,
+    @Req() req: FastifyRequest,
+  ): Promise<UserResponse> {
+    const lang = req?.headers["accept-language"];
+    const locale = this.i18n.getLocale(req.headers["accept-language"]);
+    const result = await this.createUserCommand.execute(body, locale);
+    const user = handleResult(
+      result,
+      {
+        EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
+        TRANSACTION_FAILED: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          i18nKey: "api.error.transactionFailed",
         },
-        this.i18n,
-        lang,
-      );
-      return {
-        status: 201 as const,
-        body: toUserResponse(user),
-      };
-    });
+      },
+      this.i18n,
+      lang,
+    );
+    return toUserResponse(user);
   }
 
-  @TsRestHandler(usersContract.update)
-  @RequirePermissions("users:write")
-  update(@Req() req: FastifyRequest) {
-    return tsRestHandler(usersContract.update, async ({ params: { id }, body }) => {
-      const lang = req?.headers["accept-language"];
-      const result = await this.updateUserCommand.execute(id, body);
-      const user = handleResult(
-        result,
-        {
-          USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
-          EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
-        },
-        this.i18n,
-        lang,
-      );
-      return {
-        status: 200 as const,
-        body: toUserResponse(user),
-      };
-    });
+  @Patch(":id")
+  @Idempotent()
+  @RequirePermission("users:write")
+  async update(
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
+    @Body(new ZodValidationPipe(UpdateUserSchema)) body: UpdateUserInput,
+    @Req() req: FastifyRequest,
+  ): Promise<UserResponse> {
+    const lang = req?.headers["accept-language"];
+    const result = await this.updateUserCommand.execute(id, body);
+    const user = handleResult(
+      result,
+      {
+        USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+        EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
+      },
+      this.i18n,
+      lang,
+    );
+    return toUserResponse(user);
   }
 
-  @TsRestHandler(usersContract.delete)
-  @RequirePermissions("users:write")
-  delete(@Req() req: FastifyRequest) {
-    return tsRestHandler(usersContract.delete, async ({ params: { id } }) => {
-      const lang = req?.headers["accept-language"];
-      const result = await this.deleteUserCommand.execute(id);
-      handleResult(
-        result,
-        {
-          USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
-          USER_OWNS_ORGANIZATION: {
-            status: HttpStatus.CONFLICT,
-            i18nKey: "api.user.ownsOrganization",
-          },
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Idempotent()
+  @RequirePermission("users:delete")
+  async delete(
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
+    @Req() req: FastifyRequest,
+  ): Promise<void> {
+    const lang = req?.headers["accept-language"];
+    const result = await this.deleteUserCommand.execute(id);
+    handleResult(
+      result,
+      {
+        USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.user.notFound" },
+        USER_OWNS_ORGANIZATION: {
+          status: HttpStatus.CONFLICT,
+          i18nKey: "api.user.ownsOrganization",
         },
-        this.i18n,
-        lang,
-      );
-      return {
-        status: 204 as const,
-        body: undefined,
-      };
-    });
+      },
+      this.i18n,
+      lang,
+    );
   }
 }

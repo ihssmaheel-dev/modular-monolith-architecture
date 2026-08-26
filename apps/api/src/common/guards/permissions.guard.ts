@@ -1,54 +1,50 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { PERMISSIONS_KEY } from "../decorators/permissions.decorator";
 import {
-  Permission,
-  RolePermissions,
-  TenantRolePermissions,
-  UserRole,
-  type TenantContext,
-} from "@repo/shared";
-import { env } from "../../config/env";
+  PERMISSIONS_KEY,
+  type PermissionRequirement,
+} from "../decorators/permissions.decorator";
+import { type TenantContext } from "@repo/contracts";
+import { hasPermission, resolveUserPermissions, type Permission } from "@repo/authorization";
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredPermissions = this.reflector.getAllAndOverride<Permission[]>(PERMISSIONS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const raw = this.reflector.getAllAndOverride<
+      PermissionRequirement | Permission[]
+    >(PERMISSIONS_KEY, [context.getHandler(), context.getClass()]);
 
-    if (!requiredPermissions || requiredPermissions.length === 0) {
-      return true; // No specific permissions required
+    if (!raw) return true;
+
+    const requirement: PermissionRequirement = Array.isArray(raw)
+      ? { permissions: raw, mode: "all" }
+      : raw;
+
+    if (!requirement.permissions || requirement.permissions.length === 0) {
+      return true;
     }
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-
     if (!user || !user.role) {
       throw new ForbiddenException();
     }
 
     const tenant = request.tenant as TenantContext | undefined;
-    const userPermissions = this.getPermissions(user.role as UserRole, tenant);
+    const userPermissions = resolveUserPermissions(user.role, tenant?.role);
 
-    const hasPermission = requiredPermissions.every((permission) =>
-      userPermissions.includes(permission),
+    const allowed = hasPermission(
+      userPermissions,
+      requirement.permissions,
+      requirement.mode,
     );
 
-    if (!hasPermission) {
+    if (!allowed) {
       throw new ForbiddenException();
     }
 
     return true;
-  }
-
-  private getPermissions(role: UserRole, tenant?: TenantContext): Permission[] {
-    if (env.TENANCY_MODE === "multi" && tenant?.role) {
-      return TenantRolePermissions[tenant.role] ?? [];
-    }
-    return RolePermissions[role] ?? [];
   }
 }

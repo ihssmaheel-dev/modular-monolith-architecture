@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { locales, DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "@repo/shared";
+import { locales, DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "@repo/i18n";
 
 type NestedMessages = Record<string, unknown>;
 

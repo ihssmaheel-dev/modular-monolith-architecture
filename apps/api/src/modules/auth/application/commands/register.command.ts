@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
 import { z } from "zod";
-import { DEFAULT_LOCALE, RegisterSchema, type Locale } from "@repo/shared";
-import type { AuthResponse } from "@repo/shared";
+import { RegisterSchema } from "@repo/contracts";
+import { DEFAULT_LOCALE, type Locale } from "@repo/i18n";
+import type { AuthResponse } from "@repo/contracts";
 import type { AuthError } from "../../domain/errors/auth.errors";
 import { GetUserByEmailQuery } from "../../../users/application/queries/get-user-by-email.query";
 import { CreateUserCommand } from "../../../users/application/commands/create-user.command";

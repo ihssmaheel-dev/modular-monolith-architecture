@@ -22,14 +22,17 @@ import { RateLimitModule } from "./infrastructure/rate-limit/rate-limit.module";
 import { WafModule } from "./infrastructure/waf/waf.module";
 import { SecurityModule } from "./infrastructure/security/security.module";
 import { I18nModule } from "./infrastructure/i18n/i18n.module";
+import { FeatureFlagsModule } from "./infrastructure/feature-flags";
 import { AuditModule } from "./infrastructure/audit/audit.module";
 import { OutboxModule } from "./infrastructure/outbox/outbox.module";
+import { AuthorizationModule } from "./infrastructure/authorization";
 import { APP_INTERCEPTOR, APP_GUARD } from "@nestjs/core";
 import { MetricsModule } from "./infrastructure/metrics/metrics.module";
 import { MetricsInterceptor } from "./infrastructure/metrics/metrics.interceptor";
 import { TracingInterceptor } from "./infrastructure/tracing/tracing.interceptor";
 import {
   AuthGuard,
+  CsrfGuard,
   PermissionsGuard,
   IdempotencyInterceptor,
   RateLimitGuard,
@@ -58,9 +61,11 @@ import {
     WafModule,
     SecurityModule,
     I18nModule,
+    FeatureFlagsModule,
     MetricsModule,
     AuditModule,
     OutboxModule,
+    AuthorizationModule,
     TenancyModule.forRoot(),
     UsersModule,
     AuthModule,
@@ -71,6 +76,10 @@ import {
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
     },
     {
       provide: APP_GUARD,

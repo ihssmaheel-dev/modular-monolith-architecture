@@ -1,4 +1,4 @@
-import type { UserRole } from "@repo/shared";
+import type { UserRole } from "@repo/contracts";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { env } from "../../../../config/env";
 

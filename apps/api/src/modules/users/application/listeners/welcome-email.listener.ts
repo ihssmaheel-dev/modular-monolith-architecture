@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { WelcomeEmail, render } from "@repo/email";
-import type { EmailJobData } from "@repo/shared";
+import type { EmailJobData } from "@repo/contracts";
 import * as React from "react";
 import { env } from "../../../../config/env";
 import { EmailService } from "../../../../infrastructure/email/email.service";

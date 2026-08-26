@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
-import type { EmailJobData } from "@repo/shared";
+import type { EmailJobData } from "@repo/contracts";
 import { PinoLoggerService } from "../logger/logger.service";
 import { QueueService } from "../queue/queue.service";
 import { EmailService } from "./email.service";

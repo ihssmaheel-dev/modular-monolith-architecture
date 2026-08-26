@@ -1,28 +1,27 @@
 import { beforeAll, afterAll } from "vitest";
 import { GenericContainer, StartedTestContainer } from "testcontainers";
 
-let mongoContainer: StartedTestContainer;
+let postgresContainer: StartedTestContainer;
 let redisContainer: StartedTestContainer;
 
 beforeAll(async () => {
-  // Start MongoDB container
-  mongoContainer = await new GenericContainer("mongo:6.0.4")
-    .withExposedPorts(27017)
+  postgresContainer = await new GenericContainer("postgres:16-alpine")
+    .withEnvironment({ POSTGRES_USER: "postgres", POSTGRES_PASSWORD: "postgres", POSTGRES_DB: "e2e-test" })
+    .withExposedPorts(5432)
     .start();
-  
-  process.env.MONGODB_URI = `mongodb://${mongoContainer.getHost()}:${mongoContainer.getMappedPort(27017)}/e2e-test`;
 
-  // Start Redis container
+  process.env.DATABASE_URL = `postgres://postgres:postgres@${postgresContainer.getHost()}:${postgresContainer.getMappedPort(5432)}/e2e-test`;
+
   redisContainer = await new GenericContainer("redis:7.0-alpine")
     .withExposedPorts(6379)
     .start();
-  
+
   process.env.REDIS_URL = `redis://${redisContainer.getHost()}:${redisContainer.getMappedPort(6379)}`;
 });
 
 afterAll(async () => {
-  if (mongoContainer) {
-    await mongoContainer.stop();
+  if (postgresContainer) {
+    await postgresContainer.stop();
   }
   if (redisContainer) {
     await redisContainer.stop();

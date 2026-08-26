@@ -4,7 +4,7 @@ import { RealtimeService } from "../realtime.service";
 import { Subject, Observable } from "rxjs";
 import { finalize } from "rxjs/operators";
 import { requireAuthenticatedUser } from "../../../common/utils/request-user.utils";
-import type { TenantContext } from "@repo/shared";
+import type { TenantContext } from "@repo/contracts";
 
 type TenantRequest = FastifyRequest & { tenant?: TenantContext };
 

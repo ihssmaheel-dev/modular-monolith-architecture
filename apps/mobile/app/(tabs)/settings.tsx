@@ -15,7 +15,7 @@ export default function SettingsTab() {
 
   const handleLogout = async () => {
     try {
-      await api.auth.logout({});
+      await api.auth.logout();
     } finally {
       clearTenant();
       queryClient.clear();

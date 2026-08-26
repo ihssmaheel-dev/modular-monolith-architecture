@@ -62,8 +62,10 @@ export class OutboxRelayWorker {
     try {
       await this.eventEmitter.emitAsync(event.topic, event.payload);
       await this.repository.updateById(event.id, {
-        $set: { status: "PUBLISHED" },
-        $unset: { lockedAt: "", nextAttemptAt: "", error: "" },
+        status: "PUBLISHED",
+        lockedAt: null,
+        nextAttemptAt: null,
+        error: null,
       });
       this.recordLatency(event);
     } catch (error) {
@@ -75,16 +77,33 @@ export class OutboxRelayWorker {
     const attempts = event.attempts + 1;
     const isExhausted = attempts >= MAX_ATTEMPTS;
     const delay = RETRY_BASE_DELAY_MS * RETRY_MULTIPLIER ** Math.max(0, attempts - 1);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
     await this.repository.updateById(event.id, {
-      $set: {
-        status: isExhausted ? "FAILED" : "PENDING",
-        attempts,
-        error: error instanceof Error ? error.message : String(error),
-        nextAttemptAt: new Date(Date.now() + delay),
-      },
-      $unset: { lockedAt: "" },
+      status: isExhausted ? "DEAD_LETTER" : "PENDING",
+      attempts,
+      error: errorMessage,
+      nextAttemptAt: isExhausted ? null : new Date(Date.now() + delay),
+      lockedAt: null,
     });
-    this.logger.error({ eventId: event.id, attempts, error }, "Outbox event delivery failed");
+
+    if (isExhausted) {
+      this.metrics.incrementCounter(
+        "outbox_dead_letter_total",
+        "Total number of outbox events moved to dead-letter queue",
+        1,
+        { topic: event.topic },
+      );
+      this.logger.error(
+        { eventId: event.id, topic: event.topic, attempts, error: errorMessage },
+        "Outbox event moved to dead-letter queue (max attempts exceeded)",
+      );
+    } else {
+      this.logger.warn(
+        { eventId: event.id, topic: event.topic, attempts, nextDelayMs: delay, error: errorMessage },
+        "Outbox event delivery failed, exponential retry scheduled",
+      );
+    }
   }
 
   private async recoverStaleLocks(): Promise<void> {

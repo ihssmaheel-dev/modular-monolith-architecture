@@ -1,4 +1,4 @@
-import type { TenantRole } from "@repo/shared";
+import type { TenantRole } from "@repo/contracts";
 
 export interface OrganizationData {
   id: string;

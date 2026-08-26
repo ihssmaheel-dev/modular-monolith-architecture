@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { ok, err, Result } from "neverthrow";
 import { z } from "zod";
-import { UpdateUserSchema } from "@repo/shared";
+import { UpdateUserSchema } from "@repo/contracts";
 import { User } from "../../domain/entities/user.entity";
 import { EmailTaken, UserNotFound } from "../../domain/errors/user.errors";
 import { UserUpdatedEvent } from "../../domain/events/user.events";

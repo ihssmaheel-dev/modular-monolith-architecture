@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ok, err, Result } from "neverthrow";
-import { env } from "../../config/env";
+import { ok, err, type Result } from "neverthrow";
 import { PinoLoggerService } from "../logger/logger.service";
 import {
   StorageDriver,
@@ -11,9 +10,6 @@ import {
   StoredObjectMetadata,
 } from "./storage.types";
 import { S3Driver } from "./drivers/s3.driver";
-import { GridFsDriver } from "./drivers/gridfs.driver";
-import { InjectConnection } from "@nestjs/mongoose";
-import { Connection } from "mongoose";
 import { Readable } from "node:stream";
 import { CircuitBreaker } from "../../common/utils/circuit-breaker";
 import { Bulkhead } from "../../common/utils/bulkhead";
@@ -23,12 +19,10 @@ export class StorageService {
   private driver: StorageDriver;
   private circuitBreaker: CircuitBreaker<StorageError>;
   private bulkhead: Bulkhead<StorageError>;
-  constructor(
-    private logger: PinoLoggerService,
-    @InjectConnection() connection: Connection,
-  ) {
+  constructor(private logger: PinoLoggerService) {
     this.logger = logger.child({ module: "StorageService" });
-    this.driver = this.createDriver(connection);
+    this.driver = new S3Driver();
+    this.logger.info({}, "Storage: Using S3 driver (Postgres mode)");
     this.circuitBreaker = new CircuitBreaker(
       { failureThreshold: 5, resetTimeoutMs: 10000 },
       { code: "CIRCUIT_OPEN", message: "api.error.circuitOpen" },
@@ -39,22 +33,7 @@ export class StorageService {
     );
   }
 
-  private createDriver(connection: Connection): StorageDriver {
-    switch (env.STORAGE_DRIVER) {
-      case "s3":
-        this.logger.info({}, "Storage: Using S3 driver");
-        return new S3Driver();
-      case "gridfs":
-      default:
-        this.logger.info({}, "Storage: Using GridFS driver");
-        return new GridFsDriver(connection);
-    }
-  }
-  async upload(
-    key: string,
-    body: FileInput,
-    contentType: string,
-  ): Promise<Result<UploadResult, StorageError>> {
+  async upload(key: string, body: FileInput, contentType: string): Promise<Result<UploadResult, StorageError>> {
     return this.bulkhead.execute(() =>
       this.circuitBreaker.execute(async () => {
         try {
@@ -68,11 +47,7 @@ export class StorageService {
       }),
     );
   }
-  async getPresignedUploadUrl(
-    key: string,
-    contentType: string,
-    ttlSeconds = PRESIGN_TTL_SECONDS,
-  ): Promise<Result<string, StorageError>> {
+  async getPresignedUploadUrl(key: string, contentType: string, ttlSeconds = PRESIGN_TTL_SECONDS): Promise<Result<string, StorageError>> {
     return this.bulkhead.execute(() =>
       this.circuitBreaker.execute(async () => {
         try {
@@ -86,13 +61,10 @@ export class StorageService {
     );
   }
   usesDirectTransfer(): boolean {
-    return env.STORAGE_DRIVER === "s3";
+    return true;
   }
 
-  async getPresignedDownloadUrl(
-    key: string,
-    ttlSeconds = PRESIGN_TTL_SECONDS,
-  ): Promise<Result<string, StorageError>> {
+  async getPresignedDownloadUrl(key: string, ttlSeconds = PRESIGN_TTL_SECONDS): Promise<Result<string, StorageError>> {
     return this.bulkhead.execute(() =>
       this.circuitBreaker.execute(async () => {
         try {

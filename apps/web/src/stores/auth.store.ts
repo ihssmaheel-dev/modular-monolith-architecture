@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { AuthResponse } from "@repo/shared";
+import type { AuthResponse } from "@repo/contracts";
+import { clearQueryCache } from "@/lib/query-client";
 
 type AuthUser = AuthResponse["user"];
 
@@ -25,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         set({ user: null, isAuthenticated: false });
+        clearQueryCache();
       },
     }),
     {

@@ -45,18 +45,29 @@ function RegisterPage() {
   };
 
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">{t("auth.createAccountTitle")}</CardTitle>
-        <CardDescription>{t("auth.registerDescription")}</CardDescription>
+    <Card variant="featured" className="p-2 sm:p-4">
+      <CardHeader className="text-center pb-6">
+        <div className="mx-auto pb-1 text-[10px] font-semibold uppercase tracking-[1.5px] text-muted-foreground">
+          Onboarding
+        </div>
+        <CardTitle className="text-2xl font-semibold tracking-tight">
+          {t("auth.createAccountTitle")}
+        </CardTitle>
+        <CardDescription className="text-sm">
+          {t("auth.registerDescription")}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+            <div className="rounded-sm bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
+              {error}
+            </div>
           )}
-          <div className="space-y-2">
-            <Label htmlFor="name">{t("auth.name")}</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="name" className="text-xs font-medium text-foreground">
+              {t("auth.name")}
+            </Label>
             <Input
               id="name"
               value={name}
@@ -65,8 +76,10 @@ function RegisterPage() {
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">{t("auth.email")}</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-xs font-medium text-foreground">
+              {t("auth.email")}
+            </Label>
             <Input
               id="email"
               type="email"
@@ -76,8 +89,10 @@ function RegisterPage() {
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">{t("auth.password")}</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-xs font-medium text-foreground">
+              {t("auth.password")}
+            </Label>
             <Input
               id="password"
               type="password"
@@ -88,13 +103,13 @@ function RegisterPage() {
               required
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full mt-2" disabled={loading}>
             {loading ? t("auth.creatingAccount") : t("auth.createAccount")}
           </Button>
         </form>
-        <div className="mt-4 text-center text-sm text-muted-foreground">
+        <div className="mt-6 text-center text-xs text-muted-foreground border-t border-border pt-4">
           {t("auth.hasAccount")}{" "}
-          <Link to="/login" search={{ invitationToken }} className="text-primary hover:underline">
+          <Link to="/login" search={{ invitationToken }} className="text-foreground font-semibold hover:underline">
             {t("auth.signIn")}
           </Link>
         </div>

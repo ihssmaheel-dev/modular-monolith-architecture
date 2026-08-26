@@ -17,11 +17,17 @@ describe("RateLimitService", () => {
     vi.clearAllMocks();
     mockEval.mockResolvedValue(5);
 
-    service = new RateLimitService({
-      getClient: () => ({
-        eval: mockEval,
-      }),
-    } as never);
+    const mockMetrics = { incrementCounter: vi.fn() } as never;
+    const mockLogger = { child: vi.fn().mockReturnThis(), warn: vi.fn(), error: vi.fn() } as never;
+    service = new RateLimitService(
+      {
+        getClient: () => ({
+          eval: mockEval,
+        }),
+      } as never,
+      mockMetrics,
+      mockLogger,
+    );
   });
 
   it("should allow request within limit", async () => {

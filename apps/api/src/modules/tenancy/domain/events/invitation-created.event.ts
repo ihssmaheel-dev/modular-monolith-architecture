@@ -1,4 +1,5 @@
-import type { Locale, TenantRole } from "@repo/shared";
+import type { TenantRole } from "@repo/contracts";
+import type { Locale } from "@repo/i18n";
 
 export class InvitationCreatedEvent {
   constructor(

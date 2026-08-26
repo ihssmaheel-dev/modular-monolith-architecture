@@ -1,13 +1,13 @@
 import {
-  Html,
-  Head,
-  Preview,
   Body,
-  Container,
-  Text,
-  Tailwind,
   Button,
-} from "@react-email/components";
+  Container,
+  Head,
+  Html,
+  Preview,
+  Tailwind,
+  Text,
+} from "react-email";
 
 interface PasswordResetEmailProps {
   resetLink: string;

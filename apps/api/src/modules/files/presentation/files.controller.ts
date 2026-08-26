@@ -1,8 +1,7 @@
-import { Controller, Req } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { RequirePermissions, requireAuthenticatedUser } from "../../../common";
-import { filesContract } from "@repo/shared";
-import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
+import { Idempotent, RequirePermission, requireAuthenticatedUser } from "../../../common";
+import { type RequestUploadInput, type ConfirmUploadInput, type PresignedUrlResponse, type FileMetadataResponse, type DownloadUrlResponse, type FileListResponse } from "@repo/contracts";
 import { RequestUploadCommand } from "../application/commands/request-upload.command";
 import { ConfirmUploadCommand } from "../application/commands/confirm-upload.command";
 import { DeleteFileCommand } from "../application/commands/delete-file.command";
@@ -32,90 +31,96 @@ export class FilesController {
     private readonly i18n: I18nService,
   ) {}
 
-  @TsRestHandler(filesContract.requestUpload)
-  @RequirePermissions("files:write")
-  requestUpload(@Req() req: FastifyRequest) {
-    return tsRestHandler(filesContract.requestUpload, async ({ body }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.requestUploadCmd.execute(body, actor.sub);
-      const response = handleResult(result, REQUEST_UPLOAD_ERRORS, this.i18n, lang);
-      return { status: 201 as const, body: response };
-    });
+  @Post("upload-url")
+  @HttpCode(HttpStatus.CREATED)
+  @Idempotent()
+  @RequirePermission("files:upload")
+  async requestUpload(
+    @Body() body: RequestUploadInput,
+    @Req() req: FastifyRequest,
+  ): Promise<PresignedUrlResponse> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.requestUploadCmd.execute(body, actor.sub);
+    return handleResult(result, REQUEST_UPLOAD_ERRORS, this.i18n, lang);
   }
 
-  @TsRestHandler(filesContract.confirmUpload)
-  @RequirePermissions("files:write")
-  confirmUpload(@Req() req: FastifyRequest) {
-    return tsRestHandler(filesContract.confirmUpload, async ({ body }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.confirmUploadCmd.execute(body.fileKey, actor);
-      const file = handleResult(result, CONFIRM_UPLOAD_ERRORS, this.i18n, lang);
-      return { status: 200 as const, body: toFileResponse(file) };
-    });
+  @Post("confirm")
+  @HttpCode(HttpStatus.OK)
+  @Idempotent()
+  @RequirePermission("files:upload")
+  async confirmUpload(
+    @Body() body: ConfirmUploadInput,
+    @Req() req: FastifyRequest,
+  ): Promise<FileMetadataResponse> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.confirmUploadCmd.execute(body.fileKey, actor);
+    const file = handleResult(result, CONFIRM_UPLOAD_ERRORS, this.i18n, lang);
+    return toFileResponse(file);
   }
 
-  @TsRestHandler(filesContract.getDownloadUrl)
-  @RequirePermissions("files:read")
-  getDownloadUrl(@Req() req: FastifyRequest) {
-    return tsRestHandler(filesContract.getDownloadUrl, async ({ params: { id } }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.getDownloadUrlQuery.execute(id, actor);
-      const response = handleResult(result, DOWNLOAD_ERRORS, this.i18n, lang);
-      return { status: 200 as const, body: response };
-    });
+  @Get(":id/download-url")
+  @RequirePermission("files:read")
+  async getDownloadUrl(
+    @Param("id") id: string,
+    @Req() req: FastifyRequest,
+  ): Promise<DownloadUrlResponse> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.getDownloadUrlQuery.execute(id, actor);
+    return handleResult(result, DOWNLOAD_ERRORS, this.i18n, lang);
   }
 
-  @TsRestHandler(filesContract.getById)
-  @RequirePermissions("files:read")
-  getById(@Req() req: FastifyRequest) {
-    return tsRestHandler(filesContract.getById, async ({ params: { id } }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.getFileByIdQuery.execute(id, actor);
-      const file = handleResult(result, FILE_NOT_FOUND_ERRORS, this.i18n, lang);
-      return { status: 200 as const, body: toFileResponse(file) };
-    });
+  @Get(":id")
+  @RequirePermission("files:read")
+  async getById(
+    @Param("id") id: string,
+    @Req() req: FastifyRequest,
+  ): Promise<FileMetadataResponse> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.getFileByIdQuery.execute(id, actor);
+    const file = handleResult(result, FILE_NOT_FOUND_ERRORS, this.i18n, lang);
+    return toFileResponse(file);
   }
 
-  @TsRestHandler(filesContract.listByParent)
-  @RequirePermissions("files:read")
-  listByParent(@Req() req: FastifyRequest) {
-    return tsRestHandler(filesContract.listByParent, async ({ query }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.listFilesQuery.execute(
-        query.parentType,
-        actor,
-        query.parentId,
-        query.page,
-        query.limit,
-      );
-      const data = handleResult(result, {}, this.i18n, lang);
-      return {
-        status: 200 as const,
-        body: {
-          items: data.items.map(toFileResponse),
-          total: data.total,
-          page: data.page,
-          limit: data.limit,
-          totalPages: data.totalPages,
-        },
-      };
-    });
+  @Get()
+  @RequirePermission("files:read")
+  async listByParent(
+    @Query() query: { parentType: "note" | "user" | "general"; parentId?: string; page?: number; limit?: number },
+    @Req() req: FastifyRequest,
+  ): Promise<FileListResponse> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.listFilesQuery.execute(
+      query.parentType,
+      actor,
+      query.parentId,
+      Number(query.page ?? 1),
+      Number(query.limit ?? 20),
+    );
+    const data = handleResult(result, {}, this.i18n, lang);
+    return {
+      items: data.items.map(toFileResponse),
+      total: data.total,
+      page: data.page,
+      limit: data.limit,
+      totalPages: data.totalPages,
+    };
   }
 
-  @TsRestHandler(filesContract.delete)
-  @RequirePermissions("files:delete")
-  delete(@Req() req: FastifyRequest) {
-    return tsRestHandler(filesContract.delete, async ({ params: { id } }) => {
-      const lang = req?.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.deleteFileCmd.execute(id, actor);
-      handleResult(result, DELETE_FILE_ERRORS, this.i18n, lang);
-      return { status: 204 as const, body: undefined };
-    });
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Idempotent()
+  @RequirePermission("files:delete")
+  async delete(
+    @Param("id") id: string,
+    @Req() req: FastifyRequest,
+  ): Promise<void> {
+    const lang = req?.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.deleteFileCmd.execute(id, actor);
+    handleResult(result, DELETE_FILE_ERRORS, this.i18n, lang);
   }
 }

@@ -1,10 +1,24 @@
-import { Controller, Req, Res } from "@nestjs/common";
-import { authContract } from "@repo/shared";
-import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/common";
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { err } from "neverthrow";
 import { Public, TenantAgnostic, requireAuthenticatedUser } from "../../../common";
+import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
+import {
+  type RegisterInput,
+  type LoginInput,
+  type RefreshTokenInput,
+  type ForgotPasswordInput,
+  type ResetPasswordInput,
+  type AuthResponse,
+  type MessageResponse,
+  RegisterSchema,
+  LoginSchema,
+  RefreshTokenSchema,
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
+} from "@repo/contracts";
 import { ForgotPasswordCommand } from "../application/commands/forgot-password.command";
 import { LoginCommand } from "../application/commands/login.command";
 import { LogoutCommand } from "../application/commands/logout.command";
@@ -28,94 +42,100 @@ export class AuthController {
     private readonly i18n: I18nService,
   ) {}
 
-  @TsRestHandler(authContract.register)
+  @Post("register")
+  @HttpCode(HttpStatus.CREATED)
   @Public()
   @AuthRateLimit("register")
-  register(@Req() req: FastifyRequest, @Res({ passthrough: true }) reply: FastifyReply) {
-    return tsRestHandler(authContract.register, async ({ body }) => {
-      const locale = this.i18n.getLocale(req.headers["accept-language"]);
-      const result = await this.registerCmd.execute(body, locale);
-      const value = handleResult(
-        result,
-        EMAIL_TAKEN_ERRORS,
-        this.i18n,
-        req.headers["accept-language"],
-      );
-      setAuthCookies(reply, value.accessToken, value.refreshToken);
-      return { status: 201 as const, body: value };
-    });
+  async register(
+    @Body(new ZodValidationPipe(RegisterSchema)) body: RegisterInput,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<AuthResponse> {
+    const locale = this.i18n.getLocale(req.headers["accept-language"]);
+    const result = await this.registerCmd.execute(body, locale);
+    const value = handleResult(
+      result,
+      EMAIL_TAKEN_ERRORS,
+      this.i18n,
+      req.headers["accept-language"],
+    );
+    setAuthCookies(reply, value.accessToken, value.refreshToken);
+    return value;
   }
 
-  @TsRestHandler(authContract.login)
+  @Post("login")
+  @HttpCode(HttpStatus.OK)
   @Public()
   @AuthRateLimit("login")
-  login(@Req() req: FastifyRequest, @Res({ passthrough: true }) reply: FastifyReply) {
-    return tsRestHandler(authContract.login, async ({ body }) => {
-      const result = await this.loginCmd.execute(body);
-      const value = handleResult(result, LOGIN_ERRORS, this.i18n, req.headers["accept-language"]);
-      setAuthCookies(reply, value.accessToken, value.refreshToken);
-      return { status: 200 as const, body: value };
-    });
+  async login(
+    @Body(new ZodValidationPipe(LoginSchema)) body: LoginInput,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<AuthResponse> {
+    const result = await this.loginCmd.execute(body);
+    const value = handleResult(result, LOGIN_ERRORS, this.i18n, req.headers["accept-language"]);
+    setAuthCookies(reply, value.accessToken, value.refreshToken);
+    return value;
   }
 
-  @TsRestHandler(authContract.logout)
-  logout(@Req() req: FastifyRequest, @Res({ passthrough: true }) reply: FastifyReply) {
-    return tsRestHandler(authContract.logout, async () => {
-      const lang = req.headers["accept-language"];
-      const actor = requireAuthenticatedUser(req);
-      const result = await this.logoutCmd.execute(actor.sub);
-      handleResult(result, INVALID_TOKEN_ERRORS, this.i18n, lang);
-      clearAuthCookies(reply);
-      return {
-        status: 200 as const,
-        body: { message: this.i18n.t("auth.logoutSuccess", lang) },
-      };
-    });
+  @Post("logout")
+  @HttpCode(HttpStatus.OK)
+  async logout(
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<MessageResponse> {
+    const lang = req.headers["accept-language"];
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.logoutCmd.execute(actor.sub);
+    handleResult(result, INVALID_TOKEN_ERRORS, this.i18n, lang);
+    clearAuthCookies(reply);
+    return { message: this.i18n.t("auth.logoutSuccess", lang) };
   }
 
-  @TsRestHandler(authContract.refresh)
+  @Post("refresh")
+  @HttpCode(HttpStatus.OK)
   @Public()
   @AuthRateLimit("refresh")
-  refresh(@Req() req: FastifyRequest, @Res({ passthrough: true }) reply: FastifyReply) {
-    return tsRestHandler(authContract.refresh, async ({ body }) => {
-      const lang = req.headers["accept-language"];
-      const token = body.refreshToken ?? req.cookies.refresh_token;
-      if (!token) {
-        return { status: 401 as const, body: { message: this.i18n.t("auth.invalidToken", lang) } };
-      }
-      const result = await this.refreshCmd.execute(token);
-      const value = handleResult(result, INVALID_TOKEN_ERRORS, this.i18n, lang);
-      setAuthCookies(reply, value.accessToken, value.refreshToken);
-      return { status: 200 as const, body: value };
-    });
+  async refresh(
+    @Body(new ZodValidationPipe(RefreshTokenSchema)) body: RefreshTokenInput,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<AuthResponse> {
+    const lang = req.headers["accept-language"];
+    const token = body?.refreshToken ?? (req.cookies as Record<string, string | undefined>)?.refresh_token;
+    if (!token) {
+      handleResult(err({ type: "INVALID_TOKEN" as const }), INVALID_TOKEN_ERRORS, this.i18n, lang);
+    }
+    const result = await this.refreshCmd.execute(token!);
+    const value = handleResult(result, INVALID_TOKEN_ERRORS, this.i18n, lang);
+    setAuthCookies(reply, value.accessToken, value.refreshToken);
+    return value;
   }
 
-  @TsRestHandler(authContract.forgotPassword)
+  @Post("forgot-password")
+  @HttpCode(HttpStatus.OK)
   @Public()
   @AuthRateLimit("forgotPassword")
-  forgotPassword(@Req() req: FastifyRequest) {
-    return tsRestHandler(authContract.forgotPassword, async ({ body }) => {
-      const lang = req.headers["accept-language"];
-      await this.forgotPasswordCmd.execute(body.email, lang);
-      return {
-        status: 200 as const,
-        body: { message: this.i18n.t("auth.resetLinkSent", lang) },
-      };
-    });
+  async forgotPassword(
+    @Body(new ZodValidationPipe(ForgotPasswordSchema)) body: ForgotPasswordInput,
+    @Req() req: FastifyRequest,
+  ): Promise<MessageResponse> {
+    const lang = req.headers["accept-language"];
+    await this.forgotPasswordCmd.execute(body.email, lang);
+    return { message: this.i18n.t("auth.resetLinkSent", lang) };
   }
 
-  @TsRestHandler(authContract.resetPassword)
+  @Post("reset-password")
+  @HttpCode(HttpStatus.OK)
   @Public()
   @AuthRateLimit("resetPassword")
-  resetPassword(@Req() req: FastifyRequest) {
-    return tsRestHandler(authContract.resetPassword, async ({ body }) => {
-      const lang = req.headers["accept-language"];
-      const result = await this.resetPasswordCmd.execute(body.token, body.password);
-      handleResult(result, INVALID_TOKEN_ERRORS, this.i18n, lang);
-      return {
-        status: 200 as const,
-        body: { message: this.i18n.t("auth.passwordResetSuccess", lang) },
-      };
-    });
+  async resetPassword(
+    @Body(new ZodValidationPipe(ResetPasswordSchema)) body: ResetPasswordInput,
+    @Req() req: FastifyRequest,
+  ): Promise<MessageResponse> {
+    const lang = req.headers["accept-language"];
+    const result = await this.resetPasswordCmd.execute(body.token, body.password);
+    handleResult(result, INVALID_TOKEN_ERRORS, this.i18n, lang);
+    return { message: this.i18n.t("auth.passwordResetSuccess", lang) };
   }
 }

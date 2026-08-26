@@ -26,28 +26,28 @@ Tenant-owned frontend caches must include the active tenant ID in their query ke
 the tenant changes. Authentication logout/failure already clears the built-in query caches.
 
 To make a domain tenant-owned:
-
-1. Add an optional `tenantId` property to its Mongoose schema. It remains absent in single mode.
-2. Extend `TenantScopedRepository` instead of `BaseRepository`.
-3. Add compound tenant indexes through a migration.
+ 
+1. Add an optional `tenantId` column to its Drizzle schema (`text("tenant_id")`). It remains null in single mode.
+2. Extend `BaseRepository` passing `tenantScoped = true` to `super()`.
+3. Add compound tenant indexes in the Drizzle schema and migrations.
 4. Never accept `tenantId` in a public input schema.
 
 ```ts
-import { TenantScopedRepository } from "../../../infrastructure/database";
+import { BaseRepository } from "../../../infrastructure/database";
+import { orders, type OrderRow } from "./schemas/order.schema";
 
-export class OrdersRepository extends TenantScopedRepository<Order, OrderSchema> {
-  constructor(@InjectModel(OrderSchema.name) model: Model<OrderSchema>, cls: ClsService) {
-    super(model, cls);
+export class OrdersRepository extends BaseRepository<Order, OrderRow> {
+  constructor(database: DatabaseService, tenantContext: TenantContextService) {
+    super(orders, database, tenantContext, true);
   }
 }
 ```
 
 Every inherited create, ID lookup, query, update, pagination, soft delete, and delete is then scoped
-from trusted request context. Caller-supplied tenant filters are overwritten. Direct `this.model`
-queries are prohibited in tenant-owned repositories because they bypass isolation.
+from trusted request context. Caller-supplied tenant filters are overwritten.
 
-Global data such as users and organization records continues to use `BaseRepository`. Membership
-APIs expose users inside an organization; global user administration remains system-admin only.
+Global data such as users and organization records continues to use `BaseRepository` with `tenantScoped = false`.
+Membership APIs expose users inside an organization; global user administration remains system-admin only.
 
 ## Requests and clients
 
@@ -89,24 +89,7 @@ one user may belong to multiple organizations.
 
 Do not change a populated deployment from single to multi by changing the environment variable
 alone. Create a migration that creates a default organization and owner membership, backfills every
-tenant-owned document, prefixes cache/storage keys, and validates compound indexes. Test that
+tenant-owned record, prefixes cache/storage keys, and validates compound indexes. Test that
 migration against a production-sized copy before enabling multi mode.
 
-Multi-tenant organization creation and invitation acceptance use MongoDB transactions. Production
-MongoDB must run as a replica set or managed cluster with transaction support.
-
-For local multi-tenant development, start the included single-node replica set:
-
-```sh
-docker compose -f docker/docker-compose.yml --profile multi up -d mongodb-replica
-```
-
-Then use:
-
-```env
-MONGODB_URI=mongodb://localhost:27018/app?replicaSet=rs0
-TENANCY_MODE=multi
-```
-
-The replica service is bound to localhost, stores data in its own volume, and is not intended for
-production.
+Multi-tenant organization creation and invitation acceptance use standard PostgreSQL transactions.

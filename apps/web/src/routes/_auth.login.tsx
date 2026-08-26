@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema, type LoginInput } from "@repo/shared";
+import { LoginSchema, type LoginInput } from "@repo/contracts";
 import {
   Button,
   Card,
@@ -49,18 +49,29 @@ function LoginPage() {
   };
 
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">{t("auth.welcomeBack")}</CardTitle>
-        <CardDescription>{t("auth.loginDescription")}</CardDescription>
+    <Card variant="featured" className="p-2 sm:p-4">
+      <CardHeader className="text-center pb-6">
+        <div className="mx-auto pb-1 text-[10px] font-semibold uppercase tracking-[1.5px] text-muted-foreground">
+          Authentication
+        </div>
+        <CardTitle className="text-2xl font-semibold tracking-tight">
+          {t("auth.welcomeBack")}
+        </CardTitle>
+        <CardDescription className="text-sm">
+          {t("auth.loginDescription")}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+            <div className="rounded-sm bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
+              {error}
+            </div>
           )}
-          <div className="space-y-2">
-            <Label htmlFor="email">{t("auth.email")}</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-xs font-medium text-foreground">
+              {t("auth.email")}
+            </Label>
             <Input
               id="email"
               type="email"
@@ -68,13 +79,15 @@ function LoginPage() {
               {...register("email")}
             />
             {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+              <p className="text-xs text-destructive font-medium">{errors.email.message}</p>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">{t("auth.password")}</Label>
-              <Link to="/forgot-password" className="text-sm font-medium hover:underline">
+              <Label htmlFor="password" className="text-xs font-medium text-foreground">
+                {t("auth.password")}
+              </Label>
+              <Link to="/forgot-password" className="text-xs text-[#006acc] hover:underline">
                 {t("auth.forgotPassword")}
               </Link>
             </div>
@@ -85,19 +98,19 @@ function LoginPage() {
               {...register("password")}
             />
             {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
+              <p className="text-xs text-destructive font-medium">{errors.password.message}</p>
             )}
           </div>
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" className="w-full mt-2" disabled={isSubmitting}>
             {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
           </Button>
         </form>
-        <div className="mt-4 text-center text-sm text-muted-foreground">
+        <div className="mt-6 text-center text-xs text-muted-foreground border-t border-border pt-4">
           {t("auth.noAccount")}{" "}
           <Link
             to="/register"
             search={{ invitationToken }}
-            className="text-primary hover:underline"
+            className="text-foreground font-semibold hover:underline"
           >
             {t("auth.register")}
           </Link>

@@ -8,7 +8,7 @@ Rules for adding any dependency to this codebase.
 
 Ask these questions in order:
 
-1. **Does a solution already exist in our stack?** Check `packages/shared`, `packages/ui`, and existing modules.
+1. **Does a solution already exist in our stack?** Check `@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/design-tokens`, `packages/ui`, and existing modules.
 2. **Can we solve this with <20 lines of our own code?** If yes, write it yourself.
 3. **Is this package on our locked stack?** Check `CORE_RULES.md` locked stack table.
 4. **Is this package 100% free and open source?** No paid tiers, no "community edition" bait-and-switch.
@@ -33,9 +33,9 @@ Ask these questions in order:
 2. **No "just in case" dependencies.** Install only when you are about to use it.
 3. **No duplicate functionality.** If we already have a solution, use it.
 4. **No global state managers beyond Zustand.** If you think you need Redux, MobX, or Jotai, justify why Zustand is insufficient.
-5. **No UI component libraries beyond shadcn/ui.** No MUI, no Ant Design, no Chakra. Extend shadcn/ui if needed. Exception: `@react-email/components` is allowed exclusively in `packages/email`.
+5. **No UI component libraries beyond shadcn/ui.** No MUI, no Ant Design, no Chakra. Extend shadcn/ui if needed. Exception: `react-email` is allowed exclusively in `packages/email`.
 6. **No CSS frameworks beyond Tailwind.** No CSS Modules, no Styled Components, no Emotion.
-7. **No ORMs beyond Mongoose.** No Prisma, no TypeORM, no Drizzle.
+7. **No ORMs beyond Drizzle.** No Prisma, no TypeORM, no Mongoose.
 8. **No test frameworks beyond Vitest.** No Jest, no Mocha, no Jasmine.
 
 ---

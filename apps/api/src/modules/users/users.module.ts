@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
 import { UsersController } from "./presentation/users.controller";
 import { GetUsersQuery } from "./application/queries/get-users.query";
 import { GetUserByIdQuery } from "./application/queries/get-user-by-id.query";
@@ -12,18 +11,12 @@ import { ResetUserPasswordCommand } from "./application/commands/reset-user-pass
 import { SetPasswordResetTokenCommand } from "./application/commands/set-password-reset-token.command";
 import { IncrementAuthVersionCommand } from "./application/commands/increment-auth-version.command";
 import { UsersRepository } from "./infrastructure/users.repository";
-import { UserMongooseSchema, UserSchema } from "./infrastructure/schemas/user.mongoose.schema";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { WelcomeEmailListener } from "./application/listeners/welcome-email.listener";
-
 import { OutboxModule } from "../../infrastructure/outbox/outbox.module";
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: UserMongooseSchema.name, schema: UserSchema }]),
-    EventEmitterModule,
-    OutboxModule,
-  ],
+  imports: [EventEmitterModule, OutboxModule],
   controllers: [UsersController],
   providers: [
     GetUsersQuery,

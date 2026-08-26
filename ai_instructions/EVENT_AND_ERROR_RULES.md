@@ -58,7 +58,7 @@ export class CreateUserCommand {
 // modules/presentation/users.controller.ts
 // constructor(private readonly createUserCommand: CreateUserCommand) {}
 
-  // ts-rest handler — no @Post(), @Body(), etc.
+  // Nest handler — uses @Post(), @Body() validated via Zod / oRPC
   async create(body: any) {
     const result = await this.createUserCommand.execute(body);
 
@@ -98,7 +98,7 @@ Domain errors stay internal. Controllers translate them to safe HTTP responses:
 return { status: 404, body: { message: "User not found" } };
 
 // Bad — leaks internal details
-return { status: 404, body: { message: `User ${id} not found in MongoDB collection users` } };
+return { status: 404, body: { message: `User ${id} not found in database table users` } };
 ```
 
 Never expose:

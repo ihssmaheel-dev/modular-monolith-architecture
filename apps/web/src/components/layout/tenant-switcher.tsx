@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Button, Input } from "@repo/ui";
-import { TenantStatusResponseSchema } from "@repo/shared";
+import { TenantStatusResponseSchema, type OrganizationResponse } from "@repo/contracts";
 import { api } from "@/lib/api";
 import { useTenantStore } from "@/stores/tenant.store";
 
@@ -16,10 +16,10 @@ export function TenantSwitcher() {
   const selectTenant = useTenantStore((state) => state.selectTenant);
   const status = useQuery({
     queryKey: ["tenancy-status"],
-    queryFn: async () => TenantStatusResponseSchema.parse((await api.tenancy.status({})).body),
+    queryFn: async () => TenantStatusResponseSchema.parse((await api.tenancy.status()).body),
     staleTime: Infinity,
   });
-  const organizations = useQuery({
+  const organizations = useQuery<OrganizationResponse[]>({
     queryKey: ["organizations"],
     queryFn: async () => {
       const response = await api.tenancy.listOrganizations({
@@ -33,12 +33,12 @@ export function TenantSwitcher() {
     mutationFn: async (organizationName: string) => {
       const response = await api.tenancy.createOrganization({ body: { name: organizationName } });
       if (response.status !== 201) throw new Error("create-organization-failed");
-      return response.body;
+      return response.body as OrganizationResponse;
     },
-    onSuccess: async (organization) => {
+    onSuccess: async (organization: OrganizationResponse) => {
       selectTenant(organization.id);
       setName("");
-      queryClient.setQueryData<typeof organizations.data>(["organizations"], (current) => [
+      queryClient.setQueryData<OrganizationResponse[]>(["organizations"], (current) => [
         ...(current ?? []),
         organization,
       ]);

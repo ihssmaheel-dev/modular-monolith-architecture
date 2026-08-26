@@ -21,8 +21,8 @@ const crossModuleRules = modules.flatMap((name) => {
       to: { path: `${otherModules}/infrastructure/` },
     },
     {
-      name: `no-${name}-to-other-module-mongoose-schema`,
-      comment: "Mongoose schemas and models are private to their owning module.",
+      name: `no-${name}-to-other-module-schema`,
+      comment: "Database schemas and models are private to their owning module.",
       severity: "error",
       from: { path: `${MODULE_PATH}/${escapedName}/` },
       to: { path: `${otherModules}/infrastructure/schemas/` },
@@ -51,10 +51,10 @@ module.exports = {
     },
     {
       name: "domain-not-to-frameworks",
-      comment: "Domain code must remain independent of NestJS, Mongoose, and runtime adapters.",
+      comment: "Domain code must remain independent of NestJS, Drizzle ORM, and runtime adapters.",
       severity: "error",
       from: { path: `${MODULE_PATH}/[^/]+/domain/` },
-      to: { path: "^(?:@nestjs/|mongoose$|nestjs-cls$)" },
+      to: { path: "^(?:@nestjs/|drizzle-orm|pg$|nestjs-cls$)" },
     },
     {
       name: "presentation-not-to-module-infrastructure",

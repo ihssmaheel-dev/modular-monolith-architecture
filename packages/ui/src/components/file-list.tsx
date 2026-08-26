@@ -1,7 +1,7 @@
 import { cn } from "../lib/utils";
 import { Button } from "./button";
 import { Spinner } from "./spinner";
-import type { FileMetadataResponse } from "@repo/shared";
+import type { FileMetadataResponse } from "@repo/contracts";
 
 export interface FileListProps {
   files: FileMetadataResponse[];

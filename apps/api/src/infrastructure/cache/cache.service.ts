@@ -47,6 +47,8 @@ export class CacheService {
     }
   }
 
+  private readonly inflight = new Map<string, Promise<unknown>>();
+
   async getOrSet<T>(key: string, fetcher: () => Promise<T>, ttlSeconds?: number): Promise<T> {
     const cached = await this.get<T>(key);
     if (cached !== null) {
@@ -54,10 +56,21 @@ export class CacheService {
       return cached;
     }
 
+    const existing = this.inflight.get(key) as Promise<T> | undefined;
+    if (existing) return existing;
+
     this.logger.debug({ key }, "Cache miss");
-    const fresh = await fetcher();
-    await this.set(key, fresh, ttlSeconds);
-    return fresh;
+    const promise = (async () => {
+      try {
+        const fresh = await fetcher();
+        await this.set(key, fresh, ttlSeconds);
+        return fresh;
+      } finally {
+        this.inflight.delete(key);
+      }
+    })();
+    this.inflight.set(key, promise);
+    return promise;
   }
 
   async del(key: string): Promise<void> {
@@ -77,12 +90,18 @@ export class CacheService {
     if (!client) return;
 
     try {
-      const keys = await client.keys(pattern);
-      if (keys.length > 0) {
-        await client.del(...keys);
-        this.cacheMetrics.recordEvict("redis", keys.length);
-        this.logger.debug({ pattern, count: keys.length }, "Cache pattern deleted");
-      }
+      let cursor = "0";
+      let total = 0;
+      do {
+        const [nextCursor, keys] = await client.scan(cursor, "MATCH", pattern, "COUNT", 100);
+        cursor = nextCursor;
+        if (keys.length > 0) {
+          await client.del(...keys);
+          total += keys.length;
+          this.cacheMetrics.recordEvict("redis", keys.length);
+        }
+      } while (cursor !== "0");
+      if (total > 0) this.logger.debug({ pattern, count: total }, "Cache pattern deleted");
     } catch (error) {
       this.logger.error({ pattern, error }, "Cache deletePattern failed");
     }

@@ -1,0 +1,42 @@
+import { AuthResponseSchema, type AuthResponse } from "@repo/contracts";
+import type { ApiClientOptions } from "./types";
+
+export function createIdempotencyKey(): string {
+  if (typeof globalThis.crypto?.randomUUID === "function") return globalThis.crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+export function getAuthorizationHeader(options: ApiClientOptions): string {
+  const token = options.getAccessToken?.();
+  return token ? `Bearer ${token}` : "";
+}
+
+export function getTransferHeaders(options: ApiClientOptions): Record<string, string> {
+  const headers: Record<string, string> = {
+    "accept-language": options.getLocale?.() ?? "en",
+    "idempotency-key": createIdempotencyKey(),
+  };
+  const authorization = getAuthorizationHeader(options);
+  const tenantId = options.getTenantId?.();
+  if (authorization) headers.authorization = authorization;
+  if (tenantId) headers["x-tenant-id"] = tenantId;
+  return headers;
+}
+
+export async function requestRefresh(
+  baseUrl: string,
+  options: ApiClientOptions,
+): Promise<AuthResponse | null> {
+  const response = await fetch(`${baseUrl}/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "content-type": "application/json",
+      "accept-language": options.getLocale?.() ?? "en",
+    },
+    body: JSON.stringify({ refreshToken: options.getRefreshToken?.() ?? undefined }),
+  });
+  if (!response.ok) return null;
+  const parsed = AuthResponseSchema.safeParse(await response.json());
+  return parsed.success ? parsed.data : null;
+}

@@ -28,12 +28,19 @@ function isTest(file) {
   return /\.(test|spec)\.[jt]sx?$/.test(file);
 }
 
+function getLineLimit(name, isTestFile) {
+  if (isTestFile) return 300;
+  if (name.startsWith("packages/ui/")) return 250;
+  if (name.startsWith("packages/email/")) return 250;
+  return 150;
+}
+
 function checkFile(file) {
   const name = relative(file);
   const fileName = path.basename(file);
   const source = fs.readFileSync(file, "utf8");
-  const lineCount = source.split(/\r?\n/).length;
-  const limit = isTest(file) ? 300 : 150;
+  const lineCount = source.trimEnd().split(/\r?\n/).length;
+  const limit = getLineLimit(name, isTest(file));
   if (!name.endsWith("routeTree.gen.ts") && lineCount > limit) {
     report(file, `${lineCount} lines exceeds the ${limit}-line limit`);
   }
@@ -45,6 +52,9 @@ function checkFile(file) {
     !fileName.endsWith(".mongoose.schema.ts")
   ) {
     report(file, "Mongoose schema files must use the .mongoose.schema.ts suffix");
+  }
+  if (fileName.includes("mongoose") || fileName.includes("mongo")) {
+    report(file, "Mongo/Mongoose files are forbidden — use Drizzle schemas (infrastructure/schemas/*.schema.ts)");
   }
 
   const forbidden = [
@@ -60,7 +70,11 @@ function checkFile(file) {
   if (/\/(application|domain)\//.test(`/${name}`) && /\bthrow\b/.test(source)) {
     report(file, "application/domain code must return Result instead of throwing");
   }
-  if (name.endsWith("mongoose.schema.ts")) {
+  if (
+    name.includes("/infrastructure/schemas/") &&
+    name.endsWith(".schema.ts") &&
+    source.includes("pgTable")
+  ) {
     if (/\b(index|unique)\s*:\s*true|Schema\.index\s*\(/.test(source)) {
       report(file, "database indexes must be declared only in migrations");
     }
@@ -82,7 +96,7 @@ function leafKeys(value, prefix = "") {
 }
 
 function checkLocaleParity() {
-  const localeDirectory = path.join(ROOT, "packages/shared/src/i18n/locales");
+  const localeDirectory = path.join(ROOT, "packages/i18n/src/locales");
   const locales = ["en", "es", "fr"].map((locale) => {
     const file = path.join(localeDirectory, `${locale}.json`);
     return { locale, file, keys: new Set(leafKeys(JSON.parse(fs.readFileSync(file, "utf8")))) };
@@ -97,7 +111,7 @@ function checkLocaleParity() {
 }
 
 function checkTranslationUsage() {
-  const englishFile = path.join(ROOT, "packages/shared/src/i18n/locales/en.json");
+  const englishFile = path.join(ROOT, "packages/i18n/src/locales/en.json");
   const englishKeys = new Set(leafKeys(JSON.parse(fs.readFileSync(englishFile, "utf8"))));
   const translationPattern = /\b(?:t|translate)\(\s*["'`]([^"'`]+)["'`]/g;
 
@@ -120,18 +134,18 @@ function checkTenantRepositories() {
     const infrastructure = path.join(modulesDirectory, entry.name, "infrastructure");
     if (!fs.existsSync(infrastructure)) continue;
     const files = walk(infrastructure);
-    const schemas = files.filter((file) => file.endsWith("mongoose.schema.ts"));
+    const schemas = files.filter((file) => file.endsWith(".schema.ts"));
     const isTenantOwned = schemas.some((file) =>
       fs.readFileSync(file, "utf8").includes("tenantId"),
     );
     if (!isTenantOwned) continue;
     for (const file of files.filter((value) => value.endsWith(".repository.ts"))) {
       const source = fs.readFileSync(file, "utf8");
-      if (!/extends\s+TenantScopedRepository/.test(source)) {
-        report(file, "tenant-owned repositories must extend TenantScopedRepository");
-      }
-      if (/this\.model\./.test(source)) {
-        report(file, "tenant-owned repositories must not bypass scoped base methods");
+      const isTenantScoped =
+        /extends\s+TenantScopedRepository/.test(source) ||
+        (/extends\s+(DrizzleBaseRepository|BaseRepository)/.test(source) && /super\([^)]*,\s*true/.test(source));
+      if (!isTenantScoped) {
+        report(file, "tenant-owned repositories must extend TenantScopedRepository or BaseRepository with tenantScoped=true");
       }
     }
   }

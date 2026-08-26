@@ -11,9 +11,12 @@ import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { PinoLoggerService } from "./infrastructure/logger/logger.service";
 import { I18nService } from "./infrastructure/i18n/i18n.service";
 import { env } from "./config/env";
-import { setupSwagger } from "./infrastructure/swagger/swagger";
+import { setupApiDocs } from "./infrastructure/api-docs";
 import { printStartupBanner } from "./common/utils/startup-banner.util";
-import { MAX_FILE_SIZE_BYTES } from "@repo/shared";
+import { MAX_FILE_SIZE_BYTES } from "@repo/contracts";
+
+// Prevent MaxListenersExceededWarning from 11+ shutdown handlers (DB, Redis, Queue, etc.)
+process.setMaxListeners(0);
 
 // Configure high-performance global HTTP agent
 setGlobalDispatcher(
@@ -43,20 +46,25 @@ async function bootstrap() {
       (_request, payload, done) => done(null, payload),
     );
 
-  await app.register(helmet as any, {
+  await app.register(helmet as unknown as never, {
     contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false,
     crossOriginEmbedderPolicy: false,
   });
 
-  await app.register(compress as any, {
+  await app.register(compress as unknown as never, {
     threshold: 1024,
     encodings: ["gzip", "deflate", "br"],
   });
 
-  await app.register(cookie as any, {
+  await app.register(cookie as unknown as never, {
     secret: env.JWT_SECRET,
     hook: "onRequest",
   });
+
+  // Register API docs BEFORE global prefix/versioning so /api/docs is not versioned
+  if (env.NODE_ENV !== "production") {
+    await setupApiDocs(app);
+  }
 
   app.useWebSocketAdapter(new WsAdapter(app));
 
@@ -64,18 +72,30 @@ async function bootstrap() {
   const i18n = app.get(I18nService);
   app.useGlobalFilters(new AllExceptionsFilter(logger, i18n));
 
-  app.setGlobalPrefix("api", { exclude: ["metrics"] });
+  app.setGlobalPrefix("api", { exclude: ["metrics", "docs", "api/docs"] });
   app.enableCors({
     origin:
-      env.NODE_ENV === "production" ? [env.CLIENT_URL] : [env.CLIENT_URL, "http://localhost:3000"],
+      env.NODE_ENV === "production"
+        ? [env.CLIENT_URL]
+        : (origin, callback) => {
+            if (
+              !origin ||
+              /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
+              origin === env.CLIENT_URL
+            ) {
+              callback(null, true);
+            } else {
+              callback(null, false);
+            }
+          },
     credentials: true,
+    allowedHeaders:
+      "authorization,content-type,accept,origin,x-requested-with,x-tenant-id,idempotency-key,accept-language,x-xsrf-token,x-csrf-token,scalar-origin",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+    maxAge: 86400,
   });
 
   app.enableShutdownHooks();
-
-  if (env.NODE_ENV !== "production") {
-    setupSwagger(app);
-  }
 
   await app.listen(env.PORT, "0.0.0.0");
 

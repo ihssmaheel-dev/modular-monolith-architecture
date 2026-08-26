@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ok } from "neverthrow";
-import type { AuthenticatedUser } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
 import type { WebSocket } from "ws";
 
 import { verifyAccessToken } from "../../../common/utils/access-token.utils";

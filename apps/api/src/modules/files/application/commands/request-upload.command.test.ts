@@ -180,36 +180,4 @@ describe("RequestUploadCommand", () => {
       expect(result.value.fileKey).not.toContain(" ");
     }
   });
-
-  it("returns an authenticated proxy endpoint when GridFS is configured", async () => {
-    vi.mocked(storage.usesDirectTransfer).mockReturnValue(false);
-    vi.mocked(filesRepo.create).mockResolvedValue(
-      ok({
-        id: "file-4",
-        key: "general/user-1/abc-file.txt",
-        fileName: "file.txt",
-        contentType: "text/plain",
-        fileSize: 100,
-        bucket: "test-bucket",
-        parentType: "general",
-        uploadedBy: "user-1",
-        status: "pending",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }),
-    );
-
-    const result = await command.execute(
-      { fileName: "file.txt", contentType: "text/plain", fileSize: 100, parentType: "general" },
-      "user-1",
-    );
-
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      expect(result.value.uploadMode).toBe("proxy");
-      expect(result.value.uploadUrl).toContain("/api/files/gridfs/upload?fileKey=");
-      expect(result.value.expiresAt).toBeUndefined();
-    }
-    expect(storage.getPresignedUploadUrl).not.toHaveBeenCalled();
-  });
 });

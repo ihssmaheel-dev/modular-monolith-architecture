@@ -1,6 +1,6 @@
 import { ok, err, Result } from "neverthrow";
 import { Resend } from "resend";
-import { EmailDriver, EmailError, SendEmailParams, SendEmailResult } from "../email.service";
+import type { EmailDriver, EmailError, SendEmailParams, SendEmailResult } from "../email.types";
 import { env } from "../../../config/env";
 import { PinoLoggerService } from "../../logger/logger.service";
 

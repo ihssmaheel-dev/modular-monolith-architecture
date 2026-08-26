@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@repo/ui";
-import { MemberResponseSchema, MessageResponseSchema } from "@repo/shared";
+import { MemberResponseSchema, MessageResponseSchema } from "@repo/contracts";
 import { api } from "@/lib/api";
 import { queryClient } from "@/lib/query-client";
 import { useAuthStore } from "@/stores/auth.store";

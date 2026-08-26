@@ -1,119 +1,123 @@
-import { initClient, tsRestFetchApi, type ApiFetcher } from "@ts-rest/core";
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import type { ApiClientOptions, ApiResponse } from "./types";
 import {
-  AuthResponseSchema,
-  authContract,
-  filesContract,
-  notesContract,
-  tenancyContract,
-  usersContract,
-  type AuthResponse,
-} from "@repo/shared";
+  createIdempotencyKey,
+  getAuthorizationHeader,
+  getTransferHeaders,
+  requestRefresh,
+} from "./utils";
+import {
+  createAuthClient,
+  createFilesClient,
+  createNotesClient,
+  createTenancyClient,
+  createUsersClient,
+} from "./subclients";
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
-export interface ApiClientOptions {
-  getAccessToken?: () => string | null;
-  getRefreshToken?: () => string | null;
-  getLocale?: () => string | null;
-  getTenantId?: () => string | null;
-  onAuthRefreshed?: (response: AuthResponse) => void;
-  onAuthFailure?: () => void;
-}
+export function createApiClient(baseUrl: string, options: ApiClientOptions = {}) {
+  let refreshPromise: Promise<unknown> = Promise.resolve(null);
+  let isRefreshing = false;
 
-function getAuthorizationHeader(options: ApiClientOptions): string {
-  const token = options.getAccessToken?.();
-  return token ? `Bearer ${token}` : "";
-}
-
-function getTransferHeaders(options: ApiClientOptions): Record<string, string> {
-  const headers: Record<string, string> = {
-    "accept-language": options.getLocale?.() ?? "en",
-    "idempotency-key": createIdempotencyKey(),
-  };
-  const authorization = getAuthorizationHeader(options);
-  const tenantId = options.getTenantId?.();
-  if (authorization) headers.authorization = authorization;
-  if (tenantId) headers["x-tenant-id"] = tenantId;
-  return headers;
-}
-
-async function requestRefresh(
-  baseUrl: string,
-  options: ApiClientOptions,
-): Promise<AuthResponse | null> {
-  const response = await fetch(`${baseUrl}/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
+  const authenticatedFetch = async <T>(
+    path: string,
+    init: RequestInit = {},
+  ): Promise<ApiResponse<T>> => {
+    const method = (init.method ?? "GET").toUpperCase();
+    const headers: Record<string, string> = {
       "content-type": "application/json",
       "accept-language": options.getLocale?.() ?? "en",
-    },
-    body: JSON.stringify({ refreshToken: options.getRefreshToken?.() ?? undefined }),
-  });
-  if (!response.ok) return null;
-  const parsed = AuthResponseSchema.safeParse(await response.json());
-  return parsed.success ? parsed.data : null;
-}
+      ...((init.headers as Record<string, string>) ?? {}),
+    };
 
-function createRefreshingFetcher(baseUrl: string, options: ApiClientOptions): ApiFetcher {
-  let refreshPromise: Promise<AuthResponse | null> | null = null;
-  return async (args) => {
-    const requestArgs = addIdempotencyKey(args);
-    const response = await tsRestFetchApi(requestArgs);
-    if (response.status !== 401 || args.route.path.startsWith("/auth/")) return response;
+    const auth = getAuthorizationHeader(options);
+    if (auth && !headers.authorization) headers.authorization = auth;
 
-    refreshPromise ??= requestRefresh(baseUrl, options).finally(() => {
-      refreshPromise = null;
-    });
-    const refreshed = await refreshPromise;
-    if (!refreshed) {
-      options.onAuthFailure?.();
-      return response;
+    const tenantId = options.getTenantId?.();
+    if (tenantId && !headers["x-tenant-id"]) headers["x-tenant-id"] = tenantId;
+
+    if (MUTATING_METHODS.has(method) && !headers["idempotency-key"]) {
+      headers["idempotency-key"] = createIdempotencyKey();
     }
 
-    options.onAuthRefreshed?.(refreshed);
-    return tsRestFetchApi({
-      ...requestArgs,
-      headers: { ...requestArgs.headers, authorization: `Bearer ${refreshed.accessToken}` },
-    });
+    const url = `${baseUrl.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
+    let res = await fetch(url, { ...init, headers, credentials: "include" });
+
+    if (res.status === 401 && !path.startsWith("auth/")) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        refreshPromise = requestRefresh(baseUrl, options).finally(() => {
+          isRefreshing = false;
+        });
+      }
+      const refreshed = await refreshPromise;
+      if (!refreshed) {
+        options.onAuthFailure?.();
+        let body: unknown = null;
+        try {
+          body = await res.json();
+        } catch {
+          body = null;
+        }
+        return { status: res.status, body: body as T };
+      }
+
+      options.onAuthRefreshed?.(
+        refreshed as Parameters<NonNullable<typeof options.onAuthRefreshed>>[0],
+      );
+      headers.authorization = `Bearer ${(refreshed as { accessToken: string }).accessToken}`;
+      res = await fetch(url, { ...init, headers, credentials: "include" });
+    }
+
+    let body: unknown = null;
+    if (res.status !== 204) {
+      try {
+        body = await res.json();
+      } catch {
+        body = null;
+      }
+    }
+
+    return { status: res.status, body: body as T };
   };
-}
 
-function addIdempotencyKey(args: Parameters<ApiFetcher>[0]): Parameters<ApiFetcher>[0] {
-  if (!MUTATING_METHODS.has(args.route.method)) return args;
-  if (args.headers["idempotency-key"]) return args;
-  return {
-    ...args,
-    headers: { ...args.headers, "idempotency-key": createIdempotencyKey() },
-  };
-}
-
-function createIdempotencyKey(): string {
-  if (typeof globalThis.crypto?.randomUUID === "function") return globalThis.crypto.randomUUID();
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-}
-
-export function createApiClient(baseUrl: string, options: ApiClientOptions = {}) {
-  const clientOptions = {
-    baseUrl,
-
-    baseHeaders: {
-      authorization: () => getAuthorizationHeader(options),
-      "accept-language": () => options.getLocale?.() ?? "en",
-      "x-tenant-id": () => options.getTenantId?.() ?? "",
+  const orpcLink = new RPCLink({
+    url: baseUrl,
+    fetch: async (input, init) => {
+      const headers = new Headers((init as RequestInit | undefined)?.headers);
+      const auth = getAuthorizationHeader(options);
+      if (auth) headers.set("authorization", auth);
+      const tenantId = options.getTenantId?.();
+      if (tenantId) headers.set("x-tenant-id", tenantId);
+      headers.set("accept-language", options.getLocale?.() ?? "en");
+      return fetch(input, {
+        ...(init as RequestInit | undefined),
+        headers,
+        credentials: "include",
+      });
     },
-    api: createRefreshingFetcher(baseUrl, options),
-    throwOnUnknownStatus: true as const,
-  };
+  });
+
+  const orpcClient = createORPCClient(orpcLink);
+  const orpc = createTanstackQueryUtils(orpcClient);
 
   return {
-    auth: initClient(authContract, clientOptions),
-    files: initClient(filesContract, clientOptions),
-    notes: initClient(notesContract, clientOptions),
-    tenancy: initClient(tenancyContract, clientOptions),
-    users: initClient(usersContract, clientOptions),
+    auth: createAuthClient(authenticatedFetch),
+    files: createFilesClient(authenticatedFetch),
+    notes: createNotesClient(authenticatedFetch),
+    tenancy: createTenancyClient(authenticatedFetch),
+    users: createUsersClient(authenticatedFetch),
+    orpc,
+    client: orpcClient,
     getTransferHeaders: () => getTransferHeaders(options),
   };
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;
+export * from "./types";
+export * from "./utils";
+export * from "./subclients";
+export { createORPCClient, RPCLink, createTanstackQueryUtils };

@@ -1,73 +1,69 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { FlattenMaps, Model } from "mongoose";
-import { ClsService } from "nestjs-cls";
-import { ok, Result } from "neverthrow";
-import {
-  BaseRepository,
-  type PaginatedResult,
-  type PaginationOptions,
-} from "../../../infrastructure/database";
+import { Injectable } from "@nestjs/common";
+import { eq, and, gt, lte } from "drizzle-orm";
+import { ok, type Result } from "neverthrow";
+import { DatabaseService } from "../../../infrastructure/database";
+import { TenantContextService } from "../../../infrastructure/database";
+import { BaseRepository } from "../../../infrastructure/database";
+import { invitations, type InvitationRow } from "./schemas/tenancy.schema";
 import { Invitation } from "../domain/entities/tenancy.entity";
-import { InvitationMongooseSchema } from "./schemas/tenancy.mongoose.schema";
-
-type LeanInvitation = FlattenMaps<InvitationMongooseSchema> & {
-  _id: { toString(): string };
-  createdAt?: Date;
-  updatedAt?: Date;
-};
+import type { PaginatedResult, PaginationOptions } from "../../../infrastructure/database";
 
 @Injectable()
-export class InvitationsRepository extends BaseRepository<Invitation, InvitationMongooseSchema> {
-  constructor(
-    @InjectModel(InvitationMongooseSchema.name) model: Model<InvitationMongooseSchema>,
-    @Inject(ClsService) cls: ClsService,
-  ) {
-    super(model, cls);
+export class InvitationsRepository extends BaseRepository<Invitation, InvitationRow> {
+  constructor(database: DatabaseService, tenantContext: TenantContextService) {
+    super(invitations, database, tenantContext, false);
   }
 
-  protected toDomain(value: unknown): Invitation {
-    const doc = value as LeanInvitation;
+  protected toDomain(row: InvitationRow): Invitation {
     return Invitation.fromPersistence({
-      id: doc._id.toString(),
-      tenantId: doc.tenantId,
-      email: doc.email,
-      role: doc.role as "admin" | "member",
-      status: doc.status as "pending" | "accepted" | "revoked",
-      expiresAt: doc.expiresAt,
-      createdAt: doc.createdAt ?? new Date(),
-      updatedAt: doc.updatedAt ?? new Date(),
+      id: row.id,
+      tenantId: row.tenantId,
+      email: row.email,
+      role: row.role as "admin" | "member",
+      status: row.status as "pending" | "accepted" | "revoked",
+      expiresAt: row.expiresAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     });
   }
 
-  findPending(tenantId: string, email: string): Promise<Result<Invitation | null, never>> {
-    return this.findOne({ tenantId, email, status: "pending", expiresAt: { $gt: new Date() } });
+  async findPending(tenantId: string, email: string): Promise<Result<Invitation | null, never>> {
+    const db = this.getDb();
+    const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<InvitationRow[]> } } })
+      .select()
+      .from(invitations)
+      .where(and(eq(invitations.tenantId, tenantId), eq(invitations.email, email), eq(invitations.status, "pending"), gt(invitations.expiresAt, new Date())));
+    return ok(rows[0] ? this.toDomain(rows[0]) : null);
   }
 
   async revokeExpired(tenantId: string, email: string): Promise<void> {
-    await this.model.updateMany(
-      { tenantId, email, status: "pending", expiresAt: { $lte: new Date() } },
-      { $set: { status: "revoked" } },
-    );
+    const db = this.getDb();
+    await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => Promise<void> } } })
+      .update(invitations)
+      .set({ status: "revoked", updatedAt: new Date() })
+      .where(and(eq(invitations.tenantId, tenantId), eq(invitations.email, email), eq(invitations.status, "pending"), lte(invitations.expiresAt, new Date())));
   }
 
-  findByTokenHash(tokenHash: string): Promise<Result<Invitation | null, never>> {
-    return this.findOne({ tokenHash, status: "pending", expiresAt: { $gt: new Date() } });
+  async findByTokenHash(tokenHash: string): Promise<Result<Invitation | null, never>> {
+    const db = this.getDb();
+    const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<InvitationRow[]> } } })
+      .select()
+      .from(invitations)
+      .where(and(eq(invitations.tokenHash, tokenHash), eq(invitations.status, "pending"), gt(invitations.expiresAt, new Date())));
+    return ok(rows[0] ? this.toDomain(rows[0]) : null);
   }
 
-  paginateForTenant(
-    tenantId: string,
-    options: PaginationOptions,
-  ): Promise<Result<PaginatedResult<Invitation>, never>> {
-    return this.paginate({ tenantId }, { ...options, sort: { createdAt: -1 } });
+  paginateForTenant(tenantId: string, options: PaginationOptions): Promise<Result<PaginatedResult<Invitation>, never>> {
+    return this.paginate({ tenantId }, options);
   }
 
   async markAccepted(id: string, userId: string): Promise<Result<Invitation | null, never>> {
-    const result = await this.updateOne(
-      { _id: id, status: "pending", expiresAt: { $gt: new Date() } },
-      { status: "accepted", acceptedBy: userId, acceptedAt: new Date() },
-    );
-    if (result.isErr()) return ok(null);
-    return ok(result.value);
+    const db = this.getDb();
+    const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<InvitationRow[]> } } } })
+      .update(invitations)
+      .set({ status: "accepted", acceptedBy: userId, acceptedAt: new Date(), updatedAt: new Date() })
+      .where(and(eq(invitations.id, id), eq(invitations.status, "pending"), gt(invitations.expiresAt, new Date())))
+      .returning();
+    return ok(rows[0] ? this.toDomain(rows[0]) : null);
   }
 }

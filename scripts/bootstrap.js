@@ -1,3 +1,4 @@
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
@@ -52,6 +53,10 @@ function verifyCompose() {
   }
 }
 
+function generateSecret(bytes = 48) {
+  return crypto.randomBytes(bytes).toString("base64url").slice(0, 64);
+}
+
 function createEnvironmentFiles() {
   for (const [template, destination] of ENV_FILES) {
     const target = path.join(ROOT, destination);
@@ -59,8 +64,19 @@ function createEnvironmentFiles() {
       process.stdout.write(`Preserved ${destination}\n`);
       continue;
     }
-    fs.copyFileSync(path.join(ROOT, template), target);
-    process.stdout.write(`Created ${destination}\n`);
+    let content = fs.readFileSync(path.join(ROOT, template), "utf8");
+    if (destination === "apps/api/.env") {
+      const jwtSecret = generateSecret(48);
+      let refreshSecret = generateSecret(48);
+      while (refreshSecret === jwtSecret) refreshSecret = generateSecret(48);
+      const metricsToken = generateSecret(32);
+      content = content
+        .replace("your-super-secret-jwt-key-change-in-prod", jwtSecret)
+        .replace("your-separate-refresh-secret-change-in-prod", refreshSecret)
+        .replace("optional-development-metrics-token-32chars", metricsToken);
+    }
+    fs.writeFileSync(target, content, "utf8");
+    process.stdout.write(`Created ${destination} with generated secrets\n`);
   }
 }
 

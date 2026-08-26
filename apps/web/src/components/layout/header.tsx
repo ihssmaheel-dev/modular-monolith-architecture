@@ -2,7 +2,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useUIStore } from "@/stores/ui.store";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@repo/ui";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/lib/api";
 import { useTenantStore } from "@/stores/tenant.store";
@@ -17,7 +17,7 @@ export function Header() {
 
   const handleLogout = async () => {
     try {
-      await api.auth.logout({});
+      await api.auth.logout();
     } catch {
       // Ignore network errors — clear local state regardless
     }
@@ -27,19 +27,31 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-card px-4">
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6 select-none sticky top-0 z-40">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
-          <Menu className="h-5 w-5" />
+          <Menu className="h-5 w-5 text-foreground" />
         </Button>
-        <h1 className="text-lg font-semibold">{t("dashboard.title")}</h1>
+        <div>
+          <span className="text-[10px] font-semibold uppercase tracking-[1.5px] text-muted-foreground block">
+            Workspace
+          </span>
+          <h1 className="text-sm font-semibold tracking-tight text-foreground">
+            {t("dashboard.title")}
+          </h1>
+        </div>
       </div>
-      <div className="flex items-center gap-4">
+
+      <div className="flex items-center gap-3">
         <TenantSwitcher />
+        <div className="h-4 w-px bg-border mx-1" />
         <ThemeToggle />
-        <span className="text-sm text-muted-foreground">{user?.email}</span>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
+        <div className="flex items-center gap-2 px-2 py-1 rounded-sm bg-secondary text-foreground text-xs font-medium">
+          <User className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="max-w-[140px] truncate">{user?.email}</span>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleLogout} className="text-xs">
+          <LogOut className="mr-1.5 h-3.5 w-3.5" />
           {t("auth.logout")}
         </Button>
       </div>

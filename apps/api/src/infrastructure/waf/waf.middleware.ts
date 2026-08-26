@@ -3,6 +3,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import {
   XSS_PATTERNS,
   SQL_INJECTION_PATTERNS,
+  NOSQL_INJECTION_PATTERNS,
   HEADER_INJECTION_PATTERNS,
   scanObject,
   containsPattern,
@@ -27,7 +28,13 @@ export class WafMiddleware implements NestMiddleware {
       return;
     }
 
-    if (containsPattern(url, [...XSS_PATTERNS, ...SQL_INJECTION_PATTERNS])) {
+    if (
+      containsPattern(url, [
+        ...XSS_PATTERNS,
+        ...SQL_INJECTION_PATTERNS,
+        ...NOSQL_INJECTION_PATTERNS,
+      ])
+    ) {
       res.status(HttpStatus.BAD_REQUEST).send({
         statusCode: HttpStatus.BAD_REQUEST,
         message: this.i18n.t("api.error.invalidRequest", lang),
@@ -35,19 +42,29 @@ export class WafMiddleware implements NestMiddleware {
       return;
     }
 
-    const contentType = req.headers["content-type"] ?? "";
-    if (contentType.includes("application/json")) {
-      const body = req.body as Record<string, unknown> | undefined;
-      if (body) {
-        const violations = scanObject(body);
-        if (violations.length > 0) {
-          res.status(HttpStatus.BAD_REQUEST).send({
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: this.i18n.t("api.error.blockedContent", lang),
-            violations,
-          });
-          return;
-        }
+    const query = (req.query ?? {}) as Record<string, unknown>;
+    if (Object.keys(query).length > 0) {
+      const violations = scanObject(query);
+      if (violations.length > 0) {
+        res.status(HttpStatus.BAD_REQUEST).send({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: this.i18n.t("api.error.invalidRequest", lang),
+          violations,
+        });
+        return;
+      }
+    }
+
+    const body = req.body as Record<string, unknown> | undefined;
+    if (body && typeof body === "object") {
+      const violations = scanObject(body);
+      if (violations.length > 0) {
+        res.status(HttpStatus.BAD_REQUEST).send({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: this.i18n.t("api.error.blockedContent", lang),
+          violations,
+        });
+        return;
       }
     }
 

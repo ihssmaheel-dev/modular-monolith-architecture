@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { CreateUserSchema, DEFAULT_LOCALE, type Locale } from "@repo/shared";
+import { CreateUserSchema } from "@repo/contracts";
+import { DEFAULT_LOCALE, type Locale } from "@repo/i18n";
 import { hash } from "@node-rs/argon2";
 import { err, ok, Result } from "neverthrow";
 import { z } from "zod";

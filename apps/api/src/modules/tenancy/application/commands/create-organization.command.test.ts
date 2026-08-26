@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { err, ok } from "neverthrow";
-import type { AuthenticatedUser } from "@repo/shared";
+import type { AuthenticatedUser } from "@repo/contracts";
 
 import { DatabaseService } from "../../../../infrastructure/database";
 import { Membership, Organization } from "../../domain/entities/tenancy.entity";
