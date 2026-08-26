@@ -24,10 +24,10 @@ You are working in a modular monolith codebase. Before making any changes, read 
 - Read these files before every task. Do not skip.
 - The stack is locked. Do not add, replace, or suggest alternatives without approval.
 - Never throw in application/domain layers. Use neverthrow Result.
-- Never import another module's Mongoose model.
+- Never import another module's Drizzle table or direct database model.
 - packages/ui is web-only. Never use in mobile.
-- Every Zod schema, type, and contract lives in packages/shared.
-- **All user-facing text must use i18n.** Translations live in `packages/shared`.
+- Every Zod schema, type, and contract lives in packages/contracts (@repo/contracts).
+- **All user-facing text must use i18n.** Translations live in packages/i18n (@repo/i18n).
 - **All error messages must use I18nService.** Never hardcode.
 - Ask in every PR: "Is this the simplest structure that could work?"
 - Keep files under 150 lines. If it's longer, split it.

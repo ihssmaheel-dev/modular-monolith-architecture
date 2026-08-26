@@ -42,6 +42,7 @@
     "generate:module": "node scripts/generate-module.js",
     "generate:feature": "node scripts/generate-feature.js",
     "architecture:check": "depcruise --config .dependency-cruiser.cjs apps/api/src --output-type err",
+    "rules:check-style": "node scripts/check-rules.js",
     "rules:check": "pnpm architecture:check && node scripts/check-rules.js",
     "up": "taze -r"
   },

@@ -5,17 +5,19 @@ Any code you generate MUST adhere to the following rules, without exception.
 
 ## 1. Zero Tolerance Boundary Rules
 - **NEVER** import anything from `src/modules/*/infrastructure/**` into `src/modules/*/presentation/**`.
-- **NEVER** write Mongoose/Database logic in a Controller.
-- Controllers must ONLY call Application Services.
+- **NEVER** write Drizzle/Database logic in a Controller.
+- Controllers must ONLY call Application Services/Commands/Queries.
 
 ## 2. Neverthrow & Error Handling
 - **ALWAYS** use `Result<T, E>` or `ResultAsync<T, E>` from `neverthrow` in Application and Domain layers.
 - **NEVER** use `throw new Error()` for business logic. Return an `err({ type: "...", message: "..." })`.
 - Controllers must map the `Result` to the appropriate HTTP response.
 
-## 3. Shared Library ONLY
-- All Zod schemas, types, DTOs, translations, and permissions MUST live in `packages/shared`.
-- **NEVER** define a Zod schema in `apps/api`. Always import it from `@repo/shared`.
+## 3. Contracts & Schemas
+- All Zod schemas, types, DTOs, and contracts MUST live in `packages/contracts` (`@repo/contracts`).
+- Translations MUST live in `packages/i18n` (`@repo/i18n`).
+- Permissions MUST live in `packages/authorization` (`@repo/authorization`).
+- **NEVER** define a public Zod schema in `apps/api`. Always import it from `@repo/contracts`.
 
 ## 4. I18n Strictness
 - **NEVER** hardcode user-facing strings or error messages in the backend or frontend.

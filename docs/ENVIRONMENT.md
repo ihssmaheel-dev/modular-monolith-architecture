@@ -1,7 +1,7 @@
 # Environment-variable reference
 
 Local setup copies the committed examples to ignored `.env` files. Runtime API variables are
-validated by `packages/shared/src/schemas/env.schema.ts`; invalid production configuration stops
+validated by `packages/contracts/src/schemas/env.schema.ts`; invalid production configuration stops
 startup. Never commit `.env` files or real credentials.
 
 ## API core and connectivity

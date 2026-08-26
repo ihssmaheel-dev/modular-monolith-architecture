@@ -1,50 +1,144 @@
-import { Injectable } from "@nestjs/common";
+import {
+  Injectable,
+  OnModuleInit,
+  OnApplicationShutdown,
+  Optional,
+} from "@nestjs/common";
 import { PinoLoggerService } from "../logger/logger.service";
+import { RedisService } from "../redis/redis.service";
+import { env } from "../../config/env";
+import Redis from "ioredis";
 import type { FeatureFlagContext, FeatureFlagProvider } from "./feature-flags.types";
 
-@Injectable()
-export class FeatureFlagsService implements FeatureFlagProvider {
-  private readonly flags = new Map<string, boolean>();
+const REDIS_FLAGS_HASH = "feature_flags:overrides";
+const REDIS_FLAGS_CHANNEL = "feature_flags:updates";
 
-  constructor(private readonly logger: PinoLoggerService) {
+interface FlagMessage {
+  type: "set" | "delete";
+  flagKey: string;
+  enabled?: boolean;
+}
+
+@Injectable()
+export class FeatureFlagsService
+  implements FeatureFlagProvider, OnModuleInit, OnApplicationShutdown
+{
+  private readonly flags = new Map<string, boolean>();
+  private subscriber: Redis | null = null;
+  private readonly logger: PinoLoggerService;
+
+  constructor(
+    logger: PinoLoggerService,
+    @Optional() private readonly redisService?: RedisService,
+  ) {
     this.logger = logger.child({ module: "FeatureFlagsService" });
   }
 
+  async onModuleInit(): Promise<void> {
+    await this.loadInitialFlags();
+    await this.setupSubscriber();
+  }
+
+  async onApplicationShutdown(): Promise<void> {
+    if (this.subscriber) {
+      await this.subscriber.quit();
+      this.subscriber = null;
+    }
+  }
+
+  private async loadInitialFlags(): Promise<void> {
+    const client = this.redisService?.getClient();
+    if (!client) return;
+    try {
+      const overrides = await client.hgetall(REDIS_FLAGS_HASH);
+      for (const [key, val] of Object.entries(overrides)) {
+        this.flags.set(key, val === "true" || val === "1");
+      }
+      this.logger.info(
+        { count: Object.keys(overrides).length },
+        "Loaded distributed feature flags from Redis",
+      );
+    } catch (error) {
+      this.logger.error({ error }, "Failed to load initial feature flags from Redis");
+    }
+  }
+
+  private async setupSubscriber(): Promise<void> {
+    if (!env.REDIS_URL) return;
+    try {
+      this.subscriber = new Redis(env.REDIS_URL);
+      this.subscriber.on("error", (error) => {
+        this.logger.error({ error }, "Feature flags Redis subscriber error");
+      });
+      await this.subscriber.subscribe(REDIS_FLAGS_CHANNEL);
+      this.subscriber.on("message", (channel, message) => {
+        if (channel === REDIS_FLAGS_CHANNEL) this.handleMessage(message);
+      });
+      this.logger.info({}, "Subscribed to distributed feature flag updates");
+    } catch (error) {
+      this.logger.error({ error }, "Failed to connect feature flags Redis subscriber");
+    }
+  }
+
+  private handleMessage(message: string): void {
+    try {
+      const parsed: FlagMessage = JSON.parse(message);
+      if (parsed.type === "set" && typeof parsed.enabled === "boolean") {
+        this.flags.set(parsed.flagKey, parsed.enabled);
+      } else if (parsed.type === "delete") {
+        this.flags.delete(parsed.flagKey);
+      }
+    } catch (error) {
+      this.logger.error({ error, message }, "Failed to process flag update event");
+    }
+  }
+
   isEnabled(flagKey: string, context?: FeatureFlagContext): boolean {
-    // 1. Check in-memory override
     if (this.flags.has(flagKey)) {
       const enabled = Boolean(this.flags.get(flagKey));
       this.logger.debug({ flagKey, enabled, context }, "Evaluated feature flag from memory");
       return enabled;
     }
-
-    // 2. Check process environment variable: FEATURE_FLAG_<KEY> (e.g. FEATURE_FLAG_NEW_BILLING=true)
     const envKey = `FEATURE_FLAG_${flagKey.toUpperCase().replace(/-/g, "_")}`;
     const envVal = process.env[envKey];
     if (envVal !== undefined) {
       const enabled = envVal.toLowerCase() === "true" || envVal === "1";
-      this.logger.debug({ flagKey, envKey, enabled, context }, "Evaluated feature flag from env");
+      this.logger.debug({ flagKey, envKey, enabled, context }, "Evaluated flag from env");
       return enabled;
     }
-
-    // Default to false for unknown flags
     return false;
   }
 
-  setFlag(flagKey: string, enabled: boolean): void {
+  async setFlag(flagKey: string, enabled: boolean): Promise<void> {
     this.flags.set(flagKey, enabled);
+    const client = this.redisService?.getClient();
+    if (client) {
+      try {
+        await client.hset(REDIS_FLAGS_HASH, flagKey, enabled ? "1" : "0");
+        const payload: FlagMessage = { type: "set", flagKey, enabled };
+        await client.publish(REDIS_FLAGS_CHANNEL, JSON.stringify(payload));
+      } catch (error) {
+        this.logger.error({ flagKey, error }, "Failed to persist flag to Redis");
+      }
+    }
     this.logger.info({ flagKey, enabled }, "Feature flag override updated");
   }
 
-  deleteFlag(flagKey: string): void {
+  async deleteFlag(flagKey: string): Promise<void> {
     this.flags.delete(flagKey);
+    const client = this.redisService?.getClient();
+    if (client) {
+      try {
+        await client.hdel(REDIS_FLAGS_HASH, flagKey);
+        const payload: FlagMessage = { type: "delete", flagKey };
+        await client.publish(REDIS_FLAGS_CHANNEL, JSON.stringify(payload));
+      } catch (error) {
+        this.logger.error({ flagKey, error }, "Failed to delete flag from Redis");
+      }
+    }
   }
 
   getAllFlags(): Record<string, boolean> {
-    const result: Record<string, boolean> = {};
-    for (const [key, value] of this.flags.entries()) {
-      result[key] = value;
-    }
-    return result;
+    return Object.fromEntries(this.flags.entries());
   }
 }

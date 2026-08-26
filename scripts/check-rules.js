@@ -151,6 +151,34 @@ function checkTenantRepositories() {
   }
 }
 
+function checkDocumentationDrift() {
+  const docTargets = [
+    path.join(ROOT, "AGENTS.md"),
+    path.join(ROOT, ".cursorrules"),
+    ...(fs.existsSync(path.join(ROOT, "ai_instructions")) ? walk(path.join(ROOT, "ai_instructions")) : []),
+    ...(fs.existsSync(path.join(ROOT, "docs")) ? walk(path.join(ROOT, "docs")) : []),
+  ].filter((file) => fs.existsSync(file) && (file.endsWith(".md") || file.endsWith(".cursorrules")));
+
+  const bannedPatterns = [
+    [/\bmongoose\b/i, "obsolete 'Mongoose' reference — use Drizzle/Postgres"],
+    [/\bmongodb\b/i, "obsolete 'MongoDB' reference — use PostgreSQL"],
+    [/\bpackages\/shared\b/i, "obsolete 'packages/shared' reference — use @repo/contracts, @repo/i18n, etc."],
+    [/\b@ts-rest\b/i, "obsolete '@ts-rest' reference — use oRPC/NestJS"],
+  ];
+
+  for (const file of docTargets) {
+    const source = fs.readFileSync(file, "utf8");
+    const lines = source.split(/\r?\n/);
+    lines.forEach((line, index) => {
+      for (const [pattern, message] of bannedPatterns) {
+        if (pattern.test(line)) {
+          report(file, `line ${index + 1}: ${message}`);
+        }
+      }
+    });
+  }
+}
+
 for (const directory of ["apps", "packages"]) {
   for (const file of walk(path.join(ROOT, directory))) {
     if (CODE_EXTENSIONS.has(path.extname(file))) checkFile(file);
@@ -159,6 +187,7 @@ for (const directory of ["apps", "packages"]) {
 checkLocaleParity();
 checkTranslationUsage();
 checkTenantRepositories();
+checkDocumentationDrift();
 
 if (failures.length) {
   process.stderr.write(
