@@ -167,6 +167,12 @@ Unified **RBAC + ReBAC + ABAC** engine:
 Accessible, composable UI primitives powered by Radix UI and Tailwind CSS v4:
 - Modal Dialogs, Dropdown Menus, Popovers, Tooltips, Tabs, Accordions, Date/DateRange Pickers, Comboboxes, Multi-Select Tagged Dropdowns, and TanStack Data Tables.
 
+### 5. Dynamic shadcn Theming & Precision Typography
+- **1-Click Theme Re-skinning**: 100% compatible with presets generated at [ui.shadcn.com/create](https://ui.shadcn.com/create) and [ui.shadcn.com/themes](https://ui.shadcn.com/themes) via modern Tailwind v4 `@theme inline`.
+- **Proportional Radius Engine**: Single master `--radius` CSS variable dynamically scales `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-xl` across all 27+ UI components.
+- **Zero-Latency Typography**: Self-hosted **Geist & Geist Mono** via `@fontsource-variable/*` (0 external CDN requests, 100% offline & air-gapped compliant).
+- **Cross-Platform Parity**: Unified tokens synchronized across Web (`apps/web/src/index.css`) and Mobile (`apps/mobile/global.css`).
+
 ---
 
 ## Health Checks

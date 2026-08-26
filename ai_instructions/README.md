@@ -17,6 +17,7 @@ Before any code change, read these files in order:
 | 9 | [TESTING_RULES.md](./TESTING_RULES.md) | Unit/integration/E2E contract. |
 | 10 | [PACKAGE_POLICY.md](./PACKAGE_POLICY.md) | Adding dependencies. |
 | 11 | [PERFORMANCE_RULES.md](./PERFORMANCE_RULES.md) | DB queries, caching, frontend perf. |
+| 12 | [THEMING_AND_UI_RULES.md](./THEMING_AND_UI_RULES.md) | Semantic design tokens, shadcn theming, radius scaling, fonts. |
 
 ## Before Every Task
 

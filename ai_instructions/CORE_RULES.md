@@ -45,6 +45,7 @@ Supreme laws of this codebase. These are never negotiable.
 12. Hardcode error messages — use `I18nService`.
 13. Use magic numbers — extract to named constants.
 14. Create files in wrong locations — see `FILE_PLACEMENT_RULES.md`.
+15. Hardcode hex/RGB colors or static pixel radii in UI components — use semantic tokens (see `THEMING_AND_UI_RULES.md`).
 
 ---
 
@@ -60,6 +61,7 @@ Supreme laws of this codebase. These are never negotiable.
 8. Keep files under 150 lines, functions under 30 lines.
 9. Use Pino logger with structured context.
 10. Place files in correct locations per `FILE_PLACEMENT_RULES.md`.
+11. Use semantic tokens (`bg-primary`, `border-border`, `--radius`) and self-hosted `@fontsource-variable` typography.
 
 ---
 
