@@ -3,10 +3,21 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useTenantStore } from "@/stores/tenant.store";
 import { queryClient } from "@/lib/query-client";
 import { api } from "@/lib/api";
-import { Avatar, AvatarFallback, Button } from "@repo/ui";
-import { LogOut } from "lucide-react";
+import {
+  Avatar,
+  AvatarFallback,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuGroup,
+} from "@repo/ui";
+import { ChevronsUpDown, LogOut, Sparkles, User, Settings } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
-export function NavUser() {
+export function NavUser({ collapsed }: { collapsed?: boolean }) {
   const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const clearTenant = useTenantStore((state) => state.clearTenant);
@@ -30,33 +41,79 @@ export function NavUser() {
     .toUpperCase();
 
   return (
-    <div className="border-t border-border p-3">
-      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/40 p-2.5">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-              {userInitials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-foreground truncate leading-tight">
-              {user?.name || "User"}
-            </p>
-            <p className="text-[10px] text-muted-foreground truncate leading-tight">
-              {user?.email}
-            </p>
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleLogout}
-          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-          title={t("auth.logout")}
-        >
-          <LogOut className="h-3.5 w-3.5" />
-        </Button>
-      </div>
+    <div className="border-t border-border p-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left text-sm transition-colors hover:bg-muted/60 focus-visible:outline-hidden"
+          >
+            <Avatar className="h-8 w-8 rounded-lg shrink-0">
+              <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-xs">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && (
+              <>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-xs font-semibold text-foreground">
+                    {user?.name || "User"}
+                  </p>
+                  <p className="truncate text-[10px] text-muted-foreground">
+                    {user?.email}
+                  </p>
+                </div>
+                <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </>
+            )}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" side="top" className="w-56">
+          <DropdownMenuLabel className="p-0 font-normal">
+            <div className="flex items-center gap-2 px-2 py-1.5 text-left text-xs">
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-xs">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-xs leading-tight">
+                <span className="truncate font-semibold">{user?.name || "User"}</span>
+                <span className="truncate text-[10px] text-muted-foreground">{user?.email}</span>
+              </div>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem className="gap-2 text-xs cursor-pointer">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              <span>Enterprise Edition</span>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem asChild className="gap-2 text-xs cursor-pointer">
+              <Link to="/settings">
+                <User className="h-4 w-4" />
+                <span>{t("settings.profile")}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild className="gap-2 text-xs cursor-pointer">
+              <Link to="/settings">
+                <Settings className="h-4 w-4" />
+                <span>{t("settings.title")}</span>
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={handleLogout}
+            className="gap-2 text-xs cursor-pointer text-destructive focus:text-destructive"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>{t("auth.logout")}</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
