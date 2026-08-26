@@ -134,7 +134,10 @@
     "emailNotFound": "Email not found",
     "resetLinkSent": "If the email exists, a reset link has been sent",
     "passwordResetSuccess": "Password has been reset successfully",
-    "accountLocked": "Account temporarily locked due to too many failed attempts. Please try again later."
+    "accountLocked": "Account temporarily locked due to too many failed attempts. Please try again later.",
+    "termsNotice": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+    "heroTagline": "Enterprise Modular Monolith",
+    "heroDescription": "Architected for high throughput, type-safe RPCs, distributed caching, and zero-trust multi-tenancy."
   },
   "api": {
     "error": {

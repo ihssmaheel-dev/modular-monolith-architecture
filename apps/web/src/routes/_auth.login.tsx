@@ -49,26 +49,23 @@ function LoginPage() {
   };
 
   return (
-    <Card variant="featured" className="p-2 sm:p-4">
-      <CardHeader className="text-center pb-6">
-        <div className="mx-auto pb-1 text-[10px] font-semibold uppercase tracking-[1.5px] text-muted-foreground">
-          Authentication
-        </div>
-        <CardTitle className="text-2xl font-semibold tracking-tight">
+    <Card className="border-border/80 bg-card shadow-sm">
+      <CardHeader className="text-center pb-4">
+        <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
           {t("auth.welcomeBack")}
         </CardTitle>
-        <CardDescription className="text-sm">
+        <CardDescription className="text-sm text-muted-foreground">
           {t("auth.loginDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
-            <div className="rounded-sm bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
               {error}
             </div>
           )}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="email" className="text-xs font-medium text-foreground">
               {t("auth.email")}
             </Label>
@@ -76,18 +73,20 @@ function LoginPage() {
               id="email"
               type="email"
               placeholder={t("auth.emailPlaceholder")}
+              autoComplete="email"
+              className="h-10"
               {...register("email")}
             />
             {errors.email && (
               <p className="text-xs text-destructive font-medium">{errors.email.message}</p>
             )}
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-xs font-medium text-foreground">
                 {t("auth.password")}
               </Label>
-              <Link to="/forgot-password" className="text-xs text-[#006acc] hover:underline">
+              <Link to="/forgot-password" className="text-xs text-primary font-medium hover:underline">
                 {t("auth.forgotPassword")}
               </Link>
             </div>
@@ -95,13 +94,15 @@ function LoginPage() {
               id="password"
               type="password"
               placeholder={t("auth.passwordPlaceholder")}
+              autoComplete="current-password"
+              className="h-10"
               {...register("password")}
             />
             {errors.password && (
               <p className="text-xs text-destructive font-medium">{errors.password.message}</p>
             )}
           </div>
-          <Button type="submit" className="w-full mt-2" disabled={isSubmitting}>
+          <Button type="submit" className="w-full h-10 font-medium" disabled={isSubmitting}>
             {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
           </Button>
         </form>
@@ -110,7 +111,7 @@ function LoginPage() {
           <Link
             to="/register"
             search={{ invitationToken }}
-            className="text-foreground font-semibold hover:underline"
+            className="text-foreground font-semibold hover:underline underline-offset-4"
           >
             {t("auth.register")}
           </Link>

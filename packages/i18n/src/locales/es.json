@@ -60,7 +60,10 @@
     "emailNotFound": "Correo electrónico no encontrado",
     "resetLinkSent": "Si el correo existe, se ha enviado un enlace de restablecimiento",
     "passwordResetSuccess": "La contraseña se ha restablecido correctamente",
-    "accountLocked": "Cuenta bloqueada temporalmente por demasiados intentos fallidos. Inténtelo de nuevo más tarde."
+    "accountLocked": "Cuenta bloqueada temporalmente por demasiados intentos fallidos. Inténtelo de nuevo más tarde.",
+    "termsNotice": "Al continuar, aceptas nuestros Términos de servicio y Política de privacidad.",
+    "heroTagline": "Monolito modular empresarial",
+    "heroDescription": "Diseñado para alto rendimiento, RPC con seguridad de tipos, caché distribuida y multi-inquilino de confianza cero."
   },
   "email": {
     "welcome": {

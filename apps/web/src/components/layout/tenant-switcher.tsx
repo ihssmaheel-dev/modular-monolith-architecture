@@ -14,11 +14,13 @@ export function TenantSwitcher() {
   const [name, setName] = useState("");
   const activeTenantId = useTenantStore((state) => state.activeTenantId);
   const selectTenant = useTenantStore((state) => state.selectTenant);
+
   const status = useQuery({
     queryKey: ["tenancy-status"],
     queryFn: async () => TenantStatusResponseSchema.parse((await api.tenancy.status()).body),
     staleTime: Infinity,
   });
+
   const organizations = useQuery<OrganizationResponse[]>({
     queryKey: ["organizations"],
     queryFn: async () => {
@@ -29,6 +31,7 @@ export function TenantSwitcher() {
     },
     enabled: status.data?.mode === "multi",
   });
+
   const createOrganization = useMutation({
     mutationFn: async (organizationName: string) => {
       const response = await api.tenancy.createOrganization({ body: { name: organizationName } });
@@ -61,12 +64,13 @@ export function TenantSwitcher() {
   }, [activeTenantId, organizations.data, organizations.isFetching, selectTenant]);
 
   if (status.data?.mode !== "multi") return null;
+
   const items = organizations.data ?? [];
   if (items.length > 0) {
     return (
       <select
         aria-label={t("tenancy.activeOrganization")}
-        className="h-9 rounded-md border bg-background px-3 text-sm"
+        className="w-full h-8 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring shadow-2xs"
         value={activeTenantId ?? ""}
         onChange={(event) => selectTenant(event.target.value)}
       >
@@ -78,9 +82,10 @@ export function TenantSwitcher() {
       </select>
     );
   }
+
   return (
     <form
-      className="flex items-center gap-2"
+      className="flex items-center gap-1.5"
       onSubmit={(event) => {
         event.preventDefault();
         if (name.trim()) createOrganization.mutate(name.trim());
@@ -90,9 +95,10 @@ export function TenantSwitcher() {
         aria-label={t("tenancy.organizationName")}
         placeholder={t("tenancy.organizationName")}
         value={name}
+        className="h-8 text-xs"
         onChange={(event) => setName(event.target.value)}
       />
-      <Button type="submit" size="sm" disabled={createOrganization.isPending}>
+      <Button type="submit" size="sm" className="h-8 px-2.5 text-xs" disabled={createOrganization.isPending}>
         {t("tenancy.createOrganization")}
       </Button>
     </form>

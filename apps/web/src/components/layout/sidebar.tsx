@@ -1,9 +1,21 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useUIStore } from "@/stores/ui.store";
-import { LayoutDashboard, Users, Settings, FileText, Activity, ShieldCheck, type LucideIcon } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Settings,
+  FileText,
+  Activity,
+  ShieldCheck,
+  Building2,
+  type LucideIcon,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Can } from "@/components/shared/Can";
 import type { Permission } from "@repo/authorization";
+import { Badge } from "@repo/ui";
+import { TenantSwitcher } from "./tenant-switcher";
+import { NavUser } from "./nav-user";
 
 interface NavItem {
   to: "/" | "/users" | "/notes" | "/settings";
@@ -28,21 +40,27 @@ export function Sidebar() {
 
   return (
     <aside className="hidden w-64 flex-col border-r border-border bg-card lg:flex select-none">
-      {/* Brand Header */}
-      <div className="flex h-16 items-center justify-between border-b border-border px-5">
-        <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-primary text-primary-foreground font-semibold text-xs tracking-tight shadow-sm">
-            MM
+      {/* 1. Header: Team & Workspace Switcher (sidebar-07) */}
+      <div className="flex flex-col border-b border-border p-3 gap-2">
+        <div className="flex items-center gap-2.5 px-2 py-1.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs shadow-xs shrink-0">
+            <Building2 className="h-4 w-4" />
           </div>
-          <div>
-            <span className="text-sm font-semibold tracking-tight text-foreground block">
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold tracking-tight text-foreground block truncate">
               {t("common.appName")}
             </span>
+            <span className="text-[10px] text-muted-foreground block truncate font-medium">
+              Enterprise Monolith
+            </span>
           </div>
-        </Link>
+        </div>
+        <div className="px-1">
+          <TenantSwitcher />
+        </div>
       </div>
 
-      {/* Navigation Section */}
+      {/* 2. Main Nav Groups (sidebar-07) */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
         <div>
           <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[1.5px] text-muted-foreground">
@@ -59,14 +77,14 @@ export function Sidebar() {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center gap-3 rounded-sm px-3 py-2 text-sm transition-all ${
+                  className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all ${
                     isActive
-                      ? "bg-secondary text-foreground font-semibold border-l-2 border-primary shadow-xs pl-2.5"
-                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground font-medium"
+                      ? "bg-primary/10 text-primary font-semibold shadow-xs"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
-                  <span>{t(item.labelKey)}</span>
+                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                  <span className="truncate">{t(item.labelKey)}</span>
                 </Link>
               );
 
@@ -77,7 +95,6 @@ export function Sidebar() {
                   </Can>
                 );
               }
-
               return link;
             })}
           </nav>
@@ -93,26 +110,24 @@ export function Sidebar() {
               href="/api/docs"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-3 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-secondary/60 hover:text-foreground font-medium transition-all"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
             >
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <Activity className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span>Scalar API Docs</span>
             </a>
-            <div className="flex items-center gap-3 rounded-sm px-3 py-2 text-sm text-muted-foreground font-medium">
-              <ShieldCheck className="h-4 w-4 text-[#00d722]" />
-              <span className="text-xs text-muted-foreground">FGA Engine Active</span>
+            <div className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground font-medium bg-muted/30 border border-border/50">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span className="text-xs">FGA Engine</span>
+              </div>
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0">Active</Badge>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer Meta */}
-      <div className="border-t border-border p-4">
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-          <span>Enterprise Starter</span>
-          <span className="font-mono text-[10px] text-muted-foreground/80">v2.0.0</span>
-        </div>
-      </div>
+      {/* 3. Footer: User Profile Card (NavUser in sidebar-07) */}
+      <NavUser />
     </aside>
   );
 }
