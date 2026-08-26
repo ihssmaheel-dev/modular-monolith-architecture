@@ -27,17 +27,17 @@ function Badge({ className, variant = "default", pill = false, ...props }: Badge
         {
           "bg-primary text-primary-foreground": variant === "default",
           "bg-secondary text-secondary-foreground": variant === "secondary",
-          "bg-[#ee1d36] text-white": variant === "destructive",
+          "bg-destructive text-destructive-foreground": variant === "destructive",
           "border border-border text-foreground bg-card": variant === "outline",
           "bg-[#146ef5] text-white": variant === "info",
           "bg-[#ffae13] text-black font-semibold": variant === "warning",
           "bg-[#00d722] text-black font-semibold": variant === "success",
           // 5-stop chromatic category accents
-          "bg-[#7a3dff] text-white": variant === "purple",
-          "bg-[#ed52cb] text-white": variant === "pink",
-          "bg-[#3b89ff] text-white": variant === "blue",
-          "bg-[#ff6b00] text-white": variant === "orange",
-          "bg-[#00d722] text-[#080808] font-semibold": variant === "green",
+          "bg-accent-purple text-white": variant === "purple",
+          "bg-accent-pink text-white": variant === "pink",
+          "bg-accent-blue text-white": variant === "blue",
+          "bg-accent-orange text-white": variant === "orange",
+          "bg-accent-green text-foreground font-semibold": variant === "green",
         },
         className,
       )}
