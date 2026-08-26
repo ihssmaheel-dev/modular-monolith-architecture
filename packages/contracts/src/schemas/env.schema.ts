@@ -102,18 +102,35 @@ export const envSchema = z
         message: "METRICS_TOKEN must be set in production",
       });
     }
-    if (env.JWT_SECRET === DEFAULT_JWT_SECRET) {
+    if (
+      env.JWT_SECRET === DEFAULT_JWT_SECRET ||
+      env.JWT_SECRET.includes("change-in-prod")
+    ) {
       context.addIssue({
         code: "custom",
         path: ["JWT_SECRET"],
-        message: "JWT_SECRET must be set in production",
+        message: "JWT_SECRET must be configured with a unique secret in production",
       });
     }
-    if (env.JWT_REFRESH_SECRET === DEFAULT_REFRESH_SECRET) {
+    if (
+      env.JWT_REFRESH_SECRET === DEFAULT_REFRESH_SECRET ||
+      env.JWT_REFRESH_SECRET.includes("change-in-prod") ||
+      env.JWT_REFRESH_SECRET === "your-separate-refresh-secret-change-in-prod"
+    ) {
       context.addIssue({
         code: "custom",
         path: ["JWT_REFRESH_SECRET"],
-        message: "JWT_REFRESH_SECRET must be set in production",
+        message: "JWT_REFRESH_SECRET must be configured with a unique secret in production",
+      });
+    }
+    if (
+      env.STORAGE_DRIVER === "s3" &&
+      (env.S3_ACCESS_KEY_ID === "minioadmin" || env.S3_SECRET_ACCESS_KEY === "minioadmin")
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["S3_ACCESS_KEY_ID"],
+        message: "S3 credentials must not use default minioadmin in production",
       });
     }
   });

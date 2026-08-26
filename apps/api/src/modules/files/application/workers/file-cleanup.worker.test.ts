@@ -48,7 +48,11 @@ describe("FileCleanupWorker", () => {
       error: vi.fn(),
     } as unknown as PinoLoggerService;
 
-    worker = new FileCleanupWorker(mockFilesRepo, mockStorage, mockMetrics, mockLogger);
+    const mockTenantContext = {
+      run: vi.fn(async (_ctx, fn) => await fn()),
+    } as unknown as import("../../../../infrastructure/database").TenantContextService;
+
+    worker = new FileCleanupWorker(mockFilesRepo, mockStorage, mockMetrics, mockTenantContext, mockLogger);
   });
 
   it("identifies and purges stale pending files older than cutoff", async () => {

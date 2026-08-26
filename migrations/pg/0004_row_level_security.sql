@@ -6,7 +6,6 @@ DROP POLICY IF EXISTS tenant_isolation_notes ON notes;
 CREATE POLICY tenant_isolation_notes ON notes
   FOR ALL
   USING (
-    tenant_id IS NULL OR
     NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
     tenant_id = current_setting('app.current_tenant', true)
   );
@@ -17,7 +16,6 @@ DROP POLICY IF EXISTS tenant_isolation_files ON files;
 CREATE POLICY tenant_isolation_files ON files
   FOR ALL
   USING (
-    tenant_id IS NULL OR
     NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
     tenant_id = current_setting('app.current_tenant', true)
   );
@@ -28,7 +26,6 @@ DROP POLICY IF EXISTS tenant_isolation_invitations ON invitations;
 CREATE POLICY tenant_isolation_invitations ON invitations
   FOR ALL
   USING (
-    tenant_id IS NULL OR
     NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
     tenant_id = current_setting('app.current_tenant', true)
   );
@@ -39,7 +36,6 @@ DROP POLICY IF EXISTS tenant_isolation_memberships ON memberships;
 CREATE POLICY tenant_isolation_memberships ON memberships
   FOR ALL
   USING (
-    tenant_id IS NULL OR
     NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
     tenant_id = current_setting('app.current_tenant', true)
   );

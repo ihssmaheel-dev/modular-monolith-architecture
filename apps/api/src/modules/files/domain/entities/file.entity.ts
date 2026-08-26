@@ -1,5 +1,6 @@
 export interface FileEntity {
   id: string;
+  tenantId?: string;
   key: string;
   fileName: string;
   contentType: string;

@@ -5,6 +5,8 @@ import { StorageService } from "../../../../infrastructure/storage/storage.servi
 import { PinoLoggerService } from "../../../../infrastructure/logger/logger.service";
 import { MetricsService } from "../../../../infrastructure/metrics/metrics.service";
 
+import { TenantContextService } from "../../../../infrastructure/database";
+
 const PENDING_EXPIRATION_HOURS = 24;
 
 @Injectable()
@@ -16,6 +18,7 @@ export class FileCleanupWorker {
     private readonly filesRepository: FilesRepository,
     private readonly storageService: StorageService,
     private readonly metrics: MetricsService,
+    private readonly tenantContext: TenantContextService,
     logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "FileCleanupWorker" });
@@ -39,7 +42,12 @@ export class FileCleanupWorker {
       for (const file of staleFiles) {
         try {
           await this.storageService.delete(file.key);
-          await this.filesRepository.deleteById(file.id);
+          await this.tenantContext.run(
+            { mode: file.tenantId ? "multi" : "single", tenantId: file.tenantId },
+            async () => {
+              await this.filesRepository.deleteById(file.id);
+            },
+          );
           purgedCount += 1;
           reclaimedBytes += file.fileSize;
         } catch (error) {

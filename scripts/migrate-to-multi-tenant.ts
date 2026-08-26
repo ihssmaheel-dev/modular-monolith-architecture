@@ -28,6 +28,12 @@ export interface MigrationResult {
 
 type DbInstance = NodePgDatabase<Record<string, unknown>>;
 
+class DryRunRollbackError extends Error {
+  constructor(public readonly result: MigrationResult) {
+    super("MIGRATION_DRY_RUN_ROLLBACK");
+  }
+}
+
 async function resolveOrganization(
   tx: DbInstance,
   name: string,
@@ -39,7 +45,7 @@ async function resolveOrganization(
   }
 
   const allUsers = await tx.select().from(users).where(isNull(users.deletedAt)).limit(1);
-  const creatorId = allUsers[0]?.id ?? randomUUID();
+  const creatorId = allUsers[0]?.id ?? "00000000-0000-0000-0000-000000000000";
   const orgId = randomUUID();
 
   await tx.insert(organizations).values({
@@ -65,14 +71,17 @@ async function backfillMemberships(tx: DbInstance, orgId: string): Promise<numbe
     const isMemberOfOrg = existing.some((m) => m.tenantId === orgId);
     if (!isMemberOfOrg) {
       const role = user.role === "admin" ? ("owner" as const) : ("member" as const);
-      await tx.insert(memberships).values({
-        id: randomUUID(),
-        tenantId: orgId,
-        userId: user.id,
-        userEmail: user.email,
-        userName: user.name,
-        role,
-      });
+      await tx
+        .insert(memberships)
+        .values({
+          id: randomUUID(),
+          tenantId: orgId,
+          userId: user.id,
+          userEmail: user.email,
+          userName: user.name,
+          role,
+        })
+        .onConflictDoNothing({ target: [memberships.tenantId, memberships.userId] });
       count++;
     }
   }
@@ -104,22 +113,31 @@ export async function migrateToMultiTenant(
   const orgSlug = options.organizationSlug ?? "default";
   const isDryRun = Boolean(options.dryRun);
 
-  return db.transaction(async (tx) => {
-    const org = await resolveOrganization(tx, orgName, orgSlug);
-    const membershipsCreated = await backfillMemberships(tx, org.id);
-    const records = await backfillRecords(tx, org.id);
+  try {
+    return await db.transaction(async (tx) => {
+      const org = await resolveOrganization(tx, orgName, orgSlug);
+      const membershipsCreated = await backfillMemberships(tx, org.id);
+      const records = await backfillRecords(tx, org.id);
 
-    if (isDryRun) {
-      tx.rollback();
+      const result: MigrationResult = {
+        organizationId: org.id,
+        organizationName: org.name,
+        organizationSlug: org.slug,
+        membershipsCreated,
+        ...records,
+        isDryRun: false,
+      };
+
+      if (isDryRun) {
+        throw new DryRunRollbackError({ ...result, isDryRun: true });
+      }
+
+      return result;
+    });
+  } catch (error) {
+    if (error instanceof DryRunRollbackError) {
+      return error.result;
     }
-
-    return {
-      organizationId: org.id,
-      organizationName: org.name,
-      organizationSlug: org.slug,
-      membershipsCreated,
-      ...records,
-      isDryRun,
-    };
-  });
+    throw error;
+  }
 }

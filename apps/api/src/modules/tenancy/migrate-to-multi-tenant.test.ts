@@ -70,7 +70,13 @@ describe("migrateToMultiTenant", () => {
         values: vi.fn((vals: unknown) => {
           if (table.slug) insertedOrg = vals as OrgFixture;
           else if (table.userEmail) insertedMemberships.push(vals as MembershipFixture);
-          return Promise.resolve();
+          const p = Promise.resolve();
+          return {
+            onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+            then: (onfulfilled?: (v: unknown) => unknown, onrejected?: (e: unknown) => unknown) =>
+              p.then(onfulfilled, onrejected),
+            catch: (onrejected?: (e: unknown) => unknown) => p.catch(onrejected),
+          };
         }),
       })),
       update: vi.fn((table: Record<string, unknown>) => ({
@@ -86,7 +92,6 @@ describe("migrateToMultiTenant", () => {
           })),
         })),
       })),
-      rollback: vi.fn(),
     };
 
     mockDb = {

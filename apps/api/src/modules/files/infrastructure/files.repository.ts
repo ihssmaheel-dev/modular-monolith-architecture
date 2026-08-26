@@ -15,6 +15,7 @@ export class FilesRepository extends BaseRepository<FileEntity, FileRow> {
   protected toDomain(row: FileRow): FileEntity {
     return {
       id: row.id,
+      tenantId: row.tenantId ?? undefined,
       key: row.key,
       fileName: row.fileName,
       contentType: row.contentType,
