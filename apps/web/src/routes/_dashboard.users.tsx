@@ -85,7 +85,7 @@ function UsersPage() {
 
               <div className="flex items-center gap-3">
                 <Badge variant="outline" className="text-[11px] font-mono">
-                  Verified
+                  {t("users.verified")}
                 </Badge>
                 <div className="text-[11px] text-muted-foreground font-mono hidden sm:inline">
                   {u.id.slice(0, 8)}
@@ -105,10 +105,10 @@ function UsersPage() {
           onClick={() => setPage(page - 1)}
           className="text-xs"
         >
-          <ChevronLeft className="mr-1 h-3.5 w-3.5" /> Previous
+          <ChevronLeft className="mr-1 h-3.5 w-3.5" /> {t("common.previous")}
         </Button>
         <span className="text-xs text-muted-foreground font-medium">
-          Page {page} of {totalPages}
+          {t("common.pageOf", { page, totalPages })}
         </span>
         <Button
           variant="outline"
@@ -117,7 +117,7 @@ function UsersPage() {
           onClick={() => setPage(page + 1)}
           className="text-xs"
         >
-          Next <ChevronRight className="ml-1 h-3.5 w-3.5" />
+          {t("common.next")} <ChevronRight className="ml-1 h-3.5 w-3.5" />
         </Button>
       </div>
     </div>

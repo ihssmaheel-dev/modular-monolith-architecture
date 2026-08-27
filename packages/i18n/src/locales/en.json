@@ -13,8 +13,10 @@
     "noResults": "No results found",
     "confirm": "Confirm",
     "back": "Back",
+    "previous": "Previous",
     "next": "Next",
-    "submit": "Submit"
+    "submit": "Submit",
+    "pageOf": "Page {{page}} of {{totalPages}}"
   },
   "email": {
     "welcome": {
@@ -59,7 +61,8 @@
     "edit": "Edit User",
     "delete": "Delete User",
     "profile": "Profile",
-    "noUsers": "No users found"
+    "noUsers": "No users found",
+    "verified": "Verified"
   },
   "settings": {
     "manageAccount": "Manage your account",
@@ -67,6 +70,10 @@
     "loggedInAs": "Logged in as",
     "appearance": "Appearance",
     "appearanceDescription": "Choose how the workspace looks on this device.",
+    "colorMode": "Color Mode",
+    "colorModeDescription": "Toggle between light canvas and dark mode",
+    "accountSecurity": "Account & Security",
+    "accountSecurityDescription": "Authenticated user details & security profile",
     "notifications": "Notifications",
     "notificationsDescription": "Control which workspace updates you receive.",
     "systemDefault": "System default",
@@ -77,7 +84,12 @@
     "theme": "Theme",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode",
-    "switchTheme": "Switch to {{theme}}"
+    "switchTheme": "Switch to {{theme}}",
+    "emailAddress": "Email Address",
+    "activeTenant": "Active Tenant / Organization",
+    "authRole": "Authorization Role",
+    "archConfig": "Architecture Configuration",
+    "archConfigDescription": "Core runtime stack and infrastructure drivers"
   },
   "errors": {
     "notFound": "Page not found",

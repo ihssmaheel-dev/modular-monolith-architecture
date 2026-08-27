@@ -13,8 +13,10 @@
     "noResults": "No se encontraron resultados",
     "confirm": "Confirmar",
     "back": "Atrás",
+    "previous": "Anterior",
     "next": "Siguiente",
-    "submit": "Enviar"
+    "submit": "Enviar",
+    "pageOf": "Página {{page}} de {{totalPages}}"
   },
   "auth": {
     "welcomeBack": "Te damos la bienvenida de nuevo",
@@ -108,7 +110,8 @@
     "edit": "Editar usuario",
     "delete": "Eliminar usuario",
     "profile": "Perfil",
-    "noUsers": "No se encontraron usuarios"
+    "noUsers": "No se encontraron usuarios",
+    "verified": "Verificado"
   },
   "settings": {
     "manageAccount": "Administra tu cuenta",
@@ -116,6 +119,10 @@
     "loggedInAs": "Sesión iniciada como",
     "appearance": "Apariencia",
     "appearanceDescription": "Elige cómo se muestra el espacio de trabajo en este dispositivo.",
+    "colorMode": "Modo de color",
+    "colorModeDescription": "Alternar entre modo claro y modo oscuro",
+    "accountSecurity": "Cuenta y seguridad",
+    "accountSecurityDescription": "Detalles del usuario autenticado y perfil de seguridad",
     "notifications": "Notificaciones",
     "notificationsDescription": "Controla qué novedades del espacio de trabajo recibes.",
     "systemDefault": "Configuración del sistema",
@@ -126,7 +133,12 @@
     "theme": "Tema",
     "darkMode": "Modo oscuro",
     "lightMode": "Modo claro",
-    "switchTheme": "Cambiar a {{theme}}"
+    "switchTheme": "Cambiar a {{theme}}",
+    "emailAddress": "Dirección de correo electrónico",
+    "activeTenant": "Inquilino / Organización activa",
+    "authRole": "Rol de autorización",
+    "archConfig": "Configuración de arquitectura",
+    "archConfigDescription": "Pila de tiempo de ejecución central y controladores de infraestructura"
   },
   "errors": {
     "notFound": "Página no encontrada",

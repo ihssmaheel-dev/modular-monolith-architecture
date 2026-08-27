@@ -34,8 +34,8 @@ function SettingsPage() {
           </CardHeader>
           <CardContent className="flex items-center justify-between pt-2 border-t border-border">
             <div>
-              <p className="text-sm font-medium text-foreground">Color Mode</p>
-              <p className="text-xs text-muted-foreground">Toggle between light canvas and dark mode</p>
+              <p className="text-sm font-medium text-foreground">{t("settings.colorMode")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.colorModeDescription")}</p>
             </div>
             <ThemeToggle />
           </CardContent>
@@ -46,30 +46,30 @@ function SettingsPage() {
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2.5">
               <Shield className="h-4 w-4 text-primary" />
-              <CardTitle className="text-lg">Account & Security</CardTitle>
+              <CardTitle className="text-lg">{t("settings.accountSecurity")}</CardTitle>
             </div>
             <CardDescription className="text-xs">
-              Authenticated user details & security profile
+              {t("settings.accountSecurityDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-2 border-t border-border">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">User ID</span>
+                <span className="text-xs text-muted-foreground">{t("users.userId")}</span>
                 <p className="font-mono text-xs text-foreground">{user?.id ?? "--"}</p>
               </div>
               <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">Email Address</span>
+                <span className="text-xs text-muted-foreground">{t("settings.emailAddress")}</span>
                 <p className="font-mono text-xs text-foreground">{user?.email ?? "--"}</p>
               </div>
               <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">Active Tenant / Organization</span>
+                <span className="text-xs text-muted-foreground">{t("settings.activeTenant")}</span>
                 <p className="font-mono text-xs text-foreground">
                   {activeTenantId ? activeTenantId : "Global / Single-Tenant"}
                 </p>
               </div>
               <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">Authorization Role</span>
+                <span className="text-xs text-muted-foreground">{t("settings.authRole")}</span>
                 <div>
                   <Badge variant="outline" className="text-[11px] font-mono">
                     {user?.role ?? "member"}
@@ -85,10 +85,10 @@ function SettingsPage() {
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2.5">
               <HardDrive className="h-4 w-4 text-primary" />
-              <CardTitle className="text-lg">Architecture Configuration</CardTitle>
+              <CardTitle className="text-lg">{t("settings.archConfig")}</CardTitle>
             </div>
             <CardDescription className="text-xs">
-              Core runtime stack and infrastructure drivers
+              {t("settings.archConfigDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 pt-2 border-t border-border text-xs">

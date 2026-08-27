@@ -13,8 +13,10 @@
     "noResults": "Aucun résultat trouvé",
     "confirm": "Confirmer",
     "back": "Retour",
+    "previous": "Précédent",
     "next": "Suivant",
-    "submit": "Soumettre"
+    "submit": "Soumettre",
+    "pageOf": "Page {{page}} sur {{totalPages}}"
   },
   "auth": {
     "welcomeBack": "Bon retour",
@@ -108,7 +110,8 @@
     "edit": "Modifier l'utilisateur",
     "delete": "Supprimer l'utilisateur",
     "profile": "Profil",
-    "noUsers": "Aucun utilisateur trouvé"
+    "noUsers": "Aucun utilisateur trouvé",
+    "verified": "Vérifié"
   },
   "settings": {
     "manageAccount": "Gérez votre compte",
@@ -116,6 +119,10 @@
     "loggedInAs": "Connecté en tant que",
     "appearance": "Apparence",
     "appearanceDescription": "Choisissez l'apparence de l'espace de travail sur cet appareil.",
+    "colorMode": "Mode couleur",
+    "colorModeDescription": "Basculer entre le mode clair et le mode sombre",
+    "accountSecurity": "Compte et sécurité",
+    "accountSecurityDescription": "Détails de l'utilisateur authentifié et profil de sécurité",
     "notifications": "Notifications",
     "notificationsDescription": "Contrôlez les actualités de l'espace de travail que vous recevez.",
     "systemDefault": "Réglage du système",
@@ -126,7 +133,12 @@
     "theme": "Thème",
     "darkMode": "Mode sombre",
     "lightMode": "Mode clair",
-    "switchTheme": "Passer en {{theme}}"
+    "switchTheme": "Passer en {{theme}}",
+    "emailAddress": "Adresse e-mail",
+    "activeTenant": "Organisation / Locataire actif",
+    "authRole": "Rôle d'autorisation",
+    "archConfig": "Configuration de l'architecture",
+    "archConfigDescription": "Pile d'exécution principale et pilotes d'infrastructure"
   },
   "errors": {
     "notFound": "Page non trouvée",
