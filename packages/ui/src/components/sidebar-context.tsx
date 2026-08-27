@@ -30,7 +30,7 @@ export function useSidebar() {
 }
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean>(false);
+  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
 
   React.useEffect(() => {
     const mql = window.matchMedia("(max-width: 768px)");
@@ -40,7 +40,7 @@ export function useIsMobile() {
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  return isMobile;
+  return !!isMobile;
 }
 
 export interface SidebarProviderProps extends React.ComponentProps<"div"> {

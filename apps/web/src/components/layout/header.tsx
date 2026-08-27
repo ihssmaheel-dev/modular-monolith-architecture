@@ -27,7 +27,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center gap-3">
-        <SidebarTrigger className="size-8 -ml-1 text-muted-foreground hover:text-foreground hover:bg-accent" />
+        <SidebarTrigger className="size-8 -ml-1.5 shrink-0 border border-transparent hover:border-border/50" />
         <Separator orientation="vertical" className="h-5" />
         <Breadcrumb>
           <BreadcrumbList>
