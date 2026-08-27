@@ -45,53 +45,49 @@ function ResetPasswordPage() {
   };
 
   return (
-    <Card variant="featured" className="p-2 sm:p-4">
-      <CardHeader className="text-center pb-6">
-        <div className="mx-auto pb-1 text-[10px] font-semibold uppercase tracking-[1.5px] text-muted-foreground">
-          Security
-        </div>
-        <CardTitle className="text-2xl font-semibold tracking-tight">
-          {t("auth.resetPasswordTitle")}
-        </CardTitle>
-        <CardDescription className="text-sm">
-          {t("auth.resetPasswordDescription")}
-        </CardDescription>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="text-2xl">{t("auth.resetPasswordTitle")}</CardTitle>
+        <CardDescription>{t("auth.resetPasswordDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-sm bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
-              {error}
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4">
+            {error && (
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
+                {error}
+              </div>
+            )}
+            {message && (
+              <div className="rounded-md bg-primary/10 border border-primary/20 p-3 text-xs text-primary font-medium">
+                {message}
+              </div>
+            )}
+            <div className="grid gap-2">
+              <Label htmlFor="password">{t("auth.newPassword")}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("auth.createPasswordPlaceholder")}
+                minLength={8}
+                required
+              />
             </div>
-          )}
-          {message && (
-            <div className="rounded-sm bg-[#00d722]/10 border border-[#00d722]/30 p-3 text-xs text-[#080808] font-medium">
-              {message}
-            </div>
-          )}
-          <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-xs font-medium text-foreground">
-              {t("auth.newPassword")}
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder={t("auth.createPasswordPlaceholder")}
-              minLength={8}
-              required
-            />
+            <Button type="submit" className="w-full" disabled={loading || !token}>
+              {loading ? t("auth.resettingPassword") : t("auth.resetPasswordTitle")}
+            </Button>
           </div>
-          <Button type="submit" className="w-full mt-2" disabled={loading || !token}>
-            {loading ? t("auth.resettingPassword") : t("auth.resetPasswordTitle")}
-          </Button>
+          <div className="mt-4 text-center text-xs text-muted-foreground">
+            <Link
+              to="/login"
+              className="text-foreground underline underline-offset-4 font-medium hover:text-primary"
+            >
+              {t("auth.backToLogin")}
+            </Link>
+          </div>
         </form>
-        <div className="mt-6 text-center text-xs text-muted-foreground border-t border-border pt-4">
-          <Link to="/login" className="text-foreground font-semibold hover:underline">
-            {t("auth.backToLogin")}
-          </Link>
-        </div>
       </CardContent>
     </Card>
   );

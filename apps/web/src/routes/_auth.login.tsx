@@ -49,73 +49,70 @@ function LoginPage() {
   };
 
   return (
-    <Card className="border-border/80 bg-card shadow-sm">
-      <CardHeader className="text-center pb-4">
-        <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-          {t("auth.welcomeBack")}
-        </CardTitle>
-        <CardDescription className="text-sm text-muted-foreground">
-          {t("auth.loginDescription")}
-        </CardDescription>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="text-2xl">{t("auth.welcomeBack")}</CardTitle>
+        <CardDescription>{t("auth.loginDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
-              {error}
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-xs font-medium text-foreground">
-              {t("auth.email")}
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder={t("auth.emailPlaceholder")}
-              autoComplete="email"
-              className="h-10"
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="text-xs text-destructive font-medium">{errors.email.message}</p>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid gap-4">
+            {error && (
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
+                {error}
+              </div>
             )}
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-xs font-medium text-foreground">
-                {t("auth.password")}
-              </Label>
-              <Link to="/forgot-password" className="text-xs text-primary font-medium hover:underline">
-                {t("auth.forgotPassword")}
-              </Link>
+            <div className="grid gap-2">
+              <Label htmlFor="email">{t("auth.email")}</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder={t("auth.emailPlaceholder")}
+                autoComplete="email"
+                required
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive font-medium">{errors.email.message}</p>
+              )}
             </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder={t("auth.passwordPlaceholder")}
-              autoComplete="current-password"
-              className="h-10"
-              {...register("password")}
-            />
-            {errors.password && (
-              <p className="text-xs text-destructive font-medium">{errors.password.message}</p>
-            )}
+            <div className="grid gap-2">
+              <div className="flex items-center">
+                <Label htmlFor="password">{t("auth.password")}</Label>
+                <Link
+                  to="/forgot-password"
+                  className="ml-auto inline-block text-xs underline hover:text-primary"
+                >
+                  {t("auth.forgotPassword")}
+                </Link>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                placeholder={t("auth.passwordPlaceholder")}
+                autoComplete="current-password"
+                required
+                {...register("password")}
+              />
+              {errors.password && (
+                <p className="text-xs text-destructive font-medium">{errors.password.message}</p>
+              )}
+            </div>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
+            </Button>
           </div>
-          <Button type="submit" className="w-full h-10 font-medium" disabled={isSubmitting}>
-            {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
-          </Button>
+          <div className="mt-4 text-center text-xs text-muted-foreground">
+            {t("auth.noAccount")}{" "}
+            <Link
+              to="/register"
+              search={{ invitationToken }}
+              className="text-foreground underline underline-offset-4 font-medium hover:text-primary"
+            >
+              {t("auth.register")}
+            </Link>
+          </div>
         </form>
-        <div className="mt-6 text-center text-xs text-muted-foreground border-t border-border pt-4">
-          {t("auth.noAccount")}{" "}
-          <Link
-            to="/register"
-            search={{ invitationToken }}
-            className="text-foreground font-semibold hover:underline underline-offset-4"
-          >
-            {t("auth.register")}
-          </Link>
-        </div>
       </CardContent>
     </Card>
   );
