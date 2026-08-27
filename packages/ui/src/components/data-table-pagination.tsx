@@ -1,5 +1,6 @@
 import type { Table } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { cn } from "../lib/utils";
 import { Button } from "./button";
 
 export interface DataTablePaginationProps<TData> {
@@ -15,7 +16,7 @@ export function DataTablePagination<TData>({
   const totalCount = table.getFilteredRowModel().rows.length;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4">
+    <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4")}>
       <div className="flex-1 text-sm text-muted-foreground">
         {selectedCount > 0 ? (
           <span>

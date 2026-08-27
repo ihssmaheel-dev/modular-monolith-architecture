@@ -67,7 +67,7 @@ function FileListItem({ file, onDelete, labels }: FileListItemProps) {
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-md border p-3 hover:bg-muted/50">
+    <div className={cn("flex items-center gap-3 rounded-md border p-3 hover:bg-muted/50")}>
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted">
         <span className="text-xs font-medium uppercase">{getFileIcon(file.contentType)}</span>
       </div>

@@ -29,15 +29,15 @@ function Badge({ className, variant = "default", pill = false, ...props }: Badge
           "bg-secondary text-secondary-foreground": variant === "secondary",
           "bg-destructive text-destructive-foreground": variant === "destructive",
           "border border-border text-foreground bg-card": variant === "outline",
-          "bg-[#146ef5] text-white": variant === "info",
-          "bg-[#ffae13] text-black font-semibold": variant === "warning",
-          "bg-[#00d722] text-black font-semibold": variant === "success",
-          // 5-stop chromatic category accents
+          "bg-info text-white": variant === "info",
+          "bg-warning text-black font-semibold": variant === "warning",
+          "bg-success text-white font-semibold": variant === "success",
+          // 5-stop chromatic category accents — all theme via --color-accent-* vars
           "bg-accent-purple text-white": variant === "purple",
           "bg-accent-pink text-white": variant === "pink",
           "bg-accent-blue text-white": variant === "blue",
           "bg-accent-orange text-white": variant === "orange",
-          "bg-accent-green text-foreground font-semibold": variant === "green",
+          "bg-accent-green text-white font-semibold": variant === "green",
         },
         className,
       )}

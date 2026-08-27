@@ -12,9 +12,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       className={cn(
         "rounded-md text-card-foreground transition-all",
         {
-          "border border-border bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]": variant === "default",
-          "border border-border bg-card shadow-[0_84px_24px_rgba(0,0,0,0),0_54px_22px_rgba(0,0,0,0.01),0_30px_18px_rgba(0,0,0,0.04),0_13px_13px_rgba(0,0,0,0.08),0_3px_7px_rgba(0,0,0,0.09)]":
-            variant === "featured",
+          "border border-border bg-card shadow-sm": variant === "default",
+          "border border-border bg-card shadow-layered": variant === "featured",
           "bg-primary text-primary-foreground border-transparent shadow-md": variant === "dark",
           "bg-secondary/60 border border-transparent": variant === "flat",
         },

@@ -1,5 +1,6 @@
 import type { Table } from "@tanstack/react-table";
 import { SlidersHorizontal } from "lucide-react";
+import { cn } from "../lib/utils";
 import { Button } from "./button";
 import {
   DropdownMenu,
@@ -22,12 +23,12 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="ml-auto hidden h-8 lg:flex">
+        <Button variant="outline" size="sm" className={cn("ml-auto hidden h-8 lg:flex")}>
           <SlidersHorizontal className="mr-2 h-4 w-4" />
           Columns
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[150px]">
+      <DropdownMenuContent align="end" className={cn("w-[150px]")}>
         <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {columns.map((column) => (
