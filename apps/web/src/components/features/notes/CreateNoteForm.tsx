@@ -43,9 +43,9 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
   };
 
   return (
-    <Card variant="featured">
-      <CardHeader>
-        <CardTitle className="text-lg">{t("notes.createNote")}</CardTitle>
+    <Card variant="featured" className="overflow-hidden">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-base font-semibold">{t("notes.createNote")}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
@@ -56,6 +56,7 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
             <Input
               id="title"
               placeholder={t("notes.noteTitlePlaceholder")}
+              className="h-9"
               {...register("title")}
             />
             {errors.title && (
@@ -70,20 +71,20 @@ export function CreateNoteForm({ onSuccess }: { onSuccess?: () => void }) {
               id="content"
               placeholder={t("notes.contentPlaceholder")}
               {...register("content")}
-              className="flex min-h-[90px] w-full rounded-sm border border-border bg-card px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:border-foreground focus-visible:ring-1 focus-visible:ring-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
             />
             {errors.content && (
               <p className="text-xs text-destructive font-medium">{errors.content.message}</p>
             )}
           </div>
           {error && (
-            <div className="rounded-sm bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
               {error}
             </div>
           )}
         </CardContent>
-        <CardFooter className="pt-2">
-          <Button type="submit" disabled={createMutation.isPending} className="w-full">
+        <CardFooter className="pt-2 bg-muted/30 border-t">
+          <Button type="submit" disabled={createMutation.isPending} className="w-full h-9 font-medium">
             {createMutation.isPending ? t("notes.creating") : t("notes.createButton")}
           </Button>
         </CardFooter>

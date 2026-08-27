@@ -7,20 +7,20 @@ export function DashboardHeroSection() {
   const user = useAuthStore((state) => state.user);
 
   return (
-    <section className="space-y-3 pt-2">
-      <div className="flex items-center gap-2">
+    <section className="space-y-4 py-2">
+      <div className="flex items-center gap-2.5">
         <span className="eyebrow">Enterprise Starter</span>
-        <Badge variant="green" className="text-[10px]">
+        <Badge variant="green" className="text-[10px] font-medium tracking-widest uppercase px-2 py-0.5">
           Ready to Build
         </Badge>
       </div>
-      <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold tracking-tight text-foreground leading-[1.1]">
+      <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-semibold tracking-tight text-foreground leading-[1.05] max-w-4xl">
         {t("dashboard.title")}
       </h1>
       <p className="text-muted-foreground text-base md:text-lg max-w-3xl font-normal leading-relaxed">
-        {t("dashboard.welcome", { name: user?.name ?? user?.email ?? "Engineer" })}. A
-        production-grade TypeScript modular monolith foundation built for ERP, Facility Management,
-        or custom enterprise applications.
+        {t("dashboard.welcome", { name: user?.name ?? user?.email ?? "Engineer" })} — a
+        production-grade TypeScript modular monolith foundation for ERP, facility management
+        and custom enterprise applications.
       </p>
     </section>
   );

@@ -23,29 +23,34 @@ function NotesRoute() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto py-2">
+    <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
-        <div className="space-y-1">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-border pb-6">
+        <div className="space-y-1.5">
           <span className="eyebrow">Domain Vertical Slice</span>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("notes.title")}</h1>
-          <p className="text-muted-foreground text-sm max-w-xl">{t("notes.description")}</p>
+          <p className="text-muted-foreground text-sm max-w-xl leading-relaxed">{t("notes.description")}</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} variant={showForm ? "outline" : "default"}>
+        <Button
+          onClick={() => setShowForm(!showForm)}
+          variant={showForm ? "outline" : "default"}
+          size="sm"
+          className="shrink-0 h-9 gap-1.5 font-medium"
+        >
           {showForm ? (
             <>
-              <X className="mr-1.5 h-4 w-4" /> {t("notes.cancel")}
+              <X className="h-4 w-4" /> {t("notes.cancel")}
             </>
           ) : (
             <>
-              <Plus className="mr-1.5 h-4 w-4" /> {t("notes.newNote")}
+              <Plus className="h-4 w-4" /> {t("notes.newNote")}
             </>
           )}
         </Button>
       </div>
 
       {showForm && (
-        <div className="mb-8 animate-in fade-in-50 duration-200">
+        <div className="animate-in fade-in-50 duration-200">
           <CreateNoteForm key={activeTenantId} onSuccess={handleSuccess} />
         </div>
       )}

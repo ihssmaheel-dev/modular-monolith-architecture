@@ -5,14 +5,14 @@ export function CategoryShowcase() {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="eyebrow">Core Architectural Capabilities</span>
-        <span className="text-xs text-muted-foreground hidden sm:inline">
+        <span className="text-xs text-muted-foreground hidden sm:inline font-mono tracking-wide">
           5-Stop Chromatic System
         </span>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {/* 1. Purple: Design & Contracts */}
-        <div className="rounded-md bg-accent-purple text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm transition-transform hover:-translate-y-0.5">
+        <div className="rounded-md bg-accent-purple text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Layers className="h-5 w-5 opacity-90" />
@@ -28,7 +28,7 @@ export function CategoryShowcase() {
         </div>
 
         {/* 2. Pink: Fine-Grained Authorization */}
-        <div className="rounded-md bg-accent-pink text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm transition-transform hover:-translate-y-0.5">
+        <div className="rounded-md bg-accent-pink text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Shield className="h-5 w-5 opacity-90" />
@@ -44,7 +44,7 @@ export function CategoryShowcase() {
         </div>
 
         {/* 3. Blue: Observability */}
-        <div className="rounded-md bg-accent-blue text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm transition-transform hover:-translate-y-0.5">
+        <div className="rounded-md bg-accent-blue text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Activity className="h-5 w-5 opacity-90" />
@@ -60,7 +60,7 @@ export function CategoryShowcase() {
         </div>
 
         {/* 4. Orange: Realtime & Workers */}
-        <div className="rounded-md bg-accent-orange text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm transition-transform hover:-translate-y-0.5">
+        <div className="rounded-md bg-accent-orange text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Zap className="h-5 w-5 opacity-90" />
@@ -76,7 +76,7 @@ export function CategoryShowcase() {
         </div>
 
         {/* 5. Green: Optimistic UI */}
-        <div className="rounded-md bg-accent-green text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm transition-transform hover:-translate-y-0.5">
+        <div className="rounded-md bg-accent-green text-white p-5 flex flex-col justify-between min-h-[160px] shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Sparkles className="h-5 w-5 text-white" />

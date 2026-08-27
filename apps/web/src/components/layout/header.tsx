@@ -1,6 +1,7 @@
 import { useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { TenantSwitcher } from "@/components/layout/tenant-switcher";
 import {
   SidebarTrigger,
   Separator,
@@ -24,24 +25,30 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-border px-4 select-none sticky top-0 z-40 bg-background">
-      <div className="flex items-center gap-2 px-2">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center gap-3">
+        <SidebarTrigger className="size-8 -ml-1 text-muted-foreground hover:text-foreground hover:bg-accent" />
+        <Separator orientation="vertical" className="h-5" />
         <Breadcrumb>
           <BreadcrumbList>
-            <BreadcrumbItem className="hidden md:block">
-              <BreadcrumbLink href="#">Platform</BreadcrumbLink>
+            <BreadcrumbItem className="hidden sm:block">
+              <BreadcrumbLink href="/" className="text-xs font-medium tracking-wide uppercase text-muted-foreground hover:text-foreground transition-colors">
+                Platform
+              </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator className="hidden md:block" />
+            <BreadcrumbSeparator className="hidden sm:block" />
             <BreadcrumbItem>
-              <BreadcrumbPage>{getPageTitle()}</BreadcrumbPage>
+              <BreadcrumbPage className="font-semibold tracking-tight">{getPageTitle()}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </div>
 
       <div className="flex items-center gap-2">
+        <div className="hidden sm:flex items-center gap-2 mr-2">
+          <TenantSwitcher />
+        </div>
+        <Separator orientation="vertical" className="h-5 hidden sm:block" />
         <ThemeToggle />
       </div>
     </header>

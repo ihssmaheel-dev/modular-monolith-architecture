@@ -41,40 +41,42 @@ export function NotesList() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {notes.length === 0 ? (
-        <div className="col-span-full rounded-md border border-dashed border-border p-12 text-center space-y-3 bg-card/50">
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-sm bg-secondary text-muted-foreground">
+        <div className="col-span-full rounded-lg border border-dashed border-border p-10 text-center space-y-3 bg-muted/30">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-background border shadow-sm text-muted-foreground">
             <FileText className="h-5 w-5" />
           </div>
-          <p className="text-sm font-medium text-foreground">{t("notes.noNotes")}</p>
-          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Click "New Note" above to test the 0ms instant optimistic mutation update.
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">{t("notes.noNotes")}</p>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              Click "New Note" above to test the 0ms instant optimistic mutation.
+            </p>
+          </div>
         </div>
       ) : (
         notes.map((note) => (
-          <Card key={note.id} className="flex flex-col justify-between hover:border-foreground/40 transition-colors">
+          <Card key={note.id} className="flex flex-col justify-between hover:shadow-md hover:border-border transition-all group">
             <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-lg">{note.title}</CardTitle>
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground shrink-0 font-mono">
+              <div className="flex items-start justify-between gap-3">
+                <CardTitle className="text-base font-semibold leading-tight line-clamp-2">{note.title}</CardTitle>
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground shrink-0 font-mono bg-muted px-1.5 py-0.5 rounded">
                   <Calendar className="h-3 w-3" />
                   {new Date(note.createdAt).toLocaleDateString()}
                 </div>
               </div>
-              <CardDescription className="text-xs">ID: {note.id.slice(0, 8)}...</CardDescription>
+              <CardDescription className="text-xs font-mono">ID: {note.id.slice(0, 8)}</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 py-2">
-              <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">{note.content}</p>
+              <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed line-clamp-4">{note.content}</p>
             </CardContent>
-            <CardFooter className="flex justify-end pt-3 border-t border-border mt-3">
+            <CardFooter className="flex justify-end pt-3 border-t bg-muted/20">
               <Can do="notes:delete">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleDelete(note.id)}
-                  className="text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  className="h-7 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1"
                 >
-                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5" />
                   {t("common.delete")}
                 </Button>
               </Can>
