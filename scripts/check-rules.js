@@ -46,13 +46,6 @@ function checkFile(file) {
   }
   if (name.endsWith("routeTree.gen.ts")) return;
   if (name.endsWith(".d.ts")) return;
-  if (
-    name.includes("/infrastructure/schemas/") &&
-    fileName.includes("mongoose") &&
-    !fileName.endsWith(".mongoose.schema.ts")
-  ) {
-    report(file, "Mongoose schema files must use the .mongoose.schema.ts suffix");
-  }
   if (fileName.includes("mongoose") || fileName.includes("mongo")) {
     report(file, "Mongo/Mongoose files are forbidden — use Drizzle schemas (infrastructure/schemas/*.schema.ts)");
   }
