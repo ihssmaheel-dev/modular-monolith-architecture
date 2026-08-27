@@ -3,6 +3,16 @@ import { FeatureFlagsService } from "./feature-flags.service";
 import type { PinoLoggerService } from "../logger/logger.service";
 import type { RedisService } from "../redis/redis.service";
 
+vi.mock("ioredis", () => {
+  return {
+    default: vi.fn().mockImplementation(() => ({
+      on: vi.fn(),
+      subscribe: vi.fn().mockResolvedValue("OK"),
+      quit: vi.fn().mockResolvedValue("OK"),
+    })),
+  };
+});
+
 describe("FeatureFlagsService", () => {
   let service: FeatureFlagsService;
   let mockLogger: PinoLoggerService;

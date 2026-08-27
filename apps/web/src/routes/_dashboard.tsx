@@ -1,27 +1,66 @@
-import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Navigate, Outlet, useLocation } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/auth.store";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+  Separator,
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@repo/ui";
 
 function DashboardLayout() {
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
+  const getPageTitle = () => {
+    if (location.pathname === "/notes") return t("notes.title");
+    if (location.pathname === "/users") return t("users.title");
+    if (location.pathname === "/settings") return t("settings.title");
+    return t("dashboard.title");
+  };
+
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <Sidebar />
-      <div className="flex flex-1 flex-col min-w-0">
-        <Header />
-        <main className="flex-1 overflow-auto bg-background">
-          <div className="mx-auto max-w-7xl px-6 py-8 md:px-8">
-            <Outlet />
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-border px-4 select-none">
+          <div className="flex items-center gap-2 px-2">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">Platform</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{getPageTitle()}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+          </div>
+        </header>
+        <main className="flex flex-1 flex-col gap-4 p-4 pt-4 md:p-6 bg-background">
+          <Outlet />
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 

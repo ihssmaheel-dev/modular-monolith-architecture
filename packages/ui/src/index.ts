@@ -29,6 +29,18 @@ export {
   DialogDescription,
 } from "./components/dialog";
 export {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from "./components/sheet";
+export {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -69,4 +81,44 @@ export { DataTablePagination, type DataTablePaginationProps } from "./components
 export { DataTableViewOptions, type DataTableViewOptionsProps } from "./components/data-table-view-options";
 export { FileUpload } from "./components/file-upload";
 export { FileList } from "./components/file-list";
+export {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+} from "./components/breadcrumb";
+export {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "./components/collapsible";
+export {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInput,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuAction,
+  SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSkeleton,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarSeparator,
+  SidebarTrigger,
+  useSidebar,
+} from "./components/sidebar";
 export { cn } from "./lib/utils";
