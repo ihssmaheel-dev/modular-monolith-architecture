@@ -1,4 +1,4 @@
-export { Button, type ButtonProps } from "./components/button";
+export { Button, buttonVariants, type ButtonProps } from "./components/button";
 export {
   Card,
   CardHeader,
@@ -121,4 +121,96 @@ export {
   SidebarTrigger,
   useSidebar,
 } from "./components/sidebar";
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
+} from "./components/select";
+export { Textarea, type TextareaProps } from "./components/textarea";
+export { Switch } from "./components/switch";
+export { Slider } from "./components/slider";
+export { RadioGroup, RadioGroupItem } from "./components/radio-group";
+export { Toggle, type ToggleProps } from "./components/toggle";
+export { ToggleGroup, ToggleGroupItem } from "./components/toggle-group";
+export { Alert, AlertTitle, AlertDescription } from "./components/alert";
+export { Progress } from "./components/progress";
+export {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogOverlay,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "./components/alert-dialog";
+export {
+  Command,
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandShortcut,
+  CommandSeparator,
+} from "./components/command";
+export {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuCheckboxItem,
+  ContextMenuRadioItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuGroup,
+  ContextMenuPortal,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuRadioGroup,
+} from "./components/context-menu";
+export { HoverCard, HoverCardTrigger, HoverCardContent } from "./components/hover-card";
+export {
+  Menubar,
+  MenubarMenu,
+  MenubarTrigger,
+  MenubarContent,
+  MenubarItem,
+  MenubarSeparator,
+  MenubarLabel,
+  MenubarCheckboxItem,
+  MenubarRadioGroup,
+  MenubarRadioItem,
+  MenubarPortal,
+  MenubarSubContent,
+  MenubarSubTrigger,
+  MenubarGroup,
+  MenubarSub,
+  MenubarShortcut,
+} from "./components/menubar";
+export {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuContent,
+  NavigationMenuTrigger,
+  NavigationMenuLink,
+  NavigationMenuIndicator,
+  NavigationMenuViewport,
+} from "./components/navigation-menu";
+export { ScrollArea, ScrollBar } from "./components/scroll-area";
+export { AspectRatio } from "./components/aspect-ratio";
 export { cn } from "./lib/utils";
