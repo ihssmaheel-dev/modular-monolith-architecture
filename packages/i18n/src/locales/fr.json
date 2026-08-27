@@ -170,7 +170,9 @@
       "validationFailed": "Échec de la validation",
       "rateLimited": "Trop de requêtes",
       "sessionExpired": "Session expirée",
-      "invalidToken": "Token invalide"
+      "invalidToken": "Token invalide",
+      "circuitOpen": "Service temporairement indisponible en raison d’une défaillance en amont",
+      "bulkheadRejected": "Trop de requêtes simultanées, veuillez réessayer sous peu"
     },
     "health": {
       "redisUnconfigured": "Redis n’est pas configuré, mais il est facultatif",

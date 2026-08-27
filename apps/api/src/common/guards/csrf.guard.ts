@@ -33,16 +33,16 @@ export class CsrfGuard implements CanActivate {
     const headerToken = request.headers?.["x-xsrf-token"] ?? request.headers?.["x-csrf-token"];
 
     if (!cookieToken || !headerToken) {
-      throw new ForbiddenException("Invalid or missing CSRF token");
+      throw new ForbiddenException();
     }
 
     if (cookieToken.length !== headerToken.length) {
-      throw new ForbiddenException("Invalid CSRF token");
+      throw new ForbiddenException();
     }
 
     const isValid = timingSafeEqual(Buffer.from(cookieToken), Buffer.from(headerToken));
     if (!isValid) {
-      throw new ForbiddenException("Invalid CSRF token");
+      throw new ForbiddenException();
     }
 
     return true;

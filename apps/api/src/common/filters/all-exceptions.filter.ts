@@ -76,6 +76,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (typeof value !== "object" || value === null) return null;
     if (!("message" in value) || !("error" in value)) return null;
     if (typeof value.message !== "string" || typeof value.error !== "string") return null;
+    if (value.message === value.error) return null;
     return { message: value.message, code: value.error };
   }
 }

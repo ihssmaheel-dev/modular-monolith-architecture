@@ -174,7 +174,9 @@
       "deleteFailed": "Delete failed",
       "invalidAddress": "No recipients provided",
       "configError": "Configuration error",
-      "sendFailed": "Failed to send email"
+      "sendFailed": "Failed to send email",
+      "circuitOpen": "Service temporarily unavailable due to upstream failure",
+      "bulkheadRejected": "Too many concurrent requests, please retry shortly"
     },
     "health": {
       "redisUnconfigured": "Redis unconfigured but optional",
