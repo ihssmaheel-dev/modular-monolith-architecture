@@ -7,19 +7,20 @@ export default defineConfig({
   plugins: [TanStackRouterVite({ autoCodeSplitting: true }), react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@repo/contracts": path.resolve(__dirname, "../../packages/contracts/src"),
-      "@repo/authorization": path.resolve(__dirname, "../../packages/authorization/src"),
-      "@repo/i18n": path.resolve(__dirname, "../../packages/i18n/src"),
-      "@repo/design-tokens": path.resolve(__dirname, "../../packages/design-tokens/src"),
-      "@repo/api-client": path.resolve(__dirname, "../../packages/api-client/src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
+      "@repo/contracts": path.resolve(import.meta.dirname, "../../packages/contracts/src"),
+      "@repo/authorization": path.resolve(import.meta.dirname, "../../packages/authorization/src"),
+      "@repo/i18n": path.resolve(import.meta.dirname, "../../packages/i18n/src"),
+      "@repo/design-tokens": path.resolve(import.meta.dirname, "../../packages/design-tokens/src"),
+      "@repo/api-client": path.resolve(import.meta.dirname, "../../packages/api-client/src"),
     },
   },
   server: {
     port: 5173,
+    host: "127.0.0.1",
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        target: "http://127.0.0.1:3000",
         changeOrigin: true,
       },
     },
