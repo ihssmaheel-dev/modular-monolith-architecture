@@ -1,41 +1,27 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@repo/ui";
-import { type OrganizationResponse } from "@repo/contracts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Input, Label, Button } from "@repo/ui";
 import { api } from "@/lib/api";
 import { useTenantStore } from "@/stores/tenant.store";
 
-interface CreateOrgDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-export function CreateOrgDialog({ open, onOpenChange }: CreateOrgDialogProps) {
+export function CreateOrgDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const [newOrgName, setNewOrgName] = useState("");
-  const selectTenant = useTenantStore((state) => state.selectTenant);
+  const qc = useQueryClient();
+  const selectTenant = useTenantStore((s) => s.selectTenant);
+  const [name, setName] = useState("");
 
-  const createOrganization = useMutation({
-    mutationFn: async (name: string) => {
-      const response = await api.tenancy.createOrganization({ body: { name } });
-      if (response.status !== 201) throw new Error("create-organization-failed");
-      return response.body as OrganizationResponse;
+  const m = useMutation({
+    mutationFn: async () => {
+      const r = await api.tenancy.createOrganization({ body: { name } });
+      if (r.status !== 201) throw new Error("create failed");
+      return r.body;
     },
-    onSuccess: async (organization: OrganizationResponse) => {
-      selectTenant(organization.id);
-      setNewOrgName("");
+    onSuccess: (org) => {
+      qc.invalidateQueries({ queryKey: ["organizations"] });
+      selectTenant(org.id);
+      setName("");
       onOpenChange(false);
-      await queryClient.invalidateQueries({ queryKey: ["organizations"] });
     },
   });
 
@@ -43,28 +29,18 @@ export function CreateOrgDialog({ open, onOpenChange }: CreateOrgDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-sm font-semibold">
-            {t("tenancy.createOrganization")}
-          </DialogTitle>
+          <DialogTitle className="text-base">{t("tenancy.createOrganization")}</DialogTitle>
+          <DialogDescription className="text-xs">{t("tenancy.createOrganizationDescription")}</DialogDescription>
         </DialogHeader>
-        <div className="py-2">
-          <Input
-            placeholder={t("tenancy.organizationName")}
-            value={newOrgName}
-            onChange={(e) => setNewOrgName(e.target.value)}
-            className="text-xs"
-          />
-        </div>
-        <DialogFooter>
-          <Button
-            size="sm"
-            disabled={createOrganization.isPending || !newOrgName.trim()}
-            onClick={() => createOrganization.mutate(newOrgName.trim())}
-            className="text-xs"
-          >
-            {t("common.create")}
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="org-name" className="text-xs font-medium">{t("tenancy.orgName")}</Label>
+            <Input id="org-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Inc" className="h-9" />
+          </div>
+          <Button onClick={() => m.mutate()} disabled={!name.trim() || m.isPending} className="w-full h-9 font-medium">
+            {m.isPending ? t("common.creating") : t("tenancy.create")}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

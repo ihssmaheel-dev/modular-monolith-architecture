@@ -10,11 +10,7 @@ interface NoteItem {
   createdAt: string;
 }
 
-interface RecentNotesPanelProps {
-  items?: NoteItem[];
-}
-
-export function RecentNotesPanel({ items }: RecentNotesPanelProps) {
+export function RecentNotesPanel({ items }: { items?: NoteItem[] }) {
   const { t } = useTranslation();
   const notes = items ?? [];
   return (

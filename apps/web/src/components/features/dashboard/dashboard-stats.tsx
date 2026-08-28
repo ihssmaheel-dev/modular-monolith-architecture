@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@repo/ui";
 import { Users, FileText, Building2, Activity, TrendingUp, CheckCircle2 } from "lucide-react";
 
-interface DashboardStatsProps {
+interface Props {
   userTotal?: number;
   usersLoading: boolean;
   notesTotal?: number;
@@ -9,10 +9,10 @@ interface DashboardStatsProps {
   tenancyMode?: string;
 }
 
-export function DashboardStats({ userTotal, usersLoading, notesTotal, notesCount, tenancyMode }: DashboardStatsProps) {
+export function DashboardStats({ userTotal, usersLoading, notesTotal, notesCount, tenancyMode }: Props) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="border-border/60 shadow-sm hover:shadow-md hover:border-border transition-all">
+      <Card className="border-border/60 shadow-sm hover:shadow-md transition-all">
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-xs font-medium tracking-wide uppercase text-muted-foreground">Total Users</CardTitle>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
@@ -29,8 +29,7 @@ export function DashboardStats({ userTotal, usersLoading, notesTotal, notesCount
           </div>
         </CardContent>
       </Card>
-
-      <Card className="border-border/60 shadow-sm hover:shadow-md hover:border-border transition-all">
+      <Card className="border-border/60 shadow-sm hover:shadow-md transition-all">
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-xs font-medium tracking-wide uppercase text-muted-foreground">Notes</CardTitle>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-purple text-white shadow-sm">
@@ -42,8 +41,7 @@ export function DashboardStats({ userTotal, usersLoading, notesTotal, notesCount
           <p className="text-xs text-muted-foreground">{notesCount} recent • tenant-scoped</p>
         </CardContent>
       </Card>
-
-      <Card className="border-border/60 shadow-sm hover:shadow-md hover:border-border transition-all">
+      <Card className="border-border/60 shadow-sm hover:shadow-md transition-all">
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-xs font-medium tracking-wide uppercase text-muted-foreground">Organization</CardTitle>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-blue text-white shadow-sm">
@@ -57,8 +55,7 @@ export function DashboardStats({ userTotal, usersLoading, notesTotal, notesCount
           <p className="text-xs text-muted-foreground">{tenancyMode === "multi" ? "Multi-tenant SaaS" : "Dedicated instance"}</p>
         </CardContent>
       </Card>
-
-      <Card className="border-border/60 shadow-sm hover:shadow-md hover:border-border transition-all">
+      <Card className="border-border/60 shadow-sm hover:shadow-md transition-all">
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-xs font-medium tracking-wide uppercase text-muted-foreground">System Health</CardTitle>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-sm">

@@ -16,6 +16,9 @@
     "previous": "Anterior",
     "next": "Siguiente",
     "submit": "Enviar",
+    "saving": "Guardando...",
+    "creating": "Creando...",
+    "sending": "Enviando...",
     "pageOf": "Página {{page}} de {{totalPages}}"
   },
   "auth": {
@@ -37,9 +40,18 @@
     "forgotDescription": "Introduce tu correo y te enviaremos un enlace de restablecimiento",
     "sending": "Enviando...",
     "sendResetLink": "Enviar enlace de restablecimiento",
+    "requestFailed": "La solicitud falló. Inténtalo de nuevo.",
+    "checkEmail": "Revisa tu correo",
+    "checkEmailDescription": "Si el correo existe, hemos enviado un enlace.",
+    "registerFailed": "No se pudo completar el registro",
+    "resetFailed": "No se pudo restablecer la contraseña",
     "rememberPassword": "¿Recuerdas tu contraseña?",
     "resetPasswordTitle": "Restablecer contraseña",
     "resetPasswordDescription": "Elige una contraseña nueva para tu cuenta",
+    "resetPassword": "Restablecer contraseña",
+    "resetDescription": "Introduce una nueva contraseña para tu cuenta",
+    "passwordReset": "Contraseña restablecida",
+    "passwordResetDescription": "Tu contraseña se ha restablecido correctamente",
     "newPassword": "Nueva contraseña",
     "resettingPassword": "Restableciendo la contraseña...",
     "backToLogin": "Volver al inicio de sesión",
@@ -93,6 +105,7 @@
   "dashboard": {
     "title": "Panel",
     "welcome": "¡Bienvenido, {{name}}!",
+    "subtitle": "Resumen del monolito modular",
     "stats": {
       "users": "Usuarios",
       "activeSessions": "Sesiones activas",
@@ -100,6 +113,7 @@
     }
   },
   "users": {
+    "eyebrow": "Identidad y Acceso",
     "manage": "Administra tus usuarios",
     "add": "Añadir usuario",
     "loadFailed": "No se pudieron cargar los usuarios. Inténtalo de nuevo.",
@@ -114,6 +128,7 @@
     "verified": "Verificado"
   },
   "settings": {
+    "eyebrow": "Preferencias y Sistema",
     "manageAccount": "Administra tu cuenta",
     "description": "Administra las preferencias de tu espacio de trabajo",
     "loggedInAs": "Sesión iniciada como",
@@ -145,7 +160,9 @@
     "unauthorized": "Necesitas iniciar sesión",
     "forbidden": "No tienes permiso",
     "serverError": "Error del servidor. Inténtalo más tarde.",
-    "networkError": "Error de red. Verifica tu conexión."
+    "networkError": "Error de red. Verifica tu conexión.",
+    "unexpected": "Algo salió mal",
+    "unknown": "Error desconocido"
   },
   "api": {
     "error": {
@@ -212,6 +229,7 @@
     }
   },
   "notes": {
+    "eyebrow": "Corte Vertical de Dominio",
     "title": "Notas",
     "description": "Administra tus notas aquí.",
     "newNote": "Nueva nota",
@@ -223,13 +241,22 @@
     "contentPlaceholder": "¿Qué tienes en mente?",
     "creating": "Creando...",
     "createButton": "Crear nota",
-    "noNotes": "Todavía no hay notas. Crea una arriba."
+    "noNotes": "Todavía no hay notas. Crea una arriba.",
+    "loading": "Cargando notas..."
   },
   "tenancy": {
     "activeOrganization": "Organización activa",
+    "organization": "Organización",
     "organizationName": "Nombre de la organización",
+    "orgName": "Nombre de la organización",
+    "create": "Crear",
     "createOrganization": "Crear organización",
+    "createOrganizationDescription": "Crea una nueva organización",
+    "switcherLabel": "Cambiar organización",
     "acceptInvitation": "Aceptar invitación",
+    "invitationAccepted": "Invitación aceptada",
+    "acceptFailed": "No se pudo aceptar la invitación",
+    "accept": "Aceptar",
     "accepting": "Aceptando...",
     "invalidInvitationLink": "Este enlace de invitación no es válido.",
     "signInToAccept": "Inicia sesión para aceptar la invitación"

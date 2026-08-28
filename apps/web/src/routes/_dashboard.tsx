@@ -6,18 +6,14 @@ import { SidebarProvider, SidebarInset } from "@repo/ui";
 
 function DashboardLayout() {
   const { isAuthenticated } = useAuthStore();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="bg-background">
         <Header />
         <div className="flex flex-1 flex-col bg-muted/20">
-          <div className="mx-auto w-full max-w-7xl p-6 md:p-8 lg:p-10">
+          <div className="mx-auto w-full max-w-6xl p-6 md:p-8">
             <Outlet />
           </div>
         </div>

@@ -1,20 +1,12 @@
-import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
-} from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { ChevronsUpDown, LogOut, Settings, Sparkles } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -33,103 +25,60 @@ export function NavUser() {
   const { t } = useTranslation();
   const { isMobile } = useSidebar();
   const { user, logout } = useAuthStore();
-  const clearTenant = useTenantStore((state) => state.clearTenant);
+  const clearTenant = useTenantStore((s) => s.clearTenant);
+  const initials = (user?.name || user?.email || "U").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 
-  const handleLogout = async () => {
+  const onLogout = async () => {
     try {
       await api.auth.logout();
-    } catch {
-      // Ignore network errors
-    }
+    } catch {}
     clearTenant();
     queryClient.clear();
     logout();
   };
-
-  const userInitials = (user?.name || user?.email || "U")
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
+            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage alt={user?.name || "User"} />
-                <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-xs">
-                  {userInitials}
-                </AvatarFallback>
+                <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-xs">{initials}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user?.name || "User"}</span>
                 <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ml-auto size-4 opacity-60" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={4}
-          >
+          <DropdownMenuContent align="end" side={isMobile ? "bottom" : "right"} sideOffset={4} className="w-56 rounded-xl">
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+              <div className="flex items-center gap-2 px-1 py-1.5">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage alt={user?.name || "User"} />
-                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-xs">
-                    {userInitials}
-                  </AvatarFallback>
+                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-xs">{initials}</AvatarFallback>
                 </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user?.name || "User"}</span>
+                <div className="grid flex-1 text-left">
+                  <span className="truncate font-semibold text-sm">{user?.name || "User"}</span>
                   <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem className="gap-2 cursor-pointer">
-                <Sparkles className="size-4 text-amber-500" />
-                <span>Enterprise Edition</span>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+            <DropdownMenuItem className="gap-2">
+              <Sparkles className="size-4 text-amber-500" /> Enterprise
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild className="gap-2 cursor-pointer">
-                <Link to="/settings">
-                  <BadgeCheck className="size-4" />
-                  <span>{t("settings.profile")}</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="gap-2 cursor-pointer">
-                <Link to="/settings">
-                  <CreditCard className="size-4" />
-                  <span>Billing</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="gap-2 cursor-pointer">
-                <Link to="/settings">
-                  <Bell className="size-4" />
-                  <span>Notifications</span>
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="gap-2 cursor-pointer text-destructive focus:text-destructive"
-            >
-              <LogOut className="size-4" />
-              <span>{t("auth.logout")}</span>
+            <DropdownMenuItem asChild className="gap-2">
+              <Link to="/settings">
+                <Settings className="size-4" /> {t("settings.title")}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onLogout} className="gap-2 text-destructive focus:text-destructive">
+              <LogOut className="size-4" /> {t("auth.logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

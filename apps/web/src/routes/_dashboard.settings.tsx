@@ -2,119 +2,101 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from "@repo/ui";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { PageHeader } from "@/components/layout/page-header";
+import { PageShell } from "@/components/layout/page-shell";
 import { useAuthStore } from "@/stores/auth.store";
 import { useTenantStore } from "@/stores/tenant.store";
-import { Palette, Shield, HardDrive } from "lucide-react";
+import { Palette, Shield, HardDrive, Info } from "lucide-react";
 
 function SettingsPage() {
   const { t } = useTranslation();
-  const user = useAuthStore((state) => state.user);
-  const activeTenantId = useTenantStore((state) => state.activeTenantId);
-
+  const user = useAuthStore((s) => s.user);
+  const tenant = useTenantStore((s) => s.activeTenantId);
   return (
-    <div className="space-y-8 max-w-5xl mx-auto py-2">
-      {/* Header */}
-      <div className="border-b border-border pb-6 space-y-1">
-        <span className="eyebrow">Preferences & System</span>
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("settings.title")}</h1>
-        <p className="text-muted-foreground text-sm">{t("settings.description")}</p>
-      </div>
-
+    <PageShell>
+      <PageHeader eyebrow={t("settings.eyebrow")} title={t("settings.title")} description={t("settings.description")} />
       <div className="grid gap-6">
-        {/* Appearance Card */}
-        <Card variant="featured">
+        <Card className="border-border/60 shadow-sm overflow-hidden">
           <CardHeader className="pb-4">
-            <div className="flex items-center gap-2.5">
-              <Palette className="h-4 w-4 text-primary" />
-              <CardTitle className="text-lg">{t("settings.appearance")}</CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                <Palette className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-base">{t("settings.appearance")}</CardTitle>
             </div>
-            <CardDescription className="text-xs">
-              {t("settings.appearanceDescription")}
-            </CardDescription>
+            <CardDescription className="text-xs">{t("settings.appearanceDescription")}</CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center justify-between pt-2 border-t border-border">
+          <CardContent className="flex items-center justify-between border-t border-border bg-muted/20 p-4">
             <div>
-              <p className="text-sm font-medium text-foreground">{t("settings.colorMode")}</p>
+              <p className="text-sm font-medium">{t("settings.colorMode")}</p>
               <p className="text-xs text-muted-foreground">{t("settings.colorModeDescription")}</p>
             </div>
             <ThemeToggle />
           </CardContent>
         </Card>
 
-        {/* Security & Account Card */}
-        <Card>
+        <Card className="border-border/60 shadow-sm">
           <CardHeader className="pb-4">
-            <div className="flex items-center gap-2.5">
-              <Shield className="h-4 w-4 text-primary" />
-              <CardTitle className="text-lg">{t("settings.accountSecurity")}</CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-purple text-white shadow-sm">
+                <Shield className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-base">{t("settings.accountSecurity")}</CardTitle>
             </div>
-            <CardDescription className="text-xs">
-              {t("settings.accountSecurityDescription")}
-            </CardDescription>
+            <CardDescription className="text-xs">{t("settings.accountSecurityDescription")}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-2 border-t border-border">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">{t("users.userId")}</span>
-                <p className="font-mono text-xs text-foreground">{user?.id ?? "--"}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">{t("settings.emailAddress")}</span>
-                <p className="font-mono text-xs text-foreground">{user?.email ?? "--"}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">{t("settings.activeTenant")}</span>
-                <p className="font-mono text-xs text-foreground">
-                  {activeTenantId ? activeTenantId : "Global / Single-Tenant"}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">{t("settings.authRole")}</span>
-                <div>
-                  <Badge variant="outline" className="text-[11px] font-mono">
-                    {user?.role ?? "member"}
-                  </Badge>
-                </div>
-              </div>
+          <CardContent className="grid gap-4 sm:grid-cols-2 border-t border-border pt-4">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">{t("users.userId")}</p>
+              <p className="font-mono text-xs break-all bg-muted px-2 py-1 rounded-md border">{user?.id ?? "—"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">{t("settings.emailAddress")}</p>
+              <p className="font-mono text-xs break-all bg-muted px-2 py-1 rounded-md border">{user?.email ?? "—"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">{t("settings.activeTenant")}</p>
+              <p className="font-mono text-xs break-all bg-muted px-2 py-1 rounded-md border">{tenant ?? "Global • Single"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">{t("settings.authRole")}</p>
+              <div><Badge variant="outline" className="font-mono text-xs">{user?.role ?? "member"}</Badge></div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Infrastructure & Architecture Info */}
-        <Card>
+        <Card className="border-border/60 shadow-sm">
           <CardHeader className="pb-4">
-            <div className="flex items-center gap-2.5">
-              <HardDrive className="h-4 w-4 text-primary" />
-              <CardTitle className="text-lg">{t("settings.archConfig")}</CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-blue text-white shadow-sm">
+                <HardDrive className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-base">{t("settings.archConfig")}</CardTitle>
             </div>
-            <CardDescription className="text-xs">
-              {t("settings.archConfigDescription")}
-            </CardDescription>
+            <CardDescription className="text-xs">{t("settings.archConfigDescription")}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 pt-2 border-t border-border text-xs">
-            <div className="flex justify-between items-center py-1">
-              <span className="text-muted-foreground">Backend Runtime</span>
-              <span className="font-mono text-foreground">NestJS 11 + Fastify 5</span>
-            </div>
-            <div className="flex justify-between items-center py-1 border-t border-border">
-              <span className="text-muted-foreground">Database & ORM</span>
-              <span className="font-mono text-foreground">PostgreSQL 16 + Drizzle ORM</span>
-            </div>
-            <div className="flex justify-between items-center py-1 border-t border-border">
-              <span className="text-muted-foreground">Async & Queues</span>
-              <span className="font-mono text-foreground">Redis 7 + BullMQ + Piscina 5</span>
-            </div>
-            <div className="flex justify-between items-center py-1 border-t border-border">
-              <span className="text-muted-foreground">UI Design System</span>
-              <span className="font-mono text-foreground">Radix UI + Tailwind CSS v4</span>
-            </div>
+          <CardContent className="space-y-0 divide-y divide-border border-t border-border p-0">
+            {[
+              ["Backend", "NestJS 11 + Fastify 5", "Modular monolith"],
+              ["Database", "Postgres 16 + Drizzle", "RLS + outbox"],
+              ["Realtime", "Redis 7 + BullMQ", "Idempotency + streams"],
+              ["UI", "Radix + Tailwind v4 • B12", "1-command reskin"],
+            ].map(([k, v, sub]) => (
+              <div key={k} className="flex items-center justify-between px-6 py-3.5">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Info className="h-3.5 w-3.5 opacity-60" /> {k}
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-mono font-medium">{v}</p>
+                  <p className="text-[11px] text-muted-foreground">{sub}</p>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageShell>
   );
 }
 
-export const Route = createFileRoute("/_dashboard/settings")({
-  component: SettingsPage,
-});
+export const Route = createFileRoute("/_dashboard/settings")({ component: SettingsPage });

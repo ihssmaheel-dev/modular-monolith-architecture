@@ -1,43 +1,48 @@
-import { Component, type ReactNode } from "react";
+import * as React from "react";
+import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui";
+import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
-import { Button } from "@repo/ui";
 
-interface BoundaryProps {
-  children: ReactNode;
-  t: TFunction;
-}
-
-interface BoundaryState {
+interface State {
   hasError: boolean;
+  error?: Error;
 }
 
-class Boundary extends Component<BoundaryProps, BoundaryState> {
-  state: BoundaryState = { hasError: false };
+export class ErrorBoundary extends React.Component<{ children: React.ReactNode }, State> {
+  state: State = { hasError: false };
 
-  static getDerivedStateFromError(error: Error): BoundaryState {
-    void error;
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error(error);
   }
 
   render() {
-    if (!this.state.hasError) return this.props.children;
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="max-w-md text-center">
-          <h2 className="text-2xl font-bold text-foreground">
-            {this.props.t("errors.serverError")}
-          </h2>
-          <Button onClick={() => this.setState({ hasError: false })} className="mt-4">
-            {this.props.t("common.retry")}
-          </Button>
-        </div>
-      </div>
-    );
+    if (this.state.hasError) return <Fallback error={this.state.error} onReset={() => this.setState({ hasError: false })} />;
+    return this.props.children;
   }
 }
 
-export function ErrorBoundary({ children }: { children: ReactNode }) {
+function Fallback({ error, onReset }: { error?: Error; onReset: () => void }) {
   const { t } = useTranslation();
-  return <Boundary t={t}>{children}</Boundary>;
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/20 p-6">
+      <Card className="max-w-md w-full border-destructive/20 shadow-lg">
+        <CardHeader>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <CardTitle className="text-lg">{t("errors.unexpected")}</CardTitle>
+          <CardDescription className="text-xs font-mono break-all">{error?.message ?? t("errors.unknown")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={onReset} className="w-full">
+            {t("common.retry")}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

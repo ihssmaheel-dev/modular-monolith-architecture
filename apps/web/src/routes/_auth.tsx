@@ -9,17 +9,12 @@ function AuthLayout() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuthStore();
   const { invitationToken } = useSearch({ strict: false }) as InvitationSearch;
-
   if (isAuthenticated) {
-    if (invitationToken) {
-      return <Navigate to="/accept-invitation" search={{ token: invitationToken }} replace />;
-    }
+    if (invitationToken) return <Navigate to="/accept-invitation" search={{ token: invitationToken }} replace />;
     return <Navigate to="/" replace />;
   }
-
   return (
     <div className="min-h-svh grid lg:grid-cols-2 bg-background">
-      {/* Left — brand */}
       <div className="hidden lg:flex flex-col justify-between border-r border-border bg-muted/20 p-10">
         <div>
           <Link to="/" className="flex items-center gap-2.5 font-semibold">
@@ -32,9 +27,7 @@ function AuthLayout() {
           <div className="mt-16 space-y-8 max-w-sm">
             <div className="space-y-3">
               <h1 className="text-3xl font-semibold tracking-tight leading-tight">Build enterprise systems, not boilerplate.</h1>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Modular monolith starter — CQRS, multi-tenant, RBAC + FGA, and a generated theme that reskins in one command.
-              </p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Modular monolith — CQRS, multi-tenant, RBAC + FGA, 1-command reskin.</p>
             </div>
             <div className="space-y-3 pt-2">
               {[
@@ -48,21 +41,19 @@ function AuthLayout() {
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-sm font-medium leading-none">{f.title}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                    <p className="text-xs text-muted-foreground">{f.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
             <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-3">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <p className="text-xs font-medium">B12 Enterprise preset active — indigo primary, OKLCH, 1-command reskin</p>
+              <p className="text-xs font-medium">B12 Enterprise preset active — indigo primary, OKLCH</p>
             </div>
           </div>
         </div>
         <p className="text-xs text-muted-foreground">© 2026 Workspace • Modular Monolith • MIT</p>
       </div>
-
-      {/* Right — auth */}
       <div className="flex flex-col">
         <div className="flex h-14 items-center justify-between border-b border-border px-6 lg:hidden">
           <Link to="/" className="flex items-center gap-2 font-semibold">
@@ -86,6 +77,4 @@ function AuthLayout() {
   );
 }
 
-export const Route = createFileRoute("/_auth")({
-  component: AuthLayout,
-});
+export const Route = createFileRoute("/_auth")({ component: AuthLayout });

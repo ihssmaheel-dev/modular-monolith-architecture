@@ -16,6 +16,9 @@
     "previous": "Previous",
     "next": "Next",
     "submit": "Submit",
+    "saving": "Saving...",
+    "creating": "Creating...",
+    "sending": "Sending...",
     "pageOf": "Page {{page}} of {{totalPages}}"
   },
   "email": {
@@ -44,6 +47,7 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome, {{name}}!",
+    "subtitle": "Modular monolith overview",
     "stats": {
       "users": "Users",
       "activeSessions": "Active Sessions",
@@ -51,6 +55,7 @@
     }
   },
   "users": {
+    "eyebrow": "Identity & Access",
     "manage": "Manage your users",
     "add": "Add user",
     "loadFailed": "Failed to load users. Please try again.",
@@ -65,6 +70,7 @@
     "verified": "Verified"
   },
   "settings": {
+    "eyebrow": "Preferences & System",
     "manageAccount": "Manage your account",
     "description": "Manage your workspace preferences",
     "loggedInAs": "Logged in as",
@@ -96,7 +102,9 @@
     "unauthorized": "You need to log in",
     "forbidden": "You don't have permission",
     "serverError": "Server error. Please try again later.",
-    "networkError": "Network error. Check your connection."
+    "networkError": "Network error. Check your connection.",
+    "unexpected": "Something went wrong",
+    "unknown": "Unknown error"
   },
   "home": {
     "title": "Home",
@@ -121,9 +129,18 @@
     "forgotDescription": "Enter your email and we will send you a reset link",
     "sending": "Sending...",
     "sendResetLink": "Send reset link",
+    "requestFailed": "Request failed. Please try again.",
+    "checkEmail": "Check your email",
+    "checkEmailDescription": "If the email exists, we have sent a reset link.",
+    "registerFailed": "Registration failed. Please try again.",
+    "resetFailed": "Failed to reset password.",
     "rememberPassword": "Remember your password?",
     "resetPasswordTitle": "Reset password",
     "resetPasswordDescription": "Choose a new password for your account",
+    "resetPassword": "Reset password",
+    "resetDescription": "Enter a new password for your account",
+    "passwordReset": "Password reset",
+    "passwordResetDescription": "Your password has been reset successfully",
     "newPassword": "New password",
     "resettingPassword": "Resetting password...",
     "backToLogin": "Back to sign in",
@@ -216,6 +233,7 @@
     }
   },
   "notes": {
+    "eyebrow": "Domain Vertical Slice",
     "title": "Notes",
     "description": "Manage your end-to-end template notes here.",
     "newNote": "New Note",
@@ -227,13 +245,22 @@
     "contentPlaceholder": "What's on your mind?",
     "creating": "Creating...",
     "createButton": "Create Note",
-    "noNotes": "No notes yet. Create one above!"
+    "noNotes": "No notes yet. Create one above!",
+    "loading": "Loading notes..."
   },
   "tenancy": {
     "activeOrganization": "Active organization",
+    "organization": "Organization",
     "organizationName": "Organization name",
+    "orgName": "Organization name",
+    "create": "Create",
     "createOrganization": "Create organization",
+    "createOrganizationDescription": "Create a new workspace organization",
+    "switcherLabel": "Switch organization",
     "acceptInvitation": "Accept invitation",
+    "invitationAccepted": "Invitation accepted",
+    "acceptFailed": "Failed to accept invitation",
+    "accept": "Accept",
     "accepting": "Accepting...",
     "invalidInvitationLink": "This invitation link is invalid.",
     "signInToAccept": "Sign in to accept the invitation"

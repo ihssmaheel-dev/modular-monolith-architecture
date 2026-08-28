@@ -16,6 +16,9 @@
     "previous": "Précédent",
     "next": "Suivant",
     "submit": "Soumettre",
+    "saving": "Enregistrement...",
+    "creating": "Création...",
+    "sending": "Envoi...",
     "pageOf": "Page {{page}} sur {{totalPages}}"
   },
   "auth": {
@@ -37,9 +40,18 @@
     "forgotDescription": "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation",
     "sending": "Envoi...",
     "sendResetLink": "Envoyer le lien de réinitialisation",
+    "requestFailed": "La requête a échoué. Veuillez réessayer.",
+    "checkEmail": "Vérifiez votre e-mail",
+    "checkEmailDescription": "Si l’e-mail existe, nous avons envoyé un lien.",
+    "registerFailed": "L’inscription a échoué.",
+    "resetFailed": "Impossible de réinitialiser le mot de passe.",
     "rememberPassword": "Vous vous souvenez de votre mot de passe ?",
     "resetPasswordTitle": "Réinitialiser le mot de passe",
     "resetPasswordDescription": "Choisissez un nouveau mot de passe pour votre compte",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "resetDescription": "Saisissez un nouveau mot de passe pour votre compte",
+    "passwordReset": "Mot de passe réinitialisé",
+    "passwordResetDescription": "Votre mot de passe a été réinitialisé avec succès",
     "newPassword": "Nouveau mot de passe",
     "resettingPassword": "Réinitialisation du mot de passe...",
     "backToLogin": "Retour à la connexion",
@@ -93,6 +105,7 @@
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bienvenue, {{name}} !",
+    "subtitle": "Aperçu du monolithe modulaire",
     "stats": {
       "users": "Utilisateurs",
       "activeSessions": "Sessions actives",
@@ -100,6 +113,7 @@
     }
   },
   "users": {
+    "eyebrow": "Identité et Accès",
     "manage": "Gérez vos utilisateurs",
     "add": "Ajouter un utilisateur",
     "loadFailed": "Impossible de charger les utilisateurs. Réessayez.",
@@ -114,6 +128,7 @@
     "verified": "Vérifié"
   },
   "settings": {
+    "eyebrow": "Préférences et Système",
     "manageAccount": "Gérez votre compte",
     "description": "Gérez les préférences de votre espace de travail",
     "loggedInAs": "Connecté en tant que",
@@ -145,7 +160,9 @@
     "unauthorized": "Vous devez vous connecter",
     "forbidden": "Vous n'avez pas la permission",
     "serverError": "Erreur du serveur. Veuillez réessayer plus tard.",
-    "networkError": "Erreur réseau. Vérifiez votre connexion."
+    "networkError": "Erreur réseau. Vérifiez votre connexion.",
+    "unexpected": "Quelque chose s'est mal passé",
+    "unknown": "Erreur inconnue"
   },
   "api": {
     "error": {
@@ -212,6 +229,7 @@
     }
   },
   "notes": {
+    "eyebrow": "Tranche Verticale de Domaine",
     "title": "Notes",
     "description": "Gérez vos notes ici.",
     "newNote": "Nouvelle note",
@@ -223,13 +241,22 @@
     "contentPlaceholder": "Qu’avez-vous en tête ?",
     "creating": "Création...",
     "createButton": "Créer la note",
-    "noNotes": "Aucune note pour le moment. Créez-en une ci-dessus."
+    "noNotes": "Aucune note pour le moment. Créez-en une ci-dessus.",
+    "loading": "Chargement des notes..."
   },
   "tenancy": {
     "activeOrganization": "Organisation active",
+    "organization": "Organisation",
     "organizationName": "Nom de l’organisation",
+    "orgName": "Nom de l’organisation",
+    "create": "Créer",
     "createOrganization": "Créer une organisation",
+    "createOrganizationDescription": "Créer une nouvelle organisation",
+    "switcherLabel": "Changer d’organisation",
     "acceptInvitation": "Accepter l’invitation",
+    "invitationAccepted": "Invitation acceptée",
+    "acceptFailed": "Impossible d’accepter l’invitation",
+    "accept": "Accepter",
     "accepting": "Acceptation...",
     "invalidInvitationLink": "Ce lien d’invitation est invalide.",
     "signInToAccept": "Connectez-vous pour accepter l’invitation"

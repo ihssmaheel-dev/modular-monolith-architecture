@@ -22,7 +22,6 @@ export function WorkspacePanel() {
           </Link>
         </CardContent>
       </Card>
-
       <Card className="border-border/60 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -48,7 +47,6 @@ export function WorkspacePanel() {
           </div>
         </CardContent>
       </Card>
-
       <Card className="border-border/60 shadow-sm">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
