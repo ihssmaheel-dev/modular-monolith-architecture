@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button } from "@repo/ui";
 import { Building2, Database, Shield, Layers, Activity, ArrowRight } from "lucide-react";
 
-export function B12SideCards() {
+export function WorkspacePanel() {
   return (
     <div className="space-y-6">
       <Card className="border-primary/20 bg-primary text-primary-foreground shadow-md overflow-hidden">

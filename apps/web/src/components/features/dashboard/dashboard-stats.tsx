@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@repo/ui";
 import { Users, FileText, Building2, Activity, TrendingUp, CheckCircle2 } from "lucide-react";
 
-interface Props {
+interface DashboardStatsProps {
   userTotal?: number;
   usersLoading: boolean;
   notesTotal?: number;
@@ -9,7 +9,7 @@ interface Props {
   tenancyMode?: string;
 }
 
-export function B12Stats({ userTotal, usersLoading, notesTotal, notesCount, tenancyMode }: Props) {
+export function DashboardStats({ userTotal, usersLoading, notesTotal, notesCount, tenancyMode }: DashboardStatsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card className="border-border/60 shadow-sm hover:shadow-md hover:border-border transition-all">

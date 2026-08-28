@@ -5,9 +5,9 @@ import { useAuthStore } from "@/stores/auth.store";
 import { api } from "@/lib/api";
 import { Badge, Button, Separator } from "@repo/ui";
 import { Plus, ArrowUpRight } from "lucide-react";
-import { B12Stats } from "@/components/features/dashboard/b12-stats";
-import { B12RecentNotes } from "@/components/features/dashboard/b12-recent-notes";
-import { B12SideCards } from "@/components/features/dashboard/b12-side-cards";
+import { DashboardStats } from "@/components/features/dashboard/dashboard-stats";
+import { RecentNotesPanel } from "@/components/features/dashboard/recent-notes-panel";
+import { WorkspacePanel } from "@/components/features/dashboard/workspace-panel";
 
 function DashboardPage() {
   const { t } = useTranslation();
@@ -77,7 +77,7 @@ function DashboardPage() {
         </div>
       </div>
 
-      <B12Stats
+      <DashboardStats
         userTotal={usersData?.total}
         usersLoading={usersLoading}
         notesTotal={notesData?.total}
@@ -87,9 +87,9 @@ function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <B12RecentNotes items={notesData?.items} />
+          <RecentNotesPanel items={notesData?.items} />
         </div>
-        <B12SideCards />
+        <WorkspacePanel />
       </div>
 
       <Separator className="my-2" />
