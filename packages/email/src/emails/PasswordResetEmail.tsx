@@ -8,6 +8,7 @@ import {
   Tailwind,
   Text,
 } from "react-email";
+import { emailTokens } from "../styles/tokens";
 
 interface PasswordResetEmailProps {
   resetLink: string;
@@ -28,13 +29,35 @@ export const PasswordResetEmail = ({
     <Html>
       <Head />
       <Preview>{preview}</Preview>
-      <Tailwind>
+      <Tailwind
+        config={{
+          theme: {
+            extend: {
+              colors: {
+                border: emailTokens.light.border,
+                primary: emailTokens.light.primary,
+              },
+            },
+          },
+        }}
+      >
         <Body className="bg-white my-auto mx-auto font-sans">
-          <Container className="border border-solid border-[#eaeaea] rounded my-[40px] mx-auto p-[20px] w-[465px]">
-            <Text className="text-black text-[14px] leading-[24px]">{requestText}</Text>
-            <Text className="text-black text-[14px] leading-[24px]">{instructionText}</Text>
+          <Container
+            className="border border-solid rounded my-[40px] mx-auto p-[20px] w-[465px]"
+            style={{ borderColor: emailTokens.light.border }}
+          >
+            <Text className="text-[14px] leading-[24px]" style={{ color: emailTokens.light.foreground }}>
+              {requestText}
+            </Text>
+            <Text className="text-[14px] leading-[24px]" style={{ color: emailTokens.light.foreground }}>
+              {instructionText}
+            </Text>
             <Button
-              className="bg-[#000000] rounded text-white text-[12px] font-semibold no-underline text-center px-4 py-3"
+              className="rounded text-[12px] font-semibold no-underline text-center px-4 py-3"
+              style={{
+                backgroundColor: emailTokens.light.primary,
+                color: emailTokens.light["primary-foreground"],
+              }}
               href={resetLink}
             >
               {buttonText}

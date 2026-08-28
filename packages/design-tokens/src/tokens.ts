@@ -1,21 +1,24 @@
+// GENERATED — do not edit manually — source: packages/design-tokens/src/presets/active.json — run pnpm theme:generate
 export const radius = {
   none: "0px",
-  xs: "2px",
-  sm: "4px", // 0.25rem - Canonical button, input, badge radius
-  md: "8px", // 0.5rem - Canonical card, modal, container radius
-  lg: "12px",
-  xl: "16px",
-  full: "9999px", // Reserved for circular icons only
+  xs: "calc(0.5rem * 0.4)", // = var(--radius-xs)
+  sm: "calc(0.5rem * 0.6)", // canonical button/input/badge
+  md: "calc(0.5rem * 0.8)", // canonical card/modal
+  lg: "0.5rem", // canonical dialog
+  xl: "calc(0.5rem * 1.4)",
+  "2xl": "calc(0.5rem * 1.8)",
+  "3xl": "calc(0.5rem * 2.2)",
+  full: "9999px",
 } as const;
 
 export const shadows = {
   flat: "none",
-  hairline: "0 0 0 1px #d8d8d8",
+  hairline: "0 0 0 1px var(--border)",
   layeredDrop:
-    "0 84px 24px rgba(0,0,0,0), 0 54px 22px rgba(0,0,0,0.01), 0 30px 18px rgba(0,0,0,0.04), 0 13px 13px rgba(0,0,0,0.08), 0 3px 7px rgba(0,0,0,0.09)",
+    "0 84px 24px rgba(0, 0, 0, 0), 0 54px 22px rgba(0, 0, 0, 0.01), 0 30px 18px rgba(0, 0, 0, 0.04), 0 13px 13px rgba(0, 0, 0, 0.08), 0 3px 7px rgba(0, 0, 0, 0.09)",
   layeredDropStrong:
-    "0 84px 24px rgba(0,0,0,0.02), 0 54px 22px rgba(0,0,0,0.04), 0 30px 18px rgba(0,0,0,0.07), 0 13px 13px rgba(0,0,0,0.10), 0 3px 7px rgba(0,0,0,0.12)",
-  modalHeavy: "0 24px 24px rgba(0,0,0,0.16), 0 6px 13px rgba(0,0,0,0.20)",
+    "0 84px 24px rgba(0, 0, 0, 0.02), 0 54px 22px rgba(0, 0, 0, 0.04), 0 30px 18px rgba(0, 0, 0, 0.07), 0 13px 13px rgba(0, 0, 0, 0.10), 0 3px 7px rgba(0, 0, 0, 0.12)",
+  modalHeavy: "0 24px 24px rgba(0, 0, 0, 0.16), 0 6px 13px rgba(0, 0, 0, 0.20)",
 } as const;
 
 export const spacing = {
@@ -41,6 +44,7 @@ export const spacing = {
 export const typography = {
   fontFamily: {
     sans: "'Geist', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    heading: "'Geist', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     mono: "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   },
   fontSize: {

@@ -2,20 +2,32 @@
 
 > **SSOT:** `packages/design-tokens/src/presets/active.json` → `scripts/generate-tokens.mjs` → `apps/web/src/index.css` + `apps/mobile/global.css` + `packages/email/src/styles/tokens.ts` + `packages/design-tokens/src/colors.ts` (JS fallback for RN). Never edit generated CSS manually.
 
-## 30-Second Reskin
+## 30-Second Reskin (Any shadcn Preset)
 
 ```bash
-# 1. Pick a preset from ui.shadcn.com/themes (Copy → JSON) or use built-ins
-pnpm theme:list           # lists default, rose, slate
-# 2. Apply
+# Built-in presets
+pnpm theme:list           # default, rose, slate
 pnpm theme:apply rose     # copies rose.json → active.json + regenerates all
 pnpm dev:web              # instant new palette
-# 3. Commit
-git add packages/design-tokens/src/presets/active.json apps/web/src/index.css apps/mobile/global.css packages/email/src/styles/tokens.ts
-git commit -m "feat(theme): apply rose preset"
+
+# ANY shadcn preset — auto-converted (ui.shadcn.com, tweakcn.com, v0, etc.)
+# Option A: paste file
+pnpm theme:apply ./my-shadcn.json          # raw JSON from shadcn → auto-normalized
+# Option B: fetch URL
+pnpm theme:apply https://tweakcn.com/themes/slate.json
+# Option C: manual save
+# 1. ui.shadcn.com/themes → pick → Copy JSON  (or tweakcn.com → Export → JSON)
+# 2. Save as packages/design-tokens/src/presets/my.json
+# 3. pnpm theme:apply my
+
+# Commit (all 6 files)
+git add packages/design-tokens/src/presets/active.json apps/web/src/index.css apps/mobile/global.css packages/design-tokens/src/colors.ts packages/design-tokens/src/tokens.ts packages/email/src/styles/tokens.ts
+git commit -m "feat(theme): apply slate shadcn preset"
 ```
 
-Paste any `ui.shadcn.com/create` JSON: save as `packages/design-tokens/src/presets/my.json` then `pnpm theme:apply my`.
+Supported shadcn shapes (auto-detected): `{ light, dark, radius }` (ours), `{ cssVars: { light, dark } }` (registry theme), `{ theme: { light, dark } }`, or flat `{ background, foreground, primary, ... }`. Bare HSL `"0 0% 100%"` is auto-wrapped to `hsl(0 0% 100%)`. Missing `accent-purple/pink/blue/orange/green` + `info/warning/success` + `chart-1…5` + `sidebar-*` auto-filled from `default.json` — so any shadcn theme reskins standard tokens and keeps category palette working.
+
+Via `pnpm theme:import ./shadcn.json` (alias for `theme:apply` file import).
 
 ## Preset JSON Shape (`active.json`)
 
@@ -43,9 +55,10 @@ Paste any `ui.shadcn.com/create` JSON: save as `packages/design-tokens/src/prese
 | `apps/web/src/index.css` | `active.json` + `@theme inline` bridge | `:root` light vars, `.dark` vars, `--radius` calc, `--font-*`, `.shadow-layered` |
 | `apps/mobile/global.css` | same | byte-identical core + `@layer utilities` shadows/eyebrow for RN parity |
 | `packages/email/src/styles/tokens.ts` | same | `export const emailTokens` for React Email `Tailwind` config |
-| `packages/design-tokens/src/colors.ts` header | same | `brandColors` mirrored for JS consumers (RN StyleSheet fallback) |
+| `packages/design-tokens/src/colors.ts` | same | `colors.light/dark` + `brandColors` JS mirror (RN `hsl()` fallback) |
+| `packages/design-tokens/src/tokens.ts` | same | `radius` `shadows` `typography` JS mirror (calc(var(--radius)*0.6) etc.) |
 
-Header: `/* GENERATED — do not edit manually — source: packages/design-tokens/src/presets/active.json — run pnpm theme:generate */`
+Header: `// GENERATED — do not edit manually — source: packages/design-tokens/src/presets/active.json — run pnpm theme:generate` (JS) and `/* GENERATED */` (CSS)
 
 ## Component Contract
 
@@ -55,10 +68,9 @@ Header: `/* GENERATED — do not edit manually — source: packages/design-token
 
 ## Adding a New Preset
 
-1. Visit https://ui.shadcn.com/themes → choose → Copy JSON (light/dark + radius).
-2. Merge `accent-*` from default or pick new hex.
-3. Save `packages/design-tokens/src/presets/<name>.json`.
-4. `pnpm theme:apply <name>` + visual QA `pnpm dev:web` → light/dark toggle.
+1. Visit https://ui.shadcn.com/themes or https://tweakcn.com → choose → Copy JSON (light/dark + radius). Or `ui.shadcn.com/create` → Copy Code → JSON.
+2. Run `pnpm theme:apply ./downloaded.json` — converter handles `cssVars.light` / `theme` / flat shapes and fills `accent-*` fallbacks automatically. No manual merge needed (custom palette can be overridden later in the generated preset file if you want).
+3. Or manually: save `packages/design-tokens/src/presets/<name>.json` then `pnpm theme:apply <name>` + visual QA `pnpm dev:web` → light/dark toggle.
 
 ## Troubleshooting
 

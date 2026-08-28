@@ -42,6 +42,7 @@
     "generate:module": "node scripts/generate-module.js",
     "generate:feature": "node scripts/generate-feature.js",
     "theme:apply": "node scripts/theme-apply.mjs",
+    "theme:import": "node scripts/theme-apply.mjs import",
     "theme:generate": "node scripts/generate-tokens.mjs",
     "theme:list": "node scripts/theme-apply.mjs --list",
     "architecture:check": "depcruise --config .dependency-cruiser.cjs apps/api/src --output-type err",

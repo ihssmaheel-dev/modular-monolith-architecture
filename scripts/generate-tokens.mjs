@@ -10,6 +10,8 @@ const presetPath = path.join(root, "packages/design-tokens/src/presets/active.js
 const webCssPath = path.join(root, "apps/web/src/index.css");
 const mobileCssPath = path.join(root, "apps/mobile/global.css");
 const emailTokensPath = path.join(root, "packages/email/src/styles/tokens.ts");
+const colorsPath = path.join(root, "packages/design-tokens/src/colors.ts");
+const tokensPath = path.join(root, "packages/design-tokens/src/tokens.ts");
 
 function loadPreset() {
   if (!fs.existsSync(presetPath)) {
@@ -25,6 +27,18 @@ function loadPreset() {
       process.exit(1);
     }
   }
+  // Fallback: ensure custom 5-stop + semantic keys exist even for raw shadcn presets that lacked them
+  try {
+    const defaults = JSON.parse(fs.readFileSync(path.join(root, "packages/design-tokens/src/presets/default.json"), "utf-8"));
+    const fallbackKeys = ["accent-purple", "accent-pink", "accent-blue", "accent-orange", "accent-green", "info", "warning", "success", "chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "sidebar", "sidebar-foreground", "sidebar-primary", "sidebar-primary-foreground", "sidebar-accent", "sidebar-accent-foreground", "sidebar-border", "sidebar-ring"];
+    for (const k of fallbackKeys) {
+      if (preset.light[k] === undefined && defaults.light[k] !== undefined) preset.light[k] = defaults.light[k];
+      if (preset.dark[k] === undefined && defaults.dark[k] !== undefined) preset.dark[k] = defaults.dark[k];
+    }
+    if (!preset.fonts) preset.fonts = defaults.fonts;
+    if (!preset.shadows) preset.shadows = defaults.shadows;
+    if (!preset.radius) preset.radius = defaults.radius;
+  } catch {}
   return preset;
 }
 
@@ -313,6 +327,113 @@ ${darkVars}
 `;
 }
 
+function buildColors(preset) {
+  return `// GENERATED — do not edit manually — source: packages/design-tokens/src/presets/active.json — run pnpm theme:generate
+/**
+ * Design Tokens — Single source of truth for color decisions.
+ * Generated from preset "${preset.name}" (${preset.label}).
+ * Chromatic category accents are semantic (category status) not raw hex.
+ */
+export const colors = ${JSON.stringify({ light: orderLightDarkTokens(preset.light), dark: orderLightDarkTokens(preset.dark) }, null, 2)} as const;
+
+/**
+ * 5-Stop Chromatic Category Accents & Brand Spectrum — mirrors preset accent-* + info/warning/success
+ * Semantic: use bg-accent-purple / bg-info via CSS var, or brandColors.accentPurple for JS fallbacks (RN StyleSheet, PDF).
+ */
+export const brandColors = {
+  ink: "#080808",
+  inkStrong: "#222222",
+  body: "#363636",
+  bodyMid: "#5a5a5a",
+  mute: "#898989",
+  muteSoft: "#ababab",
+  canvas: "#ffffff",
+  hairline: "#d8d8d8",
+  accentPurple: "${preset.light["accent-purple"]}",
+  accentPink: "${preset.light["accent-pink"]}",
+  accentBlue: "${preset.light["accent-blue"]}",
+  accentOrange: "${preset.light["accent-orange"]}",
+  accentGreen: "${preset.light["accent-green"]}",
+  accentBlueDeep: "${preset.light["accent-blue"]}",
+  accentBlueInfo: "${preset.light.info}",
+  accentYellow: "${preset.light.warning}",
+  accentRed: "${preset.dark.destructive}",
+  info: "${preset.light.info}",
+  warning: "${preset.light.warning}",
+  success: "${preset.light.success}",
+} as const;
+
+export type Theme = "light" | "dark";
+export type ColorToken = keyof typeof colors.light;
+`;
+}
+
+function buildTokens(preset) {
+  return `// GENERATED — do not edit manually — source: packages/design-tokens/src/presets/active.json — run pnpm theme:generate
+export const radius = {
+  none: "0px",
+  xs: "calc(${preset.radius} * 0.4)", // = var(--radius-xs)
+  sm: "calc(${preset.radius} * 0.6)", // canonical button/input/badge
+  md: "calc(${preset.radius} * 0.8)", // canonical card/modal
+  lg: "${preset.radius}", // canonical dialog
+  xl: "calc(${preset.radius} * 1.4)",
+  "2xl": "calc(${preset.radius} * 1.8)",
+  "3xl": "calc(${preset.radius} * 2.2)",
+  full: "9999px",
+} as const;
+
+export const shadows = {
+  flat: "none",
+  hairline: "0 0 0 1px var(--border)",
+  layeredDrop: "${preset.shadows.layered.replace(/"/g, '\\"')}",
+  layeredDropStrong: "${preset.shadows["layered-strong"].replace(/"/g, '\\"')}",
+  modalHeavy: "${preset.shadows.modal.replace(/"/g, '\\"')}",
+} as const;
+
+export const spacing = {
+  px: "1px",
+  0: "0px",
+  0.5: "0.125rem",
+  1: "0.25rem",
+  1.5: "0.375rem",
+  2: "0.5rem",
+  2.5: "0.625rem",
+  3: "0.75rem",
+  3.5: "0.875rem",
+  4: "1rem",
+  5: "1.25rem",
+  6: "1.5rem",
+  7: "1.75rem",
+  8: "2rem",
+  10: "2.5rem",
+  12: "3rem",
+  16: "4rem",
+} as const;
+
+export const typography = {
+  fontFamily: {
+    sans: ${JSON.stringify(preset.fonts.sans)},
+    heading: ${JSON.stringify(preset.fonts.heading)},
+    mono: ${JSON.stringify(preset.fonts.mono)},
+  },
+  fontSize: {
+    xs: ["0.75rem", { lineHeight: "1rem" }],
+    sm: ["0.875rem", { lineHeight: "1.25rem" }],
+    base: ["1rem", { lineHeight: "1.5rem" }],
+    lg: ["1.125rem", { lineHeight: "1.75rem" }],
+    xl: ["1.25rem", { lineHeight: "1.75rem" }],
+    "2xl": ["1.5rem", { lineHeight: "2rem" }],
+    "3xl": ["1.875rem", { lineHeight: "2.25rem" }],
+  },
+  fontWeight: {
+    normal: "400",
+    medium: "500",
+    semibold: "600",
+  },
+} as const;
+`;
+}
+
 function buildEmailTokens(preset) {
   return `// GENERATED — do not edit manually — source: packages/design-tokens/src/presets/active.json — run pnpm theme:generate
 export const emailTokens = ${JSON.stringify(
@@ -346,15 +467,20 @@ function main() {
   fs.mkdirSync(path.dirname(webCssPath), { recursive: true });
   fs.mkdirSync(path.dirname(mobileCssPath), { recursive: true });
   fs.mkdirSync(path.dirname(emailTokensPath), { recursive: true });
+  fs.mkdirSync(path.dirname(colorsPath), { recursive: true });
 
   fs.writeFileSync(webCssPath, buildWebCss(preset), "utf-8");
   fs.writeFileSync(mobileCssPath, buildMobileCss(preset), "utf-8");
   fs.writeFileSync(emailTokensPath, buildEmailTokens(preset), "utf-8");
+  fs.writeFileSync(colorsPath, buildColors(preset), "utf-8");
+  fs.writeFileSync(tokensPath, buildTokens(preset), "utf-8");
 
   console.log(`✓ Generated tokens for preset "${preset.name}" (${preset.label})`);
   console.log(`  → ${path.relative(root, webCssPath)}`);
   console.log(`  → ${path.relative(root, mobileCssPath)}`);
   console.log(`  → ${path.relative(root, emailTokensPath)}`);
+  console.log(`  → ${path.relative(root, colorsPath)}`);
+  console.log(`  → ${path.relative(root, tokensPath)}`);
 }
 
 main();
