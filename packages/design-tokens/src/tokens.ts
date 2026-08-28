@@ -14,11 +14,9 @@ export const radius = {
 export const shadows = {
   flat: "none",
   hairline: "0 0 0 1px var(--border)",
-  layeredDrop:
-    "0 84px 24px rgba(0, 0, 0, 0), 0 54px 22px rgba(0, 0, 0, 0.01), 0 30px 18px rgba(0, 0, 0, 0.04), 0 13px 13px rgba(0, 0, 0, 0.08), 0 3px 7px rgba(0, 0, 0, 0.09)",
-  layeredDropStrong:
-    "0 84px 24px rgba(0, 0, 0, 0.02), 0 54px 22px rgba(0, 0, 0, 0.04), 0 30px 18px rgba(0, 0, 0, 0.07), 0 13px 13px rgba(0, 0, 0, 0.10), 0 3px 7px rgba(0, 0, 0, 0.12)",
-  modalHeavy: "0 24px 24px rgba(0, 0, 0, 0.16), 0 6px 13px rgba(0, 0, 0, 0.20)",
+  layeredDrop: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)",
+  layeredDropStrong: "0 4px 16px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.12)",
+  modalHeavy: "0 16px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08)",
 } as const;
 
 export const spacing = {

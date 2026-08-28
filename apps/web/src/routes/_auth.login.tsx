@@ -13,11 +13,13 @@ import {
   CardTitle,
   Input,
   Label,
+  Separator,
 } from "@repo/ui";
 import { api } from "@/lib/api";
 import { getResponseMessage } from "@/lib/api-response";
 import { useAuthStore } from "@/stores/auth.store";
 import { validateInvitationSearch } from "@/lib/invitation-search";
+import { ShieldCheck } from "lucide-react";
 
 function LoginPage() {
   const { t } = useTranslation();
@@ -49,40 +51,45 @@ function LoginPage() {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-2xl">{t("auth.welcomeBack")}</CardTitle>
-        <CardDescription>{t("auth.loginDescription")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-4">
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight">{t("auth.welcomeBack")}</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">{t("auth.loginDescription")}</p>
+      </div>
+
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="space-y-1 pb-4">
+          <CardTitle className="text-base">Sign in to your workspace</CardTitle>
+          <CardDescription className="text-xs">Enter your email and password to continue. B12 Enterprise ready.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
-              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium">
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-medium leading-relaxed">
                 {error}
               </div>
             )}
-            <div className="grid gap-2">
-              <Label htmlFor="email">{t("auth.email")}</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs font-medium">
+                {t("auth.email")}
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder={t("auth.emailPlaceholder")}
                 autoComplete="email"
+                className="h-9 bg-background border-input focus-visible:border-primary/30 focus-visible:ring-primary/20"
                 required
                 {...register("email")}
               />
-              {errors.email && (
-                <p className="text-xs text-destructive font-medium">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="text-xs text-destructive font-medium">{errors.email.message}</p>}
             </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">{t("auth.password")}</Label>
-                <Link
-                  to="/forgot-password"
-                  className="ml-auto inline-block text-xs underline hover:text-primary"
-                >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-xs font-medium">
+                  {t("auth.password")}
+                </Label>
+                <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary underline underline-offset-4">
                   {t("auth.forgotPassword")}
                 </Link>
               </div>
@@ -91,30 +98,38 @@ function LoginPage() {
                 type="password"
                 placeholder={t("auth.passwordPlaceholder")}
                 autoComplete="current-password"
+                className="h-9 bg-background border-input focus-visible:border-primary/30 focus-visible:ring-primary/20"
                 required
                 {...register("password")}
               />
-              {errors.password && (
-                <p className="text-xs text-destructive font-medium">{errors.password.message}</p>
-              )}
+              {errors.password && <p className="text-xs text-destructive font-medium">{errors.password.message}</p>}
             </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full h-9 font-medium shadow-sm" disabled={isSubmitting}>
               {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
             </Button>
-          </div>
-          <div className="mt-4 text-center text-xs text-muted-foreground">
-            {t("auth.noAccount")}{" "}
-            <Link
-              to="/register"
-              search={{ invitationToken }}
-              className="text-foreground underline underline-offset-4 font-medium hover:text-primary"
-            >
-              {t("auth.register")}
-            </Link>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+            <div className="flex items-center gap-3 py-1">
+              <Separator className="flex-1" />
+              <span className="text-[11px] text-muted-foreground">or</span>
+              <Separator className="flex-1" />
+            </div>
+            <div className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+              Secured by Argon2 • JWT • RLS
+            </div>
+            <p className="text-center text-xs text-muted-foreground">
+              {t("auth.noAccount")}{" "}
+              <Link to="/register" search={{ invitationToken }} className="font-medium text-primary underline underline-offset-4 hover:text-primary/80">
+                {t("auth.register")}
+              </Link>
+            </p>
+          </form>
+        </CardContent>
+      </Card>
+
+      <p className="text-center text-[11px] text-muted-foreground">
+        By signing in you agree to workspace terms. B12 preset • audited.
+      </p>
+    </div>
   );
 }
 
