@@ -7,27 +7,30 @@ function generateWeb({ feature, Feature, featurePlural, FeaturePlural }) {
 
   const queriesContent = `import { queryOptions } from '@tanstack/react-query'
 import { getApiClient } from '@/lib/api'
+import { useTenantStore } from '@/stores/tenant.store'
 
 export function ${featurePlural}ListQuery(page = 1, limit = 20) {
+  const tenantId = useTenantStore.getState().tenantId
   return queryOptions({
-    queryKey: ['${featurePlural}', 'list', { page, limit }] as const,
+    queryKey: ['${featurePlural}', tenantId, 'list', { page, limit }] as const,
     queryFn: async () => {
       const client = getApiClient()
-      const res = await (client as unknown as { ${featurePlural}: { list: (q: unknown) => Promise<{ status: number; body: unknown }> } }).${featurePlural}.list({ query: { page, limit } } as never)
-      if ((res as { status: number }).status !== 200) throw new Error('Failed to fetch ${featurePlural}')
-      return (res as { body: unknown }).body
+      const res = await client.${featurePlural}.list({ query: { page, limit } })
+      if (res.status !== 200) throw new Error('errors.networkError')
+      return res.body
     },
   })
 }
 
 export function ${feature}ByIdQuery(id: string) {
+  const tenantId = useTenantStore.getState().tenantId
   return queryOptions({
-    queryKey: ['${featurePlural}', 'detail', id] as const,
+    queryKey: ['${featurePlural}', tenantId, 'detail', id] as const,
     queryFn: async () => {
       const client = getApiClient()
-      const res = await (client as unknown as { ${featurePlural}: { getById: (q: unknown) => Promise<{ status: number; body: unknown }> } }).${featurePlural}.getById({ params: { id } } as never)
-      if ((res as { status: number }).status !== 200) throw new Error('${Feature} not found')
-      return (res as { body: unknown }).body
+      const res = await client.${featurePlural}.getById({ params: { id } })
+      if (res.status !== 200) throw new Error('errors.notFound')
+      return res.body
     },
     enabled: !!id,
   })
@@ -43,9 +46,9 @@ export function create${Feature}MutationOptions() {
     mutationKey: ['${featurePlural}', 'create'] as const,
     mutationFn: async (data: Create${Feature}Dto) => {
       const client = getApiClient()
-      const res = await (client as unknown as { ${featurePlural}: { create: (q: unknown) => Promise<{ status: number; body: unknown }> } }).${featurePlural}.create({ body: data } as never)
-      if (![200, 201].includes((res as { status: number }).status)) throw new Error('Failed to create ${feature}')
-      return (res as { body: unknown }).body
+      const res = await client.${featurePlural}.create({ body: data })
+      if (![200, 201].includes(res.status)) throw new Error('errors.serverError')
+      return res.body
     },
   })
 }
@@ -55,9 +58,9 @@ export function update${Feature}MutationOptions() {
     mutationKey: ['${featurePlural}', 'update'] as const,
     mutationFn: async ({ id, ...data }: Update${Feature}Dto & { id: string }) => {
       const client = getApiClient()
-      const res = await (client as unknown as { ${featurePlural}: { update: (q: unknown) => Promise<{ status: number; body: unknown }> } }).${featurePlural}.update({ params: { id }, body: data } as never)
-      if ((res as { status: number }).status !== 200) throw new Error('Failed to update ${feature}')
-      return (res as { body: unknown }).body
+      const res = await client.${featurePlural}.update({ params: { id }, body: data })
+      if (res.status !== 200) throw new Error('errors.serverError')
+      return res.body
     },
   })
 }
@@ -67,8 +70,8 @@ export function delete${Feature}MutationOptions() {
     mutationKey: ['${featurePlural}', 'delete'] as const,
     mutationFn: async (id: string) => {
       const client = getApiClient()
-      const res = await (client as unknown as { ${featurePlural}: { delete: (q: unknown) => Promise<{ status: number }> } }).${featurePlural}.delete({ params: { id } } as never)
-      if ((res as { status: number }).status !== 204) throw new Error('Failed to delete ${feature}')
+      const res = await client.${featurePlural}.delete({ params: { id } })
+      if (res.status !== 204) throw new Error('errors.serverError')
     },
   })
 }
@@ -91,6 +94,7 @@ import { EmptyState } from '@repo/ui/components/composed/empty-state'
 import { toast } from '@repo/ui/components/ui/toast'
 import { useAuthStore } from '@/stores/auth.store'
 import { getApiClient } from '@/lib/api'
+import { ${featurePlural}ListQuery } from '@/features/${featurePlural}/${feature}.queries'
 
 export const Route = createFileRoute('/${featurePlural}')({
   validateSearch: PaginationQuerySchema,
@@ -101,15 +105,7 @@ export const Route = createFileRoute('/${featurePlural}')({
   loaderDeps: ({ search }) => ({ page: search.page, limit: search.limit }),
   loader: async ({ deps, context }) => {
     const qc = context.queryClient
-    await qc.ensureQueryData({
-      queryKey: ['${featurePlural}', { page: deps.page, limit: deps.limit }],
-      queryFn: async () => {
-        const client = getApiClient()
-        const res = await (client as unknown as { ${featurePlural}: { list: (q: unknown) => Promise<{ status: number; body: unknown }> } }).${featurePlural}.list({ query: { page: deps.page, limit: deps.limit } } as never)
-        if ((res as { status: number }).status !== 200) throw new Error('Failed to fetch ${featurePlural}')
-        return (res as { body: unknown }).body
-      },
-    })
+    await qc.ensureQueryData(${featurePlural}ListQuery(deps.page, deps.limit))
   },
   component: ${FeaturePlural}Page,
 })
@@ -121,82 +117,73 @@ function ${FeaturePlural}Page() {
   const qc = useQueryClient()
   const page = search.page ?? 1
   const limit = search.limit ?? 20
-
-  const listQuery = useQuery({
-    queryKey: ['${featurePlural}', { page, limit }],
-    queryFn: async () => {
-      const client = getApiClient()
-      const res = await (client as unknown as { ${featurePlural}: { list: (q: unknown) => Promise<{ status: number; body: unknown }> } }).${featurePlural}.list({ query: { page, limit } } as never)
-      if ((res as { status: number }).status !== 200) throw new Error('Failed to fetch ${featurePlural}')
-      return (res as { body: unknown }).body as { items: Array<{ id: string; title: string; content?: string; createdAt: string }>; total: number; totalPages: number }
-    },
-  })
+  const listQuery = useQuery(${featurePlural}ListQuery(page, limit))
 
   const form = useForm<Create${Feature}Dto>({
-    resolver: zodResolver(Create${Feature}Schema as never),
-    defaultValues: { title: '', content: '' } as unknown as Create${Feature}Dto,
+    resolver: zodResolver(Create${Feature}Schema),
+    defaultValues: { name: '', description: '' },
   })
 
   const createMutation = useMutation({
     mutationFn: async (data: Create${Feature}Dto) => {
       const client = getApiClient()
-      const res = await (client as unknown as { ${featurePlural}: { create: (q: unknown) => Promise<{ status: number; body: unknown }> } }).${featurePlural}.create({ body: data } as never)
-      if (![200, 201].includes((res as { status: number }).status)) throw new Error('Create failed')
-      return (res as { body: unknown }).body
+      const res = await client.${featurePlural}.create({ body: data })
+      if (![200, 201].includes(res.status)) throw new Error('errors.serverError')
+      return res.body
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['${featurePlural}'] })
       form.reset()
-      toast.add({ title: 'Created', type: 'success' } as never)
+      toast.add({ title: t('common.created'), type: 'success' } as never)
     },
   })
 
-  const columns: DataTableColumn<{ id: string; title: string; content?: string; createdAt: string }>[] = [
-    { key: 'title', header: 'Title', cell: (r) => r.title },
-    { key: 'content', header: 'Content', cell: (r) => r.content ?? '—' },
-    { key: 'createdAt', header: 'Created', cell: (r) => new Date(r.createdAt).toLocaleString(), className: 'hidden sm:table-cell' },
+  const columns: DataTableColumn<{ id: string; name: string; description?: string; createdAt: string }>[] = [
+    { key: 'name', header: t('common.name'), cell: (r) => r.name },
+    { key: 'description', header: t('common.description'), cell: (r) => r.description ?? '—' },
+    { key: 'createdAt', header: t('common.created'), cell: (r) => new Date(r.createdAt).toLocaleString(), className: 'hidden sm:table-cell' },
   ]
 
   return (
     <div className="min-h-svh bg-muted/20">
       <div className="border-b bg-background">
         <div className="container mx-auto p-4">
-          <PageHeader title="${FeaturePlural}" description={\`Manage your \${'${featurePlural}'} here.\`} />
+          <PageHeader title={t('common.items')} description={t('common.manageItems')} />
         </div>
       </div>
       <div className="container mx-auto max-w-3xl p-4 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Create ${Feature}</CardTitle>
-            <CardDescription>Powered by @repo/contracts + @repo/ui</CardDescription>
+            <CardTitle>{t('common.create')}</CardTitle>
+            <CardDescription>{t('common.contractDriven')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
               <div className="space-y-2">
-                <Label>Title</Label>
-                <Input placeholder="Title" {...form.register('title' as never)} />
+                <Label>{t('common.name')}</Label>
+                <Input placeholder={t('common.name')} {...form.register('name')} />
               </div>
               <div className="space-y-2">
-                <Label>Content</Label>
-                <Textarea placeholder="Content" rows={3} {...form.register('content' as never)} />
+                <Label>{t('common.description')}</Label>
+                <Textarea placeholder={t('common.description')} rows={3} {...form.register('description')} />
               </div>
               <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Creating...' : 'Create'}
+                {createMutation.isPending ? t('common.creating') : t('common.create')}
               </Button>
             </form>
           </CardContent>
         </Card>
 
         {listQuery.isLoading ? (
-          <Card><CardContent className="p-6">Loading...</CardContent></Card>
+          <Card><CardContent className="p-6">{t('common.loading')}</CardContent></Card>
         ) : listQuery.data?.items.length === 0 ? (
-          <EmptyState title="No ${featurePlural} yet" description="Create one above" />
+          <EmptyState title={t('common.noResults')} description={t('common.create')} />
         ) : (
           <Card>
             <CardContent className="pt-6">
-              <DataTable data={listQuery.data?.items ?? []} columns={columns} getRowKey={(r) => r.id} />
+              <DataTable data={listQuery.data?.items ?? []} columns={columns} getRowKey={(r) => r.id} emptyText={t('common.noResults')} />
               {listQuery.data && (listQuery.data as { totalPages: number }).totalPages > 1 && (
-                <DataTablePagination page={page} totalPages={(listQuery.data as { totalPages: number }).totalPages} onPageChange={(p) => navigate({ search: (s) => ({ ...s, page: p }) })} />
+                <DataTablePagination page={page} totalPages={(listQuery.data as { totalPages: number }).totalPages} onPageChange={(p) => navigate({ search: (s) => ({ ...s, page: p }) })} pageLabel={(currentPage, pages) => t('common.pageOf', { page: currentPage, totalPages: pages })} previousLabel={t('common.previous')} nextLabel={t('common.next')} />
               )}
             </CardContent>
           </Card>
@@ -209,7 +196,10 @@ function ${FeaturePlural}Page() {
 
   writeFileIfMissing(path.join(webFeatureDir, `${feature}.queries.ts`), queriesContent);
   writeFileIfMissing(path.join(webFeatureDir, `${feature}.mutations.ts`), mutationsContent);
-  writeFileIfMissing(path.join(rootPath, "apps", "web", "src", "routes", `${featurePlural}.tsx`), routeContent);
+  writeFileIfMissing(
+    path.join(rootPath, "apps", "web", "src", "routes", `${featurePlural}.tsx`),
+    routeContent,
+  );
 }
 
 module.exports = { generateWeb };

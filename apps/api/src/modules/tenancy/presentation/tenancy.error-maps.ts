@@ -10,6 +10,10 @@ export const ORGANIZATION_ERRORS: ErrorMap = {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     i18nKey: "api.tenancy.operationFailed",
   },
+  TENANCY_EVENT_DISPATCH_FAILED: {
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    i18nKey: "api.error.eventDispatchFailed",
+  },
 };
 
 export const MEMBERSHIP_ERRORS: ErrorMap = {
@@ -27,6 +31,10 @@ export const MEMBERSHIP_ERRORS: ErrorMap = {
   TENANCY_OPERATION_FAILED: {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     i18nKey: "api.tenancy.operationFailed",
+  },
+  TENANCY_EVENT_DISPATCH_FAILED: {
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    i18nKey: "api.error.eventDispatchFailed",
   },
 };
 

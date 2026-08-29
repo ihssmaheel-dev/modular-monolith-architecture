@@ -11,6 +11,8 @@ import {
 import { DatabaseService } from "../database";
 import { RedisService } from "../redis/redis.service";
 import { sql } from "drizzle-orm";
+import { ClsService } from "nestjs-cls";
+import { env } from "../../config/env";
 
 @Injectable()
 export class PostgresHealthIndicator {
@@ -44,14 +46,14 @@ export class RedisHealthIndicator {
     try {
       const client = this.redis.getClient();
       if (!client) {
-        return session.up({ message: this.i18n.t("api.health.redisUnconfigured") });
+        return env.NODE_ENV === "production"
+          ? session.down({ message: this.i18n.t("api.health.redisUnavailable") })
+          : session.up({ message: this.i18n.t("api.health.redisUnconfigured") });
       }
       const pong = await client.ping();
       return pong === "PONG" ? session.up() : session.down({ pong });
     } catch {
-      return session.up({
-        message: this.i18n.t("api.health.redisDown"),
-      });
+      return session.down({ message: this.i18n.t("api.health.redisUnavailable") });
     }
   }
 }
@@ -61,16 +63,30 @@ export class OutboxHealthIndicator {
   constructor(
     private readonly database: DatabaseService,
     private readonly healthIndicatorService: HealthIndicatorService,
+    private readonly cls: ClsService,
   ) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     const session = this.healthIndicatorService.check(key);
     try {
-      const db = this.database.getDb();
-      const result = await (
-        db as unknown as { execute: (q: unknown) => Promise<Array<{ count: string | number }>> }
-      ).execute(sql`SELECT count(*)::int AS count FROM outbox_events WHERE status = 'PENDING'`);
-      const pendingCount = Number(result[0]?.count ?? 0);
+      const result = await this.cls.runWith(
+        { ...(this.cls.isActive() ? this.cls.get() : {}), systemScope: true } as unknown as Record<
+          string,
+          unknown
+        >,
+        () =>
+          this.database.runTransaction(async () => {
+            const db = this.database.getTx() ?? this.database.getDb();
+            return (
+              db as unknown as {
+                execute: (q: unknown) => Promise<{ rows: Array<{ count: string | number }> }>;
+              }
+            ).execute(
+              sql`SELECT count(*)::int AS count FROM outbox_events WHERE status = 'PENDING'`,
+            );
+          }),
+      );
+      const pendingCount = Number(result.rows[0]?.count ?? 0);
       const isHealthy = pendingCount < 5000;
       return isHealthy ? session.up({ pendingCount }) : session.down({ pendingCount });
     } catch (error) {

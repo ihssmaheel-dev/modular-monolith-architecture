@@ -77,27 +77,12 @@ export class DatabaseService implements OnModuleDestroy {
   }
 
   isConnected(): boolean {
-    return true;
+    return !this.pool.ended;
   }
 
   async withTransaction<T>(fn: () => Promise<T>): Promise<Result<T, TransactionError>> {
     try {
-      const result = await this.db.transaction(async (tx: DrizzleDb) => {
-        const current = this.cls?.isActive() ? this.cls.get() : {};
-        const tenantId = (current as { tenantId?: string })?.tenantId;
-        if (tenantId && typeof (tx as unknown as { execute?: unknown }).execute === "function") {
-          await (tx as unknown as { execute: (q: unknown) => Promise<void> }).execute(
-            sql`SET LOCAL app.current_tenant = ${tenantId}`,
-          );
-        }
-        if (this.cls) {
-          return this.cls.runWith(
-            { ...current, databaseTx: tx } as unknown as Record<string, unknown>,
-            fn,
-          );
-        }
-        return fn();
-      });
+      const result = await this.runTransaction(fn);
       return ok(result);
     } catch (error) {
       this.logger.error({ error: String(error) }, "Transaction failed");
@@ -108,15 +93,16 @@ export class DatabaseService implements OnModuleDestroy {
   async withResultTransaction<T, E>(
     fn: () => Promise<Result<T, E>>,
   ): Promise<Result<T, E | TransactionError>> {
+    if (this.getTx()) {
+      try {
+        return await fn();
+      } catch {
+        return err({ type: "TRANSACTION_FAILED" });
+      }
+    }
+
     try {
       const result = await this.db.transaction(async (tx: DrizzleDb) => {
-        const current = this.cls?.isActive() ? this.cls.get() : {};
-        const tenantId = (current as { tenantId?: string })?.tenantId;
-        if (tenantId && typeof (tx as unknown as { execute?: unknown }).execute === "function") {
-          await (tx as unknown as { execute: (q: unknown) => Promise<void> }).execute(
-            sql`SET LOCAL app.current_tenant = ${tenantId}`,
-          );
-        }
         const run = async () => {
           const inner = await fn();
           if (inner.isErr()) {
@@ -124,13 +110,7 @@ export class DatabaseService implements OnModuleDestroy {
           }
           return inner.value;
         };
-        if (this.cls) {
-          return this.cls.runWith(
-            { ...current, databaseTx: tx } as unknown as Record<string, unknown>,
-            run,
-          );
-        }
-        return run();
+        return this.runWithTransactionContext(tx, run);
       });
       return ok(result as T);
     } catch (error) {
@@ -143,6 +123,21 @@ export class DatabaseService implements OnModuleDestroy {
     }
   }
 
+  /** Runs an HTTP or worker operation in one transaction and preserves thrown failures. */
+  async runTransaction<T>(fn: () => Promise<T>): Promise<T> {
+    const existing = this.getTx();
+    if (existing) return fn();
+    return this.db.transaction((tx: DrizzleDb) => this.runWithTransactionContext(tx, fn));
+  }
+
+  /** Changes the tenant scope inside the active transaction for invitation/system workflows. */
+  async setTenantContext(tenantId: string): Promise<void> {
+    const tx = this.getTx();
+    if (!tx) throw new Error("TENANT_CONTEXT_REQUIRES_TRANSACTION");
+    await this.setConfig(tx, "app.current_tenant", tenantId);
+    this.cls?.set("tenantId", tenantId);
+  }
+
   getTx(): DrizzleDb | undefined {
     if (this.cls?.isActive()) {
       return this.cls.get("databaseTx" as never) as DrizzleDb | undefined;
@@ -153,5 +148,37 @@ export class DatabaseService implements OnModuleDestroy {
   async onModuleDestroy(): Promise<void> {
     await this.pool.end();
     this.logger.info({}, "Postgres pool closed");
+  }
+
+  private async runWithTransactionContext<T>(tx: DrizzleDb, fn: () => Promise<T>): Promise<T> {
+    await this.configureTransactionContext(tx);
+    const current = this.cls?.isActive() ? this.cls.get() : {};
+    if (!this.cls) return fn();
+    return this.cls.runWith(
+      { ...current, databaseTx: tx } as unknown as Record<string, unknown>,
+      fn,
+    );
+  }
+
+  private async configureTransactionContext(tx: DrizzleDb): Promise<void> {
+    const execute = (tx as unknown as { execute?: (query: unknown) => Promise<unknown> }).execute;
+    if (typeof execute !== "function") return;
+    const current = (this.cls?.isActive() ? this.cls.get() : {}) as Record<string, unknown>;
+    const mode = typeof current.tenantMode === "string" ? current.tenantMode : env.TENANCY_MODE;
+    const tenantId = typeof current.tenantId === "string" ? current.tenantId : "";
+    const userId = typeof current.userId === "string" ? current.userId : "";
+    const userEmail = typeof current.userEmail === "string" ? current.userEmail : "";
+    const systemScope = current.systemScope === true ? "true" : "false";
+    await execute(sql`select set_config('app.tenancy_mode', ${mode}, true)`);
+    await execute(sql`select set_config('app.current_tenant', ${tenantId}, true)`);
+    await execute(sql`select set_config('app.current_user', ${userId}, true)`);
+    await execute(sql`select set_config('app.current_user_email', ${userEmail}, true)`);
+    await execute(sql`select set_config('app.system_scope', ${systemScope}, true)`);
+  }
+
+  private async setConfig(tx: DrizzleDb, key: string, value: string): Promise<void> {
+    const execute = (tx as unknown as { execute?: (query: unknown) => Promise<unknown> }).execute;
+    if (typeof execute !== "function") return;
+    await execute(sql`select set_config(${key}, ${value}, true)`);
   }
 }

@@ -25,7 +25,13 @@ export const RequestUploadSchema = z.object({
 });
 
 export const ConfirmUploadSchema = z.object({
-  fileKey: z.string().min(1),
+  fileKey: z
+    .string()
+    .min(1)
+    .max(1024)
+    .refine((value) => !value.includes("..") && !value.startsWith("/"), {
+      message: "api.error.invalidRequest",
+    }),
 });
 
 export const FileMetadataSchema = z.object({

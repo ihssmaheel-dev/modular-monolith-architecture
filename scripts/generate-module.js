@@ -37,6 +37,22 @@ folders.forEach((folder) => {
   fs.mkdirSync(path.join(basePath, folder), { recursive: true });
 });
 
+// Keep the module scaffold compilable while the domain is being designed. The
+// full vertical-slice generator adds contracts, policies, commands, tests, and
+// a web slice once the first feature has a defined contract.
+const entityContent = `export class ${pascalName} {
+  private constructor(public readonly id: string, public readonly tenantId?: string) {}
+
+  static fromPersistence(data: { id: string; tenantId?: string }): ${pascalName} {
+    return new ${pascalName}(data.id, data.tenantId);
+  }
+}
+`;
+fs.writeFileSync(path.join(basePath, "domain/entities", `${moduleName}.entity.ts`), entityContent);
+
+const moduleReadme = `# ${pascalName} module\n\nThis is a compilable boundary scaffold. Define the first feature with:\n\n'pnpm generate:feature ${moduleName} <feature>'\n\nBefore registering the module, add contracts, authorization policies, migrations, localized messages,\nand unit/integration/E2E coverage. Keep persistence tables private to this module.\n`;
+fs.writeFileSync(path.join(basePath, "README.md"), moduleReadme);
+
 const moduleFileContent = `import { Module } from "@nestjs/common";
 import { ${pascalName}Controller } from "./presentation/${moduleName}.controller";
 import { ${pascalName}Repository } from "./infrastructure/${moduleName}.repository";
@@ -105,7 +121,7 @@ import { DatabaseService } from "../../../infrastructure/database";
 import { TenantContextService } from "../../../infrastructure/database";
 import { BaseRepository } from "../../../infrastructure/database";
 import { ${moduleName}Table, type ${pascalName}Row } from "./schemas/${moduleName}.schema";
-import { ${pascalName} } from "../../domain/entities/${moduleName}.entity";
+import { ${pascalName} } from "../domain/entities/${moduleName}.entity";
 
 @Injectable()
 export class ${pascalName}Repository extends BaseRepository<${pascalName}, ${pascalName}Row> {

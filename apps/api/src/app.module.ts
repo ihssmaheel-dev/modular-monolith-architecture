@@ -39,6 +39,7 @@ import {
   TenantContextGuard,
   OriginValidationInterceptor,
   RequestIdInterceptor,
+  DatabaseTransactionInterceptor,
 } from "./common";
 
 @Module({
@@ -112,6 +113,10 @@ import {
     {
       provide: APP_INTERCEPTOR,
       useClass: RequestIdInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: DatabaseTransactionInterceptor,
     },
   ],
 })

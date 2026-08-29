@@ -3,9 +3,15 @@ export type EmailTaken = { type: "EMAIL_TAKEN"; email: string };
 export type InvalidUserData = { type: "INVALID_USER_DATA"; field: string; reason: string };
 export type InvalidPasswordResetToken = { type: "INVALID_PASSWORD_RESET_TOKEN" };
 export type UserOwnsOrganization = { type: "USER_OWNS_ORGANIZATION" };
+export type UserEventDispatchFailed = { type: "USER_EVENT_DISPATCH_FAILED" };
 
 export type UserError =
-  UserNotFound | EmailTaken | InvalidUserData | InvalidPasswordResetToken | UserOwnsOrganization;
+  | UserNotFound
+  | EmailTaken
+  | InvalidUserData
+  | InvalidPasswordResetToken
+  | UserOwnsOrganization
+  | UserEventDispatchFailed;
 
 export function formatUserError(error: UserError): string {
   switch (error.type) {
@@ -19,5 +25,7 @@ export function formatUserError(error: UserError): string {
       return "Invalid password reset token";
     case "USER_OWNS_ORGANIZATION":
       return "User owns an organization";
+    case "USER_EVENT_DISPATCH_FAILED":
+      return "User event dispatch failed";
   }
 }

@@ -78,4 +78,6 @@ console.log(` 1. Register ${ModuleName}Module in 'apps/api/src/app.module.ts'.`)
 console.log(` 2. Run 'pnpm db:generate && pnpm db:migrate' to create table migrations.`);
 console.log(` 3. Run 'pnpm test:unit' to run the new Vitest unit test suite.`);
 console.log(" 4. Run 'pnpm build' to verify end-to-end type safety.");
-console.log(` 5. Web route: apps/web/src/routes/${featurePlural}.tsx + features/${featurePlural}/*`);
+console.log(
+  ` 5. Web route: apps/web/src/routes/${featurePlural}.tsx + features/${featurePlural}/*`,
+);

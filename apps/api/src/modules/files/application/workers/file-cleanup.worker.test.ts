@@ -12,6 +12,7 @@ describe("FileCleanupWorker", () => {
   let mockStorage: StorageService;
   let mockMetrics: MetricsService;
   let mockLogger: PinoLoggerService;
+  let mockDatabase: import("../../../../infrastructure/database").DatabaseService;
 
   const STALE_FILE: FileEntity = {
     id: "file-stale-1",
@@ -30,11 +31,11 @@ describe("FileCleanupWorker", () => {
   beforeEach(() => {
     mockFilesRepo = {
       findPendingFilesBefore: vi.fn().mockResolvedValue([STALE_FILE]),
-      deleteById: vi.fn().mockResolvedValue({ isOk: () => true }),
+      deleteById: vi.fn().mockResolvedValue({ isOk: () => true, value: STALE_FILE }),
     } as unknown as FilesRepository;
 
     mockStorage = {
-      delete: vi.fn().mockResolvedValue({ isOk: () => true }),
+      delete: vi.fn().mockResolvedValue({ isOk: () => true, isErr: () => false }),
     } as unknown as StorageService;
 
     mockMetrics = {
@@ -51,12 +52,16 @@ describe("FileCleanupWorker", () => {
     const mockTenantContext = {
       run: vi.fn(async (_ctx, fn) => await fn()),
     } as unknown as import("../../../../infrastructure/database").TenantContextService;
+    mockDatabase = {
+      runTransaction: vi.fn(async (fn) => await fn()),
+    } as unknown as import("../../../../infrastructure/database").DatabaseService;
 
     worker = new FileCleanupWorker(
       mockFilesRepo,
       mockStorage,
       mockMetrics,
       mockTenantContext,
+      mockDatabase,
       mockLogger,
     );
   });

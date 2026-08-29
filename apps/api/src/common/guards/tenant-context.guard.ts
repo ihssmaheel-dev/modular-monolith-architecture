@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ClsService } from "nestjs-cls";
-import type { AuthenticatedUser, TenantContext } from "@repo/contracts";
+import { TenantIdSchema, type AuthenticatedUser, type TenantContext } from "@repo/contracts";
 import { env } from "../../config/env";
 import { I18nService } from "../../infrastructure/i18n/i18n.service";
 import { ResolveTenantAccessQuery } from "../../modules/tenancy/application/queries/resolve-tenant-access.query";
@@ -39,6 +39,9 @@ export class TenantContextGuard implements CanActivate {
         ? request.headers["accept-language"]
         : undefined;
     const tenantId = this.readTenantId(request);
+    if (tenantId && !TenantIdSchema.safeParse(tenantId).success) {
+      throw new BadRequestException(this.i18n.t("api.tenancy.invalidTenant", lang));
+    }
     const result = await this.resolver.execute(request.user.sub, tenantId);
     if (result.isErr() && result.error.type === "TENANT_REQUIRED") {
       throw new BadRequestException(this.i18n.t("api.tenancy.tenantRequired", lang));
@@ -60,7 +63,7 @@ export class TenantContextGuard implements CanActivate {
     const value = request.headers?.["x-tenant-id"];
     const header = Array.isArray(value) ? value[0] : value;
     if (header) return header;
-    return typeof request.query?.tenantId === "string" ? request.query.tenantId : undefined;
+    return typeof value === "string" ? value : undefined;
   }
 
   private activate(request: TenantRequest, tenant: TenantContext): true {

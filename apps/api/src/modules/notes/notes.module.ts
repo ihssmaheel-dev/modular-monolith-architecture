@@ -9,8 +9,10 @@ import { GetNotesQuery } from "./application/queries/get-notes.query";
 import { GetNoteByIdQuery } from "./application/queries/get-note-by-id.query";
 import { NotesRealtimeListener } from "./application/listeners/notes-realtime.listener";
 import { NotesController } from "./presentation/notes.controller";
+import { OutboxModule } from "../../infrastructure/outbox/outbox.module";
 
 @Module({
+  imports: [OutboxModule],
   controllers: [NotesController],
   providers: [
     NotesRepository,

@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,42 +11,44 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@repo/ui/components/ui/alert-dialog"
+} from "@repo/ui/components/ui/alert-dialog";
 
 export type ConfirmDialogProps = {
-  title: string
-  description: string
-  confirmText?: string
-  cancelText?: string
-  variant?: "default" | "destructive"
-  onConfirm: () => void | Promise<void>
-  trigger?: React.ReactNode
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-}
+  title: string;
+  description: string;
+  confirmText: string;
+  cancelText: string;
+  pendingText: string;
+  variant?: "default" | "destructive";
+  onConfirm: () => void | Promise<void>;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
 
 export function ConfirmDialog({
   title,
   description,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText,
+  cancelText,
+  pendingText,
   variant = "default",
   onConfirm,
   trigger,
   open,
   onOpenChange,
 }: ConfirmDialogProps) {
-  const [isPending, setIsPending] = React.useState(false)
+  const [isPending, setIsPending] = React.useState(false);
 
   const handleConfirm = async () => {
-    setIsPending(true)
+    setIsPending(true);
     try {
-      await onConfirm()
+      await onConfirm();
     } finally {
-      setIsPending(false)
-      onOpenChange?.(false)
+      setIsPending(false);
+      onOpenChange?.(false);
     }
-  }
+  };
 
   const content = (
     <AlertDialogContent>
@@ -58,17 +60,21 @@ export function ConfirmDialog({
         <AlertDialogCancel disabled={isPending}>{cancelText}</AlertDialogCancel>
         <AlertDialogAction
           onClick={(e) => {
-            e.preventDefault()
-            handleConfirm()
+            e.preventDefault();
+            handleConfirm();
           }}
           disabled={isPending}
-          className={variant === "destructive" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : undefined}
+          className={
+            variant === "destructive"
+              ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              : undefined
+          }
         >
-          {isPending ? "Please wait..." : confirmText}
+          {isPending ? pendingText : confirmText}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
-  )
+  );
 
   if (trigger) {
     return (
@@ -76,12 +82,12 @@ export function ConfirmDialog({
         <AlertDialogTrigger render={trigger as React.ReactElement} />
         {content}
       </AlertDialog>
-    )
+    );
   }
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {content}
     </AlertDialog>
-  )
+  );
 }

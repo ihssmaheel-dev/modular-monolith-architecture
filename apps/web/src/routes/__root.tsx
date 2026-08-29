@@ -1,76 +1,94 @@
-import { createRootRouteWithContext, Outlet, HeadContent, Scripts, Link } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import type { QueryClient } from '@tanstack/react-query'
-import { ThemeProvider } from '@/components/theme-provider'
-import { Toaster } from '@repo/ui/components/ui/toast'
-import { Button } from '@repo/ui/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
-import { QueryProvider } from '@/lib/query-client'
-import { I18nProvider } from '@/lib/i18n'
-import '@repo/ui/globals.css'
+import {
+  createRootRouteWithContext,
+  Outlet,
+  HeadContent,
+  Scripts,
+  Link,
+} from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import type { QueryClient } from "@tanstack/react-query";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@repo/ui/components/ui/toast";
+import { Button } from "@repo/ui/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/ui/card";
+import { QueryProvider } from "@/lib/query-client";
+import { I18nProvider } from "@/lib/i18n";
+import { useTranslation } from "react-i18next";
+import "@repo/ui/globals.css";
 
 export interface RouterContext {
-  queryClient: QueryClient
+  queryClient: QueryClient;
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Modular Monolith — TanStack Start' },
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "Modular Monolith — TanStack Start" },
     ],
-    links: [
-      { rel: 'icon', href: '/favicon.ico' },
-    ],
+    links: [{ rel: "icon", href: "/favicon.ico" }],
   }),
   component: RootComponent,
   notFoundComponent: NotFound,
   errorComponent: RootError,
-  pendingComponent: () => (
-    <div className="flex min-h-svh items-center justify-center p-6">
-      <p className="text-sm text-muted-foreground">Loading...</p>
-    </div>
-  ),
-})
+  pendingComponent: RootPending,
+});
 
 function NotFound() {
+  const { t } = useTranslation();
   return (
     <div className="flex min-h-svh items-center justify-center p-6 bg-muted/20">
       <Card className="max-w-md w-full">
         <CardHeader>
-          <CardTitle>Page not found</CardTitle>
-          <CardDescription>The page you are looking for does not exist.</CardDescription>
+          <CardTitle>{t("errors.notFound")}</CardTitle>
+          <CardDescription>{t("errors.notFound")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button render={<Link to="/" />} className="w-full">
-            Back to home
+            {t("common.back")}
           </Button>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
-function RootError({ error }: { error: Error }) {
+function RootError() {
+  const { t } = useTranslation();
   return (
     <div className="flex min-h-svh items-center justify-center p-6 bg-muted/20">
       <Card className="max-w-md w-full border-destructive/30">
         <CardHeader>
-          <CardTitle className="text-destructive">Something went wrong</CardTitle>
-          <CardDescription>{error.message || 'An unexpected error occurred'}</CardDescription>
+          <CardTitle className="text-destructive">{t("errors.unexpected")}</CardTitle>
+          <CardDescription>{t("errors.serverError")}</CardDescription>
         </CardHeader>
         <CardContent className="flex gap-2">
           <Button variant="outline" className="flex-1" onClick={() => window.location.reload()}>
-            Reload
+            {t("common.retry")}
           </Button>
           <Button className="flex-1" render={<Link to="/" />}>
-            Home
+            {t("common.back")}
           </Button>
         </CardContent>
       </Card>
     </div>
-  )
+  );
+}
+
+function RootPending() {
+  const { t } = useTranslation();
+  return (
+    <div className="flex min-h-svh items-center justify-center p-6">
+      <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+    </div>
+  );
 }
 
 function RootComponent() {
@@ -94,5 +112,5 @@ function RootComponent() {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }

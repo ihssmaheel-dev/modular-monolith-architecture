@@ -20,7 +20,15 @@ export function getTransferHeaders(options: ApiClientOptions): Record<string, st
   const tenantId = options.getTenantId?.();
   if (authorization) headers.authorization = authorization;
   if (tenantId) headers["x-tenant-id"] = tenantId;
+  const csrf = readCookie("XSRF-TOKEN");
+  if (csrf) headers["x-xsrf-token"] = csrf;
   return headers;
+}
+
+export function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const encoded = document.cookie.split("; ").find((entry) => entry.startsWith(`${name}=`));
+  return encoded ? decodeURIComponent(encoded.slice(name.length + 1)) : null;
 }
 
 export async function requestRefresh(
@@ -33,6 +41,7 @@ export async function requestRefresh(
     headers: {
       "content-type": "application/json",
       "accept-language": options.getLocale?.() ?? "en",
+      ...(readCookie("XSRF-TOKEN") ? { "x-xsrf-token": readCookie("XSRF-TOKEN")! } : {}),
     },
     body: JSON.stringify({ refreshToken: options.getRefreshToken?.() ?? undefined }),
   });

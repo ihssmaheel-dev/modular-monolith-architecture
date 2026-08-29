@@ -6,6 +6,7 @@ import {
   createIdempotencyKey,
   getAuthorizationHeader,
   getTransferHeaders,
+  readCookie,
   requestRefresh,
 } from "./utils";
 import {
@@ -41,6 +42,10 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
 
     if (MUTATING_METHODS.has(method) && !headers["idempotency-key"]) {
       headers["idempotency-key"] = createIdempotencyKey();
+    }
+    if (MUTATING_METHODS.has(method) && !headers["x-xsrf-token"]) {
+      const csrf = readCookie("XSRF-TOKEN");
+      if (csrf) headers["x-xsrf-token"] = csrf;
     }
 
     const url = `${baseUrl.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
@@ -86,17 +91,21 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
 
   const orpcLink = new RPCLink({
     url: baseUrl,
-      fetch: async (input, init) => {
-        const headers = new Headers((init as RequestInit | undefined)?.headers);
+    fetch: async (input, init) => {
+      const headers = new Headers((init as RequestInit | undefined)?.headers);
       const auth = getAuthorizationHeader(options);
       if (auth) headers.set("authorization", auth);
       const tenantId = options.getTenantId?.();
       if (tenantId) headers.set("x-tenant-id", tenantId);
-        headers.set("accept-language", options.getLocale?.() ?? "en");
-        const method = ((init as RequestInit | undefined)?.method ?? "GET").toUpperCase();
-        if (MUTATING_METHODS.has(method) && !headers.has("idempotency-key")) {
-          headers.set("idempotency-key", createIdempotencyKey());
-        }
+      headers.set("accept-language", options.getLocale?.() ?? "en");
+      const method = ((init as RequestInit | undefined)?.method ?? "GET").toUpperCase();
+      if (MUTATING_METHODS.has(method) && !headers.has("idempotency-key")) {
+        headers.set("idempotency-key", createIdempotencyKey());
+      }
+      if (MUTATING_METHODS.has(method) && !headers.has("x-xsrf-token")) {
+        const csrf = readCookie("XSRF-TOKEN");
+        if (csrf) headers.set("x-xsrf-token", csrf);
+      }
       return fetch(input, {
         ...(init as RequestInit | undefined),
         headers,

@@ -5,9 +5,10 @@ import { GetUserByIdQuery } from "../queries/get-user-by-id.query";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { User } from "../../domain/entities/user.entity";
 import { ok, err } from "neverthrow";
-import { UserDeletedEvent } from "../../domain/events/user.events";
 import { DistributedCacheService } from "../../../../infrastructure/cache/distributed-cache.service";
 import { CanDeleteUserQuery } from "../../../tenancy/application/queries/can-delete-user.query";
+import type { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
+import { ok as resultOk } from "neverthrow";
 
 describe("DeleteUserCommand", () => {
   let command: DeleteUserCommand;
@@ -16,6 +17,7 @@ describe("DeleteUserCommand", () => {
   let eventEmitter: EventEmitter2;
   let cacheService: DistributedCacheService;
   let canDeleteUser: CanDeleteUserQuery;
+  let outbox: OutboxService;
 
   beforeEach(() => {
     repository = {
@@ -28,11 +30,15 @@ describe("DeleteUserCommand", () => {
 
     eventEmitter = {
       emit: vi.fn(),
+      emitAsync: vi.fn().mockResolvedValue([]),
     } as unknown as EventEmitter2;
     cacheService = { invalidateGlobal: vi.fn() } as unknown as DistributedCacheService;
     canDeleteUser = {
       execute: vi.fn().mockResolvedValue(ok(undefined)),
     } as unknown as CanDeleteUserQuery;
+    outbox = {
+      dispatch: vi.fn().mockResolvedValue(resultOk(undefined)),
+    } as unknown as OutboxService;
 
     command = new DeleteUserCommand(
       repository,
@@ -40,6 +46,7 @@ describe("DeleteUserCommand", () => {
       eventEmitter,
       cacheService,
       canDeleteUser,
+      outbox,
     );
   });
 
@@ -76,7 +83,7 @@ describe("DeleteUserCommand", () => {
     expect(result.isOk()).toBe(true);
     expect(repository.deleteById).toHaveBeenCalledWith("123");
     expect(cacheService.invalidateGlobal).toHaveBeenCalledWith("user:123");
-    expect(eventEmitter.emit).toHaveBeenCalledWith("user.deleted", expect.any(UserDeletedEvent));
+    expect(outbox.dispatch).toHaveBeenCalledWith("user.deleted", expect.anything());
   });
 
   it("should return USER_NOT_FOUND if repository delete fails", async () => {

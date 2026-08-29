@@ -14,10 +14,15 @@ export class DeleteNoteCommand {
     private readonly repository: NotesRepository,
     private readonly getNoteById: GetNoteByIdQuery,
     private readonly eventEmitter: EventEmitter2,
-    private readonly outbox?: OutboxService,
+    private readonly outbox: OutboxService,
   ) {}
 
-  async execute(id: string, actor: AuthenticatedUser): Promise<Result<void, NoteNotFound>> {
+  async execute(
+    id: string,
+    actor: AuthenticatedUser,
+  ): Promise<
+    Result<void, NoteNotFound | import("../../domain/errors/note.errors").NoteEventDispatchFailed>
+  > {
     const existing = await this.getNoteById.execute(id, actor);
     if (existing.isErr()) return err(existing.error);
 
@@ -30,17 +35,21 @@ export class DeleteNoteCommand {
       existing.value.createdBy ?? actor.sub,
       existing.value.tenantId,
     );
-    if (this.outbox) await this.outbox.dispatch("note.deleted", event);
-    else this.eventEmitter.emit("note.deleted", event);
-    this.eventEmitter.emit("database.mutated", {
-      collectionName: "notes",
-      documentId: id,
-      action: "DELETE",
-      actorId: actor.sub,
-      tenantId: existing.value.tenantId,
-      before: { id, title: existing.value.title },
-      after: null,
-    });
+    const dispatched = await this.outbox.dispatch("note.deleted", event);
+    if (dispatched.isErr()) return err({ type: "NOTE_EVENT_DISPATCH_FAILED" });
+    try {
+      await this.eventEmitter.emitAsync("database.mutated", {
+        collectionName: "notes",
+        documentId: id,
+        action: "DELETE",
+        actorId: actor.sub,
+        tenantId: existing.value.tenantId,
+        before: { id, title: existing.value.title },
+        after: null,
+      });
+    } catch {
+      return err({ type: "NOTE_EVENT_DISPATCH_FAILED" });
+    }
 
     return ok(undefined);
   }

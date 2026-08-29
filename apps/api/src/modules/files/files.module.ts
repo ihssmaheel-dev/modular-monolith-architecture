@@ -10,8 +10,10 @@ import { GetFileDownloadUrlQuery } from "./application/queries/get-file-download
 import { ListFilesByParentQuery } from "./application/queries/list-files-by-parent.query";
 import { FileCleanupWorker } from "./application/workers/file-cleanup.worker";
 import { FilesRepository } from "./infrastructure/files.repository";
+import { DatabaseModule } from "../../infrastructure/database";
 
 @Module({
+  imports: [DatabaseModule],
   controllers: [FilesController],
   providers: [
     RequestUploadCommand,

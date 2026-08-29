@@ -1,13 +1,13 @@
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
-import type { AuthResponse } from '@repo/contracts'
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import type { AuthResponse } from "@repo/contracts";
 
 interface AuthState {
-  accessToken: string | null
-  refreshToken: string | null
-  user: AuthResponse['user'] | null
-  setAuth: (response: AuthResponse) => void
-  clearAuth: () => void
+  accessToken: string | null;
+  refreshToken: string | null;
+  user: AuthResponse["user"] | null;
+  setAuth: (response: AuthResponse) => void;
+  clearAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,13 +25,13 @@ export const useAuthStore = create<AuthState>()(
       clearAuth: () => set({ accessToken: null, refreshToken: null, user: null }),
     }),
     {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : undefined as unknown as Storage)),
-      partialize: (state) => ({
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        user: state.user,
-      }),
+      name: "auth-storage",
+      storage: createJSONStorage(() =>
+        typeof window !== "undefined" ? localStorage : (undefined as unknown as Storage),
+      ),
+      // Credentials remain in memory. The API's HttpOnly refresh cookie is the
+      // durable credential and cannot be read by injected browser scripts.
+      partialize: (state) => ({ user: state.user }),
     },
   ),
-)
+);

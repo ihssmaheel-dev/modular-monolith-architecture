@@ -7,6 +7,7 @@ import { env } from "../../../../config/env";
 import { Membership } from "../../domain/entities/tenancy.entity";
 import { MembershipsRepository } from "../../infrastructure/memberships.repository";
 import { ResolveTenantAccessQuery } from "./resolve-tenant-access.query";
+import type { DatabaseService, TenantContextService } from "../../../../infrastructure/database";
 
 describe("ResolveTenantAccessQuery", () => {
   let query: ResolveTenantAccessQuery;
@@ -15,7 +16,13 @@ describe("ResolveTenantAccessQuery", () => {
   beforeEach(() => {
     env.TENANCY_MODE = "multi";
     memberships = { findMembership: vi.fn() } as unknown as MembershipsRepository;
-    query = new ResolveTenantAccessQuery(memberships);
+    const database = {
+      withResultTransaction: vi.fn().mockImplementation(async (callback) => callback()),
+    } as unknown as DatabaseService;
+    const tenantContext = {
+      run: vi.fn((_context, callback) => callback()),
+    } as unknown as TenantContextService;
+    query = new ResolveTenantAccessQuery(memberships, database, tenantContext);
   });
 
   it("returns single mode without a membership lookup", async () => {

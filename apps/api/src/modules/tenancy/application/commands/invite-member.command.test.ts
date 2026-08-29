@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { err, ok } from "neverthrow";
 import type { AuthenticatedUser } from "@repo/contracts";
 import type { Locale } from "@repo/i18n";
-import { EventEmitter2 } from "@nestjs/event-emitter";
+import type { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 import { TenantContextService } from "../../../../infrastructure/database";
 import { Invitation, Membership, Organization } from "../../domain/entities/tenancy.entity";
@@ -20,7 +20,7 @@ describe("InviteMemberCommand", () => {
   let memberships: MembershipsRepository;
   let organizations: OrganizationsRepository;
   let context: TenantContextService;
-  let events: EventEmitter2;
+  let outbox: OutboxService;
 
   beforeEach(() => {
     invitations = {
@@ -33,8 +33,8 @@ describe("InviteMemberCommand", () => {
     context = {
       get: vi.fn().mockReturnValue({ tenantId: "org-1", role: "admin" }),
     } as unknown as TenantContextService;
-    events = { emit: vi.fn() } as unknown as EventEmitter2;
-    command = new InviteMemberCommand(invitations, memberships, organizations, context, events);
+    outbox = { dispatch: vi.fn().mockResolvedValue(ok(undefined)) } as unknown as OutboxService;
+    command = new InviteMemberCommand(invitations, memberships, organizations, context, outbox);
   });
 
   it("requires an active tenant", async () => {
@@ -110,7 +110,7 @@ describe("InviteMemberCommand", () => {
         tokenHash: expect.any(String),
       }),
     );
-    expect(events.emit).toHaveBeenCalledWith(
+    expect(outbox.dispatch).toHaveBeenCalledWith(
       "tenancy.invitation.created",
       expect.objectContaining({
         tenantId: "org-1",

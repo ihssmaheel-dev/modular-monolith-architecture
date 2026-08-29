@@ -6,8 +6,9 @@ import { GetUserByEmailQuery } from "../queries/get-user-by-email.query";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { User } from "../../domain/entities/user.entity";
 import { ok, err } from "neverthrow";
-import { UserUpdatedEvent } from "../../domain/events/user.events";
 import { DistributedCacheService } from "../../../../infrastructure/cache/distributed-cache.service";
+import type { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
+import { ok as resultOk } from "neverthrow";
 
 describe("UpdateUserCommand", () => {
   let command: UpdateUserCommand;
@@ -16,6 +17,7 @@ describe("UpdateUserCommand", () => {
   let getUserByEmail: GetUserByEmailQuery;
   let eventEmitter: EventEmitter2;
   let distributedCacheService: DistributedCacheService;
+  let outbox: OutboxService;
 
   beforeEach(() => {
     repository = {
@@ -32,11 +34,15 @@ describe("UpdateUserCommand", () => {
 
     eventEmitter = {
       emit: vi.fn(),
+      emitAsync: vi.fn().mockResolvedValue([]),
     } as unknown as EventEmitter2;
 
     distributedCacheService = {
       invalidateGlobal: vi.fn(),
     } as unknown as DistributedCacheService;
+    outbox = {
+      dispatch: vi.fn().mockResolvedValue(resultOk(undefined)),
+    } as unknown as OutboxService;
 
     command = new UpdateUserCommand(
       repository,
@@ -44,6 +50,7 @@ describe("UpdateUserCommand", () => {
       getUserByEmail,
       eventEmitter,
       distributedCacheService,
+      outbox,
     );
   });
 
@@ -115,6 +122,6 @@ describe("UpdateUserCommand", () => {
       name: "New Name",
       role: "user",
     });
-    expect(eventEmitter.emit).toHaveBeenCalledWith("user.updated", expect.any(UserUpdatedEvent));
+    expect(outbox.dispatch).toHaveBeenCalledWith("user.updated", expect.anything());
   });
 });

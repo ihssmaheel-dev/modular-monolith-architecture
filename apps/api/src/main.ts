@@ -1,4 +1,5 @@
 import { setGlobalDispatcher, Agent } from "undici";
+import { randomUUID } from "node:crypto";
 import "./tracing";
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
@@ -14,9 +15,7 @@ import { env } from "./config/env";
 import { setupApiDocs } from "./infrastructure/api-docs";
 import { printStartupBanner } from "./common/utils/startup-banner.util";
 import { MAX_FILE_SIZE_BYTES } from "@repo/contracts";
-
-// Prevent MaxListenersExceededWarning from 11+ shutdown handlers (DB, Redis, Queue, etc.)
-process.setMaxListeners(0);
+import { ClsService } from "nestjs-cls";
 
 // Configure high-performance global HTTP agent
 setGlobalDispatcher(
@@ -33,7 +32,7 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter({
       bodyLimit: MAX_BODY_SIZE_BYTES,
-      trustProxy: true,
+      trustProxy: env.TRUST_PROXY,
     }),
   );
 
@@ -61,6 +60,28 @@ async function bootstrap() {
     hook: "onRequest",
   });
 
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addHook("onRequest", (request, reply, done) => {
+      const requestCookies = request as typeof request & {
+        cookies?: Record<string, string | undefined>;
+      };
+      const replyWithCookies = reply as typeof reply & {
+        setCookie: (name: string, value: string, options: Record<string, unknown>) => void;
+      };
+      if (!requestCookies.cookies?.["XSRF-TOKEN"]) {
+        replyWithCookies.setCookie("XSRF-TOKEN", randomUUID(), {
+          httpOnly: false,
+          secure: env.NODE_ENV === "production",
+          sameSite: "strict",
+          path: "/",
+          maxAge: 24 * 60 * 60,
+        });
+      }
+      done();
+    });
+
   // Register API docs BEFORE global prefix/versioning so /api/docs is not versioned
   if (env.NODE_ENV !== "production") {
     await setupApiDocs(app);
@@ -70,7 +91,7 @@ async function bootstrap() {
 
   const logger = app.get(PinoLoggerService);
   const i18n = app.get(I18nService);
-  app.useGlobalFilters(new AllExceptionsFilter(logger, i18n));
+  app.useGlobalFilters(new AllExceptionsFilter(logger, i18n, app.get(ClsService)));
 
   app.setGlobalPrefix("api", { exclude: ["metrics", "docs", "api/docs"] });
   app.enableCors({
@@ -104,5 +125,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-// trigger restart
-// test trigger

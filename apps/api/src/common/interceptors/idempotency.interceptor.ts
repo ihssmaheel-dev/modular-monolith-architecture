@@ -5,6 +5,7 @@ import {
   CallHandler,
   BadRequestException,
   ConflictException,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { Observable, of, throwError } from "rxjs";
 import { catchError, concatMap, map, mergeMap } from "rxjs/operators";
@@ -16,6 +17,7 @@ import { IDEMPOTENT_KEY } from "../decorators/idempotent.decorator";
 import type { FastifyRequest } from "fastify";
 import type Redis from "ioredis";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
+import { env } from "../../config/env";
 
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
 const MAX_KEY_LENGTH = 128;
@@ -53,7 +55,8 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
     const redis = this.redisService.getClient();
     if (!redis) {
-      // If Redis is disabled, we bypass idempotency to prevent blocking the app
+      if (env.NODE_ENV === "production") throw new ServiceUnavailableException();
+      // Local development can run without Redis; production must fail closed.
       return next.handle();
     }
 

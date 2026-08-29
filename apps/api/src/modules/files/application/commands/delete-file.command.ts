@@ -31,16 +31,21 @@ export class DeleteFileCommand {
       });
     }
 
-    const deleteResult = await this.filesRepo.softDeleteById(fileId);
-
-    if (deleteResult.isErr()) {
+    const storageResult = await this.storage.delete(file.key);
+    if (storageResult.isErr()) {
       return err({
         type: "DELETE_FAILED",
         message: "api.error.deleteFailed",
       });
     }
 
-    await this.storage.delete(file.key);
+    const deleteResult = await this.filesRepo.softDeleteById(fileId);
+    if (deleteResult.isErr() || !deleteResult.value) {
+      return err({
+        type: "DELETE_FAILED",
+        message: "api.error.deleteFailed",
+      });
+    }
 
     return ok(undefined);
   }

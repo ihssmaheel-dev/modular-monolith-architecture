@@ -20,12 +20,12 @@ Single mode resolves a configured/default tenant context. Multi mode requires an
 
 ## Events and side effects
 
-Critical events are written to the transactional outbox in the same database transaction as the state change. Events use stable IDs, versions, tenant IDs, actor IDs, correlation IDs, and causation IDs. Consumers are idempotent and dead-lettered events are replayable.
+Critical events are written to the transactional outbox in the same database transaction as the state change. Event payloads are versioned and carry stable domain/tenant identifiers; request IDs are logged for correlation. Integrations should add persisted actor, correlation, causation, and idempotency metadata to the event contract before publishing outside the process. Consumers are idempotent and dead-lettered events are replayable.
 
 ## Authentication
 
-Access tokens are short-lived and validate issuer, audience, algorithm, account state, and revocation state. Refresh tokens rotate within families; reuse revokes the family/session. Signing keys are rotatable.
+Access tokens are short-lived and validate issuer, audience, algorithm, and account version. Refresh tokens carry a unique `jti` and are single-use when Redis is available; reuse is rejected and logout increments the account version/revokes sessions. Signing-key rotation is an operational requirement: provision overlapping key verification (`kid`) before rotating secrets.
 
 ## Verification gate
 
-Production changes require passing architecture rules, API/web typechecks, all package builds, unit/integration/contract/E2E tests, migration checks, security scans, dependency audit, and container/SBOM checks.
+Production changes require passing architecture rules, API/web typechecks, all package builds, unit/integration/contract/E2E tests, migration checks, security scans, dependency audit, and container/SBOM checks. The CI workflow is the enforcement point; local development should run the same commands before review.

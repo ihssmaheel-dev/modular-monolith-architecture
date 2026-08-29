@@ -19,8 +19,8 @@ export function to${Feature}Response(entity: ${Feature}): ${Feature}ResponseDto 
     name: entity.name,
     description: entity.description,
     createdBy: entity.createdBy,
-    createdAt: entity.createdAt,
-    updatedAt: entity.updatedAt,
+    createdAt: entity.createdAt.toISOString(),
+    updatedAt: entity.updatedAt.toISOString(),
     tenantId: entity.tenantId,
   };
 }
@@ -40,7 +40,12 @@ export function to${Feature}Response(entity: ${Feature}): ${Feature}ResponseDto 
   Req,
 } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { Idempotent, RequirePermissions, requireAuthenticatedUser } from "../../../common";
+import {
+  Idempotent,
+  RequirePermissions,
+  ZodValidationPipe,
+  requireAuthenticatedUser,
+} from "../../../common";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
 import type {
@@ -49,6 +54,11 @@ import type {
   ${Feature}ResponseDto,
   PaginationQuery,
   Update${Feature}Dto,
+} from "@repo/contracts";
+import {
+  Create${Feature}Schema,
+  PaginationQuerySchema,
+  Update${Feature}Schema,
 } from "@repo/contracts";
 import { Create${Feature}Command } from "../application/commands/create-${feature}.command";
 import { Update${Feature}Command } from "../application/commands/update-${feature}.command";
@@ -61,6 +71,10 @@ const NOT_FOUND_CONFIG = {
   ${Feature.toUpperCase()}_NOT_FOUND: {
     status: HttpStatus.NOT_FOUND,
     i18nKey: "common.notFound",
+  },
+  EVENT_DISPATCH_FAILED: {
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    i18nKey: "api.error.eventDispatchFailed",
   },
 };
 
@@ -77,7 +91,7 @@ export class ${FeaturePlural}Controller {
 
   @Get()
   @RequirePermissions("${featurePlural}:read")
-  async list(@Query() query: PaginationQuery, @Req() req: FastifyRequest): Promise<${Feature}ListResponseDto> {
+  async list(@Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery, @Req() req: FastifyRequest): Promise<${Feature}ListResponseDto> {
     const actor = requireAuthenticatedUser(req);
     const lang = req?.headers["accept-language"];
     const result = await this.listQuery.execute(query, actor);
@@ -105,11 +119,11 @@ export class ${FeaturePlural}Controller {
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
   @RequirePermissions("${featurePlural}:write")
-  async create(@Body() body: Create${Feature}Dto, @Req() req: FastifyRequest): Promise<${Feature}ResponseDto> {
+  async create(@Body(new ZodValidationPipe(Create${Feature}Schema)) body: Create${Feature}Dto, @Req() req: FastifyRequest): Promise<${Feature}ResponseDto> {
     const actor = requireAuthenticatedUser(req);
     const lang = req?.headers["accept-language"];
     const result = await this.createCmd.execute(body, actor);
-    const entity = handleResult(result, {}, this.i18n, lang);
+    const entity = handleResult(result, NOT_FOUND_CONFIG, this.i18n, lang);
     return to${Feature}Response(entity);
   }
 
@@ -118,7 +132,7 @@ export class ${FeaturePlural}Controller {
   @RequirePermissions("${featurePlural}:write")
   async update(
     @Param("id") id: string,
-    @Body() body: Update${Feature}Dto,
+    @Body(new ZodValidationPipe(Update${Feature}Schema)) body: Update${Feature}Dto,
     @Req() req: FastifyRequest,
   ): Promise<${Feature}ResponseDto> {
     const actor = requireAuthenticatedUser(req);
@@ -142,6 +156,7 @@ export class ${FeaturePlural}Controller {
 `;
 
   const moduleContent = `import { Module } from "@nestjs/common";
+import { OutboxModule } from "../../../infrastructure/outbox/outbox.module";
 import { ${FeaturePlural}Controller } from "./presentation/${featurePlural}.controller";
 import { ${FeaturePlural}Repository } from "./infrastructure/${featurePlural}.repository";
 import { Create${Feature}Command } from "./application/commands/create-${feature}.command";
@@ -152,6 +167,7 @@ import { Get${FeaturePlural}Query } from "./application/queries/get-${featurePlu
 import { ${Feature}RealtimeListener } from "./application/listeners/${feature}-realtime.listener";
 
 @Module({
+  imports: [OutboxModule],
   controllers: [${FeaturePlural}Controller],
   providers: [
     ${FeaturePlural}Repository,

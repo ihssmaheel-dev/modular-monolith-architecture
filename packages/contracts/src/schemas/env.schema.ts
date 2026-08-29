@@ -10,6 +10,7 @@ export const envSchema = z
     // Core
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().default(3000),
+    TRUST_PROXY: z.coerce.boolean().default(false),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
     TENANCY_MODE: z.enum(["single", "multi"]).default("single"),
 
@@ -132,3 +133,10 @@ export const envSchema = z
   });
 
 export type Env = z.infer<typeof envSchema>;
+
+export const webEnvSchema = z.object({
+  VITE_API_URL: z.string().url(),
+  VITE_APP_NAME: z.string().trim().min(1).max(100).default("Workspace"),
+});
+
+export type WebEnv = z.infer<typeof webEnvSchema>;

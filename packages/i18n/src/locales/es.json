@@ -19,7 +19,14 @@
     "saving": "Guardando...",
     "creating": "Creando...",
     "sending": "Enviando...",
-    "pageOf": "Página {{page}} de {{totalPages}}"
+    "pageOf": "Página {{page}} de {{totalPages}}",
+    "created": "Creado",
+    "total": "Total",
+    "items": "elementos",
+    "name": "Nombre",
+    "description": "Descripción",
+    "manageItems": "Administra tus registros",
+    "contractDriven": "Validado por contratos compartidos"
   },
   "auth": {
     "welcomeBack": "Te damos la bienvenida de nuevo",
@@ -106,8 +113,11 @@
     "title": "Panel",
     "welcome": "¡Bienvenido, {{name}}!",
     "subtitle": "Resumen del monolito modular",
+    "loading": "Cargando el panel...",
+    "loadFailed": "No se pudo cargar el panel",
     "stats": {
       "users": "Usuarios",
+      "notes": "Notas",
       "activeSessions": "Sesiones activas",
       "storage": "Uso de almacenamiento"
     }
@@ -184,16 +194,19 @@
       "forbidden": "Prohibido",
       "badRequest": "Solicitud incorrecta",
       "conflict": "El recurso ya existe",
+      "serviceUnavailable": "Este servicio no está disponible temporalmente",
       "validationFailed": "Validación fallida",
       "rateLimited": "Demasiadas solicitudes",
       "sessionExpired": "Sesión expirada",
       "invalidToken": "Token inválido",
       "circuitOpen": "Servicio no disponible temporalmente debido a un fallo ascendente",
-      "bulkheadRejected": "Demasiadas solicitudes simultáneas, inténtelo de nuevo en breve"
+      "bulkheadRejected": "Demasiadas solicitudes simultáneas, inténtelo de nuevo en breve",
+      "eventDispatchFailed": "No se pudo finalizar la operación"
     },
     "health": {
       "redisUnconfigured": "Redis no está configurado, pero es opcional",
-      "redisDown": "Redis no está disponible, pero es opcional"
+      "redisDown": "Redis no está disponible",
+      "redisUnavailable": "Redis no está disponible"
     },
     "file": {
       "notFound": "Archivo no encontrado"
@@ -211,6 +224,7 @@
     "tenancy": {
       "slugTaken": "La URL de esta organización ya está en uso",
       "tenantRequired": "Selecciona una organización para continuar",
+      "invalidTenant": "La organización seleccionada no es válida",
       "membershipNotFound": "No se encontró la membresía de la organización",
       "membershipExists": "Este usuario ya pertenece a la organización",
       "lastOwner": "Una organización debe tener al menos un propietario",
@@ -242,7 +256,8 @@
     "creating": "Creando...",
     "createButton": "Crear nota",
     "noNotes": "Todavía no hay notas. Crea una arriba.",
-    "loading": "Cargando notas..."
+    "loading": "Cargando notas...",
+    "deleteConfirm": "¿Eliminar \"{{title}}\"? Esta acción no se puede deshacer."
   },
   "tenancy": {
     "activeOrganization": "Organización activa",
@@ -263,7 +278,18 @@
   },
   "home": {
     "title": "Inicio",
-    "description": "Esta es tu pantalla de inicio"
+    "description": "Esta es tu pantalla de inicio",
+    "platformBadge": "TanStack Start",
+    "routingTitle": "TanStack Start + Router",
+    "routingDescription": "SSR de documento completo, streaming y funciones de servidor con rutas tipadas basadas en archivos",
+    "contractsTitle": "Contratos compartidos",
+    "contractsDescription": "Esquemas Zod, recursos REST, herramientas oRPC opcionales y locales i18n desde @repo/*",
+    "uiTitle": "Base UI + shadcn",
+    "uiDescription": "Primitivas Base UI sin estilos con el preset base-nova de shadcn y Tailwind 4",
+    "themeHint": "cambiar el modo oscuro",
+    "apiLabel": "API",
+    "authFlow": "Flujo de autenticación",
+    "notesSlice": "Slice vertical de notas"
   },
   "zod": {
     "errors": {

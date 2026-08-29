@@ -95,6 +95,10 @@ export class UsersController {
       result,
       {
         EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "api.user.emailTaken" },
+        USER_EVENT_DISPATCH_FAILED: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          i18nKey: "api.error.eventDispatchFailed",
+        },
         TRANSACTION_FAILED: {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           i18nKey: "api.error.transactionFailed",
@@ -145,6 +149,10 @@ export class UsersController {
         USER_OWNS_ORGANIZATION: {
           status: HttpStatus.CONFLICT,
           i18nKey: "api.user.ownsOrganization",
+        },
+        USER_EVENT_DISPATCH_FAILED: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          i18nKey: "api.error.eventDispatchFailed",
         },
       },
       this.i18n,

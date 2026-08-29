@@ -6,6 +6,7 @@ import { PinoLoggerService } from "../logger/logger.service";
 import { OutboxEvent, OutboxRepository } from "./outbox.repository";
 import { ClsService } from "nestjs-cls";
 import { env } from "../../config/env";
+import { DatabaseService } from "../database";
 
 const BATCH_SIZE = 10;
 const MAX_ATTEMPTS = 5;
@@ -23,6 +24,7 @@ export class OutboxRelayWorker {
     private readonly eventEmitter: EventEmitter2,
     private readonly metrics: MetricsService,
     private readonly cls: ClsService,
+    private readonly database: DatabaseService,
     logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "OutboxRelayWorker" });
@@ -33,9 +35,17 @@ export class OutboxRelayWorker {
     if (this.isProcessing) return;
     this.isProcessing = true;
     try {
-      await this.recoverStaleLocks();
-      const events = await this.getPendingEvents();
-      for (const event of events) await this.relayEvent(event);
+      await this.cls.runWith(
+        { ...(this.cls.isActive() ? this.cls.get() : {}), systemScope: true } as unknown as Record<
+          string,
+          unknown
+        >,
+        async () => {
+          await this.recoverStaleLocks();
+          const events = await this.getPendingEvents();
+          for (const event of events) await this.relayEvent(event);
+        },
+      );
     } catch (error) {
       this.logger.error({ error }, "Outbox relay failed");
     } finally {
@@ -44,28 +54,33 @@ export class OutboxRelayWorker {
   }
 
   private async getPendingEvents(): Promise<OutboxEvent[]> {
-    const pendingCount = await this.repository.countPendingEvents();
-    this.metrics.setGauge(
-      "outbox_pending_events_depth",
-      "Number of pending outbox events",
-      pendingCount,
-    );
-    return this.repository.lockPendingEvents(BATCH_SIZE);
+    const events = await this.database.runTransaction(async () => {
+      const pendingCount = await this.repository.countPendingEvents();
+      this.metrics.setGauge(
+        "outbox_pending_events_depth",
+        "Number of pending outbox events",
+        pendingCount,
+      );
+      return this.repository.lockPendingEvents(BATCH_SIZE);
+    });
+    return events;
   }
 
   private async relayEvent(event: OutboxEvent): Promise<void> {
-    const context = { tenantMode: env.TENANCY_MODE, tenantId: event.tenantId };
+    const context = { tenantMode: env.TENANCY_MODE, tenantId: event.tenantId, systemScope: true };
     await this.cls.runWith(context, () => this.publishEvent(event));
   }
 
   private async publishEvent(event: OutboxEvent): Promise<void> {
     try {
       await this.eventEmitter.emitAsync(event.topic, event.payload);
-      await this.repository.updateById(event.id, {
-        status: "PUBLISHED",
-        lockedAt: null,
-        nextAttemptAt: null,
-        error: null,
+      await this.database.runTransaction(async () => {
+        await this.repository.updateById(event.id, {
+          status: "PUBLISHED",
+          lockedAt: null,
+          nextAttemptAt: null,
+          error: null,
+        });
       });
       this.recordLatency(event);
     } catch (error) {
@@ -79,12 +94,14 @@ export class OutboxRelayWorker {
     const delay = RETRY_BASE_DELAY_MS * RETRY_MULTIPLIER ** Math.max(0, attempts - 1);
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    await this.repository.updateById(event.id, {
-      status: isExhausted ? "DEAD_LETTER" : "PENDING",
-      attempts,
-      error: errorMessage,
-      nextAttemptAt: isExhausted ? null : new Date(Date.now() + delay),
-      lockedAt: null,
+    await this.database.runTransaction(async () => {
+      await this.repository.updateById(event.id, {
+        status: isExhausted ? "DEAD_LETTER" : "PENDING",
+        attempts,
+        error: errorMessage,
+        nextAttemptAt: isExhausted ? null : new Date(Date.now() + delay),
+        lockedAt: null,
+      });
     });
 
     if (isExhausted) {
@@ -114,7 +131,9 @@ export class OutboxRelayWorker {
 
   private async recoverStaleLocks(): Promise<void> {
     const cutoff = new Date(Date.now() - LOCK_TIMEOUT_MS);
-    const recovered = await this.repository.recoverStaleLocks(cutoff);
+    const recovered = await this.database.runTransaction(() =>
+      this.repository.recoverStaleLocks(cutoff),
+    );
     if (recovered > 0) this.logger.warn({ recovered }, "Recovered stale outbox locks");
   }
 

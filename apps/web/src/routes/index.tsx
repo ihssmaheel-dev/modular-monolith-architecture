@@ -1,16 +1,22 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
-import { Button } from '@repo/ui/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
-import { Badge } from '@repo/ui/components/ui/badge'
-import { ArrowRight, Layers, Shield, Zap } from 'lucide-react'
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import { Button } from "@repo/ui/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/ui/card";
+import { Badge } from "@repo/ui/components/ui/badge";
+import { ArrowRight, Layers, Shield, Zap } from "lucide-react";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   component: HomePage,
-})
+});
 
 function HomePage() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -20,17 +26,17 @@ function HomePage() {
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Layers className="size-4" />
             </div>
-            <span className="font-semibold">{t('common.appName')}</span>
+            <span className="font-semibold">{t("common.appName")}</span>
             <Badge variant="secondary" className="ml-2 hidden sm:inline-flex">
-              TanStack Start
+              {t("home.platformBadge")}
             </Badge>
           </div>
           <nav className="flex items-center gap-2">
             <Button variant="ghost" size="sm" render={<Link to="/auth" />}>
-              {t('auth.login')}
+              {t("auth.login")}
             </Button>
             <Button size="sm" render={<Link to="/dashboard" />}>
-              {t('dashboard.title')}
+              {t("dashboard.title")}
               <ArrowRight className="size-3.5" />
             </Button>
           </nav>
@@ -40,21 +46,17 @@ function HomePage() {
       <main className="container mx-auto flex flex-1 flex-col px-4 py-10">
         <div className="mx-auto max-w-3xl text-center">
           <Badge variant="outline" className="mb-4">
-            {t('auth.heroTagline')}
+            {t("auth.heroTagline")}
           </Badge>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            {t('auth.heroTagline')}
-          </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            {t('auth.heroDescription')}
-          </p>
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{t("auth.heroTagline")}</h1>
+          <p className="mt-4 text-lg text-muted-foreground">{t("auth.heroDescription")}</p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Button size="lg" render={<Link to="/dashboard" />}>
-              {t('dashboard.title')}
+              {t("dashboard.title")}
               <ArrowRight className="size-4" />
             </Button>
             <Button variant="outline" size="lg" render={<Link to="/notes" />}>
-              {t('notes.title')}
+              {t("notes.title")}
             </Button>
           </div>
         </div>
@@ -65,10 +67,8 @@ function HomePage() {
               <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
                 <Zap className="size-4 text-primary" />
               </div>
-              <CardTitle className="text-base">TanStack Start + Router</CardTitle>
-              <CardDescription>
-                Full-document SSR, streaming, server functions with type-safe file-based routing
-              </CardDescription>
+              <CardTitle className="text-base">{t("home.routingTitle")}</CardTitle>
+              <CardDescription>{t("home.routingDescription")}</CardDescription>
             </CardHeader>
           </Card>
           <Card>
@@ -76,10 +76,8 @@ function HomePage() {
               <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
                 <Shield className="size-4 text-primary" />
               </div>
-              <CardTitle className="text-base">Shared Contracts</CardTitle>
-              <CardDescription>
-                Zod schemas, oRPC contracts, i18n locales — single source of truth via @repo/*
-              </CardDescription>
+              <CardTitle className="text-base">{t("home.contractsTitle")}</CardTitle>
+              <CardDescription>{t("home.contractsDescription")}</CardDescription>
             </CardHeader>
           </Card>
           <Card>
@@ -87,32 +85,32 @@ function HomePage() {
               <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
                 <Layers className="size-4 text-primary" />
               </div>
-              <CardTitle className="text-base">Base UI + shadcn</CardTitle>
-              <CardDescription>
-                Headless Base UI primitives with shadcn base-nova preset + Tailwind 4
-              </CardDescription>
+              <CardTitle className="text-base">{t("home.uiTitle")}</CardTitle>
+              <CardDescription>{t("home.uiDescription")}</CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <kbd className="rounded border bg-muted px-1.5 py-0.5">d</kbd>
-                toggle dark mode
+                {t("home.themeHint")}
               </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="mx-auto mt-10 flex flex-col items-center gap-2 text-sm text-muted-foreground">
-          <p>API: {t('dashboard.subtitle')}</p>
+          <p>
+            {t("home.apiLabel")}: {t("dashboard.subtitle")}
+          </p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" render={<Link to="/auth" />}>
-              Auth flow
+              {t("home.authFlow")}
             </Button>
             <Button variant="outline" size="sm" render={<Link to="/notes" />}>
-              Notes vertical slice
+              {t("home.notesSlice")}
             </Button>
           </div>
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -19,6 +19,7 @@ import { OrganizationsRepository } from "./infrastructure/organizations.reposito
 import { MembershipsController } from "./presentation/memberships.controller";
 import { OrganizationsController } from "./presentation/organizations.controller";
 import { TenancyStatusController } from "./presentation/tenancy-status.controller";
+import { OutboxModule } from "../../infrastructure/outbox/outbox.module";
 
 const providers = [
   OrganizationsRepository,
@@ -46,7 +47,7 @@ export class TenancyModule {
       env.TENANCY_MODE === "multi" ? [OrganizationsController, MembershipsController] : [];
     return {
       module: TenancyModule,
-      imports: [EventEmitterModule],
+      imports: [EventEmitterModule, OutboxModule],
       controllers: [TenancyStatusController, ...domainControllers],
       providers,
       exports: [ResolveTenantAccessQuery, CanDeleteUserQuery],

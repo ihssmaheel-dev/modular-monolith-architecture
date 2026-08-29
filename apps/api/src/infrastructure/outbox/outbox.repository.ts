@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq, and, lt } from "drizzle-orm";
+import { eq, and, lt, sql } from "drizzle-orm";
 import { DatabaseService, TenantContextService, BaseRepository } from "../database";
 import { outboxEvents, type OutboxRow } from "./schemas/outbox.schema";
 
@@ -40,21 +40,20 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxRow> {
   }
 
   async lockPendingEvents(limit: number): Promise<OutboxEvent[]> {
-    const pool = this.database.getPool();
-    const { rows } = await pool.query(
-      `WITH locked AS (
+    const db = this.getDb();
+    const result = await (
+      db as unknown as { execute: (query: unknown) => Promise<{ rows: unknown[] }> }
+    ).execute(sql`WITH locked AS (
         SELECT id FROM outbox_events
         WHERE status = 'PENDING' AND (next_attempt_at IS NULL OR next_attempt_at <= NOW())
         ORDER BY created_at ASC
-        LIMIT $1
+        LIMIT ${limit}
         FOR UPDATE SKIP LOCKED
       )
       UPDATE outbox_events SET status = 'PROCESSING', locked_at = NOW(), updated_at = NOW()
       WHERE id IN (SELECT id FROM locked)
-      RETURNING *`,
-      [limit],
-    );
-    return (rows as OutboxRow[]).map((r) => this.toDomain(r as OutboxRow));
+      RETURNING *`);
+    return result.rows.map((row) => this.toDomain(row as OutboxRow));
   }
 
   async countPendingEvents(): Promise<number> {

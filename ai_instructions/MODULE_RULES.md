@@ -179,7 +179,9 @@ export class AppModule {}
 - **Use standard Nest decorators**: Controllers use `@Controller()` with `@Post()`, `@Get()`, `@Body()`, `@Query()` etc., validated via Zod schemas from `@repo/contracts` (or oRPC `oc.route().input()`).
 - **Enforce Fine-Grained Authorization**: Protect endpoints with `@RequirePermission('...')` to enforce RBAC action vocabulary and multi-tenant scoping.
 - Validate input via Zod schemas from `@repo/contracts` before calling application layer.
-- `apiContract` (`oc.router` in `@repo/contracts`) is for client (`packages/api-client` via `RPCLink` + `createORPCClient`) and OpenAPI (`@orpc/openapi`), not a Nest handler.
+- `apiContract` (`oc.router` in `@repo/contracts`) is for OpenAPI and optional typed transports, not a
+  Nest handler. REST controllers and `packages/api-client` are the canonical runtime API until a complete
+  oRPC server adapter is introduced and tested end-to-end.
 - **Protect mutations with Idempotency**: All critical POST, PUT, or DELETE endpoints (e.g., payments, resource creation) MUST be protected using the `@Idempotent()` decorator. The client is required to send an `idempotency-key` header to prevent duplicate processing.
 - **Domain Policies Registration**: If a domain module has domain-specific access rules, implement `OnModuleInit` in `[domain].module.ts` and call `this.authService.registerPolicies([domain]Policies)`.
 - Call exactly one application command/query per route.

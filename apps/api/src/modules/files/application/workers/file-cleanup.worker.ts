@@ -6,6 +6,8 @@ import { PinoLoggerService } from "../../../../infrastructure/logger/logger.serv
 import { MetricsService } from "../../../../infrastructure/metrics/metrics.service";
 
 import { TenantContextService } from "../../../../infrastructure/database";
+import { DatabaseService } from "../../../../infrastructure/database";
+import { env } from "../../../../config/env";
 
 const PENDING_EXPIRATION_HOURS = 24;
 
@@ -19,6 +21,7 @@ export class FileCleanupWorker {
     private readonly storageService: StorageService,
     private readonly metrics: MetricsService,
     private readonly tenantContext: TenantContextService,
+    private readonly database: DatabaseService,
     logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "FileCleanupWorker" });
@@ -37,26 +40,29 @@ export class FileCleanupWorker {
 
     try {
       const cutoff = new Date(Date.now() - PENDING_EXPIRATION_HOURS * 60 * 60 * 1000);
-      const staleFiles = await this.filesRepository.findPendingFilesBefore(cutoff, true);
-
-      for (const file of staleFiles) {
-        try {
-          await this.storageService.delete(file.key);
-          await this.tenantContext.run(
-            { mode: file.tenantId ? "multi" : "single", tenantId: file.tenantId },
-            async () => {
-              await this.filesRepository.deleteById(file.id);
-            },
-          );
-          purgedCount += 1;
-          reclaimedBytes += file.fileSize;
-        } catch (error) {
-          this.logger.error(
-            { fileId: file.id, key: file.key, error },
-            "Failed to purge orphan file",
-          );
+      await this.tenantContext.run({ mode: env.TENANCY_MODE, system: true }, async () => {
+        const staleFiles = await this.database.runTransaction(() =>
+          this.filesRepository.findPendingFilesBefore(cutoff, true),
+        );
+        for (const file of staleFiles) {
+          try {
+            const deletedObject = await this.storageService.delete(file.key);
+            if (deletedObject.isErr()) continue;
+            const deletedRow = await this.database.runTransaction(() =>
+              this.filesRepository.deleteById(file.id),
+            );
+            if (deletedRow.isOk() && deletedRow.value) {
+              purgedCount += 1;
+              reclaimedBytes += file.fileSize;
+            }
+          } catch (error) {
+            this.logger.error(
+              { fileId: file.id, key: file.key, error },
+              "Failed to purge orphan file",
+            );
+          }
         }
-      }
+      });
 
       if (purgedCount > 0) {
         this.metrics.incrementCounter(

@@ -1,40 +1,43 @@
-import { z } from 'zod'
+import { webEnvSchema, type WebEnv } from "@repo/contracts";
 
-const envSchema = z.object({
-  VITE_API_URL: z.string().url().default('http://localhost:3000/api'),
-  VITE_APP_NAME: z.string().default('Modular Monolith'),
-})
-
-export type WebEnv = z.infer<typeof envSchema>
+export type { WebEnv };
 
 function loadEnv(): WebEnv {
   // Vite exposes env via import.meta.env
-  const raw = {
-    VITE_API_URL: (import.meta as unknown as { env: Record<string, string> }).env?.VITE_API_URL,
-    VITE_APP_NAME: (import.meta as unknown as { env: Record<string, string> }).env?.VITE_APP_NAME,
-  }
-  const parsed = envSchema.safeParse(raw)
-  if (!parsed.success) {
-    console.warn('Invalid web env, using defaults', parsed.error.flatten().fieldErrors)
-    return envSchema.parse({})
-  }
-  return parsed.data
+  const raw = import.meta.env as Record<string, string | undefined>;
+  const parsed = webEnvSchema.safeParse({
+    VITE_API_URL: raw.VITE_API_URL,
+    VITE_APP_NAME: raw.VITE_APP_NAME,
+  });
+  if (!parsed.success) throw new Error("Invalid web environment configuration");
+  assertProductionApiUrl(parsed.data.VITE_API_URL);
+  return parsed.data;
 }
 
 // Lazy to avoid SSR issues
-let cached: WebEnv | null = null
+let cached: WebEnv | null = null;
 export function getWebEnv(): WebEnv {
-  if (cached) return cached
+  if (cached) return cached;
   // On server, import.meta.env may not be available — fallback to process.env
-  if (typeof window === 'undefined' && typeof process !== 'undefined') {
+  if (typeof window === "undefined" && typeof process !== "undefined") {
     const serverRaw = {
       VITE_API_URL: process.env.VITE_API_URL,
       VITE_APP_NAME: process.env.VITE_APP_NAME,
-    }
-    const parsed = envSchema.safeParse(serverRaw)
-    cached = parsed.success ? parsed.data : envSchema.parse({})
-    return cached
+    };
+    const parsed = webEnvSchema.safeParse(serverRaw);
+    if (!parsed.success) throw new Error("Invalid web environment configuration");
+    assertProductionApiUrl(parsed.data.VITE_API_URL);
+    cached = parsed.data;
+    return cached;
   }
-  cached = loadEnv()
-  return cached
+  cached = loadEnv();
+  return cached;
+}
+
+function assertProductionApiUrl(apiUrl: string): void {
+  if (import.meta.env?.MODE !== "production") return;
+  const hostname = new URL(apiUrl).hostname;
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    throw new Error("Production web API URL must not point to localhost");
+  }
 }

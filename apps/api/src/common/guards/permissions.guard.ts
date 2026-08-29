@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from "@
 import { Reflector } from "@nestjs/core";
 import { PERMISSIONS_KEY, type PermissionRequirement } from "../decorators/permissions.decorator";
 import { type TenantContext } from "@repo/contracts";
-import { hasPermission, resolveUserPermissions, type Permission } from "@repo/authorization";
+import type { Permission } from "@repo/authorization";
 import { AuthorizationService } from "../../infrastructure/authorization";
 
 @Injectable()
@@ -34,14 +34,9 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException();
     }
 
+    if (!this.authorization) throw new ForbiddenException();
+
     const tenant = request.tenant as TenantContext | undefined;
-    if (!this.authorization) {
-      const permissions = resolveUserPermissions(user.role, tenant?.role);
-      if (!hasPermission(permissions, requirement.permissions, requirement.mode)) {
-        throw new ForbiddenException();
-      }
-      return true;
-    }
     const authorization = this.authorization;
     const principal = {
       id: user.sub,

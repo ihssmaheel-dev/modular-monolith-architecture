@@ -43,6 +43,7 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
       TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
       REDIS_URL: redis://localhost:6379
+      E2E_USE_CONTAINERS: "true"
       JWT_SECRET: super-secret-test-access-token-key-32chars
       JWT_REFRESH_SECRET: super-secret-test-refresh-token-key-32chars
       STORAGE_DRIVER: s3
@@ -85,20 +86,50 @@ jobs:
       - name: Architecture Rules Check
         run: pnpm run rules:check
 
+      - name: Formatting Check
+        run: pnpm run format:check
+
       - name: Lint
         run: pnpm run lint
 
       - name: Unit Tests
         run: pnpm test:unit
 
+      - name: Contract and migration checks
+        run: |
+          pnpm --filter @repo/contracts build
+          pnpm db:migrate
+          pnpm db:migrate:status
+
+      - name: Integration Tests
+        run: pnpm test:integration
+
+      - name: End-to-End Tests
+        run: pnpm test:e2e
+
       - name: Typecheck all workspaces
         run: pnpm typecheck
-
-      - name: Contract and migration checks
-        run: pnpm --filter @repo/contracts build
 
       - name: Dependency audit
         run: pnpm audit --audit-level high
 
       - name: Build
         run: pnpm run build
+
+      - name: Production compose validation
+        run: |
+          POSTGRES_USER=postgres \
+          POSTGRES_PASSWORD=postgres \
+          MINIO_USER=ci-minio-user \
+          MINIO_PASSWORD=ci-minio-password \
+          CLIENT_URL=http://localhost:5173 \
+          VITE_API_URL=http://localhost:3000 \
+          EMAIL_FROM=ci@example.com \
+          METRICS_TOKEN=ci-metrics-token-32-characters-long \
+          docker compose -f docker/docker-compose.prod.yml config
+
+      - name: Build production API image
+        run: docker build --file Dockerfile --tag modular-monolith-api:ci .
+
+      - name: Build production web image
+        run: docker build --file apps/web/Dockerfile --build-arg VITE_API_URL=http://localhost:3000 --tag modular-monolith-web:ci .

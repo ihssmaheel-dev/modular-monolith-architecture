@@ -28,6 +28,7 @@ describe("AcceptInvitationCommand", () => {
     memberships = { findMembership: vi.fn(), create: vi.fn() } as unknown as MembershipsRepository;
     const database = {
       withResultTransaction: vi.fn().mockImplementation(async (callback) => callback()),
+      setTenantContext: vi.fn().mockResolvedValue(undefined),
     } as unknown as DatabaseService;
     command = new AcceptInvitationCommand(invitations, memberships, database);
   });
@@ -85,7 +86,7 @@ describe("AcceptInvitationCommand", () => {
 
     const result = await command.execute("token", actor);
 
-    expect(result).toMatchObject({ error: { type: "TENANCY_OPERATION_FAILED" } });
+    expect(result).toMatchObject({ error: { type: "INVITATION_INVALID" } });
   });
 
   it("maps lookup failures to a safe tenancy error", async () => {

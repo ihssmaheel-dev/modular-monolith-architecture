@@ -5,6 +5,7 @@ import type { PinoLoggerService } from "../logger/logger.service";
 import type { ClsService } from "nestjs-cls";
 import { OutboxRelayWorker } from "./outbox-relay.worker";
 import type { OutboxEvent, OutboxRepository } from "./outbox.repository";
+import type { DatabaseService } from "../database";
 
 const EVENT: OutboxEvent = {
   id: "event-1",
@@ -38,8 +39,13 @@ describe("OutboxRelayWorker", () => {
     } as unknown as PinoLoggerService;
     const cls = {
       runWith: vi.fn((_context, callback: () => Promise<void>) => callback()),
+      isActive: vi.fn().mockReturnValue(false),
+      get: vi.fn().mockReturnValue({}),
     } as unknown as ClsService;
-    worker = new OutboxRelayWorker(repository, emitter, metrics, cls, logger);
+    const database = {
+      runTransaction: vi.fn().mockImplementation(async (callback) => callback()),
+    } as unknown as DatabaseService;
+    worker = new OutboxRelayWorker(repository, emitter, metrics, cls, database, logger);
   });
 
   it("publishes and marks a locked event complete", async () => {

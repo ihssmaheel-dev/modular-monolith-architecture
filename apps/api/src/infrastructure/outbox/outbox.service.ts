@@ -19,12 +19,17 @@ export class OutboxService {
    * If called within a Transaction (via DatabaseService), it inherits the ACID guarantees.
    */
   async dispatch(topic: string, payload: unknown): Promise<Result<void, OutboxError>> {
-    const result = await this.outboxRepository.create({
-      tenantId: this.tenantContext.get().tenantId,
-      topic,
-      payload,
-      status: "PENDING",
-    });
+    let result: Awaited<ReturnType<OutboxRepository["create"]>>;
+    try {
+      result = await this.outboxRepository.create({
+        tenantId: this.tenantContext.get().tenantId,
+        topic,
+        payload,
+        status: "PENDING",
+      });
+    } catch {
+      return err({ type: "OUTBOX_WRITE_FAILED" });
+    }
 
     if (result.isErr()) {
       return err({ type: "OUTBOX_WRITE_FAILED" });

@@ -10,6 +10,8 @@ import { UsersRepository } from "../../infrastructure/users.repository";
 import { GetUserByIdQuery } from "../queries/get-user-by-id.query";
 import { GetUserByEmailQuery } from "../queries/get-user-by-email.query";
 import { DistributedCacheService } from "../../../../infrastructure/cache/distributed-cache.service";
+import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
+import type { UserEventDispatchFailed } from "../../domain/errors/user.errors";
 
 @Injectable()
 export class UpdateUserCommand {
@@ -19,12 +21,13 @@ export class UpdateUserCommand {
     private readonly getUserByEmail: GetUserByEmailQuery,
     private readonly eventEmitter: EventEmitter2,
     private readonly cacheService: DistributedCacheService,
+    private readonly outbox: OutboxService,
   ) {}
 
   async execute(
     id: string,
     data: z.infer<typeof UpdateUserSchema>,
-  ): Promise<Result<User, UserNotFound | EmailTaken>> {
+  ): Promise<Result<User, UserNotFound | EmailTaken | UserEventDispatchFailed>> {
     const existing = await this.getUserById.execute(id);
     if (existing.isErr()) return err(existing.error);
 
@@ -46,16 +49,24 @@ export class UpdateUserCommand {
     // Explicit Cache Invalidation
     await this.cacheService.invalidateGlobal(`user:${id}`);
 
-    this.eventEmitter.emit("user.updated", new UserUpdatedEvent(saved.value.id, data));
-    this.eventEmitter.emit("database.mutated", {
-      collectionName: "users",
-      documentId: saved.value.id,
-      action: "UPDATE",
-      actorId: saved.value.id,
-      tenantId: undefined,
-      before: { id: existing.value.id },
-      after: { id: saved.value.id, email: saved.value.email, name: saved.value.name },
-    });
+    const dispatched = await this.outbox.dispatch(
+      "user.updated",
+      new UserUpdatedEvent(saved.value.id, data),
+    );
+    if (dispatched.isErr()) return err({ type: "USER_EVENT_DISPATCH_FAILED" });
+    try {
+      await this.eventEmitter.emitAsync("database.mutated", {
+        collectionName: "users",
+        documentId: saved.value.id,
+        action: "UPDATE",
+        actorId: saved.value.id,
+        tenantId: undefined,
+        before: { id: existing.value.id },
+        after: { id: saved.value.id, email: saved.value.email, name: saved.value.name },
+      });
+    } catch {
+      return err({ type: "USER_EVENT_DISPATCH_FAILED" });
+    }
 
     return ok(saved.value);
   }

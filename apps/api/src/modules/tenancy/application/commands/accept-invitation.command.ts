@@ -20,22 +20,21 @@ export class AcceptInvitationCommand {
     token: string,
     actor: AuthenticatedUser,
   ): Promise<Result<Membership, TenancyError>> {
-    const invitation = await this.invitations.findByTokenHash(hashInvitationToken(token));
-    if (invitation.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" });
-    if (!invitation.value) return err({ type: "INVITATION_INVALID" });
-    const invitationValue = invitation.value;
-    if (invitationValue.data.email !== actor.email.toLowerCase()) {
-      return err({ type: "INVITATION_EMAIL_MISMATCH" });
-    }
-
-    const tenantId = invitationValue.data.tenantId;
-    const existingMembership = await this.memberships.findMembership(tenantId, actor.sub);
-    if (existingMembership.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" });
-    if (existingMembership.value) {
-      return err({ type: "MEMBERSHIP_ALREADY_EXISTS" });
-    }
-
     const result = await this.database.withResultTransaction<Membership, TenancyError>(async () => {
+      const invitation = await this.invitations.findByTokenHash(hashInvitationToken(token));
+      if (invitation.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" });
+      if (!invitation.value) return err({ type: "INVITATION_INVALID" });
+      const invitationValue = invitation.value;
+      if (invitationValue.data.email !== actor.email.toLowerCase()) {
+        return err({ type: "INVITATION_EMAIL_MISMATCH" });
+      }
+
+      const tenantId = invitationValue.data.tenantId;
+      await this.database.setTenantContext(tenantId);
+      const existingMembership = await this.memberships.findMembership(tenantId, actor.sub);
+      if (existingMembership.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" });
+      if (existingMembership.value) return err({ type: "MEMBERSHIP_ALREADY_EXISTS" });
+
       const membership = await this.memberships.create({
         tenantId,
         userId: actor.sub,
@@ -50,7 +49,11 @@ export class AcceptInvitationCommand {
       }
       return ok(membership.value);
     });
-    if (result.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" });
+    if (result.isErr()) {
+      return result.error.type === "TRANSACTION_FAILED"
+        ? err({ type: "TENANCY_OPERATION_FAILED" })
+        : err(result.error as TenancyError);
+    }
     return ok(result.value);
   }
 }

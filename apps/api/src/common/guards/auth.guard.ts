@@ -38,6 +38,7 @@ export class AuthGuard implements CanActivate {
 
     request.user = decoded;
     this.cls.set("userId", decoded.sub);
+    this.cls.set("userEmail", decoded.email);
     return true;
   }
 

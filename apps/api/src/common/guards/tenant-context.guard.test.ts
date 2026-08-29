@@ -27,7 +27,7 @@ describe("TenantContextGuard", () => {
     env.TENANCY_MODE = "multi";
     const tenant = {
       mode: "multi" as const,
-      tenantId: "507f1f77bcf86cd799439011",
+      tenantId: "507f1f77-bcf8-6cd7-9943-901100000011",
       membershipId: "membership-1",
       role: "admin" as const,
     };

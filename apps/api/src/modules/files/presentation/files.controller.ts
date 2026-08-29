@@ -112,11 +112,20 @@ export class FilesController {
   @Get()
   @RequirePermission("files:read")
   async listByParent(
-    @Query(new ZodValidationPipe(PaginationQuerySchema.extend({
-      parentType: z.enum(["note", "user", "general"]),
-      parentId: z.string().min(1).optional(),
-    })))
-    query: { parentType: "note" | "user" | "general"; parentId?: string; page: number; limit: number },
+    @Query(
+      new ZodValidationPipe(
+        PaginationQuerySchema.extend({
+          parentType: z.enum(["note", "user", "general"]),
+          parentId: z.string().min(1).optional(),
+        }),
+      ),
+    )
+    query: {
+      parentType: "note" | "user" | "general";
+      parentId?: string;
+      page: number;
+      limit: number;
+    },
     @Req() req: FastifyRequest,
   ): Promise<FileListResponse> {
     const lang = req?.headers["accept-language"];

@@ -1,30 +1,37 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@repo/ui/components/ui/table"
-import { Button } from "@repo/ui/components/ui/button"
-import { Input } from "@repo/ui/components/ui/input"
-import { Skeleton } from "@repo/ui/components/ui/skeleton"
-import { cn } from "@repo/ui/lib/utils"
+import * as React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@repo/ui/components/ui/table";
+import { Button } from "@repo/ui/components/ui/button";
+import { Input } from "@repo/ui/components/ui/input";
+import { Skeleton } from "@repo/ui/components/ui/skeleton";
+import { cn } from "@repo/ui/lib/utils";
 
 export type DataTableColumn<T> = {
-  key: string
-  header: string
-  cell: (row: T) => React.ReactNode
-  className?: string
-}
+  key: string;
+  header: string;
+  cell: (row: T) => React.ReactNode;
+  className?: string;
+};
 
 export type DataTableProps<T> = {
-  data: T[]
-  columns: DataTableColumn<T>[]
-  isLoading?: boolean
-  searchPlaceholder?: string
-  onSearch?: (value: string) => void
-  searchValue?: string
-  emptyText?: string
-  className?: string
-  getRowKey: (row: T) => string
-}
+  data: T[];
+  columns: DataTableColumn<T>[];
+  isLoading?: boolean;
+  searchPlaceholder?: string;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  emptyText: string;
+  className?: string;
+  getRowKey: (row: T) => string;
+};
 
 export function DataTable<T>({
   data,
@@ -33,7 +40,7 @@ export function DataTable<T>({
   searchPlaceholder,
   onSearch,
   searchValue,
-  emptyText = "No results found",
+  emptyText,
   className,
   getRowKey,
 }: DataTableProps<T>) {
@@ -49,7 +56,7 @@ export function DataTable<T>({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -57,7 +64,7 @@ export function DataTable<T>({
       {onSearch && (
         <div className="flex items-center gap-2">
           <Input
-            placeholder={searchPlaceholder ?? "Search..."}
+            placeholder={searchPlaceholder}
             value={searchValue}
             onChange={(e) => onSearch(e.target.value)}
             className="max-w-sm"
@@ -79,7 +86,10 @@ export function DataTable<T>({
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   {emptyText}
                 </TableCell>
               </TableRow>
@@ -98,31 +108,45 @@ export function DataTable<T>({
         </Table>
       </div>
     </div>
-  )
+  );
 }
 
 export function DataTablePagination({
   page,
   totalPages,
   onPageChange,
+  pageLabel,
+  previousLabel,
+  nextLabel,
 }: {
-  page: number
-  totalPages: number
-  onPageChange: (page: number) => void
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  pageLabel: (page: number, totalPages: number) => string;
+  previousLabel: string;
+  nextLabel: string;
 }) {
   return (
     <div className="flex items-center justify-between gap-2 pt-2">
-      <p className="text-sm text-muted-foreground">
-        Page {page} of {totalPages}
-      </p>
+      <p className="text-sm text-muted-foreground">{pageLabel(page, totalPages)}</p>
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
-          Previous
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+        >
+          {previousLabel}
         </Button>
-        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
-          Next
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+        >
+          {nextLabel}
         </Button>
       </div>
     </div>
-  )
+  );
 }

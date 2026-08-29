@@ -33,7 +33,9 @@ export function signRefreshToken(userId: string, version: number): string {
 export function verifyRefreshToken(token: string): RefreshTokenPayload | null {
   try {
     const value = jwt.verify(token, env.JWT_REFRESH_SECRET, {
-      algorithms: ["HS256"], issuer: env.JWT_ISSUER, audience: env.JWT_AUDIENCE,
+      algorithms: ["HS256"],
+      issuer: env.JWT_ISSUER,
+      audience: env.JWT_AUDIENCE,
     });
     if (!isRefreshTokenPayload(value)) return null;
     return value;
@@ -53,6 +55,6 @@ function isRefreshTokenPayload(value: unknown): value is RefreshTokenPayload {
     payload.type === "refresh" &&
     typeof payload.sub === "string" &&
     typeof payload.version === "number" &&
-    payload.jti === undefined || typeof payload.jti === "string"
+    (payload.jti === undefined || typeof payload.jti === "string")
   );
 }

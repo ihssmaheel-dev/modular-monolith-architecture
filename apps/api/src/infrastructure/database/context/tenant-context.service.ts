@@ -8,12 +8,15 @@ export class TenantContextService {
   constructor(private readonly cls: ClsService) {}
 
   get(): TenantContext {
-    if (env.TENANCY_MODE === "single") return { mode: "single" };
+    if (env.TENANCY_MODE === "single") {
+      return { mode: "single", system: Boolean(this.cls.get("systemScope")) };
+    }
     return {
       mode: "multi",
       tenantId: this.cls.get("tenantId"),
       membershipId: this.cls.get("tenantMembershipId"),
       role: this.cls.get("tenantRole"),
+      system: Boolean(this.cls.get("systemScope")),
     };
   }
 
@@ -28,6 +31,7 @@ export class TenantContextService {
       tenantId: context.tenantId,
       tenantMembershipId: context.membershipId,
       tenantRole: context.role,
+      systemScope: context.system ?? false,
     };
     return this.cls.runWith(store, callback);
   }

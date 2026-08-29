@@ -20,7 +20,7 @@ Supreme laws of this codebase. These are never negotiable.
 | Email Templating | React Email (react-email) |
 | Worker Threads | Piscina 5 |
 | Result Type | neverthrow 8 |
-| Client SDK | @repo/api-client (oRPC client + RPCLink + TanStack Query) |
+| Client SDK | @repo/api-client (typed REST client + auth/tenant/CSRF middleware; optional oRPC utilities) |
 | Frontend Web | TanStack Start 1 (Vite 8 + TanStack Router 1 file-based + TanStack Query 5 + Zustand 5 + react-i18next) |
 | UI System | @repo/ui — Tailwind CSS 4 + tw-animate-css + shadcn base-nova + Base UI React 1 + lucide-react + CVA |
 | i18n Sources | @repo/i18n (en/es/fr) — backend I18nService + web react-i18next |
@@ -67,7 +67,9 @@ Supreme laws of this codebase. These are never negotiable.
 - **`@repo/contracts`**: Zod 4 schemas, DTO types, oRPC contracts, and error constants. Env schemas for the API and web (`VITE_*`).
 - **`@repo/authorization`**: FGA types, action permissions vocabulary, and pure evaluator.
 - **`@repo/i18n`**: Multi-language locale dictionaries (JSON) and locale config. Consumed via backend `I18nService` and frontend `react-i18next`.
-- **`@repo/api-client`**: Type-safe API client factory using oRPC + `RPCLink` + `createORPCClient` + `createTanstackQueryUtils`. Provides `authenticatedFetch` with auto-refresh, tenant + locale headers, idempotency-key.
+- **`@repo/api-client`**: Canonical typed REST client factory with centralized auth refresh, CSRF,
+  tenant and locale headers, idempotency keys, and stable response DTOs. Optional oRPC utilities may be
+  used only when a matching server handler is explicitly enabled.
 - **`@repo/ui`**: Headless Base UI primitives + shadcn presets + Tailwind 4 design tokens. `globals.css` is single Tailwind entry, consumed by `apps/web` (`@repo/ui/globals.css`) and theming via CSS variables.
 - **`@repo/email`**: Transactional email templates.
 

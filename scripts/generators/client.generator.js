@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 const { writeFileIfMissing, appendExportIfMissing } = require("./utils");
 
 function generateClient({ clientPath, feature, Feature, featurePlural, FeaturePlural }) {
@@ -48,6 +49,23 @@ export function create${FeaturePlural}Client(fetchFn: FetchFn) {
     path.join(clientPath, "src", "subclients", "index.ts"),
     `export * from "./${featurePlural}";`,
   );
+
+  const indexPath = path.join(clientPath, "src", "index.ts");
+  if (fs.existsSync(indexPath)) {
+    let index = fs.readFileSync(indexPath, "utf8");
+    const importLine = `  create${FeaturePlural}Client,`;
+    if (!index.includes(importLine)) {
+      index = index.replace("  createUsersClient,", `  createUsersClient,\n${importLine}`);
+    }
+    const propertyLine = `    ${featurePlural}: create${FeaturePlural}Client(authenticatedFetch),`;
+    if (!index.includes(propertyLine)) {
+      index = index.replace(
+        "    users: createUsersClient(authenticatedFetch),",
+        `    users: createUsersClient(authenticatedFetch),\n${propertyLine}`,
+      );
+    }
+    fs.writeFileSync(indexPath, index, "utf8");
+  }
 }
 
 module.exports = { generateClient };

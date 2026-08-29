@@ -8,4 +8,6 @@ export interface TenantContext {
   tenantId?: string;
   membershipId?: string;
   role?: TenantRole;
+  /** Explicitly marks a trusted maintenance/job context. Never derived from client input. */
+  system?: boolean;
 }

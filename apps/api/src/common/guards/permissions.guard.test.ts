@@ -3,6 +3,7 @@ import { ForbiddenException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { PermissionsGuard } from "./permissions.guard";
 import { Permissions } from "@repo/authorization";
+import { AuthorizationService } from "../../infrastructure/authorization";
 
 function createMockContext(user?: { role: string }, tenant?: { role?: string }) {
   const request = { user, tenant };
@@ -20,7 +21,7 @@ describe("PermissionsGuard", () => {
     const reflector = {
       getAllAndOverride: vi.fn().mockReturnValue(undefined),
     } as unknown as Reflector;
-    const guard = new PermissionsGuard(reflector);
+    const guard = new PermissionsGuard(reflector, new AuthorizationService());
     const ctx = createMockContext();
 
     expect(guard.canActivate(ctx)).toBe(true);
@@ -32,7 +33,7 @@ describe("PermissionsGuard", () => {
         .fn()
         .mockReturnValue({ permissions: [Permissions.NOTES_CREATE], mode: "all" }),
     } as unknown as Reflector;
-    const guard = new PermissionsGuard(reflector);
+    const guard = new PermissionsGuard(reflector, new AuthorizationService());
     const ctx = createMockContext(undefined);
 
     expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
@@ -44,7 +45,7 @@ describe("PermissionsGuard", () => {
         .fn()
         .mockReturnValue({ permissions: [Permissions.NOTES_CREATE], mode: "all" }),
     } as unknown as Reflector;
-    const guard = new PermissionsGuard(reflector);
+    const guard = new PermissionsGuard(reflector, new AuthorizationService());
     const ctx = createMockContext({ role: "user" });
 
     expect(guard.canActivate(ctx)).toBe(true);
@@ -56,7 +57,7 @@ describe("PermissionsGuard", () => {
         .fn()
         .mockReturnValue({ permissions: [Permissions.USERS_DELETE], mode: "all" }),
     } as unknown as Reflector;
-    const guard = new PermissionsGuard(reflector);
+    const guard = new PermissionsGuard(reflector, new AuthorizationService());
     const ctx = createMockContext({ role: "user" });
 
     expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
@@ -68,7 +69,7 @@ describe("PermissionsGuard", () => {
         .fn()
         .mockReturnValue({ permissions: [Permissions.USERS_DELETE], mode: "all" }),
     } as unknown as Reflector;
-    const guard = new PermissionsGuard(reflector);
+    const guard = new PermissionsGuard(reflector, new AuthorizationService());
     const ctx = createMockContext({ role: "admin" });
 
     expect(guard.canActivate(ctx)).toBe(true);
@@ -80,7 +81,7 @@ describe("PermissionsGuard", () => {
         .fn()
         .mockReturnValue({ permissions: [Permissions.BILLING_MANAGE], mode: "all" }),
     } as unknown as Reflector;
-    const guard = new PermissionsGuard(reflector);
+    const guard = new PermissionsGuard(reflector, new AuthorizationService());
     const ctx = createMockContext({ role: "user" }, { role: "admin" });
 
     expect(guard.canActivate(ctx)).toBe(true);

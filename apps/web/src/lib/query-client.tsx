@@ -1,8 +1,7 @@
-import * as React from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { restoreQueryClient, setupQueryPersist } from './query-persist'
+import * as React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-let client: QueryClient | null = null
+let client: QueryClient | null = null;
 
 function makeQueryClient() {
   const qc = new QueryClient({
@@ -17,23 +16,19 @@ function makeQueryClient() {
         retry: 0,
       },
     },
-  })
-  if (typeof window !== 'undefined') {
-    restoreQueryClient(qc)
-    setupQueryPersist(qc)
-  }
-  return qc
+  });
+  return qc;
 }
 
 export function getQueryClient() {
-  if (typeof window === 'undefined') {
-    return makeQueryClient()
+  if (typeof window === "undefined") {
+    return makeQueryClient();
   }
-  if (!client) client = makeQueryClient()
-  return client
+  if (!client) client = makeQueryClient();
+  return client;
 }
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = React.useState(() => getQueryClient())
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  const [queryClient] = React.useState(() => getQueryClient());
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

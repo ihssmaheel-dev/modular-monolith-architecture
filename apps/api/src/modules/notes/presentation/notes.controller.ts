@@ -79,6 +79,10 @@ export class NotesController {
       result,
       {
         NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+        NOTE_EVENT_DISPATCH_FAILED: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          i18nKey: "api.error.eventDispatchFailed",
+        },
       },
       this.i18n,
       lang,
@@ -116,6 +120,10 @@ export class NotesController {
       result,
       {
         NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+        NOTE_EVENT_DISPATCH_FAILED: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          i18nKey: "api.error.eventDispatchFailed",
+        },
       },
       this.i18n,
       lang,
@@ -138,6 +146,10 @@ export class NotesController {
       result,
       {
         NOTE_NOT_FOUND: { status: HttpStatus.NOT_FOUND, i18nKey: "api.note.notFound" },
+        NOTE_EVENT_DISPATCH_FAILED: {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          i18nKey: "api.error.eventDispatchFailed",
+        },
       },
       this.i18n,
       lang,

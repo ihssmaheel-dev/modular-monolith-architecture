@@ -5,6 +5,11 @@ let postgresContainer: StartedTestContainer;
 let redisContainer: StartedTestContainer;
 
 beforeAll(async () => {
+  if (process.env.E2E_USE_CONTAINERS !== "true") {
+    process.env.E2E_SKIP = "true";
+    return;
+  }
+
   postgresContainer = await new GenericContainer("postgres:16-alpine")
     .withEnvironment({
       POSTGRES_USER: "postgres",
@@ -19,6 +24,9 @@ beforeAll(async () => {
   redisContainer = await new GenericContainer("redis:7.0-alpine").withExposedPorts(6379).start();
 
   process.env.REDIS_URL = `redis://${redisContainer.getHost()}:${redisContainer.getMappedPort(6379)}`;
+
+  const { runMigrations } = await import("../src/infrastructure/database/migrate");
+  await runMigrations();
 });
 
 afterAll(async () => {

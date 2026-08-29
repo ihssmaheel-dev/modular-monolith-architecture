@@ -19,8 +19,8 @@ export const ${Feature}ResponseSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   createdBy: z.string().optional(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
   tenantId: z.string().optional(),
 });
 

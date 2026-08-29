@@ -13,8 +13,6 @@ export class CsrfGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
-
     const request = context.switchToHttp().getRequest() as {
       method?: string;
       headers?: Record<string, string>;
@@ -27,6 +25,9 @@ export class CsrfGuard implements CanActivate {
     // Bearer token authentication is immune to ambient cookie CSRF attacks
     const authHeader = request.headers?.authorization;
     if (authHeader?.startsWith("Bearer ")) return true;
+
+    const hasAuthCookie = Boolean(request.cookies?.access_token || request.cookies?.refresh_token);
+    if (isPublic && !hasAuthCookie) return true;
 
     // If request relies on cookie authentication, verify double-submit CSRF token
     const cookieToken = request.cookies?.["XSRF-TOKEN"] ?? request.cookies?.["xsrf_token"];

@@ -7,6 +7,8 @@ import { UsersRepository } from "../../infrastructure/users.repository";
 import { GetUserByIdQuery } from "../queries/get-user-by-id.query";
 import { DistributedCacheService } from "../../../../infrastructure/cache/distributed-cache.service";
 import { CanDeleteUserQuery } from "../../../tenancy/application/queries/can-delete-user.query";
+import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
+import type { UserEventDispatchFailed } from "../../domain/errors/user.errors";
 
 @Injectable()
 export class DeleteUserCommand {
@@ -16,9 +18,12 @@ export class DeleteUserCommand {
     private readonly eventEmitter: EventEmitter2,
     private readonly cacheService: DistributedCacheService,
     private readonly canDeleteUser: CanDeleteUserQuery,
+    private readonly outbox: OutboxService,
   ) {}
 
-  async execute(id: string): Promise<Result<void, UserNotFound | UserOwnsOrganization>> {
+  async execute(
+    id: string,
+  ): Promise<Result<void, UserNotFound | UserOwnsOrganization | UserEventDispatchFailed>> {
     const existing = await this.getUserById.execute(id);
     if (existing.isErr()) return err(existing.error);
     const allowed = await this.canDeleteUser.execute(id);
@@ -29,16 +34,21 @@ export class DeleteUserCommand {
     if (!deleted.value) return err({ type: "USER_NOT_FOUND", userId: id });
 
     await this.cacheService.invalidateGlobal(`user:${id}`);
-    this.eventEmitter.emit("user.deleted", new UserDeletedEvent(id));
-    this.eventEmitter.emit("database.mutated", {
-      collectionName: "users",
-      documentId: id,
-      action: "DELETE",
-      actorId: id,
-      tenantId: undefined,
-      before: { id, email: existing.value.email },
-      after: null,
-    });
+    const dispatched = await this.outbox.dispatch("user.deleted", new UserDeletedEvent(id));
+    if (dispatched.isErr()) return err({ type: "USER_EVENT_DISPATCH_FAILED" });
+    try {
+      await this.eventEmitter.emitAsync("database.mutated", {
+        collectionName: "users",
+        documentId: id,
+        action: "DELETE",
+        actorId: id,
+        tenantId: undefined,
+        before: { id, email: existing.value.email },
+        after: null,
+      });
+    } catch {
+      return err({ type: "USER_EVENT_DISPATCH_FAILED" });
+    }
 
     return ok(undefined);
   }

@@ -19,7 +19,14 @@
     "saving": "Saving...",
     "creating": "Creating...",
     "sending": "Sending...",
-    "pageOf": "Page {{page}} of {{totalPages}}"
+    "pageOf": "Page {{page}} of {{totalPages}}",
+    "created": "Created",
+    "total": "Total",
+    "items": "items",
+    "name": "Name",
+    "description": "Description",
+    "manageItems": "Manage your records",
+    "contractDriven": "Validated by shared contracts"
   },
   "email": {
     "welcome": {
@@ -48,8 +55,11 @@
     "title": "Dashboard",
     "welcome": "Welcome, {{name}}!",
     "subtitle": "Modular monolith overview",
+    "loading": "Loading dashboard...",
+    "loadFailed": "Failed to load dashboard",
     "stats": {
       "users": "Users",
+      "notes": "Notes",
       "activeSessions": "Active Sessions",
       "storage": "Storage Usage"
     }
@@ -108,7 +118,18 @@
   },
   "home": {
     "title": "Home",
-    "description": "This is your home screen"
+    "description": "This is your home screen",
+    "platformBadge": "TanStack Start",
+    "routingTitle": "TanStack Start + Router",
+    "routingDescription": "Full-document SSR, streaming, server functions with type-safe file-based routing",
+    "contractsTitle": "Shared Contracts",
+    "contractsDescription": "Zod schemas, REST resources, optional oRPC tooling, and i18n locales from @repo/*",
+    "uiTitle": "Base UI + shadcn",
+    "uiDescription": "Headless Base UI primitives with the shadcn base-nova preset and Tailwind 4",
+    "themeHint": "toggle dark mode",
+    "apiLabel": "API",
+    "authFlow": "Auth flow",
+    "notesSlice": "Notes vertical slice"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -176,6 +197,7 @@
       "forbidden": "Forbidden",
       "badRequest": "Bad request",
       "conflict": "Resource already exists",
+      "serviceUnavailable": "This service is temporarily unavailable",
       "validationFailed": "Validation failed",
       "rateLimited": "Too many requests",
       "sessionExpired": "Session expired",
@@ -193,11 +215,13 @@
       "configError": "Configuration error",
       "sendFailed": "Failed to send email",
       "circuitOpen": "Service temporarily unavailable due to upstream failure",
-      "bulkheadRejected": "Too many concurrent requests, please retry shortly"
+      "bulkheadRejected": "Too many concurrent requests, please retry shortly",
+      "eventDispatchFailed": "The operation could not be finalized"
     },
     "health": {
       "redisUnconfigured": "Redis unconfigured but optional",
-      "redisDown": "Redis down but optional"
+      "redisDown": "Redis is unavailable",
+      "redisUnavailable": "Redis is unavailable"
     },
     "user": {
       "created": "User created successfully",
@@ -223,6 +247,7 @@
     "tenancy": {
       "slugTaken": "This organization URL is already in use",
       "tenantRequired": "Select an organization to continue",
+      "invalidTenant": "The selected organization is invalid",
       "membershipNotFound": "Organization membership not found",
       "membershipExists": "This user is already an organization member",
       "lastOwner": "An organization must have at least one owner",
@@ -246,7 +271,8 @@
     "creating": "Creating...",
     "createButton": "Create Note",
     "noNotes": "No notes yet. Create one above!",
-    "loading": "Loading notes..."
+    "loading": "Loading notes...",
+    "deleteConfirm": "Delete \"{{title}}\"? This cannot be undone."
   },
   "tenancy": {
     "activeOrganization": "Active organization",

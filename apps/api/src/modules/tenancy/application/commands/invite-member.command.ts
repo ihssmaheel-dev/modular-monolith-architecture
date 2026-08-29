@@ -1,6 +1,5 @@
 import { randomBytes, createHash } from "node:crypto";
 import { Injectable } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { err, ok, type Result } from "neverthrow";
 import {
   INVITATION_TOKEN_BYTES,
@@ -26,8 +25,7 @@ export class InviteMemberCommand {
     private readonly memberships: MembershipsRepository,
     private readonly organizations: OrganizationsRepository,
     private readonly context: TenantContextService,
-    private readonly events: EventEmitter2,
-    private readonly outbox?: OutboxService,
+    private readonly outbox: OutboxService,
   ) {}
 
   async execute(
@@ -69,15 +67,15 @@ export class InviteMemberCommand {
     });
     if (result.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" });
     const event = new InvitationCreatedEvent(
-        tenant.tenantId,
-        organization.value.data.name,
-        email,
-        input.role,
-        token,
-        locale,
-      );
-    if (this.outbox) await this.outbox.dispatch("tenancy.invitation.created", event);
-    else this.events.emit("tenancy.invitation.created", event);
+      tenant.tenantId,
+      organization.value.data.name,
+      email,
+      input.role,
+      token,
+      locale,
+    );
+    const dispatched = await this.outbox.dispatch("tenancy.invitation.created", event);
+    if (dispatched.isErr()) return err({ type: "TENANCY_EVENT_DISPATCH_FAILED" });
     return ok(result.value);
   }
 }

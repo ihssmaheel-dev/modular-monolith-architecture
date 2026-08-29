@@ -8,7 +8,8 @@ const PageFields = {
   totalPages: z.number().int().positive(),
 };
 
-export const TenantIdSchema = z.string().regex(/^[a-f\d]{24}$/i);
+// Tenant identifiers are generated with crypto.randomUUID() by the API.
+export const TenantIdSchema = z.string().uuid();
 export const TenantRoleSchema = z.enum(TENANT_ROLES);
 
 export const MemberUserIdParamSchema = z.object({ userId: z.string() });

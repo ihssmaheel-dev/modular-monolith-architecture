@@ -1,10 +1,11 @@
 import { Controller, Get } from "@nestjs/common";
 import { HealthCheck } from "@nestjs/terminus";
 import { AppHealthService } from "./health.service";
-import { Public } from "../../common";
+import { NoDatabaseTransaction, Public } from "../../common";
 
 @Controller("health")
 @Public()
+@NoDatabaseTransaction()
 export class HealthController {
   constructor(private readonly healthService: AppHealthService) {}
 

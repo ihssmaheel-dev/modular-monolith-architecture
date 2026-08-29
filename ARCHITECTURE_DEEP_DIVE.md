@@ -25,7 +25,7 @@ graph TD
         S[packages/contracts<br>Zod Schemas, oRPC Contracts]
         AuthZ[packages/authorization<br>FGA + Permissions]
         I18N[packages/i18n<br>Locales]
-        Client[packages/api-client<br>oRPC Client SDK + TanStack Query]
+        Client[packages/api-client<br>Type-Safe REST Client + TanStack Query]
         UI[packages/ui<br>Base UI + shadcn + Tailwind 4]
         Email[packages/email<br>React Email Templates]
     end
@@ -37,7 +37,7 @@ graph TD
     Client -->|Imports Contracts| S
     Web -->|Imports Contracts + i18n| S
     Web -->|Uses UI primitives| UI
-    Web -->|Uses Client + RPCLink| Client
+    Web -->|Uses typed REST client| Client
     Web -.->|HTTP + Cookies + x-tenant-id| A
 ```
 
@@ -46,7 +46,9 @@ graph TD
 The backend and web share capability packages (`@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/api-client`, `@repo/ui`). If the backend changes a rule or contract, the web compiler catches drift before the code is run.
 
 - Web is TanStack Start (Vite 8, TanStack Router file-based, streaming SSR) + TanStack Query + Zustand + react-i18next + Tailwind 4 + `@repo/ui` (Base UI + shadcn base-nova). Forms use `react-hook-form` + `zodResolver` + schemas from `@repo/contracts`.
-- The web uses `getApiClient()` from `@repo/api-client` (oRPC `RPCLink` + `createORPCClient` + `createTanstackQueryUtils`) which automatically sends `accept-language`, `x-tenant-id`, `idempotency-key` and 401-auto-refreshes.
+- REST controllers are the canonical runtime API. The web uses `getApiClient()` from `@repo/api-client`,
+  which centralizes credentials, refresh, CSRF, tenant, locale, idempotency, and typed response DTOs.
+  oRPC contracts remain an optional schema/OpenAPI surface until a complete oRPC handler adapter is introduced.
 
 ---
 
@@ -59,7 +61,8 @@ This is the most important layer in the project. It holds all the rules for our 
 ### What goes inside?
 
 - **Zod Schemas (`@repo/contracts`)**: Rules for what data should look like (e.g., `Email must be a string`). Also `VITE_API_URL` env validation for web.
-- **oRPC Contracts (`@repo/contracts`)**: The exact blueprints for our API endpoints (`oc.route().input().output()` — e.g., `POST /notes requires CreateNoteSchema`). The same `apiContract` is used by the backend (`@orpc/nest`) and web client (`RPCLink` + `createORPCClient`).
+- **oRPC Contracts (`@repo/contracts`)**: Exact endpoint blueprints (`oc.route().input().output()`)
+  used for OpenAPI generation and future typed transports. REST remains the canonical implementation.
 - **Permissions & Evaluator (`@repo/authorization`)**: Central action vocabulary (`notes:create`, `team:invite`) and the pure FGA engine (RBAC + ReBAC + ABAC).
 - **Locales (`@repo/i18n`)**: All the text shown to users (`en.json` containing `"api.user.notFound": "User not found"`). Used by backend `I18nService` and the web `react-i18next` integration.
 - **UI System (`@repo/ui`)**: Single Tailwind 4 entry `src/styles/globals.css` with design tokens, Base UI headless primitives, shadcn base-nova preset, lucide icons. Web imports `@repo/ui/globals.css` once.
@@ -168,7 +171,7 @@ Our web app lives in `apps/web` and is a **TanStack Start** app (the most modern
 ### Why this frontend wiring is reliable
 
 - **No duplication:** Zod schemas live once in `@repo/contracts`, consumed by api (`ZodValidationPipe`) and web (`react-hook-form zodResolver`).
-- **No drift:** oRPC contract `apiContract` is shared. Changing a route is a compile error in the API and web client.
+- **No drift:** REST DTOs and Zod schemas are shared. Changing a route payload is a compile error in the API client and web.
 - **One auth story:** httpOnly cookies on web, with a short-lived Bearer fallback through the same `getApiClient` refresh + `x-tenant-id` + `idempotency-key` logic.
 - **One i18n story:** locales in `@repo/i18n`, consumed by the web through `react-i18next`.
 
@@ -192,7 +195,7 @@ Instead of throwing, our functions return a `Result` box. The box either contain
 ```typescript
 // Inside the Command
 if (noteAlreadyExists) {
-  return err({ type: 'NOTE_EXISTS' }); // Safe!
+  return err({ type: "NOTE_EXISTS" }); // Safe!
 }
 return ok(newNote); // Safe!
 ```
@@ -201,7 +204,12 @@ return ok(newNote); // Safe!
 // Inside the Controller
 const result = await command.execute(data);
 if (result.isErr()) {
-  return handleResult(result, { NOTE_NOT_FOUND: { status: 404, i18nKey: 'api.note.notFound' } }, i18n, lang);
+  return handleResult(
+    result,
+    { NOTE_NOT_FOUND: { status: 404, i18nKey: "api.note.notFound" } },
+    i18n,
+    lang,
+  );
 }
 return toNoteResponse(result.value);
 

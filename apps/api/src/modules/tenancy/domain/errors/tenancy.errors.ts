@@ -8,4 +8,5 @@ export type TenancyError =
   | { type: "INVITATION_EMAIL_MISMATCH" }
   | { type: "TENANT_FORBIDDEN" }
   | { type: "LAST_OWNER" }
-  | { type: "TENANCY_OPERATION_FAILED" };
+  | { type: "TENANCY_OPERATION_FAILED" }
+  | { type: "TENANCY_EVENT_DISPATCH_FAILED" };

@@ -4,10 +4,10 @@ Local setup copies the committed examples to ignored `.env` files (`pnpm bootstr
 
 ## Web (TanStack Start)
 
-| Variable | Default / purpose |
-|----------|-------------------|
-| `VITE_API_URL` | `http://localhost:3000/api`; browser → API base URL (must include `/api` prefix) |
-| `VITE_APP_NAME` | `Workspace`; display name (optional) |
+| Variable        | Default / purpose                                                                |
+| --------------- | -------------------------------------------------------------------------------- |
+| `VITE_API_URL`  | `http://localhost:3000/api`; browser → API base URL (must include `/api` prefix) |
+| `VITE_APP_NAME` | `Workspace`; display name (optional)                                             |
 
 Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/web/.env.example`.
 

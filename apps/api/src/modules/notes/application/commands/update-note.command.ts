@@ -17,14 +17,16 @@ export class UpdateNoteCommand {
     private readonly repository: NotesRepository,
     private readonly getNoteById: GetNoteByIdQuery,
     private readonly eventEmitter: EventEmitter2,
-    private readonly outbox?: OutboxService,
+    private readonly outbox: OutboxService,
   ) {}
 
   async execute(
     id: string,
     data: z.infer<typeof UpdateNoteSchema>,
     actor: AuthenticatedUser,
-  ): Promise<Result<Note, NoteNotFound>> {
+  ): Promise<
+    Result<Note, NoteNotFound | import("../../domain/errors/note.errors").NoteEventDispatchFailed>
+  > {
     const existing = await this.getNoteById.execute(id, actor);
     if (existing.isErr()) return err(existing.error);
 
@@ -38,23 +40,27 @@ export class UpdateNoteCommand {
     if (!saved.value) return err({ type: "NOTE_NOT_FOUND", noteId: id });
 
     const event = new NoteUpdatedEvent(
-        saved.value.id,
-        saved.value.createdBy ?? actor.sub,
-        data.title,
-        data.content,
-        saved.value.tenantId,
-      );
-    if (this.outbox) await this.outbox.dispatch("note.updated", event);
-    else this.eventEmitter.emit("note.updated", event);
-    this.eventEmitter.emit("database.mutated", {
-      collectionName: "notes",
-      documentId: saved.value.id,
-      action: "UPDATE",
-      actorId: actor.sub,
-      tenantId: saved.value.tenantId,
-      before: { id: existing.value.id },
-      after: { id: saved.value.id, title: saved.value.title },
-    });
+      saved.value.id,
+      saved.value.createdBy ?? actor.sub,
+      data.title,
+      data.content,
+      saved.value.tenantId,
+    );
+    const dispatched = await this.outbox.dispatch("note.updated", event);
+    if (dispatched.isErr()) return err({ type: "NOTE_EVENT_DISPATCH_FAILED" });
+    try {
+      await this.eventEmitter.emitAsync("database.mutated", {
+        collectionName: "notes",
+        documentId: saved.value.id,
+        action: "UPDATE",
+        actorId: actor.sub,
+        tenantId: saved.value.tenantId,
+        before: { id: existing.value.id },
+        after: { id: saved.value.id, title: saved.value.title },
+      });
+    } catch {
+      return err({ type: "NOTE_EVENT_DISPATCH_FAILED" });
+    }
 
     return ok(saved.value);
   }

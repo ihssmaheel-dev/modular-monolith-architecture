@@ -3,31 +3,32 @@ const { writeFileIfMissing } = require("./utils");
 
 function generateApplication({ modulePath, feature, Feature, featurePlural, FeaturePlural }) {
   const createCmd = `import { Injectable } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
-import { type Result } from "neverthrow";
+import { err, type Result } from "neverthrow";
 import type { AuthenticatedUser, Create${Feature}Dto } from "@repo/contracts";
 import { ${Feature} } from "../../domain/entities/${feature}.entity";
 import { ${Feature}CreatedEvent } from "../../domain/events/${feature}.events";
 import { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
+import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 @Injectable()
 export class Create${Feature}Command {
   constructor(
     private readonly repository: ${FeaturePlural}Repository,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly outbox: OutboxService,
   ) {}
 
-  async execute(dto: Create${Feature}Dto, actor: AuthenticatedUser): Promise<Result<${Feature}, Error>> {
+  async execute(dto: Create${Feature}Dto, actor: AuthenticatedUser): Promise<Result<${Feature}, { type: "EVENT_DISPATCH_FAILED" } | Error>> {
     const result = await this.repository.create({
       name: dto.name,
       description: dto.description,
       createdBy: actor.sub,
     });
     if (result.isOk()) {
-      this.eventEmitter.emit(
+      const dispatched = await this.outbox.dispatch(
         "${feature}.created",
         new ${Feature}CreatedEvent(result.value.id, actor.sub, result.value.name, result.value.tenantId),
       );
+      if (dispatched.isErr()) return err({ type: "EVENT_DISPATCH_FAILED" });
     }
     return result;
   }
@@ -39,7 +40,7 @@ import { ok } from "neverthrow";
 import { Create${Feature}Command } from "./create-${feature}.command";
 import { ${Feature} } from "../../domain/entities/${feature}.entity";
 import type { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
-import type { EventEmitter2 } from "@nestjs/event-emitter";
+import type { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 describe("Create${Feature}Command", () => {
   it("creates a new ${feature} and emits event", async () => {
@@ -51,36 +52,36 @@ describe("Create${Feature}Command", () => {
       tenantId: "tenant-1",
     });
     const repo = { create: vi.fn().mockResolvedValue(ok(mockEntity)) } as unknown as ${FeaturePlural}Repository;
-    const emitter = { emit: vi.fn() } as unknown as EventEmitter2;
-    const cmd = new Create${Feature}Command(repo, emitter);
+    const outbox = { dispatch: vi.fn().mockResolvedValue(ok(undefined)) } as unknown as OutboxService;
+    const cmd = new Create${Feature}Command(repo, outbox);
 
     const res = await cmd.execute({ name: "Test" }, { sub: "user-1", email: "a@b.com", role: "user" });
     expect(res.isOk()).toBe(true);
-    expect(emitter.emit).toHaveBeenCalledWith("${feature}.created", expect.any(Object));
+    expect(outbox.dispatch).toHaveBeenCalledWith("${feature}.created", expect.any(Object));
   });
 });
 `;
 
   const updateCmd = `import { Injectable } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { err, type Result } from "neverthrow";
 import type { AuthenticatedUser, Update${Feature}Dto } from "@repo/contracts";
 import { ${Feature} } from "../../domain/entities/${feature}.entity";
 import { ${Feature}UpdatedEvent } from "../../domain/events/${feature}.events";
 import { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
+import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 @Injectable()
 export class Update${Feature}Command {
   constructor(
     private readonly repository: ${FeaturePlural}Repository,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly outbox: OutboxService,
   ) {}
 
   async execute(
     id: string,
     dto: Update${Feature}Dto,
     actor: AuthenticatedUser,
-  ): Promise<Result<${Feature}, { type: "${Feature.toUpperCase()}_NOT_FOUND" } | { type: "CONFLICT" } | Error>> {
+  ): Promise<Result<${Feature}, { type: "${Feature.toUpperCase()}_NOT_FOUND" } | { type: "CONFLICT" } | { type: "EVENT_DISPATCH_FAILED" } | Error>> {
     const existing = await this.repository.findById(id);
     if (existing.isErr()) return err(existing.error);
     if (!existing.value) return err({ type: "${Feature.toUpperCase()}_NOT_FOUND" });
@@ -92,10 +93,11 @@ export class Update${Feature}Command {
     if (updated.isErr()) return err(updated.error);
     if (!updated.value) return err({ type: "${Feature.toUpperCase()}_NOT_FOUND" });
 
-    this.eventEmitter.emit(
+    const dispatched = await this.outbox.dispatch(
       "${feature}.updated",
       new ${Feature}UpdatedEvent(id, actor.sub, updated.value.name, updated.value.tenantId),
     );
+    if (dispatched.isErr()) return err({ type: "EVENT_DISPATCH_FAILED" });
     return updated as Result<${Feature}, never>;
   }
 }
@@ -106,7 +108,7 @@ import { ok } from "neverthrow";
 import { Update${Feature}Command } from "./update-${feature}.command";
 import { ${Feature} } from "../../domain/entities/${feature}.entity";
 import type { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
-import type { EventEmitter2 } from "@nestjs/event-emitter";
+import type { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 describe("Update${Feature}Command", () => {
   it("updates existing ${feature}", async () => {
@@ -126,8 +128,8 @@ describe("Update${Feature}Command", () => {
       findById: vi.fn().mockResolvedValue(ok(existing)),
       updateById: vi.fn().mockResolvedValue(ok(updated)),
     } as unknown as ${FeaturePlural}Repository;
-    const emitter = { emit: vi.fn() } as unknown as EventEmitter2;
-    const cmd = new Update${Feature}Command(repo, emitter);
+    const outbox = { dispatch: vi.fn().mockResolvedValue(ok(undefined)) } as unknown as OutboxService;
+    const cmd = new Update${Feature}Command(repo, outbox);
 
     const res = await cmd.execute("1", { name: "New" }, { sub: "u1", email: "a@b.com", role: "user" });
     expect(res.isOk()).toBe(true);
@@ -136,23 +138,23 @@ describe("Update${Feature}Command", () => {
 `;
 
   const deleteCmd = `import { Injectable } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { err, ok, type Result } from "neverthrow";
 import type { AuthenticatedUser } from "@repo/contracts";
 import { ${Feature}DeletedEvent } from "../../domain/events/${feature}.events";
 import { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
+import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 @Injectable()
 export class Delete${Feature}Command {
   constructor(
     private readonly repository: ${FeaturePlural}Repository,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly outbox: OutboxService,
   ) {}
 
   async execute(
     id: string,
     actor: AuthenticatedUser,
-  ): Promise<Result<void, { type: "${Feature.toUpperCase()}_NOT_FOUND" } | Error>> {
+  ): Promise<Result<void, { type: "${Feature.toUpperCase()}_NOT_FOUND" } | { type: "EVENT_DISPATCH_FAILED" } | Error>> {
     const existing = await this.repository.findById(id);
     if (existing.isErr()) return err(existing.error);
     if (!existing.value) return err({ type: "${Feature.toUpperCase()}_NOT_FOUND" });
@@ -160,7 +162,11 @@ export class Delete${Feature}Command {
     const deleted = await this.repository.softDeleteById(id);
     if (deleted.isErr()) return err(deleted.error);
 
-    this.eventEmitter.emit("${feature}.deleted", new ${Feature}DeletedEvent(id, actor.sub, existing.value.tenantId));
+    const dispatched = await this.outbox.dispatch(
+      "${feature}.deleted",
+      new ${Feature}DeletedEvent(id, actor.sub, existing.value.tenantId),
+    );
+    if (dispatched.isErr()) return err({ type: "EVENT_DISPATCH_FAILED" });
     return ok(undefined);
   }
 }
@@ -171,7 +177,7 @@ import { ok } from "neverthrow";
 import { Delete${Feature}Command } from "./delete-${feature}.command";
 import { ${Feature} } from "../../domain/entities/${feature}.entity";
 import type { ${FeaturePlural}Repository } from "../../infrastructure/${featurePlural}.repository";
-import type { EventEmitter2 } from "@nestjs/event-emitter";
+import type { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 describe("Delete${Feature}Command", () => {
   it("soft deletes existing ${feature}", async () => {
@@ -185,8 +191,8 @@ describe("Delete${Feature}Command", () => {
       findById: vi.fn().mockResolvedValue(ok(existing)),
       softDeleteById: vi.fn().mockResolvedValue(ok(existing)),
     } as unknown as ${FeaturePlural}Repository;
-    const emitter = { emit: vi.fn() } as unknown as EventEmitter2;
-    const cmd = new Delete${Feature}Command(repo, emitter);
+    const outbox = { dispatch: vi.fn().mockResolvedValue(ok(undefined)) } as unknown as OutboxService;
+    const cmd = new Delete${Feature}Command(repo, outbox);
 
     const res = await cmd.execute("1", { sub: "u1", email: "a@b.com", role: "user" });
     expect(res.isOk()).toBe(true);
