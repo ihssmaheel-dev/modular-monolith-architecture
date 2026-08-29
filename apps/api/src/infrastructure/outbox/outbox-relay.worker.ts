@@ -100,7 +100,13 @@ export class OutboxRelayWorker {
       );
     } else {
       this.logger.warn(
-        { eventId: event.id, topic: event.topic, attempts, nextDelayMs: delay, error: errorMessage },
+        {
+          eventId: event.id,
+          topic: event.topic,
+          attempts,
+          nextDelayMs: delay,
+          error: errorMessage,
+        },
         "Outbox event delivery failed, exponential retry scheduled",
       );
     }

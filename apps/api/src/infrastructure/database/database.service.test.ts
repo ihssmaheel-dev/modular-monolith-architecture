@@ -46,7 +46,9 @@ describe("DatabaseService", () => {
   });
 
   it("should propagate result transaction", async () => {
-    const result = await service.withResultTransaction(async () => err({ type: "EXPECTED" } as never));
+    const result = await service.withResultTransaction(async () =>
+      err({ type: "EXPECTED" } as never),
+    );
     expect(result.isErr()).toBe(true);
   });
 });

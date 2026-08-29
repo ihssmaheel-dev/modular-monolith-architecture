@@ -17,7 +17,9 @@ function createMockContext(user?: { role: string }, tenant?: { role?: string }) 
 
 describe("PermissionsGuard", () => {
   it("allows access when no permissions are required", () => {
-    const reflector = { getAllAndOverride: vi.fn().mockReturnValue(undefined) } as unknown as Reflector;
+    const reflector = {
+      getAllAndOverride: vi.fn().mockReturnValue(undefined),
+    } as unknown as Reflector;
     const guard = new PermissionsGuard(reflector);
     const ctx = createMockContext();
 
@@ -25,7 +27,11 @@ describe("PermissionsGuard", () => {
   });
 
   it("throws ForbiddenException when user is not present", () => {
-    const reflector = { getAllAndOverride: vi.fn().mockReturnValue({ permissions: [Permissions.NOTES_CREATE], mode: "all" }) } as unknown as Reflector;
+    const reflector = {
+      getAllAndOverride: vi
+        .fn()
+        .mockReturnValue({ permissions: [Permissions.NOTES_CREATE], mode: "all" }),
+    } as unknown as Reflector;
     const guard = new PermissionsGuard(reflector);
     const ctx = createMockContext(undefined);
 
@@ -33,7 +39,11 @@ describe("PermissionsGuard", () => {
   });
 
   it("allows access when user role has permission", () => {
-    const reflector = { getAllAndOverride: vi.fn().mockReturnValue({ permissions: [Permissions.NOTES_CREATE], mode: "all" }) } as unknown as Reflector;
+    const reflector = {
+      getAllAndOverride: vi
+        .fn()
+        .mockReturnValue({ permissions: [Permissions.NOTES_CREATE], mode: "all" }),
+    } as unknown as Reflector;
     const guard = new PermissionsGuard(reflector);
     const ctx = createMockContext({ role: "user" });
 
@@ -41,7 +51,11 @@ describe("PermissionsGuard", () => {
   });
 
   it("throws ForbiddenException when user role lacks permission", () => {
-    const reflector = { getAllAndOverride: vi.fn().mockReturnValue({ permissions: [Permissions.USERS_DELETE], mode: "all" }) } as unknown as Reflector;
+    const reflector = {
+      getAllAndOverride: vi
+        .fn()
+        .mockReturnValue({ permissions: [Permissions.USERS_DELETE], mode: "all" }),
+    } as unknown as Reflector;
     const guard = new PermissionsGuard(reflector);
     const ctx = createMockContext({ role: "user" });
 
@@ -49,7 +63,11 @@ describe("PermissionsGuard", () => {
   });
 
   it("allows admin access to all permissions", () => {
-    const reflector = { getAllAndOverride: vi.fn().mockReturnValue({ permissions: [Permissions.USERS_DELETE], mode: "all" }) } as unknown as Reflector;
+    const reflector = {
+      getAllAndOverride: vi
+        .fn()
+        .mockReturnValue({ permissions: [Permissions.USERS_DELETE], mode: "all" }),
+    } as unknown as Reflector;
     const guard = new PermissionsGuard(reflector);
     const ctx = createMockContext({ role: "admin" });
 
@@ -57,7 +75,11 @@ describe("PermissionsGuard", () => {
   });
 
   it("allows access when tenant role grants permission", () => {
-    const reflector = { getAllAndOverride: vi.fn().mockReturnValue({ permissions: [Permissions.BILLING_MANAGE], mode: "all" }) } as unknown as Reflector;
+    const reflector = {
+      getAllAndOverride: vi
+        .fn()
+        .mockReturnValue({ permissions: [Permissions.BILLING_MANAGE], mode: "all" }),
+    } as unknown as Reflector;
     const guard = new PermissionsGuard(reflector);
     const ctx = createMockContext({ role: "user" }, { role: "admin" });
 

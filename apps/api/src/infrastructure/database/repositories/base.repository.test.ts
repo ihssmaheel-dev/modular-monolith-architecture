@@ -60,7 +60,10 @@ describe("BaseRepository Tenant Isolation", () => {
     // When tenantScoped is true, missing tenant context throws
     const repo = new TestRepo(mockDb, mockContext, true);
     // Simulate multi-tenant mode
-    vi.spyOn(repo as unknown as { isTenantIsolationRequired: () => boolean }, "isTenantIsolationRequired").mockReturnValue(true);
+    vi.spyOn(
+      repo as unknown as { isTenantIsolationRequired: () => boolean },
+      "isTenantIsolationRequired",
+    ).mockReturnValue(true);
 
     await expect(repo.create({ name: "Fail" })).rejects.toThrow("TENANT_REQUIRED");
     await expect(repo.createMany([{ name: "Fail" }])).rejects.toThrow("TENANT_REQUIRED");

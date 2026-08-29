@@ -21,13 +21,19 @@ export interface ResourceDescriptor<T = unknown> {
 
 export type Relation = "owner" | "editor" | "viewer" | "member" | "admin" | string;
 
-export interface PolicyConditionParams<TResource = unknown, TContext extends Record<string, unknown> = Record<string, unknown>> {
+export interface PolicyConditionParams<
+  TResource = unknown,
+  TContext extends Record<string, unknown> = Record<string, unknown>,
+> {
   principal: Principal;
   resource?: ResourceDescriptor<TResource>;
   context?: TContext;
 }
 
-export interface Policy<TResource = unknown, TContext extends Record<string, unknown> = Record<string, unknown>> {
+export interface Policy<
+  TResource = unknown,
+  TContext extends Record<string, unknown> = Record<string, unknown>,
+> {
   id: string;
   description?: string;
   resourceType?: string | string[];
@@ -37,7 +43,10 @@ export interface Policy<TResource = unknown, TContext extends Record<string, unk
   condition: (params: PolicyConditionParams<TResource, TContext>) => boolean;
 }
 
-export interface AuthorizationRequest<TResource = unknown, TContext extends Record<string, unknown> = Record<string, unknown>> {
+export interface AuthorizationRequest<
+  TResource = unknown,
+  TContext extends Record<string, unknown> = Record<string, unknown>,
+> {
   principal: Principal;
   action: Permission | string;
   resource?: ResourceDescriptor<TResource> | TResource;

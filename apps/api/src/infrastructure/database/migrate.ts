@@ -14,7 +14,9 @@ export async function runMigrations(): Promise<void> {
 
   const client = await pool.connect();
   try {
-    process.stdout.write(`[Migrator] Acquiring PostgreSQL advisory lock (${MIGRATION_LOCK_ID})...\n`);
+    process.stdout.write(
+      `[Migrator] Acquiring PostgreSQL advisory lock (${MIGRATION_LOCK_ID})...\n`,
+    );
     await client.query("SELECT pg_advisory_lock($1)", [MIGRATION_LOCK_ID]);
     process.stdout.write("[Migrator] Advisory lock acquired. Applying Drizzle migrations...\n");
 

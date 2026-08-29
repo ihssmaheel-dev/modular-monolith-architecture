@@ -102,7 +102,8 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<AuthResponse> {
     const lang = req.headers["accept-language"];
-    const token = body?.refreshToken ?? (req.cookies as Record<string, string | undefined>)?.refresh_token;
+    const token =
+      body?.refreshToken ?? (req.cookies as Record<string, string | undefined>)?.refresh_token;
     if (!token) {
       handleResult(err({ type: "INVALID_TOKEN" as const }), INVALID_TOKEN_ERRORS, this.i18n, lang);
     }

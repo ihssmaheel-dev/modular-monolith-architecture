@@ -105,10 +105,20 @@ export function matchesPermission(userPerm: string, requiredPerm: string): boole
   }
   if (userPerm === "notes:write" && requiredPerm.startsWith("notes:")) return true;
   if (userPerm === "files:write" && requiredPerm.startsWith("files:")) return true;
-  if (userPerm === "team:manage" && (requiredPerm.startsWith("team:") || requiredPerm.startsWith("members:") || requiredPerm.startsWith("invitations:"))) return true;
+  if (
+    userPerm === "team:manage" &&
+    (requiredPerm.startsWith("team:") ||
+      requiredPerm.startsWith("members:") ||
+      requiredPerm.startsWith("invitations:"))
+  )
+    return true;
   if (userPerm === "team:invite" && requiredPerm === "invitations:write") return true;
   if (userPerm === "invitations:write" && requiredPerm === "team:invite") return true;
-  if (userPerm === "team:read" && (requiredPerm === "members:read" || requiredPerm === "invitations:read")) return true;
+  if (
+    userPerm === "team:read" &&
+    (requiredPerm === "members:read" || requiredPerm === "invitations:read")
+  )
+    return true;
   if (userPerm === "members:read" && requiredPerm === "team:read") return true;
   return false;
 }

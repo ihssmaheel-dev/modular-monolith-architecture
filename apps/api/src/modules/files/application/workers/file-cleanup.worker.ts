@@ -51,7 +51,10 @@ export class FileCleanupWorker {
           purgedCount += 1;
           reclaimedBytes += file.fileSize;
         } catch (error) {
-          this.logger.error({ fileId: file.id, key: file.key, error }, "Failed to purge orphan file");
+          this.logger.error(
+            { fileId: file.id, key: file.key, error },
+            "Failed to purge orphan file",
+          );
         }
       }
 

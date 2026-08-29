@@ -8,17 +8,14 @@ Where to create new files in this codebase. Every file must land in the correct 
 
 Before creating any file, answer these questions in order:
 
-1. **Is it shared across apps?** → `packages/`
-2. **Is it a UI component?** → `packages/ui/src/components/`
-3. **Is it a Zod schema, type, or contract?** → `packages/contracts/src/`
-4. **Is it authorization rules, permissions, or evaluator?** → `packages/authorization/src/`
-5. **Is it translations or locale definitions?** → `packages/i18n/src/`
-6. **Is it visual design tokens?** → `packages/design-tokens/src/`
-7. **Is it backend infrastructure?** → `apps/api/src/infrastructure/`
-8. **Is it a backend module?** → `apps/api/src/modules/[domain]/`
-9. **Is it web frontend?** → `apps/web/src/`
-10. **Is it mobile?** → `apps/mobile/`
-11. **Is it config or docs?** → Root level
+1. **Is it a shared contract, Zod schema, or DTO?** → `packages/contracts/src/`
+2. **Is it authorization rules, permissions, or evaluator?** → `packages/authorization/src/`
+3. **Is it translations or locale definitions?** → `packages/i18n/src/`
+4. **Is it API client factory/methods?** → `packages/api-client/src/`
+5. **Is it transactional email templates?** → `packages/email/src/`
+6. **Is it backend cross-cutting infrastructure?** → `apps/api/src/infrastructure/`
+7. **Is it a backend domain module?** → `apps/api/src/modules/[domain]/`
+8. **Is it config or docs?** → Root level or `docs/`
 
 ---
 
@@ -41,7 +38,7 @@ Before creating any file, answer these questions in order:
 
 ## Capability Packages (`packages/*`)
 
-Focused capability packages: `@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/design-tokens`.
+Focused capability packages: `@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/api-client`, `@repo/email`, `@repo/typescript-config`.
 
 ### 1. `@repo/contracts` (`packages/contracts/src/`)
 - Schemas (`schemas/*.schema.ts`): Zod 4 schemas & DTOs
@@ -58,54 +55,8 @@ Focused capability packages: `@repo/contracts`, `@repo/authorization`, `@repo/i1
 - Locales (`locales/*.json`): en.json, es.json, fr.json
 - Config (`index.ts`): Locale definitions & keys
 
-### 4. `@repo/design-tokens` (`packages/design-tokens/src/`)
-- Colors (`colors.ts`): Color tokens, typography, spacing, radius scales
-
----
-
-## packages/ui/
-
-Web-only UI components built with headless Radix UI primitives and styled with Tailwind CSS v4. Never used by mobile.
-
-```
-packages/ui/src/
-├── components/
-│   ├── button.tsx
-│   ├── card.tsx
-│   ├── input.tsx
-│   ├── label.tsx
-│   ├── badge.tsx
-│   ├── separator.tsx
-│   ├── avatar.tsx
-│   ├── skeleton.tsx
-│   ├── spinner.tsx
-│   ├── checkbox.tsx
-│   ├── dialog.tsx
-│   ├── dropdown-menu.tsx
-│   ├── popover.tsx
-│   ├── tooltip.tsx
-│   ├── tabs.tsx
-│   ├── accordion.tsx
-│   ├── calendar.tsx
-│   ├── date-picker.tsx
-│   ├── combobox.tsx
-│   ├── multi-select.tsx
-│   ├── table.tsx
-│   ├── data-table.tsx
-│   ├── data-table-column-header.tsx
-│   ├── data-table-pagination.tsx
-│   └── data-table-view-options.tsx
-├── lib/
-│   └── utils.ts              ← cn() helper, etc.
-└── index.ts                  ← Main barrel export
-```
-
-### Rules
-- One component per file. Flat structure (no folders per component).
-- File name is kebab-case matching the component.
-- Export through `packages/ui/src/index.ts`.
-- No business logic, no API calls, no state management.
-- No upload utilities, hooks, or stores — those belong in `apps/web/src/`.
+### 4. `@repo/email` (`packages/email/src/`)
+- Templates (`templates/*.tsx`): React Email transactional templates
 
 ---
 
@@ -268,99 +219,6 @@ apps/api/src/modules/
 
 ---
 
-## apps/web/src/
-
-```
-apps/web/src/
-├── main.tsx                   ← App entry point
-├── index.css                  ← Global styles + Tailwind
-├── lib/
-│   ├── api.ts                 ← createApiClient() instance
-│   ├── upload.ts              ← S3 presigned upload utility
-│   ├── query-client.ts        ← TanStack Query client
-│   └── i18n/
-│       └── index.ts           ← i18n initialization
-├── routes/
-│   ├── __root.tsx             ← Root layout (TanStack Router)
-│   ├── index.tsx              ← Home page
-│   ├── _auth.login.tsx        ← Login page
-│   ├── _auth.register.tsx     ← Register page
-│   ├── _auth.forgot-password.tsx
-│   ├── _dashboard.tsx         ← Dashboard layout wrapper
-│   ├── _dashboard.index.tsx   ← Dashboard home
-│   ├── _dashboard.users.tsx   ← Users list page
-│   ├── _dashboard.notes.tsx   ← Notes list page
-│   └── _dashboard.settings.tsx
-├── components/
-│   ├── layout/
-│   │   ├── header.tsx
-│   │   ├── sidebar.tsx
-│   │   └── page-container.tsx
-│   ├── features/
-│   │   ├── notes/
-│   │   │   ├── CreateNoteForm.tsx
-│   │   │   └── NotesList.tsx
-│   │   └── users/
-│   │       └── UserCard.tsx
-│   └── shared/
-│       ├── theme-toggle.tsx
-│       └── error-boundary.tsx
-├── hooks/
-│   ├── use-file-upload.ts     ← File upload hook
-│   ├── use-theme.ts           ← Theme hook
-│   ├── use-authorization.ts   ← FGA permission hooks
-│   ├── use-permissions.ts
-│   ├── use-optimistic-mutation.ts ← Reusable 0ms optimistic mutation hook
-│   └── use-notes.ts           ← Optimistic entity query hook
-└── stores/
-    ├── auth.store.ts          ← Auth Zustand store (purges query cache on logout)
-    ├── tenant.store.ts        ← Tenant Zustand store (purges query cache on tenant switch)
-    └── ui.store.ts            ← UI Zustand store
-```
-
-### Rules
-- Routes follow TanStack Router file conventions.
-- Components are presentational or container (thin).
-- `lib/` contains framework utilities (api client, upload, query client, i18n init).
-- `hooks/` contains React hooks (TanStack Query wrappers, optimistic mutation hooks, custom hooks).
-- `stores/` contains Zustand stores for client state.
-- Upload utilities (`upload.ts`) and hooks (`use-file-upload.ts`) live in `apps/web/src/`, not `packages/ui`.
-- No direct `fetch`/`axios` — use `packages/api-client`.
-
----
-
-## apps/mobile/
-
-```
-apps/mobile/
-├── app/
-│   ├── _layout.tsx            ← Root layout (Expo Router)
-│   ├── index.tsx              ← Home screen
-│   ├── users/
-│   │   ├── index.tsx          ← Users list screen
-│   │   └── [userId].tsx       ← User detail screen
-│   └── (+tabs)/               ← Tab layout
-├── components/
-│   ├── UserCard.tsx
-│   └── index.ts
-├── hooks/
-│   ├── useUsers.ts
-│   └── index.ts
-├── stores/
-│   ├── auth.store.ts
-│   └── index.ts
-└── types/
-    └── index.ts
-```
-
-### Rules
-- Expo Router file conventions.
-- Never import `packages/ui`.
-- Same Zod schemas from `@repo/contracts`.
-- Same API client as web.
-
----
-
 ## Testing Files
 
 ### Backend Tests
@@ -374,19 +232,7 @@ users/
 │   ├── create-user.command.test.ts        ← Unit test
 │   └── create-user.command.integration.test.ts  ← Integration test
 ├── users.controller.ts
-├── users.controller.e2e.test.ts ← E2E test
-```
-
-### Frontend Tests
-
-Co-locate with component:
-
-```
-components/
-├── Button/
-│   ├── Button.tsx
-│   ├── Button.test.tsx
-│   └── index.ts
+└── users.controller.e2e.test.ts           ← E2E test
 ```
 
 ### Test Naming
@@ -420,8 +266,12 @@ migrations/
 ```
 docs/
 ├── ARCHITECTURE.md             ← Architecture overview
-├── ARCHITECTURE_EXPLAINED.md   ← Plain-English guide
-└── API.md                      ← API documentation (if needed)
+├── ARCHITECTURE_DEEP_DIVE.md   ← Plain-English guide
+├── DATABASE.md                 ← Database guide
+├── DEVELOPMENT.md              ← Dev setup guide
+├── ENVIRONMENT.md              ← Environment variables
+├── NEW_MODULE.md               ← Module creation guide
+└── TENANCY.md                  ← Multi-tenancy architecture
 ```
 
 ### Rules
@@ -435,7 +285,7 @@ docs/
 | Mistake | Correct Location |
 |---------|-----------------|
 | Zod schema in module folder | `packages/contracts/src/schemas/` |
-| Type definition in component file | `packages/contracts/src/types/` or nearest `types/` folder |
+| Type definition in controller file | `packages/contracts/src/types/` |
 | API call with `fetch()` | `packages/api-client` |
 | `process.env` outside `config/env.ts` | `config/env.ts` only |
 | Business logic in controller | `application/` command/query layer |
@@ -443,9 +293,6 @@ docs/
 | ORM/DB driver in domain layer | `infrastructure/` layer only |
 | Test file far from source | Co-locate with source file |
 | Utility in random location | `packages/contracts/src/` or nearest `lib/` |
-| Component in routes folder | `components/` folder |
-| Store in components folder | `stores/` folder |
-| Hook in components folder | `hooks/` folder |
 | API Docs in config folder | `infrastructure/api-docs/` |
 
 ---
@@ -461,8 +308,7 @@ docs/
 | Action permission | `packages/authorization/src/permissions/[domain].permissions.ts` |
 | Pure FGA evaluator | `packages/authorization/src/evaluator.ts` |
 | i18n translations | `packages/i18n/src/locales/[locale].json` |
-| Theme design tokens | `packages/design-tokens/src/` |
-| UI component | `packages/ui/src/components/[name].tsx` |
+| Email template | `packages/email/src/templates/[name].tsx` |
 | API client helper | `packages/api-client/src/` |
 | Env config | `apps/api/src/config/env.ts` |
 | API Docs setup | `apps/api/src/infrastructure/api-docs/` |
@@ -498,15 +344,6 @@ docs/
 | Backend unit test | Co-locate with source: `[name].test.ts` |
 | Backend integration test | Co-locate with source: `[name].integration.test.ts` |
 | Backend E2E test | Co-locate with source: `[name].e2e.test.ts` |
-| Web route | `apps/web/src/routes/` |
-| Web component | `apps/web/src/components/` |
-| Web hook | `apps/web/src/hooks/` |
-| Web Zustand store | `apps/web/src/stores/` |
-| Web test | Co-locate with component: `[Name].test.tsx` |
-| Mobile screen | `apps/mobile/app/` |
-| Mobile component | `apps/mobile/components/` |
-| Mobile hook | `apps/mobile/hooks/` |
-| Mobile store | `apps/mobile/stores/` |
 | DB migration | `migrations/pg/` |
 | Docker config | `docker/` |
 | Documentation | `docs/` |
@@ -518,7 +355,7 @@ docs/
 **If you're unsure where a file belongs, it probably doesn't belong there.**
 
 Ask:
-1. Who uses this file? (One app? Multiple apps? One module?)
+1. Who uses this file? (One app? Multiple packages? One module?)
 2. Does it depend on frameworks or infrastructure?
 3. Is it pure data definition or business logic?
 4. Does it cross module boundaries?

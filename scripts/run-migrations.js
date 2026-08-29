@@ -1,1 +1,2 @@
-console.log("Mongo migrations removed — use: pnpm --filter api db:migrate (drizzle-kit)"); process.exit(0);
+console.log("Mongo migrations removed ï¿½ use: pnpm --filter api db:migrate (drizzle-kit)");
+process.exit(0);

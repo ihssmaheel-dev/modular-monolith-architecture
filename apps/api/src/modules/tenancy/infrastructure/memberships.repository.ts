@@ -36,11 +36,17 @@ export class MembershipsRepository extends BaseRepository<Membership, Membership
     return this.findOne({ tenantId, userEmail: email });
   }
 
-  paginateForUser(userId: string, options: PaginationOptions): Promise<Result<PaginatedResult<Membership>, never>> {
+  paginateForUser(
+    userId: string,
+    options: PaginationOptions,
+  ): Promise<Result<PaginatedResult<Membership>, never>> {
     return this.paginate({ userId }, options);
   }
 
-  paginateForTenant(tenantId: string, options: PaginationOptions): Promise<Result<PaginatedResult<Membership>, never>> {
+  paginateForTenant(
+    tenantId: string,
+    options: PaginationOptions,
+  ): Promise<Result<PaginatedResult<Membership>, never>> {
     return this.paginate({ tenantId }, options);
   }
 
@@ -52,7 +58,11 @@ export class MembershipsRepository extends BaseRepository<Membership, Membership
     return this.exists({ userId, role: "owner" } as unknown as Record<string, unknown>);
   }
 
-  updateRole(tenantId: string, userId: string, role: TenantRole): Promise<Result<Membership | null, { type: "CONFLICT" }>> {
+  updateRole(
+    tenantId: string,
+    userId: string,
+    role: TenantRole,
+  ): Promise<Result<Membership | null, { type: "CONFLICT" }>> {
     return this.updateOne({ tenantId, userId }, { role });
   }
 
@@ -62,13 +72,20 @@ export class MembershipsRepository extends BaseRepository<Membership, Membership
     return this.deleteById(membership.value.data.id);
   }
 
-  async updateUserSnapshot(userId: string, changes: { email?: string; name?: string }): Promise<void> {
+  async updateUserSnapshot(
+    userId: string,
+    changes: { email?: string; name?: string },
+  ): Promise<void> {
     const update: Record<string, string> = {};
     if (changes.email) update.userEmail = changes.email;
     if (changes.name) update.userName = changes.name;
     if (Object.keys(update).length === 0) return;
     const db = this.getDb();
-    await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => Promise<void> } } })
+    await (
+      db as unknown as {
+        update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => Promise<void> } };
+      }
+    )
       .update(memberships)
       .set({ ...update, updatedAt: new Date() })
       .where(eq(memberships.userId, userId));
@@ -76,7 +93,9 @@ export class MembershipsRepository extends BaseRepository<Membership, Membership
 
   async removeUser(userId: string): Promise<void> {
     const db = this.getDb();
-    await (db as unknown as { delete: (t: unknown) => { where: (c: unknown) => Promise<void> } }).delete(memberships).where(eq(memberships.userId, userId));
+    await (db as unknown as { delete: (t: unknown) => { where: (c: unknown) => Promise<void> } })
+      .delete(memberships)
+      .where(eq(memberships.userId, userId));
   }
 
   private exists(filter: Record<string, unknown>): Promise<Result<boolean, never>> {

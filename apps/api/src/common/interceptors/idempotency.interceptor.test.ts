@@ -174,13 +174,20 @@ describe("IdempotencyInterceptor", () => {
 
     await fc.assert(
       fc.asyncProperty(
-        fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:-'), { minLength: 1, maxLength: 50 }).map(arr => arr.join('')),
+        fc
+          .array(
+            fc.constantFrom(
+              ..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:-",
+            ),
+            { minLength: 1, maxLength: 50 },
+          )
+          .map((arr) => arr.join("")),
         fc.json(),
         async (idempotencyKey, responseData) => {
           const parsedData = JSON.parse(responseData);
           const context = createMockContext({ "idempotency-key": idempotencyKey });
           const handler = createMockCallHandler(parsedData);
-          
+
           redisClient.set.mockResolvedValueOnce("OK");
           redisClient.set.mockResolvedValueOnce("OK");
 
@@ -193,13 +200,13 @@ describe("IdempotencyInterceptor", () => {
             "PROCESSING",
             "EX",
             86400,
-            "NX"
+            "NX",
           );
-          
+
           redisClient.set.mockClear();
-        }
+        },
       ),
-      { numRuns: 20 }
+      { numRuns: 20 },
     );
   });
 });

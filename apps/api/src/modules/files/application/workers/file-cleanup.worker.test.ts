@@ -52,7 +52,13 @@ describe("FileCleanupWorker", () => {
       run: vi.fn(async (_ctx, fn) => await fn()),
     } as unknown as import("../../../../infrastructure/database").TenantContextService;
 
-    worker = new FileCleanupWorker(mockFilesRepo, mockStorage, mockMetrics, mockTenantContext, mockLogger);
+    worker = new FileCleanupWorker(
+      mockFilesRepo,
+      mockStorage,
+      mockMetrics,
+      mockTenantContext,
+      mockLogger,
+    );
   });
 
   it("identifies and purges stale pending files older than cutoff", async () => {

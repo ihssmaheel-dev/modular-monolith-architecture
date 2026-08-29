@@ -72,8 +72,14 @@ export const ${featurePlural}Contract = oc.prefix("/${featurePlural}").router({
 });
 `;
 
-  writeFileIfMissing(path.join(contractsPath, "src", "schemas", `${feature}.schema.ts`), schemaContent);
-  writeFileIfMissing(path.join(contractsPath, "src", "contracts", `${featurePlural}.contract.ts`), contractContent);
+  writeFileIfMissing(
+    path.join(contractsPath, "src", "schemas", `${feature}.schema.ts`),
+    schemaContent,
+  );
+  writeFileIfMissing(
+    path.join(contractsPath, "src", "contracts", `${featurePlural}.contract.ts`),
+    contractContent,
+  );
 
   appendExportIfMissing(
     path.join(contractsPath, "src", "schemas", "index.ts"),

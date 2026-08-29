@@ -8,7 +8,7 @@ Rules for adding any dependency to this codebase.
 
 Ask these questions in order:
 
-1. **Does a solution already exist in our stack?** Check `@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/design-tokens`, `packages/ui`, and existing modules.
+1. **Does a solution already exist in our stack?** Check `@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/api-client`, and existing modules.
 2. **Can we solve this with <20 lines of our own code?** If yes, write it yourself.
 3. **Is this package on our locked stack?** Check `CORE_RULES.md` locked stack table.
 4. **Is this package 100% free and open source?** No paid tiers, no "community edition" bait-and-switch.

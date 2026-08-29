@@ -46,7 +46,10 @@ function checkFile(file) {
   if (name.endsWith("routeTree.gen.ts")) return;
   if (name.endsWith(".d.ts")) return;
   if (fileName.includes("mongoose") || fileName.includes("mongo")) {
-    report(file, "Mongo/Mongoose files are forbidden — use Drizzle schemas (infrastructure/schemas/*.schema.ts)");
+    report(
+      file,
+      "Mongo/Mongoose files are forbidden — use Drizzle schemas (infrastructure/schemas/*.schema.ts)",
+    );
   }
 
   const forbidden = [
@@ -132,9 +135,13 @@ function checkTenantRepositories() {
       const source = fs.readFileSync(file, "utf8");
       const isTenantScoped =
         /extends\s+TenantScopedRepository/.test(source) ||
-        (/extends\s+(DrizzleBaseRepository|BaseRepository)/.test(source) && /super\([^)]*,\s*true/.test(source));
+        (/extends\s+(DrizzleBaseRepository|BaseRepository)/.test(source) &&
+          /super\([^)]*,\s*true/.test(source));
       if (!isTenantScoped) {
-        report(file, "tenant-owned repositories must extend TenantScopedRepository or BaseRepository with tenantScoped=true");
+        report(
+          file,
+          "tenant-owned repositories must extend TenantScopedRepository or BaseRepository with tenantScoped=true",
+        );
       }
     }
   }
@@ -144,14 +151,21 @@ function checkDocumentationDrift() {
   const docTargets = [
     path.join(ROOT, "AGENTS.md"),
     path.join(ROOT, ".cursorrules"),
-    ...(fs.existsSync(path.join(ROOT, "ai_instructions")) ? walk(path.join(ROOT, "ai_instructions")) : []),
+    ...(fs.existsSync(path.join(ROOT, "ai_instructions"))
+      ? walk(path.join(ROOT, "ai_instructions"))
+      : []),
     ...(fs.existsSync(path.join(ROOT, "docs")) ? walk(path.join(ROOT, "docs")) : []),
-  ].filter((file) => fs.existsSync(file) && (file.endsWith(".md") || file.endsWith(".cursorrules")));
+  ].filter(
+    (file) => fs.existsSync(file) && (file.endsWith(".md") || file.endsWith(".cursorrules")),
+  );
 
   const bannedPatterns = [
     [/\bmongoose\b/i, "obsolete 'Mongoose' reference — use Drizzle/Postgres"],
     [/\bmongodb\b/i, "obsolete 'MongoDB' reference — use PostgreSQL"],
-    [/\bpackages\/shared\b/i, "obsolete 'packages/shared' reference — use @repo/contracts, @repo/i18n, etc."],
+    [
+      /\bpackages\/shared\b/i,
+      "obsolete 'packages/shared' reference — use @repo/contracts, @repo/i18n, etc.",
+    ],
     [/\b@ts-rest\b/i, "obsolete '@ts-rest' reference — use oRPC/NestJS"],
   ];
 

@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  evaluateAuthorization,
-  type Policy,
-  type Principal,
-} from "./index";
+import { evaluateAuthorization, type Policy, type Principal } from "./index";
 
 describe("Unified Authorization Engine (RBAC + ReBAC + ABAC)", () => {
   const alice: Principal = {

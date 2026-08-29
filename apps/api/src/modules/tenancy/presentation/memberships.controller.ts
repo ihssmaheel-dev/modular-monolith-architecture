@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import {
   Idempotent,
@@ -6,7 +18,16 @@ import {
   TenantAgnostic,
   requireAuthenticatedUser,
 } from "../../../common";
-import { type AcceptInvitationInput, type InviteMemberInput, type UpdateMemberInput, type PaginationQuery, type MemberResponse, type MemberListResponse, type InvitationResponse, type InvitationListResponse } from "@repo/contracts";
+import {
+  type AcceptInvitationInput,
+  type InviteMemberInput,
+  type UpdateMemberInput,
+  type PaginationQuery,
+  type MemberResponse,
+  type MemberListResponse,
+  type InvitationResponse,
+  type InvitationListResponse,
+} from "@repo/contracts";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
 import { AcceptInvitationCommand } from "../application/commands/accept-invitation.command";
@@ -60,10 +81,7 @@ export class MembershipsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
   @RequirePermission("team:remove")
-  async remove(
-    @Param("userId") userId: string,
-    @Req() request: FastifyRequest,
-  ): Promise<void> {
+  async remove(@Param("userId") userId: string, @Req() request: FastifyRequest): Promise<void> {
     this.handle(await this.removeMember.execute(userId), MEMBERSHIP_ERRORS, request);
   }
 

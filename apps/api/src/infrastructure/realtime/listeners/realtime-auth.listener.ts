@@ -18,7 +18,10 @@ export class RealtimeAuthListener {
   handleAuthVersionIncremented(payload: { userId: string }): void {
     if (payload?.userId) {
       const closed = this.realtime.disconnectUser(payload.userId);
-      this.logger.info({ userId: payload.userId, closed }, "Closed realtime sessions on auth version increment");
+      this.logger.info(
+        { userId: payload.userId, closed },
+        "Closed realtime sessions on auth version increment",
+      );
     }
   }
 
@@ -26,7 +29,10 @@ export class RealtimeAuthListener {
   handlePasswordReset(payload: { userId: string }): void {
     if (payload?.userId) {
       const closed = this.realtime.disconnectUser(payload.userId);
-      this.logger.info({ userId: payload.userId, closed }, "Closed realtime sessions on password reset");
+      this.logger.info(
+        { userId: payload.userId, closed },
+        "Closed realtime sessions on password reset",
+      );
     }
   }
 
@@ -34,7 +40,10 @@ export class RealtimeAuthListener {
   handleSessionRevoked(payload: { userId: string }): void {
     if (payload?.userId) {
       const closed = this.realtime.disconnectUser(payload.userId);
-      this.logger.info({ userId: payload.userId, closed }, "Closed realtime sessions on session revocation");
+      this.logger.info(
+        { userId: payload.userId, closed },
+        "Closed realtime sessions on session revocation",
+      );
     }
   }
 }

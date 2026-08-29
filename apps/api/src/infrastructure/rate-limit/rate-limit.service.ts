@@ -40,7 +40,12 @@ export class RateLimitService {
 
     const client = this.redis.getClient();
     if (!client) {
-      this.metrics.incrementCounter("rate_limit_redis_unavailable", "Redis unavailable for rate limiting", 1, { key });
+      this.metrics.incrementCounter(
+        "rate_limit_redis_unavailable",
+        "Redis unavailable for rate limiting",
+        1,
+        { key },
+      );
       this.logger.warn({ key }, "Rate limit Redis unavailable");
       const isAuth = key.includes("/auth/") || key.includes("auth:");
       if (isAuth) {
@@ -72,7 +77,7 @@ export class RateLimitService {
       windowStart.toString(),
       now.toString(),
       `${now}:${crypto.randomUUID()}`,
-      windowSeconds.toString()
+      windowSeconds.toString(),
     )) as number;
 
     const remaining = Math.max(0, maxRequests - count);

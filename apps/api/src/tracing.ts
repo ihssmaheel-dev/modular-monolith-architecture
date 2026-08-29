@@ -1,15 +1,20 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { BatchSpanProcessor, ParentBasedSampler, TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-base";
+import {
+  BatchSpanProcessor,
+  ParentBasedSampler,
+  TraceIdRatioBasedSampler,
+} from "@opentelemetry/sdk-trace-base";
 import { env } from "./config/env";
 import pino from "pino";
 
 const logger = pino({ name: "tracing", level: env.LOG_LEVEL });
 
-const traceExporter = env.NODE_ENV === "production" || env.OTEL_EXPORTER_OTLP_ENDPOINT
-  ? new OTLPTraceExporter({ url: env.OTEL_EXPORTER_OTLP_ENDPOINT })
-  : undefined;
+const traceExporter =
+  env.NODE_ENV === "production" || env.OTEL_EXPORTER_OTLP_ENDPOINT
+    ? new OTLPTraceExporter({ url: env.OTEL_EXPORTER_OTLP_ENDPOINT })
+    : undefined;
 
 export const otelSDK = new NodeSDK({
   serviceName: "api-service",

@@ -56,7 +56,9 @@ function createGuard(tenantId?: string) {
   } as unknown as Reflector;
   const resolver = { execute: vi.fn() } as unknown as ResolveTenantAccessQuery;
   const cls = { set: vi.fn(), get: vi.fn() } as unknown as ClsService;
-  const i18n = { t: vi.fn().mockReturnValue("translated") } as unknown as import("../../infrastructure/i18n/i18n.service").I18nService;
+  const i18n = {
+    t: vi.fn().mockReturnValue("translated"),
+  } as unknown as import("../../infrastructure/i18n/i18n.service").I18nService;
   const request = {
     headers: tenantId ? { "x-tenant-id": tenantId } : {},
     user: { sub: "user-1", email: "user@example.com", role: "user" as const },

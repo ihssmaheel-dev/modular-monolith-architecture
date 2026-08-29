@@ -6,15 +6,17 @@ let redisContainer: StartedTestContainer;
 
 beforeAll(async () => {
   postgresContainer = await new GenericContainer("postgres:16-alpine")
-    .withEnvironment({ POSTGRES_USER: "postgres", POSTGRES_PASSWORD: "postgres", POSTGRES_DB: "e2e-test" })
+    .withEnvironment({
+      POSTGRES_USER: "postgres",
+      POSTGRES_PASSWORD: "postgres",
+      POSTGRES_DB: "e2e-test",
+    })
     .withExposedPorts(5432)
     .start();
 
   process.env.DATABASE_URL = `postgres://postgres:postgres@${postgresContainer.getHost()}:${postgresContainer.getMappedPort(5432)}/e2e-test`;
 
-  redisContainer = await new GenericContainer("redis:7.0-alpine")
-    .withExposedPorts(6379)
-    .start();
+  redisContainer = await new GenericContainer("redis:7.0-alpine").withExposedPorts(6379).start();
 
   process.env.REDIS_URL = `redis://${redisContainer.getHost()}:${redisContainer.getMappedPort(6379)}`;
 });

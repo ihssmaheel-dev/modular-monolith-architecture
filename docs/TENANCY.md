@@ -26,7 +26,7 @@ Tenant-owned frontend caches must include the active tenant ID in their query ke
 the tenant changes. Authentication logout/failure already clears the built-in query caches.
 
 To make a domain tenant-owned:
- 
+
 1. Add an optional `tenantId` column to its Drizzle schema (`text("tenant_id")`). It remains null in single mode.
 2. Extend `BaseRepository` passing `tenantScoped = true` to `super()`.
 3. Add compound tenant indexes in the Drizzle schema and migrations.

@@ -1,13 +1,4 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Html,
-  Preview,
-  Tailwind,
-  Text,
-} from "react-email";
+import { Body, Button, Container, Head, Html, Preview, Tailwind, Text } from "react-email";
 import { emailTokens } from "../styles/tokens";
 
 interface OrganizationInvitationEmailProps {
@@ -46,10 +37,16 @@ export function OrganizationInvitationEmail({
             className="border border-solid rounded my-[40px] mx-auto p-[20px] w-[465px]"
             style={{ borderColor: emailTokens.light.border }}
           >
-            <Text className="text-[18px] leading-[28px] font-semibold" style={{ color: emailTokens.light.foreground }}>
+            <Text
+              className="text-[18px] leading-[28px] font-semibold"
+              style={{ color: emailTokens.light.foreground }}
+            >
               {heading}
             </Text>
-            <Text className="text-[14px] leading-[24px]" style={{ color: emailTokens.light.foreground }}>
+            <Text
+              className="text-[14px] leading-[24px]"
+              style={{ color: emailTokens.light.foreground }}
+            >
               {body}
             </Text>
             <Button

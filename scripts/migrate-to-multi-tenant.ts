@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { eq, isNull } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { organizations, memberships } from "../apps/api/src/modules/tenancy/infrastructure/schemas/tenancy.schema";
+import {
+  organizations,
+  memberships,
+} from "../apps/api/src/modules/tenancy/infrastructure/schemas/tenancy.schema";
 import { users } from "../apps/api/src/modules/users/infrastructure/schemas/user.schema";
 import { notes } from "../apps/api/src/modules/notes/infrastructure/schemas/note.schema";
 import { files } from "../apps/api/src/modules/files/infrastructure/schemas/file.schema";
@@ -39,7 +42,11 @@ async function resolveOrganization(
   name: string,
   slug: string,
 ): Promise<{ id: string; name: string; slug: string }> {
-  const existing = await tx.select().from(organizations).where(eq(organizations.slug, slug)).limit(1);
+  const existing = await tx
+    .select()
+    .from(organizations)
+    .where(eq(organizations.slug, slug))
+    .limit(1);
   if (existing.length > 0 && existing[0]) {
     return { id: existing[0].id, name: existing[0].name, slug: existing[0].slug };
   }
@@ -63,10 +70,7 @@ async function backfillMemberships(tx: DbInstance, orgId: string): Promise<numbe
   let count = 0;
 
   for (const user of allUsers) {
-    const existing = await tx
-      .select()
-      .from(memberships)
-      .where(eq(memberships.userId, user.id));
+    const existing = await tx.select().from(memberships).where(eq(memberships.userId, user.id));
 
     const isMemberOfOrg = existing.some((m) => m.tenantId === orgId);
     if (!isMemberOfOrg) {
@@ -91,10 +95,26 @@ async function backfillMemberships(tx: DbInstance, orgId: string): Promise<numbe
 
 async function backfillRecords(tx: DbInstance, orgId: string) {
   const [noteRows, fileRows, auditRows, outboxRows] = await Promise.all([
-    tx.update(notes).set({ tenantId: orgId, updatedAt: new Date() }).where(isNull(notes.tenantId)).returning({ id: notes.id }),
-    tx.update(files).set({ tenantId: orgId, updatedAt: new Date() }).where(isNull(files.tenantId)).returning({ id: files.id }),
-    tx.update(auditLogs).set({ tenantId: orgId }).where(isNull(auditLogs.tenantId)).returning({ id: auditLogs.id }),
-    tx.update(outboxEvents).set({ tenantId: orgId, updatedAt: new Date() }).where(isNull(outboxEvents.tenantId)).returning({ id: outboxEvents.id }),
+    tx
+      .update(notes)
+      .set({ tenantId: orgId, updatedAt: new Date() })
+      .where(isNull(notes.tenantId))
+      .returning({ id: notes.id }),
+    tx
+      .update(files)
+      .set({ tenantId: orgId, updatedAt: new Date() })
+      .where(isNull(files.tenantId))
+      .returning({ id: files.id }),
+    tx
+      .update(auditLogs)
+      .set({ tenantId: orgId })
+      .where(isNull(auditLogs.tenantId))
+      .returning({ id: auditLogs.id }),
+    tx
+      .update(outboxEvents)
+      .set({ tenantId: orgId, updatedAt: new Date() })
+      .where(isNull(outboxEvents.tenantId))
+      .returning({ id: outboxEvents.id }),
   ]);
 
   return {

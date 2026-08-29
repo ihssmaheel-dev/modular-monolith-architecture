@@ -25,39 +25,88 @@ export class UsersRepository extends BaseRepository<User, UserRow> {
     });
   }
 
-  async findByEmailWithPassword(email: string): Promise<Result<(UserRow & { passwordHash: string }) | null, never>> {
+  async findByEmailWithPassword(
+    email: string,
+  ): Promise<Result<(UserRow & { passwordHash: string }) | null, never>> {
     const db = this.getDb();
-    const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<UserRow[]> } } })
+    const rows = await (
+      db as unknown as {
+        select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<UserRow[]> } };
+      }
+    )
       .select()
       .from(users)
       .where(eq(users.email, email));
     return ok((rows[0] as UserRow & { passwordHash: string }) ?? null);
   }
 
-  async setPasswordResetToken(userId: string, tokenHash: string, expiresAt: Date): Promise<Result<boolean, never>> {
+  async setPasswordResetToken(
+    userId: string,
+    tokenHash: string,
+    expiresAt: Date,
+  ): Promise<Result<boolean, never>> {
     const db = this.getDb();
-    await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => Promise<unknown[]> } } })
+    await (
+      db as unknown as {
+        update: (t: unknown) => {
+          set: (v: unknown) => { where: (c: unknown) => Promise<unknown[]> };
+        };
+      }
+    )
       .update(users)
-      .set({ passwordResetTokenHash: tokenHash, passwordResetExpiresAt: expiresAt, updatedAt: new Date() } as unknown as Record<string, unknown>)
+      .set({
+        passwordResetTokenHash: tokenHash,
+        passwordResetExpiresAt: expiresAt,
+        updatedAt: new Date(),
+      } as unknown as Record<string, unknown>)
       .where(eq(users.id, userId));
     return ok(true);
   }
 
-  async resetPasswordByToken(tokenHash: string, passwordHash: string): Promise<Result<User | null, never>> {
+  async resetPasswordByToken(
+    tokenHash: string,
+    passwordHash: string,
+  ): Promise<Result<User | null, never>> {
     const db = this.getDb();
-    const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<UserRow[]> } } } })
+    const rows = await (
+      db as unknown as {
+        update: (t: unknown) => {
+          set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<UserRow[]> } };
+        };
+      }
+    )
       .update(users)
-      .set({ passwordHash, authVersion: sql`auth_version + 1`, passwordResetTokenHash: null, passwordResetExpiresAt: null, updatedAt: new Date() } as unknown as Record<string, unknown>)
-      .where(and(eq(users.passwordResetTokenHash, tokenHash), gt(users.passwordResetExpiresAt, new Date())))
+      .set({
+        passwordHash,
+        authVersion: sql`auth_version + 1`,
+        passwordResetTokenHash: null,
+        passwordResetExpiresAt: null,
+        updatedAt: new Date(),
+      } as unknown as Record<string, unknown>)
+      .where(
+        and(
+          eq(users.passwordResetTokenHash, tokenHash),
+          gt(users.passwordResetExpiresAt, new Date()),
+        ),
+      )
       .returning();
     return ok(rows[0] ? this.toDomain(rows[0]) : null);
   }
 
   async incrementAuthVersion(userId: string): Promise<Result<User | null, never>> {
     const db = this.getDb();
-    const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<UserRow[]> } } } })
+    const rows = await (
+      db as unknown as {
+        update: (t: unknown) => {
+          set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<UserRow[]> } };
+        };
+      }
+    )
       .update(users)
-      .set({ authVersion: sql`auth_version + 1`, updatedAt: new Date() } as unknown as Record<string, unknown>)
+      .set({ authVersion: sql`auth_version + 1`, updatedAt: new Date() } as unknown as Record<
+        string,
+        unknown
+      >)
       .where(eq(users.id, userId))
       .returning();
     return ok(rows[0] ? this.toDomain(rows[0]) : null);

@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  hasPermission,
-  matchesPermission,
-  Permissions,
-  resolveUserPermissions,
-} from "./index";
+import { hasPermission, matchesPermission, Permissions, resolveUserPermissions } from "./index";
 
 describe("Permissions Engine", () => {
   describe("matchesPermission", () => {

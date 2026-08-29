@@ -41,7 +41,10 @@ export class DatabaseService implements OnModuleDestroy {
           const result = await originalQuery(...args);
           const durationMs = performance.now() - start;
           if (durationMs > 100) {
-            const sqlText = typeof args[0] === "string" ? args[0] : (args[0] as { text?: string })?.text ?? "SQL";
+            const sqlText =
+              typeof args[0] === "string"
+                ? args[0]
+                : ((args[0] as { text?: string })?.text ?? "SQL");
             this.logger.warn(
               { sql: sqlText.slice(0, 500), durationMs: Math.round(durationMs) },
               "Slow database query detected (>100ms)",
@@ -50,7 +53,8 @@ export class DatabaseService implements OnModuleDestroy {
           return result;
         } catch (err) {
           const durationMs = performance.now() - start;
-          const sqlText = typeof args[0] === "string" ? args[0] : (args[0] as { text?: string })?.text ?? "SQL";
+          const sqlText =
+            typeof args[0] === "string" ? args[0] : ((args[0] as { text?: string })?.text ?? "SQL");
           this.logger.error(
             { sql: sqlText.slice(0, 500), durationMs: Math.round(durationMs), error: String(err) },
             "Database query failed",
@@ -87,7 +91,10 @@ export class DatabaseService implements OnModuleDestroy {
           );
         }
         if (this.cls) {
-          return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, fn);
+          return this.cls.runWith(
+            { ...current, databaseTx: tx } as unknown as Record<string, unknown>,
+            fn,
+          );
         }
         return fn();
       });
@@ -118,7 +125,10 @@ export class DatabaseService implements OnModuleDestroy {
           return inner.value;
         };
         if (this.cls) {
-          return this.cls.runWith({ ...current, databaseTx: tx } as unknown as Record<string, unknown>, run);
+          return this.cls.runWith(
+            { ...current, databaseTx: tx } as unknown as Record<string, unknown>,
+            run,
+          );
         }
         return run();
       });

@@ -1,5 +1,11 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
-import { evaluateAuthorization, type AuthorizationDecision, type AuthorizationRequest, type Policy, type Principal } from "@repo/authorization";
+import {
+  evaluateAuthorization,
+  type AuthorizationDecision,
+  type AuthorizationRequest,
+  type Policy,
+  type Principal,
+} from "@repo/authorization";
 import { defaultFoundationalPolicies } from "./policies";
 
 @Injectable()
@@ -33,12 +39,7 @@ export class AuthorizationService {
     return decision;
   }
 
-  can(
-    principal: Principal,
-    action: string,
-    resource?: unknown,
-    resourceType?: string,
-  ): boolean {
+  can(principal: Principal, action: string, resource?: unknown, resourceType?: string): boolean {
     return this.check({ principal, action, resource, resourceType }).allowed;
   }
 }

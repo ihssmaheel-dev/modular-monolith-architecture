@@ -1,4 +1,12 @@
-import type { AuthResponse, ForgotPasswordInput, LoginInput, MessageResponse, RefreshTokenInput, RegisterInput, ResetPasswordInput } from "@repo/contracts";
+import type {
+  AuthResponse,
+  ForgotPasswordInput,
+  LoginInput,
+  MessageResponse,
+  RefreshTokenInput,
+  RegisterInput,
+  ResetPasswordInput,
+} from "@repo/contracts";
 import type { FetchFn } from "../types";
 
 export function createAuthClient(fetchFn: FetchFn) {

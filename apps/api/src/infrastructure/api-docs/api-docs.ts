@@ -48,7 +48,10 @@ export async function setupApiDocs(app: NestFastifyApplication): Promise<void> {
     });
   } catch (error) {
     // Docs are dev-only; never crash boot if generation fails — log and continue
-    const maybeLogger = (app as unknown as { get?: (t: unknown) => { warn?: (o: unknown, m: string) => void } })?.get?.(undefined as unknown as never) as { warn?: (o: unknown, m: string) => void } | undefined;
+    const maybeLogger = (
+      app as unknown as { get?: (t: unknown) => { warn?: (o: unknown, m: string) => void } }
+    )?.get?.(undefined as unknown as never) as
+      { warn?: (o: unknown, m: string) => void } | undefined;
     if (maybeLogger?.warn) {
       maybeLogger.warn({ error: String(error) }, "API docs setup failed");
     } else {

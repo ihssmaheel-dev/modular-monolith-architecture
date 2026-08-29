@@ -13,11 +13,10 @@ You are working in a modular monolith codebase. Before making any changes, read 
 5. `ai_instructions/PACKAGE_POLICY.md` — Before installing any package.
 6. `ai_instructions/EVENT_AND_ERROR_RULES.md` — Error handling and domain events.
 7. `ai_instructions/TESTING_RULES.md` — Test contract.
-8. `ai_instructions/FRONTEND_RULES.md` — Web and mobile rules.
+8. `ai_instructions/I18N_RULES.md` — Internationalization. Translations, locale management.
 9. `ai_instructions/CODE_QUALITY_RULES.md` — Small files, clean code, no anti-patterns.
 10. `ai_instructions/SECURITY_AND_OPS_RULES.md` — Env vars, security, indexing, logging, git workflow.
-11. `ai_instructions/PERFORMANCE_RULES.md` — DB queries, caching, frontend perf, bundle size.
-12. `ai_instructions/I18N_RULES.md` — Internationalization. Translations, locale management.
+11. `ai_instructions/PERFORMANCE_RULES.md` — DB queries, caching, bundle size.
 
 ## Non-Negotiable
 
@@ -25,7 +24,6 @@ You are working in a modular monolith codebase. Before making any changes, read 
 - The stack is locked. Do not add, replace, or suggest alternatives without approval.
 - Never throw in application/domain layers. Use neverthrow Result.
 - Never import another module's Drizzle table or direct database model.
-- packages/ui is web-only. Never use in mobile.
 - Every Zod schema, type, and contract lives in packages/contracts (@repo/contracts).
 - **All user-facing text must use i18n.** Translations live in packages/i18n (@repo/i18n).
 - **All error messages must use I18nService.** Never hardcode.

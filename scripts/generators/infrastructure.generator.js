@@ -1,13 +1,7 @@
 const path = require("path");
 const { writeFileIfMissing } = require("./utils");
 
-function generateInfrastructure({
-  modulePath,
-  feature,
-  Feature,
-  featurePlural,
-  FeaturePlural,
-}) {
+function generateInfrastructure({ modulePath, feature, Feature, featurePlural, FeaturePlural }) {
   const schemaContent = `import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const ${feature}Table = pgTable(

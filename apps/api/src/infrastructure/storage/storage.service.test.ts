@@ -71,4 +71,3 @@ describe("StorageService", () => {
     expect(result.isOk() && result.value?.size).toBe(4);
   });
 });
-

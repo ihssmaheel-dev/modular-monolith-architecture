@@ -161,46 +161,7 @@ export class ImportService {
 
 ---
 
-## Frontend Performance
-
-### Web (React)
-- Use `React.memo()` for expensive components that receive stable props.
-- Use `useMemo()` for expensive computations.
-- Use `useCallback()` for callbacks passed to memoized children.
-- Lazy-load routes with `React.lazy()` + Suspense.
-- Don't re-render the entire tree for local state changes.
-- Use TanStack Query's `staleTime` and `gcTime` to avoid unnecessary refetches.
-
-### Mobile (React Native)
-- Use `FlatList` instead of `ScrollView` for long lists.
-- Set `getItemLayout` for fixed-height items (skips measurement).
-- Use `React.memo()` for list item components.
-- Avoid anonymous functions in `renderItem`.
-- Use `useCallback` for event handlers in list items.
-
-### Shared
-- Avoid unnecessary re-renders. Profile with React DevTools.
-- Split large components into smaller ones with focused state.
-- Don't put large objects in global state (Zustand) if only one component needs them.
-
----
-
-## Bundle Size
-
-### Web
-- Tree-shake imports. Import only what you use.
-- Avoid barrel exports that re-export everything.
-- Use dynamic imports for heavy features (charts, editors).
-- Analyze bundle with `vite-plugin-visualizer`.
-
-### Mobile
-- Use Expo's tree-shaking.
-- Avoid large libraries that duplicate what you can write in <30 lines.
-- Lazy-load heavy screens.
-
----
-
-## Node.js / NestJS
+## Node.js / NestJS Event Loop & Memory
 
 ### Event Loop
 - Never block the event loop with synchronous operations.

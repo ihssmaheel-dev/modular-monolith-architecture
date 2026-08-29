@@ -31,19 +31,33 @@ export class RealtimeConnectionRegistry {
       return;
     }
     clients.add(socket);
-    this.metrics.incrementGauge("realtime_active_connections_total", "Active realtime connections", 1, { type: "ws" });
+    this.metrics.incrementGauge(
+      "realtime_active_connections_total",
+      "Active realtime connections",
+      1,
+      { type: "ws" },
+    );
   }
 
   removeWsClient(userId: string, tenantId: string | undefined, socket: WebSocket): void {
     const key = connectionKey(userId, tenantId);
     const clients = this.wsClients.get(key);
     if (clients?.delete(socket)) {
-      this.metrics.decrementGauge("realtime_active_connections_total", "Active realtime connections", 1, { type: "ws" });
+      this.metrics.decrementGauge(
+        "realtime_active_connections_total",
+        "Active realtime connections",
+        1,
+        { type: "ws" },
+      );
       if (clients.size === 0) this.wsClients.delete(key);
     }
   }
 
-  addSseClient(userId: string, tenantId: string | undefined, subject: Subject<NestMessageEvent>): void {
+  addSseClient(
+    userId: string,
+    tenantId: string | undefined,
+    subject: Subject<NestMessageEvent>,
+  ): void {
     const key = connectionKey(userId, tenantId);
     if (!this.sseClients.has(key)) this.sseClients.set(key, new Set());
     const clients = this.sseClients.get(key)!;
@@ -54,20 +68,45 @@ export class RealtimeConnectionRegistry {
       return;
     }
     clients.add(subject);
-    this.metrics.incrementGauge("realtime_active_connections_total", "Active realtime connections", 1, { type: "sse" });
+    this.metrics.incrementGauge(
+      "realtime_active_connections_total",
+      "Active realtime connections",
+      1,
+      { type: "sse" },
+    );
   }
 
-  removeSseClient(userId: string, tenantId: string | undefined, subject: Subject<NestMessageEvent>): void {
+  removeSseClient(
+    userId: string,
+    tenantId: string | undefined,
+    subject: Subject<NestMessageEvent>,
+  ): void {
     const key = connectionKey(userId, tenantId);
     const clients = this.sseClients.get(key);
     if (clients?.delete(subject)) {
-      this.metrics.decrementGauge("realtime_active_connections_total", "Active realtime connections", 1, { type: "sse" });
+      this.metrics.decrementGauge(
+        "realtime_active_connections_total",
+        "Active realtime connections",
+        1,
+        { type: "sse" },
+      );
       if (clients.size === 0) this.sseClients.delete(key);
     }
   }
 
-  dispatchToUser(userId: string, tenantId: string | undefined, event: string, payload: unknown): void {
-    dispatchToConnection(this.wsClients, this.sseClients, connectionKey(userId, tenantId), event, payload);
+  dispatchToUser(
+    userId: string,
+    tenantId: string | undefined,
+    event: string,
+    payload: unknown,
+  ): void {
+    dispatchToConnection(
+      this.wsClients,
+      this.sseClients,
+      connectionKey(userId, tenantId),
+      event,
+      payload,
+    );
   }
 
   dispatchToAll(event: string, payload: unknown): void {
@@ -79,7 +118,12 @@ export class RealtimeConnectionRegistry {
     for (const [key, sockets] of this.wsClients.entries()) {
       if (key.endsWith(`:${userId}`)) {
         for (const s of sockets) {
-          try { s.close(4001, "Session invalidated"); closedCount++; } catch { /* ignore */ }
+          try {
+            s.close(4001, "Session invalidated");
+            closedCount++;
+          } catch {
+            /* ignore */
+          }
         }
         this.wsClients.delete(key);
       }
@@ -87,7 +131,12 @@ export class RealtimeConnectionRegistry {
     for (const [key, subjects] of this.sseClients.entries()) {
       if (key.endsWith(`:${userId}`)) {
         for (const sub of subjects) {
-          try { sub.complete(); closedCount++; } catch { /* ignore */ }
+          try {
+            sub.complete();
+            closedCount++;
+          } catch {
+            /* ignore */
+          }
         }
         this.sseClients.delete(key);
       }

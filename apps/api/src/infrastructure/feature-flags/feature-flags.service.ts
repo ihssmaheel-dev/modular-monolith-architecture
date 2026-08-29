@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnApplicationShutdown,
-  Optional,
-} from "@nestjs/common";
+import { Injectable, OnModuleInit, OnApplicationShutdown, Optional } from "@nestjs/common";
 import { PinoLoggerService } from "../logger/logger.service";
 import { RedisService } from "../redis/redis.service";
 import { env } from "../../config/env";

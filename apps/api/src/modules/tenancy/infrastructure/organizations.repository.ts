@@ -29,12 +29,24 @@ export class OrganizationsRepository extends BaseRepository<Organization, Organi
   }
 
   async findByIds(ids: string[]): Promise<Result<Organization[], never>> {
-    if (ids.length === 0) return this.find({ id: "__none__" } as unknown as Record<string, unknown>);
+    if (ids.length === 0)
+      return this.find({ id: "__none__" } as unknown as Record<string, unknown>);
     const db = this.getDb();
-    const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<OrganizationRow[]> } } })
+    const rows = await (
+      db as unknown as {
+        select: () => {
+          from: (t: unknown) => { where: (c: unknown) => Promise<OrganizationRow[]> };
+        };
+      }
+    )
       .select()
       .from(organizations)
       .where(inArray(organizations.id, ids));
-    return { isOk: () => true, isErr: () => false, value: rows.map((r) => this.toDomain(r)), error: undefined } as unknown as Result<Organization[], never>;
+    return {
+      isOk: () => true,
+      isErr: () => false,
+      value: rows.map((r) => this.toDomain(r)),
+      error: undefined,
+    } as unknown as Result<Organization[], never>;
   }
 }

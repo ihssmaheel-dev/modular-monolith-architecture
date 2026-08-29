@@ -1,7 +1,25 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, Req } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  Req,
+} from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import { Idempotent, RequirePermission, requireAuthenticatedUser } from "../../../common";
-import { type RequestUploadInput, type ConfirmUploadInput, type PresignedUrlResponse, type FileMetadataResponse, type DownloadUrlResponse, type FileListResponse } from "@repo/contracts";
+import {
+  type RequestUploadInput,
+  type ConfirmUploadInput,
+  type PresignedUrlResponse,
+  type FileMetadataResponse,
+  type DownloadUrlResponse,
+  type FileListResponse,
+} from "@repo/contracts";
 import { RequestUploadCommand } from "../application/commands/request-upload.command";
 import { ConfirmUploadCommand } from "../application/commands/confirm-upload.command";
 import { DeleteFileCommand } from "../application/commands/delete-file.command";
@@ -88,7 +106,13 @@ export class FilesController {
   @Get()
   @RequirePermission("files:read")
   async listByParent(
-    @Query() query: { parentType: "note" | "user" | "general"; parentId?: string; page?: number; limit?: number },
+    @Query()
+    query: {
+      parentType: "note" | "user" | "general";
+      parentId?: string;
+      page?: number;
+      limit?: number;
+    },
     @Req() req: FastifyRequest,
   ): Promise<FileListResponse> {
     const lang = req?.headers["accept-language"];
@@ -114,10 +138,7 @@ export class FilesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
   @RequirePermission("files:delete")
-  async delete(
-    @Param("id") id: string,
-    @Req() req: FastifyRequest,
-  ): Promise<void> {
+  async delete(@Param("id") id: string, @Req() req: FastifyRequest): Promise<void> {
     const lang = req?.headers["accept-language"];
     const actor = requireAuthenticatedUser(req);
     const result = await this.deleteFileCmd.execute(id, actor);

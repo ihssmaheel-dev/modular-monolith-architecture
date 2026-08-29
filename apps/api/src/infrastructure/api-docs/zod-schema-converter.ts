@@ -21,8 +21,7 @@ export class Zod4SchemaConverter {
       const clean = { ...(json as Record<string, unknown>) };
       delete clean["$schema"];
       const isOptional =
-        type === "optional" ||
-        (typeof s.isOptional === "function" && s.isOptional());
+        type === "optional" || (typeof s.isOptional === "function" && s.isOptional());
       return [!isOptional, clean];
     } catch {
       return this.handleFallback(s);
@@ -42,9 +41,7 @@ export class Zod4SchemaConverter {
         return this.convert(filtered[0]);
       }
       if (filtered.length > 1) {
-        return this.convert(
-          z.union(filtered as [z.ZodType, z.ZodType, ...z.ZodType[]]),
-        );
+        return this.convert(z.union(filtered as [z.ZodType, z.ZodType, ...z.ZodType[]]));
       }
     }
     return [false, {}];

@@ -20,4 +20,3 @@ Routes stay behind global authentication, tenant context, permission, idempotenc
 - Download routes expose only `uploaded` files owned by the requesting user (or an administrator) and send a safe attachment filename.
 
 Use `StorageService` from application commands and queries. Do not import S3 drivers from a module directly.
-

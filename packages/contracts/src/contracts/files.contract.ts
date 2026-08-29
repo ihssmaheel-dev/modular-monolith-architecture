@@ -13,15 +13,27 @@ import { z } from "zod";
 
 export const filesContract = oc.prefix("/files").router({
   requestUpload: oc
-    .route({ method: "POST", path: "/upload-url", summary: "Request a direct S3 presigned upload URL" })
+    .route({
+      method: "POST",
+      path: "/upload-url",
+      summary: "Request a direct S3 presigned upload URL",
+    })
     .input(RequestUploadSchema)
     .output(PresignedUrlResponseSchema),
   confirmUpload: oc
-    .route({ method: "POST", path: "/confirm", summary: "Confirm upload completed and persist metadata" })
+    .route({
+      method: "POST",
+      path: "/confirm",
+      summary: "Confirm upload completed and persist metadata",
+    })
     .input(ConfirmUploadSchema)
     .output(FileMetadataSchema),
   getDownloadUrl: oc
-    .route({ method: "GET", path: "/:id/download-url", summary: "Get a direct S3 presigned download URL" })
+    .route({
+      method: "GET",
+      path: "/:id/download-url",
+      summary: "Get a direct S3 presigned download URL",
+    })
     .input(FileIdParamSchema)
     .output(DownloadUrlResponseSchema),
   getById: oc

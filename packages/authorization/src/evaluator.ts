@@ -19,7 +19,14 @@ export function normalizeResource<T>(
     type: typeof obj.type === "string" ? obj.type : fallbackType,
     id: typeof obj.id === "string" ? obj.id : undefined,
     tenantId: typeof obj.tenantId === "string" ? obj.tenantId : undefined,
-    ownerId: typeof obj.ownerId === "string" ? obj.ownerId : (typeof obj.authorId === "string" ? obj.authorId : (typeof obj.userId === "string" ? obj.userId : undefined)),
+    ownerId:
+      typeof obj.ownerId === "string"
+        ? obj.ownerId
+        : typeof obj.authorId === "string"
+          ? obj.authorId
+          : typeof obj.userId === "string"
+            ? obj.userId
+            : undefined,
     attributes: obj,
     data: resource as T,
   };

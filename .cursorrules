@@ -20,9 +20,9 @@ Any code you generate MUST adhere to the following rules, without exception.
 - **NEVER** define a public Zod schema in `apps/api`. Always import it from `@repo/contracts`.
 
 ## 4. I18n Strictness
-- **NEVER** hardcode user-facing strings or error messages in the backend or frontend.
+- **NEVER** hardcode user-facing strings or error messages in the backend or clients.
 - Backend: Use `I18nService.t()` for API errors.
-- Frontend: Use `react-i18next` `useTranslation().t()` for UI text.
+- Consumers: Use locale keys from `@repo/i18n`.
 
 ## 5. File Size Limits
 - Keep files under 150 lines. Split them if they get too large.

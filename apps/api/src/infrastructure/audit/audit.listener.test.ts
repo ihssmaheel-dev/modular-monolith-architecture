@@ -12,7 +12,9 @@ describe("AuditListener", () => {
 
   beforeEach(() => {
     mockInsert.mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) });
-    database = { getDb: vi.fn().mockReturnValue({ insert: vi.fn().mockReturnValue({ values: mockInsert }) }) } as unknown as DatabaseService;
+    database = {
+      getDb: vi.fn().mockReturnValue({ insert: vi.fn().mockReturnValue({ values: mockInsert }) }),
+    } as unknown as DatabaseService;
     logger = { child: vi.fn(), error: vi.fn() } as unknown as PinoLoggerService;
     vi.mocked(logger.child).mockReturnValue(logger);
     listener = new AuditListener(database, logger);
@@ -32,4 +34,3 @@ describe("AuditListener", () => {
     );
   });
 });
-

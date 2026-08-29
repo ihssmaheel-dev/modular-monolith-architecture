@@ -85,7 +85,8 @@ describe("migrateToMultiTenant", () => {
             returning: vi.fn(() => {
               if (table.content) return Promise.resolve([{ id: "note-1" }, { id: "note-2" }]);
               if (table.bucket) return Promise.resolve([{ id: "file-1" }]);
-              if (table.collectionName) return Promise.resolve([{ id: "audit-1" }, { id: "audit-2" }, { id: "audit-3" }]);
+              if (table.collectionName)
+                return Promise.resolve([{ id: "audit-1" }, { id: "audit-2" }, { id: "audit-3" }]);
               if (table.topic) return Promise.resolve([{ id: "outbox-1" }]);
               return Promise.resolve([]);
             }),

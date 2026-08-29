@@ -5,9 +5,7 @@ const { spawnSync } = require("node:child_process");
 
 const ROOT = path.resolve(__dirname, "..");
 const MINIMUM_NODE_MAJOR = 20;
-const ENV_FILES = [
-  ["apps/api/.env.example", "apps/api/.env"],
-];
+const ENV_FILES = [["apps/api/.env.example", "apps/api/.env"]];
 
 function main() {
   try {

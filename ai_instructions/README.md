@@ -11,13 +11,11 @@ Before any code change, read these files in order:
 | 3 | [FILE_PLACEMENT_RULES.md](./FILE_PLACEMENT_RULES.md) | Where files go. |
 | 4 | [EVENT_AND_ERROR_RULES.md](./EVENT_AND_ERROR_RULES.md) | neverthrow Result + domain events. |
 | 5 | [I18N_RULES.md](./I18N_RULES.md) | Translations, locale management. |
-| 6 | [FRONTEND_RULES.md](./FRONTEND_RULES.md) | Web + mobile rules. |
-| 7 | [CODE_QUALITY_RULES.md](./CODE_QUALITY_RULES.md) | File sizes, naming, anti-patterns. |
-| 8 | [SECURITY_AND_OPS_RULES.md](./SECURITY_AND_OPS_RULES.md) | Env vars, security, logging. |
-| 9 | [TESTING_RULES.md](./TESTING_RULES.md) | Unit/integration/E2E contract. |
-| 10 | [PACKAGE_POLICY.md](./PACKAGE_POLICY.md) | Adding dependencies. |
-| 11 | [PERFORMANCE_RULES.md](./PERFORMANCE_RULES.md) | DB queries, caching, frontend perf. |
-| 12 | [THEMING_AND_UI_RULES.md](./THEMING_AND_UI_RULES.md) | Semantic design tokens, shadcn theming, radius scaling, fonts. |
+| 6 | [CODE_QUALITY_RULES.md](./CODE_QUALITY_RULES.md) | File sizes, naming, anti-patterns. |
+| 7 | [SECURITY_AND_OPS_RULES.md](./SECURITY_AND_OPS_RULES.md) | Env vars, security, logging. |
+| 8 | [TESTING_RULES.md](./TESTING_RULES.md) | Unit/integration/E2E contract. |
+| 9 | [PACKAGE_POLICY.md](./PACKAGE_POLICY.md) | Adding dependencies. |
+| 10 | [PERFORMANCE_RULES.md](./PERFORMANCE_RULES.md) | DB queries, caching, backend performance. |
 
 ## Before Every Task
 

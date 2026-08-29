@@ -1,13 +1,7 @@
 const path = require("path");
 const { writeFileIfMissing, appendExportIfMissing } = require("./utils");
 
-function generateClient({
-  clientPath,
-  feature,
-  Feature,
-  featurePlural,
-  FeaturePlural,
-}) {
+function generateClient({ clientPath, feature, Feature, featurePlural, FeaturePlural }) {
   const subclientContent = `import type {
   Create${Feature}Dto,
   ${Feature}ListResponseDto,

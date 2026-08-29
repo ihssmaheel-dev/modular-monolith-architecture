@@ -42,7 +42,11 @@ export abstract class BaseReadRepository<TEntity, TRow> {
       ? { id: id as string, ...tenantFilter }
       : { id: id as string };
     const conditions = this.buildConditions(filter);
-    const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<TRow[]> } } })
+    const rows = await (
+      db as unknown as {
+        select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<TRow[]> } };
+      }
+    )
       .select()
       .from(this.table)
       .where(conditions);
@@ -55,7 +59,15 @@ export abstract class BaseReadRepository<TEntity, TRow> {
     if (this.hasMissingTenantContext()) return ok(null);
     const db = this.getDb();
     const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
-    const rows = await (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => { limit: (n: number) => Promise<TRow[]> } } } })
+    const rows = await (
+      db as unknown as {
+        select: () => {
+          from: (t: unknown) => {
+            where: (c: unknown) => { limit: (n: number) => Promise<TRow[]> };
+          };
+        };
+      }
+    )
       .select()
       .from(this.table)
       .where(conditions)
@@ -68,7 +80,13 @@ export abstract class BaseReadRepository<TEntity, TRow> {
     if (this.hasMissingTenantContext()) return ok([]);
     const db = this.getDb();
     const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
-    const query = (db as unknown as { select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<TRow[]> } } }).select().from(this.table);
+    const query = (
+      db as unknown as {
+        select: () => { from: (t: unknown) => { where: (c: unknown) => Promise<TRow[]> } };
+      }
+    )
+      .select()
+      .from(this.table);
     const rows = conditions
       ? await (query as unknown as { where: (c: unknown) => Promise<TRow[]> }).where(conditions)
       : await (query as unknown as Promise<TRow[]>);
@@ -79,7 +97,13 @@ export abstract class BaseReadRepository<TEntity, TRow> {
     if (this.hasMissingTenantContext()) return ok(0);
     const db = this.getDb();
     const conditions = this.buildConditions({ ...filter, ...this.tenantFilter() });
-    const result = await (db as unknown as { select: (v: unknown) => { from: (t: unknown) => { where: (c: unknown) => Promise<{ count: number }[]> } } })
+    const result = await (
+      db as unknown as {
+        select: (v: unknown) => {
+          from: (t: unknown) => { where: (c: unknown) => Promise<{ count: number }[]> };
+        };
+      }
+    )
       .select({ count: sql<number>`count(*)` })
       .from(this.table)
       .where(conditions);

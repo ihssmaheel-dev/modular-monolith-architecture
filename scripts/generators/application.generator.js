@@ -1,13 +1,7 @@
 const path = require("path");
 const { writeFileIfMissing } = require("./utils");
 
-function generateApplication({
-  modulePath,
-  feature,
-  Feature,
-  featurePlural,
-  FeaturePlural,
-}) {
+function generateApplication({ modulePath, feature, Feature, featurePlural, FeaturePlural }) {
   const createCmd = `import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { type Result } from "neverthrow";
@@ -311,17 +305,50 @@ export class ${Feature}RealtimeListener {
 }
 `;
 
-  writeFileIfMissing(path.join(modulePath, "application", "commands", `create-${feature}.command.ts`), createCmd);
-  writeFileIfMissing(path.join(modulePath, "application", "commands", `create-${feature}.command.test.ts`), createCmdTest);
-  writeFileIfMissing(path.join(modulePath, "application", "commands", `update-${feature}.command.ts`), updateCmd);
-  writeFileIfMissing(path.join(modulePath, "application", "commands", `update-${feature}.command.test.ts`), updateCmdTest);
-  writeFileIfMissing(path.join(modulePath, "application", "commands", `delete-${feature}.command.ts`), deleteCmd);
-  writeFileIfMissing(path.join(modulePath, "application", "commands", `delete-${feature}.command.test.ts`), deleteCmdTest);
-  writeFileIfMissing(path.join(modulePath, "application", "queries", `get-${feature}-by-id.query.ts`), getByIdQuery);
-  writeFileIfMissing(path.join(modulePath, "application", "queries", `get-${feature}-by-id.query.test.ts`), getByIdQueryTest);
-  writeFileIfMissing(path.join(modulePath, "application", "queries", `get-${featurePlural}.query.ts`), listQuery);
-  writeFileIfMissing(path.join(modulePath, "application", "queries", `get-${featurePlural}.query.test.ts`), listQueryTest);
-  writeFileIfMissing(path.join(modulePath, "application", "listeners", `${feature}-realtime.listener.ts`), listener);
+  writeFileIfMissing(
+    path.join(modulePath, "application", "commands", `create-${feature}.command.ts`),
+    createCmd,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "commands", `create-${feature}.command.test.ts`),
+    createCmdTest,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "commands", `update-${feature}.command.ts`),
+    updateCmd,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "commands", `update-${feature}.command.test.ts`),
+    updateCmdTest,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "commands", `delete-${feature}.command.ts`),
+    deleteCmd,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "commands", `delete-${feature}.command.test.ts`),
+    deleteCmdTest,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "queries", `get-${feature}-by-id.query.ts`),
+    getByIdQuery,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "queries", `get-${feature}-by-id.query.test.ts`),
+    getByIdQueryTest,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "queries", `get-${featurePlural}.query.ts`),
+    listQuery,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "queries", `get-${featurePlural}.query.test.ts`),
+    listQueryTest,
+  );
+  writeFileIfMissing(
+    path.join(modulePath, "application", "listeners", `${feature}-realtime.listener.ts`),
+    listener,
+  );
 }
 
 module.exports = { generateApplication };

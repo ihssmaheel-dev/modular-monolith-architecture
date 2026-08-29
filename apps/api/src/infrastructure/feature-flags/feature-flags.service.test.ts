@@ -88,10 +88,7 @@ describe("FeatureFlagsService", () => {
     await service.setFlag("temp_flag", true);
     await service.deleteFlag("temp_flag");
 
-    expect(mockRedisClient.hdel).toHaveBeenCalledWith(
-      "feature_flags:overrides",
-      "temp_flag",
-    );
+    expect(mockRedisClient.hdel).toHaveBeenCalledWith("feature_flags:overrides", "temp_flag");
     expect(mockRedisClient.publish).toHaveBeenCalledWith(
       "feature_flags:updates",
       JSON.stringify({ type: "delete", flagKey: "temp_flag" }),
@@ -112,19 +109,12 @@ describe("FeatureFlagsService", () => {
 
   it("handles pub/sub update events dynamically", () => {
     // Simulate incoming pub/sub message on instance B
-    const handler = (service as unknown as { handleMessage: (msg: string) => void })
-      .handleMessage;
+    const handler = (service as unknown as { handleMessage: (msg: string) => void }).handleMessage;
 
-    handler.call(
-      service,
-      JSON.stringify({ type: "set", flagKey: "sync_flag", enabled: true }),
-    );
+    handler.call(service, JSON.stringify({ type: "set", flagKey: "sync_flag", enabled: true }));
     expect(service.isEnabled("sync_flag")).toBe(true);
 
-    handler.call(
-      service,
-      JSON.stringify({ type: "delete", flagKey: "sync_flag" }),
-    );
+    handler.call(service, JSON.stringify({ type: "delete", flagKey: "sync_flag" }));
     expect(service.isEnabled("sync_flag")).toBe(false);
   });
 });

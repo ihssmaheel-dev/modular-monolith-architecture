@@ -33,7 +33,11 @@ export class StorageService {
     );
   }
 
-  async upload(key: string, body: FileInput, contentType: string): Promise<Result<UploadResult, StorageError>> {
+  async upload(
+    key: string,
+    body: FileInput,
+    contentType: string,
+  ): Promise<Result<UploadResult, StorageError>> {
     return this.bulkhead.execute(() =>
       this.circuitBreaker.execute(async () => {
         try {
@@ -47,7 +51,11 @@ export class StorageService {
       }),
     );
   }
-  async getPresignedUploadUrl(key: string, contentType: string, ttlSeconds = PRESIGN_TTL_SECONDS): Promise<Result<string, StorageError>> {
+  async getPresignedUploadUrl(
+    key: string,
+    contentType: string,
+    ttlSeconds = PRESIGN_TTL_SECONDS,
+  ): Promise<Result<string, StorageError>> {
     return this.bulkhead.execute(() =>
       this.circuitBreaker.execute(async () => {
         try {
@@ -64,7 +72,10 @@ export class StorageService {
     return true;
   }
 
-  async getPresignedDownloadUrl(key: string, ttlSeconds = PRESIGN_TTL_SECONDS): Promise<Result<string, StorageError>> {
+  async getPresignedDownloadUrl(
+    key: string,
+    ttlSeconds = PRESIGN_TTL_SECONDS,
+  ): Promise<Result<string, StorageError>> {
     return this.bulkhead.execute(() =>
       this.circuitBreaker.execute(async () => {
         try {

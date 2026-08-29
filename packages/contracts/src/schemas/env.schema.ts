@@ -18,10 +18,7 @@ export const envSchema = z
     API_URL: z.string().url().default("http://localhost:3000"),
 
     // Database & Cache
-    DATABASE_URL: z
-      .string()
-      .url()
-      .default("postgres://postgres:postgres@localhost:5432/app"),
+    DATABASE_URL: z.string().url().default("postgres://postgres:postgres@localhost:5432/app"),
     DB_MAX_POOL_SIZE: z.coerce.number().default(10),
     REDIS_URL: z.string().url().optional(),
 
@@ -102,10 +99,7 @@ export const envSchema = z
         message: "METRICS_TOKEN must be set in production",
       });
     }
-    if (
-      env.JWT_SECRET === DEFAULT_JWT_SECRET ||
-      env.JWT_SECRET.includes("change-in-prod")
-    ) {
+    if (env.JWT_SECRET === DEFAULT_JWT_SECRET || env.JWT_SECRET.includes("change-in-prod")) {
       context.addIssue({
         code: "custom",
         path: ["JWT_SECRET"],

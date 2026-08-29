@@ -2,7 +2,13 @@ import { randomBytes, createHash } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { err, ok, type Result } from "neverthrow";
-import { INVITATION_TOKEN_BYTES, INVITATION_TTL_DAYS, MILLISECONDS_PER_DAY, type AuthenticatedUser, type InviteMemberInput } from "@repo/contracts";
+import {
+  INVITATION_TOKEN_BYTES,
+  INVITATION_TTL_DAYS,
+  MILLISECONDS_PER_DAY,
+  type AuthenticatedUser,
+  type InviteMemberInput,
+} from "@repo/contracts";
 import { type Locale } from "@repo/i18n";
 import { TenantContextService } from "../../../../infrastructure/database";
 import type { Invitation } from "../../domain/entities/tenancy.entity";

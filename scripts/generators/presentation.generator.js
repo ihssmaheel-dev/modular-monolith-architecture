@@ -182,10 +182,7 @@ export class ${ModuleName}Module {}
     path.join(modulePath, "presentation", `${featurePlural}.controller.ts`),
     controllerContent,
   );
-  writeFileIfMissing(
-    path.join(modulePath, `${moduleName}.module.ts`),
-    moduleContent,
-  );
+  writeFileIfMissing(path.join(modulePath, `${moduleName}.module.ts`), moduleContent);
 }
 
 module.exports = { generatePresentation };

@@ -1,7 +1,12 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import { Idempotent, TenantAgnostic, requireAuthenticatedUser } from "../../../common";
-import { type CreateOrganizationInput, type PaginationQuery, type OrganizationResponse, type OrganizationListResponse } from "@repo/contracts";
+import {
+  type CreateOrganizationInput,
+  type PaginationQuery,
+  type OrganizationResponse,
+  type OrganizationListResponse,
+} from "@repo/contracts";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
 import { CreateOrganizationCommand } from "../application/commands/create-organization.command";

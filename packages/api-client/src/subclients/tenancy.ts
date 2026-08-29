@@ -1,4 +1,17 @@
-import type { AcceptInvitationInput, CreateOrganizationInput, InvitationListResponse, InvitationResponse, InviteMemberInput, MemberListResponse, MemberResponse, OrganizationListResponse, OrganizationResponse, PaginationQuery, TenantStatusResponse, UpdateMemberInput } from "@repo/contracts";
+import type {
+  AcceptInvitationInput,
+  CreateOrganizationInput,
+  InvitationListResponse,
+  InvitationResponse,
+  InviteMemberInput,
+  MemberListResponse,
+  MemberResponse,
+  OrganizationListResponse,
+  OrganizationResponse,
+  PaginationQuery,
+  TenantStatusResponse,
+  UpdateMemberInput,
+} from "@repo/contracts";
 import type { FetchFn } from "../types";
 
 export function createTenancyClient(fetchFn: FetchFn) {

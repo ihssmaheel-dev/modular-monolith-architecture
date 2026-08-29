@@ -10,78 +10,53 @@ This document will explain **what** we use, **why** we use it, and **how** it al
 
 ## 1. The Big Picture (System Map)
 
-Our code is organized as a **Monorepo** using **Turborepo** and **pnpm**. This means all our apps (frontend, backend) and shared packages live in one single Git repository.
+Our code is organized as a **Monorepo** using **Turborepo** and **pnpm**. This means all backend applications and shared capability packages live in one single Git repository.
 
 ```mermaid
 graph TD
-    subgraph Frontend Apps
-        W[apps/web<br>React + Vite]
-        M[apps/mobile<br>React Native / Expo]
-    end
-
     subgraph Backend Apps
-        A[apps/api<br>NestJS API]
+        A[apps/api<br>NestJS + Fastify API]
     end
 
-    subgraph Shared Packages
+    subgraph Shared Capability Packages
         S[packages/contracts<br>Zod Schemas, oRPC Contracts, DTOs]
         AuthZ[packages/authorization<br>FGA + Permissions]
-        I18N[packages/i18n<br>Locales]
-        Tokens[packages/design-tokens<br>Theme]
-        UI[packages/ui<br>React Components]
-        Client[packages/api-client<br>oRPC Client]
+        I18N[packages/i18n<br>Locales & Translations]
+        Client[packages/api-client<br>Type-Safe oRPC Client SDK]
+        Email[packages/email<br>React Email Templates]
     end
 
-    W -->|Imports Types & Contracts| S
-    W -->|Imports Components| UI
-    W -->|Imports AuthZ + i18n| AuthZ
-    W -->|Uses| Client
-    M -->|Imports Types & Contracts| S
     A -->|Imports Types & Contracts| S
-    A -->|Uses| AuthZ
-
-    W -->|oRPC + REST via api-client| A
-    M -->|oRPC + REST via api-client| A
+    A -->|Uses FGA Engine| AuthZ
+    A -->|Uses i18n & Locales| I18N
+    A -->|Renders Templates| Email
+    Client -->|Imports Contracts| S
 ```
 
 ### Why a Monorepo?
 
-By sharing capability packages (`@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/design-tokens`), the backend and frontend speak the exact same language. If the backend changes an API rule, the frontend will show a red compiler error instantly before the code is even run. No more broken APIs!
+By sharing capability packages (`@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/api-client`, `@repo/email`), any external client or micro-frontend speaks the exact same language. If the backend changes an API rule or contract, the client will show a red compiler error instantly before the code is even run. No more broken APIs!
 
 ---
 
-## 2. The Single Source of Truth (`packages/contracts`, `authorization`, `i18n`, `design-tokens`)
+## 2. The Single Source of Truth (`packages/contracts`, `authorization`, `i18n`)
 
 This is the most important layer in the project. It holds all the rules for our data.
 
 - **Zod Schemas (`@repo/contracts`)**: Rules for what data should look like (e.g., `Email must be a string`).
 - **oRPC Contracts (`@repo/contracts`)**: The exact blueprints for our API endpoints (`oc.route().input().output()`).
 - **Permissions & Evaluator (`@repo/authorization`)**: Action vocabulary (`notes:create`, `team:invite`) and pure FGA engine (RBAC + ReBAC + ABAC).
-- **Locales (`@repo/i18n`)**: All the text shown to users (`en.json` containing `"api.user.notFound": "User not found"`), consumed via `I18nService` (backend) and `useTranslation()` (frontend).
-- **Design Tokens (`@repo/design-tokens`)**: Colors, spacing, typography shared by web and mobile.
+- **Locales (`@repo/i18n`)**: All the text shown to users (`en.json` containing `"api.user.notFound": "User not found"`), consumed via `I18nService` (backend).
 
 ### The Rule
 
-We never write validation logic twice. The backend uses these Zod schemas (via `ZodValidationPipe` + `AllExceptionsFilter`) to validate incoming data. The frontend uses the _exact same_ Zod schemas to validate forms before submitting. All user-facing text is pulled from `@repo/i18n` to prevent hardcoded strings. All error messages go through `I18nService.t()`.
+We never write validation logic twice. The backend uses these Zod schemas (via `ZodValidationPipe` + `AllExceptionsFilter`) to validate incoming data. All user-facing text is pulled from `@repo/i18n` to prevent hardcoded strings. All error messages go through `I18nService.t()`.
 
 ---
 
-## 3. The Frontend (`apps/web` & `apps/mobile`)
+## 3. The Backend Modular Monolith (`apps/api`)
 
-- **Web Core**: React 19, Vite, TanStack Router, TanStack Query v5 (offline persisted 24h), Zustand, React Hook Form + Zod 4, shadcn/ui + Tailwind CSS v4.
-- **Mobile Core**: React Native, Expo, Expo Router, NativeWind, TanStack Query, Zustand.
-- **State Management**: Zustand (client state) and TanStack Query (server state) with optimistic mutations (`useOptimisticMutation`) and tenant-safe cache purging.
-- **UI Components**: Built using `@repo/ui` (Radix UI headless + Tailwind CSS v4, web-only).
-
-### How does it work?
-
-We use `@repo/api-client` (`createApiClient` -> `RPCLink + createORPCClient + createTanstackQueryUtils`) powered by oRPC contracts from `@repo/contracts`. It reads the `oc.router` and knows exactly what the backend expects and returns. We achieve **100% end-to-end type safety**. Frontend never calls `fetch` directly; all calls go through `packages/api-client` with auto `idempotency-key`, `x-tenant-id`, `accept-language`, and `401 -> refresh` handling.
-
----
-
-## 4. The Backend Modular Monolith (`apps/api`)
-
-We deploy as a single, easily hosted Node.js process using **NestJS 11**. However, internally, our codebase is split into **strictly isolated Modules** (e.g., `users`, `notes`).
+We deploy as a single, easily hosted Node.js process using **NestJS 11** and **Fastify 5**. However, internally, our codebase is split into **strictly isolated Modules** (e.g., `users`, `notes`, `tenancy`, `auth`, `files`).
 
 - `auth` does not know how `users` works inside.
 - Modules communicate exclusively through Application-layer Commands/Queries or Domain Events.
@@ -131,18 +106,18 @@ graph TD
 
 ### The Request Flow Map
 
-Here is exactly how a request travels through the 4 layers when a user tries to create a Note:
+Here is exactly how a request travels through the 4 layers when creating a resource (e.g., Note):
 
 ```mermaid
 sequenceDiagram
-    participant User as React Frontend
+    participant Client as API Client / Consumer
     participant C as 1. Presentation (Controller)
     participant A as 2. Application (Command)
     participant D as 3. Domain (Entity)
     participant I as 4. Infrastructure (Repository)
     participant DB as Postgres
 
-    User->>C: POST /notes { title: "Hello" }
+    Client->>C: POST /notes { title: "Hello" }
     C->>C: Validates payload using shared Zod schema
     C->>A: Executes CreateNoteCommand
     A->>D: Note.create(data)
@@ -152,7 +127,7 @@ sequenceDiagram
     DB-->>I: Success
     I-->>A: Returns Success
     A-->>C: Returns Result (ok or err)
-    C-->>User: Returns HTTP 201 Created
+    C-->>Client: Returns HTTP 201 Created
 ```
 
 ### Layer 1: Presentation Layer (`presentation/`)
@@ -178,13 +153,13 @@ sequenceDiagram
 
 ### Layer 4: Infrastructure Layer (`infrastructure/`)
 
-- **What it is:** The dirty work. Drizzle `pgTable` schemas, Repositories (`BaseRepository`/`TenantScopedRepository`), Redis/BullMQ, Piscina workers, S3/MinIO, Email (Resend/SMTP via CircuitBreaker), Realtime (WS/SSE), Outbox, Audit, Metrics, Tracing.
+- **What it is:** Drizzle `pgTable` schemas, Repositories (`BaseRepository`/`TenantScopedRepository`), Redis/BullMQ, Piscina workers, S3/MinIO, Email (Resend/SMTP via CircuitBreaker), Realtime (WS/SSE), Outbox, Audit, Metrics, Tracing.
 - **The Rule:** No business logic allowed. `cross-cutting` infra lives in `src/infrastructure/*` (`@Global()`), `domain-specific` infra lives in `modules/[domain]/infrastructure/*`.
 - **Why?** The Application layer asks to save data. The Infrastructure layer knows _how_ to save it to Postgres. Repositories map Drizzle rows back into pristine Domain Entities before handing them back. Tenant isolation is app-enforced via `BaseRepository` + `TenantContextService` (CLS `tenantId`) — `findById/updateById/softDelete/delete` are all tenant-scoped.
 
 ---
 
-## 5. Handling Errors Gracefully (Railway Oriented Programming)
+## 4. Handling Errors Gracefully (Railway Oriented Programming)
 
 We **never** `throw new Error()` for expected domain or application errors (like "Email Taken").
 Instead, our Application layer returns a `Result<Value, DomainError>` using the **`neverthrow`** library.
@@ -202,9 +177,9 @@ Thrown exceptions act like hidden GOTO statements that crash apps unexpectedly. 
 
 ---
 
-## 6. Developer Checklist
+## 5. Developer Checklist
 
-When building a new feature (like "Invoices"), follow this perfect flow:
+When building a new feature (like "Invoices"), follow this flow:
 
 - [ ] **Contracts:** Define the Zod schema and oRPC contract (`oc.route().input().output()`) in `packages/contracts/src/schemas` + `contracts`.
 - [ ] **Domain:** Create an `Invoice` pure TypeScript class in `modules/invoices/domain/entities` (no framework deps).
@@ -212,24 +187,8 @@ When building a new feature (like "Invoices"), follow this perfect flow:
 - [ ] **Application:** Create a specific `CreateInvoiceCommand` in `application/commands/` that returns a `Result<T,E>` and dispatches via `OutboxService` if critical.
 - [ ] **Presentation:** Create an `InvoicesController` in `presentation/` that validates via `ZodValidationPipe` (schemas from `@repo/contracts`), calls the command, handles the `Result` via `handleResult` + `I18nService`, and maps to HTTP; protect with `@RequirePermission` + `@Idempotent`.
 - [ ] **AuthZ:** Add action vocabulary in `packages/authorization/src/permissions.ts` and policies in `application/invoices.policies.ts`, register via `OnModuleInit`.
-- [ ] **Text:** Put all user-facing English text inside `packages/i18n/src/locales/en.json` (and `es.json`/`fr.json`), use `I18nService.t()` (backend) and `useTranslation()` (frontend).
-- [ ] **Frontend:** Build the UI using components from `packages/ui` and hooks (`useOptimisticMutation`) via `packages/api-client`; translate text using `useTranslation()`. Generate the slice fast with `pnpm generate:feature invoices invoice`.
-- [ ] **Theming:** Use semantic tokens (`bg-primary`, `bg-card`, `border-border`) and proportional `--radius`. Never hardcode raw hex colors.
-
----
-
-## 7. Theming & Cross-Platform UI Architecture
-
-Our UI architecture guarantees **100% theme reactivity and instant preset re-skinning**:
-
-1. **Modern `@theme inline` (Tailwind CSS v4)**:
-   - Direct CSS variable bindings support OKLCH, HSL, RGB, and Hex presets from [ui.shadcn.com/create](https://ui.shadcn.com/create).
-2. **Proportional Radius Engine**:
-   - Master `--radius` scales `--radius-sm` (buttons/inputs), `--radius-md` (cards/menus), and `--radius-lg` (modals).
-3. **Self-Hosted Typography**:
-   - Self-hosted **Geist & Geist Mono** via `@fontsource-variable/*` (zero external CDN requests, 100% offline & air-gapped compliant).
-4. **`@repo/design-tokens` Cross-Platform Bridge**:
-   - Single source of truth for React Native mobile `StyleSheet` objects, transactional email HTML (`packages/email`), and backend SVG/PDF rendering.
+- [ ] **Text:** Put all user-facing English text inside `packages/i18n/src/locales/en.json` (and `es.json`/`fr.json`), use `I18nService.t()`.
+- [ ] **API Client:** Export the new routes from `packages/api-client`. Generate the slice fast with `pnpm generate:feature invoices invoice`.
 
 ---
 

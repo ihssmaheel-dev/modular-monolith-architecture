@@ -64,7 +64,13 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxRow> {
 
   async recoverStaleLocks(lockedBefore: Date): Promise<number> {
     const db = this.getDb();
-    const rows = await (db as unknown as { update: (t: unknown) => { set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<OutboxRow[]> } } } })
+    const rows = await (
+      db as unknown as {
+        update: (t: unknown) => {
+          set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<OutboxRow[]> } };
+        };
+      }
+    )
       .update(outboxEvents)
       .set({ status: "PENDING", lockedAt: null, updatedAt: new Date() })
       .where(and(eq(outboxEvents.status, "PROCESSING"), lt(outboxEvents.lockedAt, lockedBefore)))

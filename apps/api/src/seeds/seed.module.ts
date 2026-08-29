@@ -5,7 +5,11 @@ import { LoggerModule } from "../infrastructure/logger/logger.module";
 import { UsersRepository } from "../modules/users/infrastructure/users.repository";
 
 @Module({
-  imports: [ClsModule.forRoot({ global: true, middleware: { mount: false } }), LoggerModule, DatabaseModule],
+  imports: [
+    ClsModule.forRoot({ global: true, middleware: { mount: false } }),
+    LoggerModule,
+    DatabaseModule,
+  ],
   providers: [
     {
       provide: UsersRepository,

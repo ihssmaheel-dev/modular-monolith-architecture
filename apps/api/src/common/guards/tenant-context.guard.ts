@@ -34,7 +34,10 @@ export class TenantContextGuard implements CanActivate {
     if (env.TENANCY_MODE === "single") return this.activate(request, { mode: "single" });
     if (this.isAgnostic(context) || !request.user) return this.activate(request, { mode: "multi" });
 
-    const lang = typeof request.headers?.["accept-language"] === "string" ? request.headers["accept-language"] : undefined;
+    const lang =
+      typeof request.headers?.["accept-language"] === "string"
+        ? request.headers["accept-language"]
+        : undefined;
     const tenantId = this.readTenantId(request);
     const result = await this.resolver.execute(request.user.sub, tenantId);
     if (result.isErr() && result.error.type === "TENANT_REQUIRED") {

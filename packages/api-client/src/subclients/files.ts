@@ -1,4 +1,11 @@
-import type { ConfirmUploadInput, DownloadUrlResponse, FileListResponse, FileMetadataResponse, PresignedUrlResponse, RequestUploadInput } from "@repo/contracts";
+import type {
+  ConfirmUploadInput,
+  DownloadUrlResponse,
+  FileListResponse,
+  FileMetadataResponse,
+  PresignedUrlResponse,
+  RequestUploadInput,
+} from "@repo/contracts";
 import type { FetchFn } from "../types";
 
 export function createFilesClient(fetchFn: FetchFn) {

@@ -23,7 +23,7 @@ setGlobalDispatcher(
   new Agent({
     connections: 100,
     keepAliveTimeout: 15 * 60 * 1000,
-  })
+  }),
 );
 
 const MAX_BODY_SIZE_BYTES = 1048576; // 1MB

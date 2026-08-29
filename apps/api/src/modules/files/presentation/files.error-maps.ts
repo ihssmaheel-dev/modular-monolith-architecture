@@ -27,7 +27,6 @@ export const CONFIRM_UPLOAD_ERRORS: ErrorMap = {
 
 // Removed GridFS transfer errors — S3 presigned URLs only
 
-
 export const DOWNLOAD_ERRORS: ErrorMap = {
   ...FILE_NOT_FOUND_ERRORS,
   PRESIGN_FAILED: {

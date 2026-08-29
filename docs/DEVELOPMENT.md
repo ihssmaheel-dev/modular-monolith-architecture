@@ -37,9 +37,8 @@ Start all applications after setup:
 pnpm dev
 ```
 
-Use `pnpm dev:api`, `pnpm dev:web`, or `pnpm dev:mobile` to run one application. Local endpoints
-are API `http://localhost:3000/api`, Swagger `http://localhost:3000/api/docs`, web
-`http://localhost:5173`, MinIO console `http://localhost:9001`, and Mailpit
+Use `pnpm dev:api` to run the API application. Local endpoints
+are API `http://localhost:3000/api`, Swagger/Scalar `http://localhost:3000/api/docs`, MinIO console `http://localhost:9001`, and Mailpit
 `http://localhost:8025`.
 
 Stop infrastructure with `pnpm docker:down`.
@@ -91,8 +90,7 @@ Use `pnpm test:api:watch` while developing.
 ## Debugging
 
 Run `pnpm dev:api:debug`, then attach a Node debugger to port `9229`. Breakpoints and source maps
-work against the TypeScript API source. Use browser developer tools for the web app and Expo's
-developer menu for mobile. Set `LOG_LEVEL=debug` for structured API diagnostics; never add
+work against the TypeScript API source. Set `LOG_LEVEL=debug` for structured API diagnostics; never add
 `console.log` to production code.
 
 Useful runtime checks:
@@ -106,7 +104,7 @@ pnpm --filter api db:migrate:status
 ## Troubleshooting
 
 - **`docker` is unavailable:** install/start Docker and confirm `docker compose version` succeeds.
-- **A port is occupied:** check `3000`, `5173`, `5432`, `6379`, `8025`, `9000`, `9001`, then
+- **A port is occupied:** check `3000`, `5432`, `6379`, `8025`, `9000`, `9001`, then
   stop the conflicting process.
 - **Environment validation fails:** compare the relevant `.env` with its `.env.example`; access and
   refresh JWT secrets must differ and contain at least 32 characters.
