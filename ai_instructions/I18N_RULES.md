@@ -60,16 +60,17 @@ return { status: 409, body: { message: "Email already taken" } };
 
 ## Frontend Rules (`apps/web`, `apps/mobile`)
 
-### Web (`apps/web`)
+### Web (`apps/web` — TanStack Start)
 
-- Use `react-i18next` for all user-facing text.
-- Import translations from `@repo/i18n`.
-- Store user language preference in `localStorage`.
-- Auto-detect browser language on first visit.
+- Use `react-i18next` + `i18next-browser-languagedetector` for all user-facing text. Resources imported from `@repo/i18n` locales.
+- Init in `apps/web/src/lib/i18n.tsx`: `i18n.use(LanguageDetector).use(initReactI18next).init({ resources: { en: { translation: locales.en }, es, fr }, fallbackLng: 'en' })`. Wrap app in `I18nProvider` from `routes/__root.tsx`.
+- Store user language preference in Zustand `useLocaleStore` (persist localStorage) + `localStorage` + `i18next-browser-languagedetector` caches `localStorage`.
+- Auto-detect browser language on first visit via detector order `['localStorage','navigator','htmlTag']`.
+- `getApiClient()` reads `getLocale()` from `useLocaleStore` and sends `accept-language`; backend `I18nService.t(key, lang, params)` respects it.
 - Never hardcode strings in components.
 
 ```tsx
-// Good
+// Good — web
 import { useTranslation } from "react-i18next";
 
 function Dashboard() {
@@ -81,11 +82,13 @@ function Dashboard() {
 return <h1>Dashboard</h1>;
 ```
 
-### Mobile (`apps/mobile`)
+### Mobile (`apps/mobile` — Expo)
 
-- Use `react-i18next` with `AsyncStorage` for persistence.
+- Use `react-i18next` with `expo-secure-store` backed `useLocaleStore` for persistence (not AsyncStorage).
+- `src/lib/i18n.ts` builds same `resources` from `@repo/i18n` and `initI18n()` reads `useLocaleStore.getState().locale`. Call `await initI18n()` in `app/_layout.tsx` before rendering.
+- Same translation keys as web. Switching via `useLocaleStore.setLocale(next)` + `i18n.changeLanguage(next)`.
+- `getApiClient()` also sends `x-tenant-id` + `accept-language` via `useTenantStore`/`useLocaleStore`.
 - Initialize i18n in root `_layout.tsx` before rendering.
-- Same translation keys as web.
 
 ---
 
@@ -125,8 +128,8 @@ return <h1>Dashboard</h1>;
 2. Copy structure from `en.json`.
 3. Translate all values (not keys).
 4. Add locale to `SUPPORTED_LOCALES` in `packages/i18n/src/index.ts`.
-5. Add locale to resources in `apps/web/src/lib/i18n/index.ts`.
-6. Add locale to resources in `apps/mobile/lib/i18n/index.ts`.
+5. Add locale to `resources` in `apps/web/src/lib/i18n.tsx`.
+6. Add locale to `resources` in `apps/mobile/src/lib/i18n.ts`.
 
 ---
 

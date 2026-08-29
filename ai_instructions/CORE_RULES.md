@@ -10,7 +10,7 @@ Supreme laws of this codebase. These are never negotiable.
 
 | Layer | Locked Choice |
 |-------|---------------|
-| Monorepo | Turborepo + pnpm |
+| Monorepo | Turborepo 2.10 + pnpm 10 workspaces |
 | Backend | NestJS 11 + Fastify 5 |
 | Validation | Zod 4 |
 | API Contract | oRPC + Scalar API Reference (@scalar/fastify-api-reference) |
@@ -20,8 +20,12 @@ Supreme laws of this codebase. These are never negotiable.
 | Email Templating | React Email (react-email) |
 | Worker Threads | Piscina 5 |
 | Result Type | neverthrow 8 |
-| Client SDK | @repo/api-client (oRPC client) |
-| Testing | Vitest 4 |
+| Client SDK | @repo/api-client (oRPC client + RPCLink + TanStack Query) |
+| Frontend Web | TanStack Start 1 (Vite 8 + TanStack Router 1 file-based + TanStack Query 5 + Zustand 5 + react-i18next) |
+| Frontend Mobile | Expo SDK 53 + expo-router 5 + NativeWind 4 + Zustand 5 + react-i18next + TanStack Query 5 |
+| UI System | @repo/ui — Tailwind CSS 4 + tw-animate-css + shadcn base-nova + Base UI React 1 + lucide-react + CVA |
+| i18n Sources | @repo/i18n (en/es/fr) — backend I18nService + react-i18next (web localStorage, mobile SecureStore) |
+| Testing | Vitest 4 (api) + Playwright (web) + Maestro (mobile) |
 
 **No paid services. No proprietary dependencies. No exceptions.**
 
@@ -61,10 +65,11 @@ Supreme laws of this codebase. These are never negotiable.
 
 ## Single Source of Truth
 
-- **`@repo/contracts`**: Zod 4 schemas, DTO types, oRPC contracts, and error constants.
+- **`@repo/contracts`**: Zod 4 schemas, DTO types, oRPC contracts, and error constants. Env schemas for api + web (`VITE_*`) + mobile (`EXPO_PUBLIC_*`).
 - **`@repo/authorization`**: FGA types, action permissions vocabulary, and pure evaluator.
-- **`@repo/i18n`**: Multi-language locale dictionaries (JSON) and locale config.
-- **`@repo/api-client`**: Type-safe API client factory using oRPC.
+- **`@repo/i18n`**: Multi-language locale dictionaries (JSON) and locale config. Consumed via backend `I18nService` and frontend `react-i18next`.
+- **`@repo/api-client`**: Type-safe API client factory using oRPC + `RPCLink` + `createORPCClient` + `createTanstackQueryUtils`. Provides `authenticatedFetch` with auto-refresh, tenant + locale headers, idempotency-key.
+- **`@repo/ui`**: Headless Base UI primitives + shadcn presets + Tailwind 4 design tokens. `globals.css` is single Tailwind entry, consumed by `apps/web` (`@repo/ui/globals.css`) and theming via CSS variables.
 - **`@repo/email`**: Transactional email templates.
 
 ---

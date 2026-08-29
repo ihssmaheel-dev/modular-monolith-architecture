@@ -5,7 +5,11 @@ const { spawnSync } = require("node:child_process");
 
 const ROOT = path.resolve(__dirname, "..");
 const MINIMUM_NODE_MAJOR = 20;
-const ENV_FILES = [["apps/api/.env.example", "apps/api/.env"]];
+const ENV_FILES = [
+  ["apps/api/.env.example", "apps/api/.env"],
+  ["apps/web/.env.example", "apps/web/.env"],
+  ["apps/mobile/.env.example", "apps/mobile/.env"],
+];
 
 function main() {
   try {
@@ -35,8 +39,8 @@ function verifyPrerequisites() {
 function verifyPnpm() {
   const result = execute("pnpm", ["--version"], "pipe");
   const major = Number(result.stdout?.toString().trim().split(".")[0]);
-  if (result.error || result.status !== 0 || major !== 9) {
-    throw new Error("pnpm 9 is required. Enable the repository version with Corepack.");
+  if (result.error || result.status !== 0 || major < 9) {
+    throw new Error("pnpm 9+ is required. Enable the repository version with Corepack (pnpm 10.33.4 recommended).");
   }
 }
 

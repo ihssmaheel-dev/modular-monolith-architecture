@@ -3,14 +3,20 @@ node_modules/
 .pnpm-store/
 .mimocode/
 .pkg-audit/
-vite-monorepo/
 
 # Build
 dist/
 build/
 .turbo/
 *.tsbuildinfo
+.tanstack/
 apps/web/.tanstack/
+apps/web/.output/
+apps/web/dist/
+apps/mobile/dist/
+apps/mobile/.expo/
+.expo/
+web-build/
 
 # Environment
 .env

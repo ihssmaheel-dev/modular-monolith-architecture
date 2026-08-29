@@ -6,24 +6,27 @@ A production-grade, highly scalable TypeScript modular monolith architecture des
 
 ## Tech Stack
 
-- **Backend:** NestJS 11 + Fastify 5 + PostgreSQL 16 + Drizzle ORM + Redis 7 + BullMQ + oRPC
+- **Backend:** NestJS 11 + Fastify 5 + PostgreSQL 16 + Drizzle ORM + Redis 7 + BullMQ + oRPC + Scalar
+- **Frontend Web:** TanStack Start 1 (Vite 8 + TanStack Router file-based SSR + streaming) + TanStack Query 5 + Zustand 5 + react-i18next + Tailwind 4 + shadcn base-nova + Base UI 1
+- **Frontend Mobile:** Expo SDK 53 + expo-router 5 + NativeWind 4 + Zustand 5 + react-i18next + TanStack Query 5 + SecureStore
 - **Capability Packages:**
-  - `@repo/contracts`: Zod 4 schemas, oRPC type-safe API contracts, DTO types, pagination & error constants
+  - `@repo/contracts`: Zod 4 schemas, oRPC type-safe API contracts, DTO types, pagination & error constants, env schemas (VITE_* + EXPO_PUBLIC_*)
   - `@repo/authorization`: Fine-Grained Authorization engine (RBAC + ReBAC + ABAC) & action vocabulary
-  - `@repo/i18n`: Multi-language JSON locale dictionaries (en, es, fr) & locale resolver
-  - `@repo/api-client`: Type-safe client factory with oRPC and RPCLink
+  - `@repo/i18n`: Multi-language JSON locale dictionaries (en, es, fr) & locale resolver (I18nService + react-i18next)
+  - `@repo/api-client`: Type-safe client factory (`createApiClient` + RPCLink + createORPCClient + createTanstackQueryUtils), auto-refresh, tenant + locale + idempotency
+  - `@repo/ui`: Base UI React 1 + shadcn base-nova + Tailwind 4 + tw-animate-css + CVA + lucide-react (single `globals.css` + `cn()`)
   - `@repo/email`: React Email templates with isolated HTML renderer
-  - `@repo/typescript-config`: Centralized TypeScript configurations
+  - `@repo/typescript-config`: Centralized TypeScript configurations (TS ~6)
 - **Observability:** Grafana + Prometheus + Loki + Promtail + Jaeger + Postgres & Redis Exporters
 - **Documentation:** Interactive Scalar API Reference (`@scalar/fastify-api-reference`) & OpenAPI 3.1
-- **Tooling & Monorepo:** Turborepo + pnpm workspaces + TypeScript 5.8 + Vitest 4
+- **Tooling & Monorepo:** Turborepo 2.10 + pnpm 10 workspaces + TypeScript ~6 + Vitest 4 (api) + Playwright (web) + Maestro (mobile)
 
 ---
 
 ## Prerequisites
 
 - **Node.js**: `>= 20.0.0`
-- **pnpm**: `>= 9.0.0`
+- **pnpm**: `>= 10.33.4` (`corepack enable` then `corepack prepare pnpm@10.33.4 --activate`)
 - **Docker**: Docker Engine with Docker Compose v2.17+
 
 ---
@@ -44,17 +47,20 @@ pnpm dev
 
 ```text
 ├── apps/
-│   └── api/             # NestJS Fastify backend (Modular Monolith + CQRS + FGA + Drizzle)
+│   ├── api/             # NestJS Fastify backend (Modular Monolith + CQRS + FGA + Drizzle)
+│   ├── web/             # TanStack Start web (Vite 8 + Router file-based SSR + Query + Zustand + i18n + @repo/ui)
+│   └── mobile/          # Expo 53 mobile (expo-router + NativeWind + Zustand SecureStore + Query + i18n)
 ├── packages/
-│   ├── contracts/       # Zod 4 Schemas, oRPC API contracts, DTO types, and constants
+│   ├── contracts/       # Zod 4 Schemas, oRPC API contracts, DTO types, constants, env schemas
 │   ├── authorization/   # Pure FGA Evaluator (RBAC + ReBAC + ABAC) & Action Vocabulary
-│   ├── i18n/            # Multi-language locale dictionaries (en, es, fr) & config
-│   ├── api-client/      # Type-safe API client (oRPC + TanStack Query)
+│   ├── i18n/            # Multi-language locale dictionaries (en, es, fr) & config, react-i18next resources
+│   ├── api-client/      # Type-safe API client (oRPC + RPCLink + TanStack Query, auto-refresh + tenant + locale)
+│   ├── ui/              # Base UI + shadcn base-nova + Tailwind 4 (globals.css, components, hooks, lib)
 │   ├── email/           # Email templates (React Email)
 │   └── typescript-config/ # Base TypeScript configurations
 ├── scripts/             # Full-Stack Vertical Slice Generator (pnpm generate:feature)
 ├── docker/              # Docker Compose services & Observability configuration
-└── ai_instructions/     # Architectural laws & guidelines
+└── ai_instructions/     # Architectural laws & guidelines (CORE, FILE_PLACEMENT, FRONTEND, I18N, etc)
 ```
 
 ---
@@ -64,9 +70,11 @@ pnpm dev
 ### Development & API
 
 ```bash
-pnpm dev              # Start all packages in development mode
+pnpm dev              # Start all (api, web, mobile) in development mode (Turborepo)
 pnpm dev:api          # Build dependencies and start API (http://localhost:3000)
 pnpm dev:api:debug    # Start API with Node inspector on port 9229
+pnpm --filter web dev # Start TanStack Start web only (http://localhost:5173)
+pnpm --filter mobile dev # Start Expo mobile (Metro 8081 + QR)
 ```
 
 ### Full-Stack Vertical Slice Generator
@@ -79,12 +87,19 @@ pnpm generate:feature <module> <feature>
 ### Build & Verification
 
 ```bash
-pnpm build            # Build all packages & apps with Turborepo
-pnpm lint             # Lint all workspaces
+pnpm build            # Build all packages & apps with Turborepo (api + web .output + mobile export)
+pnpm lint             # Lint all workspaces (eslint)
 pnpm format           # Format code with Prettier
 pnpm format:check     # Check formatting
-pnpm typecheck        # Run TypeScript type check across all workspaces
+pnpm typecheck        # Run TypeScript type check across all workspaces (api, web, mobile, ui, contracts ...)
 pnpm rules:check      # Enforce strict architectural boundaries and dependency rules
+
+# Web shadcn
+pnpm dlx shadcn@latest add button -c apps/web   # add ui primitive to @repo/ui (see packages/ui)
+
+# Mobile
+pnpm --filter mobile lint
+pnpm --filter web typecheck
 ```
 
 ### Testing
@@ -128,32 +143,42 @@ pnpm observability:logs # Tail telemetry logs
 
 ## Local Service Directory
 
-| Service                  | Local URL / Port                 | Credentials / Purpose                    |
-| :----------------------- | :------------------------------- | :--------------------------------------- |
-| **API Backend**          | `http://localhost:3000`          | Fastify API Server                       |
-| **Scalar API Reference** | `http://localhost:3000/api/docs` | Interactive OpenAPI 3.1 Docs             |
-| **Grafana Dashboard**    | `http://localhost:3001`          | `admin / admin` (API, DB, Redis metrics) |
-| **Jaeger Trace Viewer**  | `http://localhost:16686`         | OpenTelemetry Distributed Traces         |
-| **Prometheus Metrics**   | `http://localhost:9090`          | Time-series Metrics Server               |
-| **Loki Log Engine**      | `http://localhost:3100`          | High-performance Log Aggregator          |
-| **Mailpit Web UI**       | `http://localhost:8025`          | Local SMTP Email Inbox (`:1025`)         |
-| **MinIO Console**        | `http://localhost:9001`          | `minioadmin / minioadmin` (S3: `:9000`)  |
-| **pgAdmin 4**            | `http://localhost:5050`          | `admin@example.com / admin`              |
+| Service                  | Local URL / Port                 | Credentials / Purpose                           |
+| :----------------------- | :------------------------------- | :---------------------------------------------- |
+| **API Backend**          | `http://localhost:3000`          | Fastify API Server (`/api`, `/api/health/*`)    |
+| **Web (TanStack Start)** | `http://localhost:5173`          | Vite + SSR (dev) `pnpm --filter web dev`        |
+| **Mobile (Expo Metro)**  | `http://localhost:8081`          | Metro bundler + QR (`pnpm --filter mobile dev`) |
+| **Scalar API Reference** | `http://localhost:3000/api/docs` | Interactive OpenAPI 3.1 Docs                    |
+| **Grafana Dashboard**    | `http://localhost:3001`          | `admin / admin` (API, DB, Redis metrics)        |
+| **Jaeger Trace Viewer**  | `http://localhost:16686`         | OpenTelemetry Distributed Traces                |
+| **Prometheus Metrics**   | `http://localhost:9090`          | Time-series Metrics Server                      |
+| **Loki Log Engine**      | `http://localhost:3100`          | High-performance Log Aggregator                 |
+| **Mailpit Web UI**       | `http://localhost:8025`          | Local SMTP Email Inbox (`:1025`)                |
+| **MinIO Console**        | `http://localhost:9001`          | `minioadmin / minioadmin` (S3: `:9000`)         |
+| **pgAdmin 4**            | `http://localhost:5050`          | `admin@example.com / admin`                     |
 
 ---
 
 ## Key Architectural Patterns
 
-### 1. Clean Architecture & CQRS
+### 1. Clean Architecture & CQRS (Backend) + Shared Contracts (Full-Stack)
 
 Every domain module in `apps/api/src/modules/[domain]/` adheres to CQRS:
 
-- **`presentation/`**: Thin Fastify controllers mapping input/output via `@repo/contracts`.
+- **`presentation/`**: Thin Fastify controllers mapping input/output via `@repo/contracts` (`ZodValidationPipe` + `handleResult` + `I18nService`).
 - **`application/`**: Single-responsibility `commands/`, `queries/`, and domain event `listeners/`. All return `neverthrow` `Result<T, E>`.
-- **`domain/`**: Pure `entities/`, `value-objects/`, `events/`, and domain `errors/`.
-- **`infrastructure/`**: Drizzle table schemas and repositories.
+- **`domain/`**: Pure `entities/`, `value-objects/`, `events/`, and domain `errors/` (zero framework deps).
+- **`infrastructure/`**: Drizzle table schemas and repositories (`BaseRepository`/`TenantScopedRepository` + `DatabaseService` + `TenantContextService`).
 
-### 2. Fine-Grained Authorization (FGA)
+Web (`apps/web` TanStack Start) and mobile (`apps/mobile` Expo) consume the same schemas/contracts via `react-hook-form` + `zodResolver` + `getApiClient()` (`@repo/api-client`). One source of truth — compiler catches drift.
+
+### 2. Frontend — TanStack Start (Web) + Expo (Mobile) + `@repo/ui`
+
+- **Web:** File-based TanStack Router (`src/routes/__root.tsx`, `index.tsx`, `auth.tsx`, `notes.tsx`), `src/router.tsx` + SSR query integration, Zustand persist (localStorage) + TanStack Query, react-i18next (`src/lib/i18n.tsx`), Tailwind 4 + `@repo/ui` (Base UI + shadcn base-nova + lucide), `src/lib/api.ts` singleton with 401 refresh + tenant + locale + idempotency-key, `src/lib/env.ts` `VITE_API_URL`.
+- **Mobile:** `app/` file-based expo-router (Stack + (tabs)), NativeWind 4, Zustand persist (expo-secure-store), react-i18next (`src/lib/i18n.ts`), `src/lib/api.ts` with `EXPO_PUBLIC_API_URL`, same contract sharing.
+- **UI:** `packages/ui` single `globals.css` + CVA + `cn()`; shadcn CLI `pnpm dlx shadcn@latest add <c> -c apps/web` writes to `packages/ui`. Mobile mirrors tokens in `tailwind.config.js`, never imports `@repo/ui` DOM primitives.
+
+### 3. Fine-Grained Authorization (FGA)
 
 Unified **RBAC + ReBAC + ABAC** engine:
 
@@ -162,12 +187,12 @@ Unified **RBAC + ReBAC + ABAC** engine:
 - **Attribute-Based Access Control**: Dynamic policy predicates (tenant scoping, department matching).
 - **Backend Protection**: Controller `@RequirePermission('notes:create')` and application `AuthorizationService.check(...)`.
 
-### 3. Transactional Outbox & Resilient Async Events
+### 4. Transactional Outbox & Resilient Async Events
 
 - **Guaranteed Event Publishing**: Changes to domain entities and their outgoing domain events are written in the same PostgreSQL transaction.
 - **Background Outbox Relay**: An asynchronous worker polls and processes pending events via Redis Streams and BullMQ queues with automatic retries and dead-letter handling.
 
-### 4. Zero-Trust Multi-Tenancy
+### 5. Zero-Trust Multi-Tenancy
 
 - **Dynamic Mode**: Supports both single-tenant and cloud multi-tenant execution modes via `TENANCY_MODE`.
 - **Tenant Context Isolation**: `TenantContextGuard` and `TenantScopedRepository` enforce row-level tenant boundary isolation automatically across all database operations.

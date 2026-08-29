@@ -4,10 +4,11 @@ This is the supported local-development path for the monorepo.
 
 ## Prerequisites
 
-- Node.js 20 or newer
-- pnpm 9 (`corepack enable` if `pnpm` is unavailable)
+- Node.js 20 or newer (tested on 20 + 22)
+- pnpm 10.33.4 (`corepack enable` then `corepack prepare pnpm@10.33.4 --activate`)
 - Docker Desktop, or Docker Engine with Compose v2.17+
 - Git
+- For mobile (optional): Android Studio / Xcode + `expo` CLI (`pnpm dlx expo --version`)
 
 Verify the tools with `node --version`, `pnpm --version`, and `docker compose version`.
 
@@ -34,14 +35,42 @@ It never overwrites an existing `.env` and does not create an administrator auto
 Start all applications after setup:
 
 ```sh
-pnpm dev
+pnpm dev                      # api (3000) + web (5173) + mobile Metro (8081) via Turborepo
 ```
 
-Use `pnpm dev:api` to run the API application. Local endpoints
-are API `http://localhost:3000/api`, Swagger/Scalar `http://localhost:3000/api/docs`, MinIO console `http://localhost:9001`, and Mailpit
-`http://localhost:8025`.
+Useful filtered runs:
+
+```sh
+pnpm dev:api                  # api only
+pnpm --filter web dev         # TanStack Start web only -> http://localhost:5173
+pnpm --filter mobile dev      # Expo Metro + QR -> press a/i/w
+```
+
+Local endpoints:
+
+- API `http://localhost:3000/api`, Scalar `http://localhost:3000/api/docs`
+- Web `http://localhost:5173`
+- Metro `http://localhost:8081` (QR in terminal)
+- MinIO console `http://localhost:9001`, Mailpit `http://localhost:8025`
 
 Stop infrastructure with `pnpm docker:down`.
+
+### Web + Mobile local env
+
+Web reads `apps/web/.env` (copied from `.env.example` on `pnpm bootstrap`):
+
+```env
+VITE_API_URL=http://localhost:3000/api
+```
+
+Mobile reads `apps/mobile/.env` / `EXPO_PUBLIC_*` (or `app.json` extra):
+
+```env
+EXPO_PUBLIC_API_URL=http://localhost:3000/api
+# For device on same LAN use your LAN IP: http://192.168.1.10:3000/api
+```
+
+For physical device testing, replace localhost with your machine's LAN IP (both web and mobile must reach api). See `docs/ENVIRONMENT.md`.
 
 ## Database migrations
 
@@ -71,11 +100,14 @@ existing administrator. Remove the credentials from `.env` after use.
 ```sh
 pnpm test:unit          # fast unit tests across the workspace
 pnpm test:integration   # real infrastructure tests
-pnpm test:e2e           # API/application flows
-pnpm lint
+pnpm test:e2e           # API/application flows (Supertest)
+pnpm lint               # eslint across api + web + mobile + ui
 pnpm format:check
-pnpm rules:check
-pnpm build
+pnpm rules:check        # dependency-cruiser + conventions (api domain isolation + no fetch in routes + no hardcoded i18n)
+pnpm build              # api + web (.output) + mobile (expo export) + packages
+pnpm typecheck          # tsc across all workspaces
+pnpm --filter web typecheck
+pnpm --filter mobile typecheck
 ```
 
 Integration and E2E tests require `TEST_DATABASE_URL` in `apps/api/.env`; its database name must

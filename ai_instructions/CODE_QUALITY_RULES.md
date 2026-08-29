@@ -4,18 +4,21 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 
 ---
 
-## File Size Limits
+## File Size Limits (Relaxed for Real-World, Single-Responsibility First)
 
 | File Type / Location | Max Lines | Action if Exceeded |
 |----------------------|-----------|-------------------|
-| Any file (`apps/*`, `packages/contracts`, `packages/authorization`, `packages/i18n`, `packages/design-tokens`, `packages/api-client`) | 150 | Split by responsibility |
-| Command / Query / Controller / Feature Component / Utility / Type / Schema | 150 | Extract helper methods or split |
-| UI Component (`packages/ui/src/components/*`) | 250 | One shadcn component family per file; if >250 extract sub-component (shadcn primitives group ~10 related exports by design) |
-| Email Template (`packages/email/src/*`) | 250 | One template per file |
-| Test file (`*.test.ts`, `*.spec.ts`) | 300 | Split by describe block |
+| App code: `apps/*`, `packages/contracts`, `packages/authorization`, `packages/i18n`, `packages/api-client`, `packages/ui` lib/hooks | **300** | Split by responsibility if file does 2 jobs or is hard to scan in 2 minutes |
+| Backend Command / Query / Controller / Service | **300** | Extract helper; keep one use-case per file |
+| Frontend Route / Page `apps/web/src/routes/*`, `apps/mobile/app/*` | **400** | Split into `features/*` components if route mixes data + UI + form logic |
+| Feature Component / Hook / Utility `apps/web/src/features/*`, `apps/mobile/src/features/*`, `apps/*/src/lib/*`, `apps/*/src/hooks/*` | **300** | Extract sub-component/hook |
+| UI Primitive `packages/ui/src/components/ui/*` | **500** | One shadcn family per file; primitives like `sidebar` legitimately 300-500 due to ~10 exports. Split only if >500 or mixes 2 families |
+| Composed Component `packages/ui/src/components/composed/*` (DataTable, PageHeader, etc) | **350** | One reusable composed component per file (composes 3-6 primitives) |
+| Email Template `packages/email/src/*` | **350** | One template per file |
+| Test file `*.test.ts`, `*.spec.ts`, `*.e2e.ts` | **600** | Split by describe block or scenario |
 
 **How we count:** `source.trimEnd().split(/\r?\n/).length` — trailing final newline is not counted.  
-**If a file feels hard to read, it is too big.** Split it. The hard limit is **150 for app code, 250 for UI/email kit, 300 for tests**.
+**The rule is single-responsibility, not line-count.** If a file does one thing well and is readable in 2 minutes, 280 lines is fine. If it does two jobs, split at 150. Hard caps above are when you must split; soft target is 150-300 for most files.
 
 ---
 
@@ -27,8 +30,8 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 - If you can't describe what a file does in one sentence, split it.
 
 ### Small Functions
-- Functions should be 5–20 lines.
-- If a function exceeds 30 lines, extract helpers.
+- Functions should be 5–25 lines.
+- If a function exceeds 45 lines, extract helpers.
 - Early returns over nested conditionals.
 
 ```typescript
@@ -244,13 +247,13 @@ import { CreateUserInput, UserError } from "../types";
 
 Before submitting a file, ask:
 
-1. Can I understand this file in under 60 seconds?
-2. Does this file do one thing well?
-3. Are all functions under 30 lines?
+1. Can I understand this file in under 2 minutes and describe its single responsibility in one sentence?
+2. Does this file do one thing well? (if two, split regardless of line count)
+3. Are all functions under 45 lines?
 4. Is there any duplication I can extract?
 5. Would a new developer understand this without comments?
 6. Does this file belong where I'm putting it?
 7. Are all user-facing strings using i18n keys?
-8. Are all error messages using `I18nService`?
+8. Are all error messages using `I18nService` / `useTranslation`?
 
 If the answer to any is no — refactor before committing.
