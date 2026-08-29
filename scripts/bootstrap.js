@@ -7,7 +7,6 @@ const ROOT = path.resolve(__dirname, "..");
 const MINIMUM_NODE_MAJOR = 20;
 const ENV_FILES = [
   ["apps/api/.env.example", "apps/api/.env"],
-  ["apps/web/.env.example", "apps/web/.env"],
   ["apps/mobile/.env.example", "apps/mobile/.env"],
 ];
 

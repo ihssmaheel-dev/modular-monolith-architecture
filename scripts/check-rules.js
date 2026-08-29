@@ -30,7 +30,6 @@ function isTest(file) {
 
 function getLineLimit(name, isTestFile) {
   if (isTestFile) return 300;
-  if (name.startsWith("packages/ui/")) return 250;
   if (name.startsWith("packages/email/")) return 250;
   return 150;
 }
@@ -71,9 +70,6 @@ function checkFile(file) {
     if (/\b(index|unique)\s*:\s*true|Schema\.index\s*\(/.test(source)) {
       report(file, "database indexes must be declared only in migrations");
     }
-  }
-  if (name.startsWith("apps/mobile/") && /from\s+["']@repo\/ui/.test(source)) {
-    report(file, "mobile must not import the web-only UI package");
   }
   if (!name.includes("/infrastructure/database/") && /from\s+["'][^"']*database\//.test(source)) {
     report(file, "database consumers must import from the public database barrel");
@@ -172,61 +168,6 @@ function checkDocumentationDrift() {
   }
 }
 
-function checkThemingGuardrails() {
-  const allowedHardHexFiles = new Set([
-    "apps/web/src/index.css",
-    "apps/mobile/global.css",
-    "packages/design-tokens/src/colors.ts",
-    "packages/design-tokens/src/tokens.ts",
-    "packages/design-tokens/src/presets/active.json",
-  ]);
-  const presetDir = path.join(ROOT, "packages/design-tokens/src/presets");
-  const allowedExtra = new Set(
-    fs.existsSync(presetDir)
-      ? fs.readdirSync(presetDir).map((f) => `packages/design-tokens/src/presets/${f}`)
-      : [],
-  );
-  const hardHexPattern = /bg-\[#[0-9a-fA-F]{3,8}\]|text-\[#[0-9a-fA-F]{3,8}\]|from-\[#[0-9a-fA-F]{3,8}\]|\b#[0-9a-fA-F]{6}\b/;
-  const suspiciousShadow = /shadow-\[0[^\]]*rgba\(0,0,0/;
-
-  for (const dir of ["apps/web/src/components", "packages/ui/src/components"]) {
-    const abs = path.join(ROOT, dir);
-    if (!fs.existsSync(abs)) continue;
-    for (const file of walk(abs)) {
-      if (!CODE_EXTENSIONS.has(path.extname(file))) continue;
-      const rel = relative(file);
-      if (allowedHardHexFiles.has(rel) || allowedExtra.has(rel)) continue;
-      const src = fs.readFileSync(file, "utf8");
-      if (hardHexPattern.test(src)) {
-        report(file, "hard-coded hex color forbidden — use semantic tokens (bg-primary, bg-accent-purple, bg-info, etc. via preset vars)");
-      }
-      if (suspiciousShadow.test(src)) {
-        report(file, "hard-coded shadow rgba forbidden — use shadow-layered / shadow-modal utilities from preset");
-      }
-    }
-  }
-
-  const presetActive = path.join(ROOT, "packages/design-tokens/src/presets/active.json");
-  const webCss = path.join(ROOT, "apps/web/src/index.css");
-  const mobileCss = path.join(ROOT, "apps/mobile/global.css");
-  const emailTokens = path.join(ROOT, "packages/email/src/styles/tokens.ts");
-  if (fs.existsSync(presetActive) && fs.existsSync(webCss)) {
-    const preset = JSON.parse(fs.readFileSync(presetActive, "utf8"));
-    const css = fs.readFileSync(webCss, "utf8");
-    if (!css.includes(preset.light.primary) || !css.includes(preset.radius)) {
-      report(webCss, "generated CSS does not match active preset — run pnpm theme:generate");
-    }
-  }
-  if (fs.existsSync(presetActive) && fs.existsSync(mobileCss) && fs.existsSync(emailTokens)) {
-    const presetRaw = fs.readFileSync(presetActive, "utf8");
-    const preset = JSON.parse(presetRaw);
-    const mobile = fs.readFileSync(mobileCss, "utf8");
-    if (!mobile.includes(preset.light.primary)) {
-      report(mobileCss, "mobile global.css not synced with active preset — run pnpm theme:generate");
-    }
-  }
-}
-
 for (const directory of ["apps", "packages"]) {
   for (const file of walk(path.join(ROOT, directory))) {
     if (CODE_EXTENSIONS.has(path.extname(file))) checkFile(file);
@@ -236,7 +177,6 @@ checkLocaleParity();
 checkTranslationUsage();
 checkTenantRepositories();
 checkDocumentationDrift();
-checkThemingGuardrails();
 
 if (failures.length) {
   process.stderr.write(

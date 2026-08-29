@@ -17,7 +17,6 @@
     "@repo/api-client": "workspace:*",
     "@repo/authorization": "workspace:*",
     "@repo/contracts": "workspace:*",
-    "@repo/design-tokens": "workspace:*",
     "@repo/i18n": "workspace:*",
     "@tanstack/react-query": "^5.102.2",
     "expo": "~57.0.16",

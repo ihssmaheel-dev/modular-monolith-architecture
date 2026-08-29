@@ -6,7 +6,6 @@ const { generateApplication } = require("./generators/application.generator");
 const { generateContracts } = require("./generators/contracts.generator");
 const { generateClient } = require("./generators/client.generator");
 const { generatePresentation } = require("./generators/presentation.generator");
-const { generateFrontend } = require("./generators/frontend.generator");
 
 const rawModule = process.argv[2];
 const rawFeature = process.argv[3] || rawModule;
@@ -36,7 +35,6 @@ const rootPath = path.resolve(__dirname, "..");
 const modulePath = path.join(rootPath, "apps", "api", "src", "modules", moduleName);
 const contractsPath = path.join(rootPath, "packages", "contracts");
 const clientPath = path.join(rootPath, "packages", "api-client");
-const webPath = path.join(rootPath, "apps", "web");
 
 const context = {
   modulePath,
@@ -48,7 +46,6 @@ const context = {
   FeaturePlural,
   contractsPath,
   clientPath,
-  webPath,
 };
 
 console.log("1. Generating Domain Layer...");
@@ -68,9 +65,6 @@ generateClient(context);
 
 console.log("\n6. Generating Presentation Layer (Fastify Controller, Mapper, NestJS Module)...");
 generatePresentation(context);
-
-console.log("\n7. Generating Frontend Layer (TanStack Query hooks, React UI Form & List)...");
-generateFrontend(context);
 
 console.log("\n=======================================================");
 console.log(`  Successfully generated vertical slice for '${feature}'!`);

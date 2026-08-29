@@ -2,7 +2,6 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAuthStore } from "../../stores/auth.store";
-import { colors } from "@repo/design-tokens";
 import { useTranslation } from "react-i18next";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
@@ -13,20 +12,14 @@ const tabIcons: Record<string, IoniconsName> = {
   settings: "settings",
 };
 
-const lightTheme = colors.light;
-const darkTheme = colors.dark;
-
-function getTabColors(theme: "light" | "dark") {
-  const t = theme === "dark" ? darkTheme : lightTheme;
-  return {
-    active: `hsl(${t.primary})`,
-    inactive: `hsl(${t["muted-foreground"]})`,
-    background: `hsl(${t.card})`,
-    border: `hsl(${t.border})`,
-    headerBg: `hsl(${t.card})`,
-    headerTint: `hsl(${t.foreground})`,
-  };
-}
+const tabColors = {
+  active: "#6366f1",
+  inactive: "#94a3b8",
+  background: "#ffffff",
+  border: "#e2e8f0",
+  headerBg: "#ffffff",
+  headerTint: "#0f172a",
+};
 
 export default function TabsLayout() {
   const { t } = useTranslation();
@@ -35,8 +28,6 @@ export default function TabsLayout() {
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
   }
-
-  const tabColors = getTabColors("light");
 
   return (
     <Tabs
