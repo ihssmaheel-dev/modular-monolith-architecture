@@ -24,6 +24,8 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
   private logger: PinoLoggerService;
   private isShuttingDown = false;
   private lastId = "$";
+  private readonly groupName = `realtime-${process.pid}`;
+  private readonly consumerName = `api-${process.pid}`;
 
   constructor(
     private readonly redis: RedisService,
@@ -42,21 +44,54 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
     }
 
     this.subscriber = client.duplicate();
+    await this.ensureConsumerGroup();
     this.readStreamLoop();
+  }
+
+  private async ensureConsumerGroup(): Promise<void> {
+    if (!this.subscriber) return;
+    const xgroup = (
+      this.subscriber as unknown as {
+        xgroup?: (...args: Array<string | number>) => Promise<unknown>;
+      }
+    ).xgroup;
+    if (typeof xgroup !== "function") return;
+    try {
+      await xgroup.call(this.subscriber, "CREATE", STREAM_KEY, this.groupName, "$", "MKSTREAM");
+    } catch (error) {
+      if (!String(error).includes("BUSYGROUP")) {
+        this.logger.error({ error }, "Unable to create realtime consumer group");
+      }
+    }
   }
 
   private async readStreamLoop(): Promise<void> {
     if (!this.subscriber || this.isShuttingDown) return;
 
     try {
-      const result = await this.subscriber.xread(
-        "BLOCK",
-        XREAD_BLOCK_MS,
-        "STREAMS",
-        STREAM_KEY,
-        this.lastId,
-      );
-      this.processStreamResult(result);
+      const grouped = this.subscriber as Redis & {
+        xreadgroup: (...args: Array<string | number>) => Promise<RedisStreamResult>;
+        xack: (stream: string, group: string, id: string) => Promise<number>;
+      };
+      const result = grouped.xreadgroup
+        ? await grouped.xreadgroup(
+            "GROUP",
+            this.groupName,
+            this.consumerName,
+            "COUNT",
+            50,
+            "BLOCK",
+            XREAD_BLOCK_MS,
+            "STREAMS",
+            STREAM_KEY,
+            ">",
+          )
+        : await this.subscriber.xread("BLOCK", XREAD_BLOCK_MS, "STREAMS", STREAM_KEY, this.lastId);
+      this.processStreamResult(result as RedisStreamResult);
+      const stream = result?.[0];
+      if (stream && grouped.xack) {
+        for (const [id] of stream[1]) await grouped.xack(STREAM_KEY, this.groupName, id);
+      }
     } catch (err) {
       this.logger.error({ err }, "Redis XREAD error");
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));

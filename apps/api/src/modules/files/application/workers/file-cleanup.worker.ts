@@ -37,7 +37,7 @@ export class FileCleanupWorker {
 
     try {
       const cutoff = new Date(Date.now() - PENDING_EXPIRATION_HOURS * 60 * 60 * 1000);
-      const staleFiles = await this.filesRepository.findPendingFilesBefore(cutoff);
+      const staleFiles = await this.filesRepository.findPendingFilesBefore(cutoff, true);
 
       for (const file of staleFiles) {
         try {

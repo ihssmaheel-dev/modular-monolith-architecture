@@ -2,7 +2,7 @@
 /**
  * pkg-audit.mjs — scan a monorepo for every package.json, summarize each
  * workspace, and cross-check dependency versions across all of them so
- * drift (e.g. React 19 in `web`, React 18 in `mobile`) is obvious.
+ * drift between the web client and shared packages is obvious.
  *
  * Usage:
  *   node pkg-audit.mjs [dir] [options]

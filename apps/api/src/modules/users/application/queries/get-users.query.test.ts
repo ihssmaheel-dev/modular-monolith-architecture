@@ -40,9 +40,9 @@ describe("GetUsersQuery", () => {
       ok({
         items: [user],
         total: 1,
+        totalPages: 1,
         page: 2,
         limit: 5,
-        totalPages: 1,
         hasNextPage: false,
         hasPrevPage: true,
       }),
@@ -57,6 +57,7 @@ describe("GetUsersQuery", () => {
       expect(result.value).toEqual({
         users: [user],
         total: 1,
+        totalPages: 1,
         page: 2,
         limit: 5,
       });

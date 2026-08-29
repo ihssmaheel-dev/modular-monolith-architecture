@@ -1,24 +1,15 @@
 # Environment-variable reference
 
-Local setup copies the committed examples to ignored `.env` files (`pnpm bootstrap` creates `apps/api/.env`, `apps/web/.env`, `apps/mobile/.env` if missing). Runtime API variables are
-validated by `packages/contracts/src/schemas/env.schema.ts`; web (`VITE_API_URL`) and mobile (`EXPO_PUBLIC_API_URL`) are validated locally via Zod in `apps/web/src/lib/env.ts` and `apps/mobile/src/lib/env.ts`. Invalid production configuration stops startup. Never commit `.env` files or real credentials.
+Local setup copies the committed examples to ignored `.env` files (`pnpm bootstrap` creates `apps/api/.env` and `apps/web/.env` if missing). Runtime API variables are validated by `packages/contracts/src/schemas/env.schema.ts`; web (`VITE_API_URL`) is validated locally via Zod in `apps/web/src/lib/env.ts`. Invalid production configuration stops startup. Never commit `.env` files or real credentials.
 
 ## Web (TanStack Start)
 
 | Variable | Default / purpose |
 |----------|-------------------|
-| `VITE_API_URL` | `http://localhost:3000/api`; browser → API base URL (must include `/api` prefix). For LAN device testing use `http://<lan-ip>:3000/api` |
+| `VITE_API_URL` | `http://localhost:3000/api`; browser → API base URL (must include `/api` prefix) |
 | `VITE_APP_NAME` | `Workspace`; display name (optional) |
 
 Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/web/.env.example`.
-
-## Mobile (Expo)
-
-| Variable | Default / purpose |
-|----------|-------------------|
-| `EXPO_PUBLIC_API_URL` | `http://localhost:3000/api`; Metro/JS → API base URL. Must be reachable from device/emulator. On physical device use LAN IP `http://192.168.x.x:3000/api`. Exposed via `expo-constants` + `process.env` |
-
-Validated in `apps/mobile/src/lib/env.ts`. Example in `apps/mobile/.env.example`. Also see `app.json` `expo.extra` if you prefer `extra` over `process.env`.
 
 ## API core and connectivity
 

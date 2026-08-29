@@ -86,13 +86,17 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
 
   const orpcLink = new RPCLink({
     url: baseUrl,
-    fetch: async (input, init) => {
-      const headers = new Headers((init as RequestInit | undefined)?.headers);
+      fetch: async (input, init) => {
+        const headers = new Headers((init as RequestInit | undefined)?.headers);
       const auth = getAuthorizationHeader(options);
       if (auth) headers.set("authorization", auth);
       const tenantId = options.getTenantId?.();
       if (tenantId) headers.set("x-tenant-id", tenantId);
-      headers.set("accept-language", options.getLocale?.() ?? "en");
+        headers.set("accept-language", options.getLocale?.() ?? "en");
+        const method = ((init as RequestInit | undefined)?.method ?? "GET").toUpperCase();
+        if (MUTATING_METHODS.has(method) && !headers.has("idempotency-key")) {
+          headers.set("idempotency-key", createIdempotencyKey());
+        }
       return fetch(input, {
         ...(init as RequestInit | undefined),
         headers,

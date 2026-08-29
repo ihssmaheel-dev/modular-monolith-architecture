@@ -47,6 +47,15 @@ export class UpdateUserCommand {
     await this.cacheService.invalidateGlobal(`user:${id}`);
 
     this.eventEmitter.emit("user.updated", new UserUpdatedEvent(saved.value.id, data));
+    this.eventEmitter.emit("database.mutated", {
+      collectionName: "users",
+      documentId: saved.value.id,
+      action: "UPDATE",
+      actorId: saved.value.id,
+      tenantId: undefined,
+      before: { id: existing.value.id },
+      after: { id: saved.value.id, email: saved.value.email, name: saved.value.name },
+    });
 
     return ok(saved.value);
   }

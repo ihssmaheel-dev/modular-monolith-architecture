@@ -13,7 +13,7 @@ Ask these questions in order:
 3. **Is this package on our locked stack?** Check `CORE_RULES.md` locked stack table.
 4. **Is this package 100% free and open source?** No paid tiers, no "community edition" bait-and-switch.
 5. **Does this package have an active maintainer and recent releases?** Check npm downloads, last publish date, open issues.
-6. **What is the bundle size impact?** Check bundlephobia.com for web/mobile packages.
+6. **What is the bundle size impact?** Check bundlephobia.com for client packages.
 
 ---
 
@@ -33,13 +33,13 @@ Ask these questions in order:
 2. **No "just in case" dependencies.** Install only when you are about to use it.
 3. **No duplicate functionality.** If we already have a solution, use it.
 4. **No global state managers beyond Zustand.** If you think you need Redux, MobX, or Jotai, justify why Zustand is insufficient.
-5. **No UI component libraries beyond shadcn/ui + Base UI.** No MUI, no Ant Design, no Chakra. Extend shadcn/ui if needed. Exception: `react-email` is allowed exclusively in `packages/email`. `nativewind` is allowed exclusively in `apps/mobile` for Tailwind on React Native.
-6. **No CSS frameworks beyond Tailwind (web: Tailwind 4 + @tailwindcss/vite, mobile: NativeWind 4 + tailwindcss 3.4).** No CSS Modules, no Styled Components, no Emotion.
+5. **No UI component libraries beyond shadcn/ui + Base UI.** No MUI, no Ant Design, no Chakra. Extend shadcn/ui if needed. `react-email` is allowed exclusively in `packages/email`.
+6. **No CSS frameworks beyond Tailwind 4 + @tailwindcss/vite.** No CSS Modules, no Styled Components, no Emotion.
 7. **No ORMs beyond Drizzle.** No Prisma, no TypeORM, no alternative ORMs or ODM drivers.
-8. **No test frameworks beyond Vitest (api) + Playwright (web) + Maestro (mobile).** No Jest, no Mocha, no Jasmine.
+8. **No test frameworks beyond Vitest (api) + Playwright (web).** No Jest, no Mocha, no Jasmine.
 9. **Locked frontend data stack:** TanStack Router + TanStack Start + TanStack Query only. No React Router, no Next.js, no Remix, no SWR beyond TanStack Query. Forms via `react-hook-form` + `@hookform/resolvers/zod` only.
-10. **Locked i18n stack:** `react-i18next` + `i18next-browser-languagedetector` (web) / `expo-secure-store` backed Zustand (mobile). No next-intl, no FormatJS.
-11. **Icons:** `lucide-react` (web) + `react-native-svg` + lucide via nativewind, no other icon packs without justification.
+10. **Locked i18n stack:** `react-i18next` + `i18next-browser-languagedetector` (web). No next-intl, no FormatJS.
+11. **Icons:** `lucide-react`, no other icon packs without justification.
 
 ---
 

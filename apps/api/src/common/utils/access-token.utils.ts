@@ -6,6 +6,8 @@ export function verifyAccessToken(token: string): AuthenticatedUser | null {
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET, {
       algorithms: ["HS256"],
+      issuer: env.JWT_ISSUER,
+      audience: env.JWT_AUDIENCE,
     });
     if (typeof decoded === "string") return null;
     if (!isAuthenticatedUser(decoded)) return null;

@@ -10,8 +10,8 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 |----------------------|-----------|-------------------|
 | App code: `apps/*`, `packages/contracts`, `packages/authorization`, `packages/i18n`, `packages/api-client`, `packages/ui` lib/hooks | **300** | Split by responsibility if file does 2 jobs or is hard to scan in 2 minutes |
 | Backend Command / Query / Controller / Service | **300** | Extract helper; keep one use-case per file |
-| Frontend Route / Page `apps/web/src/routes/*`, `apps/mobile/app/*` | **400** | Split into `features/*` components if route mixes data + UI + form logic |
-| Feature Component / Hook / Utility `apps/web/src/features/*`, `apps/mobile/src/features/*`, `apps/*/src/lib/*`, `apps/*/src/hooks/*` | **300** | Extract sub-component/hook |
+| Frontend Route / Page `apps/web/src/routes/*` | **400** | Split into `features/*` components if route mixes data + UI + form logic |
+| Feature Component / Hook / Utility `apps/web/src/features/*`, `apps/web/src/lib/*`, `apps/web/src/hooks/*` | **300** | Extract sub-component/hook |
 | UI Primitive `packages/ui/src/components/ui/*` | **500** | One shadcn family per file; primitives like `sidebar` legitimately 300-500 due to ~10 exports. Split only if >500 or mixes 2 families |
 | Composed Component `packages/ui/src/components/composed/*` (DataTable, PageHeader, etc) | **350** | One reusable composed component per file (composes 3-6 primitives) |
 | Email Template `packages/email/src/*` | **350** | One template per file |

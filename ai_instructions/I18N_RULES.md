@@ -58,7 +58,7 @@ return { status: 409, body: { message: "Email already taken" } };
 
 ---
 
-## Frontend Rules (`apps/web`, `apps/mobile`)
+## Frontend Rules (`apps/web`)
 
 ### Web (`apps/web` — TanStack Start)
 
@@ -81,14 +81,6 @@ function Dashboard() {
 // Bad
 return <h1>Dashboard</h1>;
 ```
-
-### Mobile (`apps/mobile` — Expo)
-
-- Use `react-i18next` with `expo-secure-store` backed `useLocaleStore` for persistence (not AsyncStorage).
-- `src/lib/i18n.ts` builds same `resources` from `@repo/i18n` and `initI18n()` reads `useLocaleStore.getState().locale`. Call `await initI18n()` in `app/_layout.tsx` before rendering.
-- Same translation keys as web. Switching via `useLocaleStore.setLocale(next)` + `i18n.changeLanguage(next)`.
-- `getApiClient()` also sends `x-tenant-id` + `accept-language` via `useTenantStore`/`useLocaleStore`.
-- Initialize i18n in root `_layout.tsx` before rendering.
 
 ---
 
@@ -129,7 +121,6 @@ return <h1>Dashboard</h1>;
 3. Translate all values (not keys).
 4. Add locale to `SUPPORTED_LOCALES` in `packages/i18n/src/index.ts`.
 5. Add locale to `resources` in `apps/web/src/lib/i18n.tsx`.
-6. Add locale to `resources` in `apps/mobile/src/lib/i18n.ts`.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Welcome! If you are new to the project, or if you just want to understand exactly how everything fits together, you are in the right place.
 
-This document explains **everything** in simple English. It uses maps and diagrams so you can visualize the flow of data. By the time you finish reading, you will understand exactly how to build features perfectly.
+This document explains **everything** in simple English. It uses maps and diagrams so you can visualize the flow of data. By the time you finish reading, you will understand exactly how to build features consistently.
 
 > [!NOTE]  
 > **The Core Philosophy:** We build for the long term. We want a codebase where it is impossible to make mistakes. We achieve this by using strict rules, type-safety, and isolating different parts of the code so they don't tangle together.
@@ -11,13 +11,12 @@ This document explains **everything** in simple English. It uses maps and diagra
 
 ## The Big Picture (System Map)
 
-Before we look at the code, let's look at the big picture. Our code is organized as a **Monorepo** using Turborepo 2.10 + pnpm 10. All apps (api, web, mobile) and shared capability packages live in one single Git repository.
+Before we look at the code, let's look at the big picture. Our code is organized as a **Monorepo** using Turborepo 2.10 + pnpm 10. The API, web client, and shared capability packages live in one Git repository.
 
 ```mermaid
 graph TD
     subgraph Frontend Apps
         Web[apps/web<br>TanStack Start + Router]
-        Mobile[apps/mobile<br>Expo + NativeWind]
     end
     subgraph Backend Apps
         A[apps/api<br>NestJS Fastify API]
@@ -39,18 +38,15 @@ graph TD
     Web -->|Imports Contracts + i18n| S
     Web -->|Uses UI primitives| UI
     Web -->|Uses Client + RPCLink| Client
-    Mobile -->|Uses Client + RPCLink| Client
     Web -.->|HTTP + Cookies + x-tenant-id| A
-    Mobile -.->|HTTP + SecureStore Bearer + x-tenant-id| A
 ```
 
-### Why a Monorepo with Web + Mobile Wired?
+### Why a Monorepo with Shared Contracts?
 
-The backend, web, and mobile share capability packages (`@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/api-client`, `@repo/ui`). If the backend changes a rule or contract, both frontends show a red compiler error instantly before the code is even run!
+The backend and web share capability packages (`@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/api-client`, `@repo/ui`). If the backend changes a rule or contract, the web compiler catches drift before the code is run.
 
 - Web is TanStack Start (Vite 8, TanStack Router file-based, streaming SSR) + TanStack Query + Zustand + react-i18next + Tailwind 4 + `@repo/ui` (Base UI + shadcn base-nova). Forms use `react-hook-form` + `zodResolver` + schemas from `@repo/contracts`.
-- Mobile is Expo SDK 53 + expo-router + NativeWind + Zustand (SecureStore) + react-i18next + TanStack Query.
-- Both use the same `getApiClient()` factory from `@repo/api-client` (oRPC `RPCLink` + `createORPCClient` + `createTanstackQueryUtils`) which automatically sends `accept-language`, `x-tenant-id`, `idempotency-key` and 401-auto-refreshes.
+- The web uses `getApiClient()` from `@repo/api-client` (oRPC `RPCLink` + `createORPCClient` + `createTanstackQueryUtils`) which automatically sends `accept-language`, `x-tenant-id`, `idempotency-key` and 401-auto-refreshes.
 
 ---
 
@@ -63,14 +59,14 @@ This is the most important layer in the project. It holds all the rules for our 
 ### What goes inside?
 
 - **Zod Schemas (`@repo/contracts`)**: Rules for what data should look like (e.g., `Email must be a string`). Also `VITE_API_URL` env validation for web.
-- **oRPC Contracts (`@repo/contracts`)**: The exact blueprints for our API endpoints (`oc.route().input().output()` — e.g., `POST /notes requires CreateNoteSchema`). The same `apiContract` is used by backend (`@orpc/nest`) and frontends (`RPCLink` + `createORPCClient`).
+- **oRPC Contracts (`@repo/contracts`)**: The exact blueprints for our API endpoints (`oc.route().input().output()` — e.g., `POST /notes requires CreateNoteSchema`). The same `apiContract` is used by the backend (`@orpc/nest`) and web client (`RPCLink` + `createORPCClient`).
 - **Permissions & Evaluator (`@repo/authorization`)**: Central action vocabulary (`notes:create`, `team:invite`) and the pure FGA engine (RBAC + ReBAC + ABAC).
-- **Locales (`@repo/i18n`)**: All the text shown to users (`en.json` containing `"api.user.notFound": "User not found"`). Used by backend `I18nService` and frontends `react-i18next` (web localStorage, mobile SecureStore).
-- **UI System (`@repo/ui`)**: Single Tailwind 4 entry `src/styles/globals.css` with design tokens, Base UI headless primitives, shadcn base-nova preset, lucide icons. Web does `import '@repo/ui/globals.css'` once; mobile mirrors tokens in `apps/mobile/tailwind.config.js`.
+- **Locales (`@repo/i18n`)**: All the text shown to users (`en.json` containing `"api.user.notFound": "User not found"`). Used by backend `I18nService` and the web `react-i18next` integration.
+- **UI System (`@repo/ui`)**: Single Tailwind 4 entry `src/styles/globals.css` with design tokens, Base UI headless primitives, shadcn base-nova preset, lucide icons. Web imports `@repo/ui/globals.css` once.
 
 ### Why do we need it?
 
-To prevent repeating ourselves. The backend uses the Zod schemas (via `ZodValidationPipe`) to validate incoming API data. Web/mobile use the same schemas via `zodResolver` for instant client-side validation + type-safe API calls via `@repo/api-client`. No duplicate forms, no drift.
+To prevent repeating ourselves. The backend uses the Zod schemas (via `ZodValidationPipe`) to validate incoming API data. The web uses the same schemas via `zodResolver` for instant client-side validation + type-safe API calls via `@repo/api-client`. No duplicate forms, no drift.
 
 ---
 
@@ -82,11 +78,11 @@ This means we divide our code into strict layers, like an onion.
 
 ### The Request Flow Map — Frontend to Backend
 
-Here is exactly how a request travels when a TanStack Start page or Expo screen creates a Note:
+Here is exactly how a request travels when a TanStack Start page creates a Note:
 
 ```mermaid
 sequenceDiagram
-    participant Web as TanStack Start / Expo
+    participant Web as TanStack Start
     participant C as Presentation Layer (Controller)
     participant A as Application Layer (Command)
     participant D as Domain Layer (Entity)
@@ -155,7 +151,7 @@ Now, let's explain each of those layers in simple English.
 
 ---
 
-## 3. The Frontends — Web + Mobile (Fully Wired)
+## 3. The Frontend — Web (Fully Wired)
 
 ### Web — TanStack Start
 
@@ -169,21 +165,12 @@ Our web app lives in `apps/web` and is a **TanStack Start** app (the most modern
 - **API:** `src/lib/api.ts` => `getApiClient()` wraps `createApiClient(VITE_API_URL, { getAccessToken, getLocale, getTenantId, onAuthRefreshed/onAuthFailure })`. Env validated in `src/lib/env.ts` (`VITE_API_URL` Zod).
 - **i18n:** `src/lib/i18n.tsx` with `resources` from `@repo/i18n` + `LanguageDetector` (localStorage). Every string via `const { t } = useTranslation()` and `t('auth.login')`.
 
-### Mobile — Expo
+### Why this frontend wiring is reliable
 
-Our mobile app lives in `apps/mobile` and is an **Expo SDK 53** app with `expo-router` + NativeWind.
-
-- **Config:** `app.json` (scheme `modular-monolith`), `metro.config.js` with `withNativeWind` + `watchFolders=[workspaceRoot]` for pnpm workspaces, `tailwind.config.js` (NativeWind preset) mirroring tokens, `global.css` (`@tailwind base/components/utilities`), `babel.config.js` (`babel-preset-expo` + `nativewind/babel` + `expo-router/babel`).
-- **Navigation:** `app/_layout.tsx` (Stack + QueryClient + `initI18n()`), `app/index.tsx` (landing), `app/auth.tsx`, `app/notes.tsx`, `app/(tabs)/_layout.tsx` (Tabs) + `index.tsx`/`settings.tsx`. Use `Link` + `router` from `expo-router`.
-- **API & State:** Same shape but stores persist via `expo-secure-store` adapter. `src/lib/env.ts` validates `EXPO_PUBLIC_API_URL` from `process.env` + `expo-constants`. `src/lib/api.ts` same `getApiClient` pattern.
-- **Styling:** NativeWind `className` on `View`/`Text`/`Pressable`/`FlatList`. Don't import `@repo/ui` (DOM-only); mirror tokens in `tailwind.config.js`.
-
-### Why this frontend wiring is perfect
-
-- **No duplication:** Zod schemas live once in `@repo/contracts`, consumed by api (`ZodValidationPipe`), web (`react-hook-form zodResolver`), mobile (same).
-- **No drift:** oRPC contract `apiContract` is shared. Changing a route is a compile error in all apps.
-- **One auth story:** httpOnly cookies on web (with Bearer fallback via Zustand) + SecureStore on mobile, both through the same `getApiClient` refresh + `x-tenant-id` + `idempotency-key` logic.
-- **One i18n story:** locales in `@repo/i18n` — web uses `localStorage`, mobile uses `SecureStore`, both use `react-i18next`.
+- **No duplication:** Zod schemas live once in `@repo/contracts`, consumed by api (`ZodValidationPipe`) and web (`react-hook-form zodResolver`).
+- **No drift:** oRPC contract `apiContract` is shared. Changing a route is a compile error in the API and web client.
+- **One auth story:** httpOnly cookies on web, with a short-lived Bearer fallback through the same `getApiClient` refresh + `x-tenant-id` + `idempotency-key` logic.
+- **One i18n story:** locales in `@repo/i18n`, consumed by the web through `react-i18next`.
 
 ---
 
@@ -234,10 +221,9 @@ If you are asked to build a new feature (like "Invoices"), use this simple check
 - [ ] **Application:** Did I create a specific `CreateInvoiceCommand` in `application/commands/` that returns a `Result` and uses `OutboxService` if the event is critical?
 - [ ] **Presentation:** Did I create an `InvoicesController` that validates via `ZodValidationPipe` (schemas from `@repo/contracts`), calls the command, maps the `Result` via `handleResult` + `I18nService`, and is protected by `@RequirePermission` + `@Idempotent`?
 - [ ] **AuthZ:** Did I add the action to `packages/authorization/src/permissions.ts` and policies in `application/invoices.policies.ts` (`OnModuleInit` register)?
-- [ ] **Text:** Did I put all the English text inside `packages/i18n/src/locales/en.json` (and `es.json`/`fr.json`)? Then use `I18nService.t()` (api) and `useTranslation().t()` (web/mobile).
+- [ ] **Text:** Did I put all the English text inside `packages/i18n/src/locales/en.json` (and `es.json`/`fr.json`)? Then use `I18nService.t()` (api) and `useTranslation().t()` (web).
 - [ ] **API Client:** Did I export routes from `packages/api-client` (`createInvoicesClient`)? Tip: `pnpm generate:feature invoices invoice` scaffolds the slice.
 - [ ] **Web:** Did I add `apps/web/src/routes/invoices.tsx` + `apps/web/src/features/invoices/invoices.queries.ts` (queryOptions) + form with `zodResolver` + `@repo/ui` + `getApiClient()` + invalidate?
-- [ ] **Mobile:** Did I add `apps/mobile/app/invoices.tsx` or `app/(tabs)/invoices.tsx` with NativeWind + `getApiClient()`?
 - [ ] **UI:** If a new primitive was needed, did I add via `pnpm dlx shadcn@latest add <component> -c apps/web`?
 
 If you checked all those boxes, you have written **perfect, clean, enterprise-grade code**. Welcome to the team!

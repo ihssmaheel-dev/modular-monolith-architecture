@@ -30,6 +30,15 @@ export class DeleteUserCommand {
 
     await this.cacheService.invalidateGlobal(`user:${id}`);
     this.eventEmitter.emit("user.deleted", new UserDeletedEvent(id));
+    this.eventEmitter.emit("database.mutated", {
+      collectionName: "users",
+      documentId: id,
+      action: "DELETE",
+      actorId: id,
+      tenantId: undefined,
+      before: { id, email: existing.value.email },
+      after: null,
+    });
 
     return ok(undefined);
   }

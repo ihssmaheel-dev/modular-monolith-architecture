@@ -27,7 +27,12 @@ describe("jwt.utils", () => {
       expect(jwt.sign).toHaveBeenCalledWith(
         { sub: userId, email, name: "Test User", role },
         env.JWT_SECRET,
-        { algorithm: "HS256", expiresIn: "15m" },
+        {
+          algorithm: "HS256",
+          expiresIn: "15m",
+          issuer: env.JWT_ISSUER,
+          audience: env.JWT_AUDIENCE,
+        },
       );
     });
   });
@@ -41,10 +46,22 @@ describe("jwt.utils", () => {
       const token = signRefreshToken(userId, version);
 
       expect(token).toBe("mock-refresh-token");
+      const [payload] = vi.mocked(jwt.sign).mock.calls[0] ?? [];
+      expect(payload).toEqual({
+        sub: userId,
+        type: "refresh",
+        version,
+        jti: expect.any(String),
+      });
       expect(jwt.sign).toHaveBeenCalledWith(
-        { sub: userId, type: "refresh", version },
+        expect.objectContaining({ sub: userId, type: "refresh", version }),
         env.JWT_REFRESH_SECRET,
-        { algorithm: "HS256", expiresIn: "7d" },
+        {
+          algorithm: "HS256",
+          expiresIn: "7d",
+          issuer: env.JWT_ISSUER,
+          audience: env.JWT_AUDIENCE,
+        },
       );
     });
   });

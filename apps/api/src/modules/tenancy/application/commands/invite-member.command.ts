@@ -17,6 +17,7 @@ import { InvitationCreatedEvent } from "../../domain/events/invitation-created.e
 import { InvitationsRepository } from "../../infrastructure/invitations.repository";
 import { MembershipsRepository } from "../../infrastructure/memberships.repository";
 import { OrganizationsRepository } from "../../infrastructure/organizations.repository";
+import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 @Injectable()
 export class InviteMemberCommand {
@@ -26,6 +27,7 @@ export class InviteMemberCommand {
     private readonly organizations: OrganizationsRepository,
     private readonly context: TenantContextService,
     private readonly events: EventEmitter2,
+    private readonly outbox?: OutboxService,
   ) {}
 
   async execute(
@@ -66,17 +68,16 @@ export class InviteMemberCommand {
       expiresAt: new Date(Date.now() + INVITATION_TTL_DAYS * MILLISECONDS_PER_DAY),
     });
     if (result.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" });
-    this.events.emit(
-      "tenancy.invitation.created",
-      new InvitationCreatedEvent(
+    const event = new InvitationCreatedEvent(
         tenant.tenantId,
         organization.value.data.name,
         email,
         input.role,
         token,
         locale,
-      ),
-    );
+      );
+    if (this.outbox) await this.outbox.dispatch("tenancy.invitation.created", event);
+    else this.events.emit("tenancy.invitation.created", event);
     return ok(result.value);
   }
 }

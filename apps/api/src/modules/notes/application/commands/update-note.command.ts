@@ -9,6 +9,7 @@ import { NoteUpdatedEvent } from "../../domain/events/note.events";
 import { NotesRepository } from "../../infrastructure/notes.repository";
 import { GetNoteByIdQuery } from "../queries/get-note-by-id.query";
 import type { AuthenticatedUser } from "@repo/contracts";
+import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 @Injectable()
 export class UpdateNoteCommand {
@@ -16,6 +17,7 @@ export class UpdateNoteCommand {
     private readonly repository: NotesRepository,
     private readonly getNoteById: GetNoteByIdQuery,
     private readonly eventEmitter: EventEmitter2,
+    private readonly outbox?: OutboxService,
   ) {}
 
   async execute(
@@ -35,16 +37,24 @@ export class UpdateNoteCommand {
     if (saved.isErr()) return err({ type: "NOTE_NOT_FOUND", noteId: id });
     if (!saved.value) return err({ type: "NOTE_NOT_FOUND", noteId: id });
 
-    this.eventEmitter.emit(
-      "note.updated",
-      new NoteUpdatedEvent(
+    const event = new NoteUpdatedEvent(
         saved.value.id,
         saved.value.createdBy ?? actor.sub,
         data.title,
         data.content,
         saved.value.tenantId,
-      ),
-    );
+      );
+    if (this.outbox) await this.outbox.dispatch("note.updated", event);
+    else this.eventEmitter.emit("note.updated", event);
+    this.eventEmitter.emit("database.mutated", {
+      collectionName: "notes",
+      documentId: saved.value.id,
+      action: "UPDATE",
+      actorId: actor.sub,
+      tenantId: saved.value.tenantId,
+      before: { id: existing.value.id },
+      after: { id: saved.value.id, title: saved.value.title },
+    });
 
     return ok(saved.value);
   }

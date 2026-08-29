@@ -12,7 +12,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@repo/ui/components/ui/alert-dialog"
-import { Button } from "@repo/ui/components/ui/button"
 
 export type ConfirmDialogProps = {
   title: string

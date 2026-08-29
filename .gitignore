@@ -13,9 +13,6 @@ build/
 apps/web/.tanstack/
 apps/web/.output/
 apps/web/dist/
-apps/mobile/dist/
-apps/mobile/.expo/
-.expo/
 web-build/
 
 # Environment

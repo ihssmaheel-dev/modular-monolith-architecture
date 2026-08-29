@@ -8,6 +8,10 @@ CREATE POLICY tenant_isolation_notes ON notes
   USING (
     NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
     tenant_id = current_setting('app.current_tenant', true)
+  )
+  WITH CHECK (
+    NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
+    tenant_id = current_setting('app.current_tenant', true)
   );
 
 -- 2. Files Table RLS
@@ -16,6 +20,10 @@ DROP POLICY IF EXISTS tenant_isolation_files ON files;
 CREATE POLICY tenant_isolation_files ON files
   FOR ALL
   USING (
+    NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
+    tenant_id = current_setting('app.current_tenant', true)
+  )
+  WITH CHECK (
     NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
     tenant_id = current_setting('app.current_tenant', true)
   );
@@ -28,6 +36,10 @@ CREATE POLICY tenant_isolation_invitations ON invitations
   USING (
     NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
     tenant_id = current_setting('app.current_tenant', true)
+  )
+  WITH CHECK (
+    NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
+    tenant_id = current_setting('app.current_tenant', true)
   );
 
 -- 4. Memberships Table RLS
@@ -36,6 +48,10 @@ DROP POLICY IF EXISTS tenant_isolation_memberships ON memberships;
 CREATE POLICY tenant_isolation_memberships ON memberships
   FOR ALL
   USING (
+    NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
+    tenant_id = current_setting('app.current_tenant', true)
+  )
+  WITH CHECK (
     NULLIF(current_setting('app.current_tenant', true), '') IS NULL OR
     tenant_id = current_setting('app.current_tenant', true)
   );

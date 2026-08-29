@@ -8,7 +8,7 @@ import type {
 import type { FetchFn } from "../types";
 
 export function createNotesClient(fetchFn: FetchFn) {
-  return {
+  const client = {
     getNotes: (req: { query?: PaginationQuery } = {}) => {
       const sp = new URLSearchParams();
       if (req.query?.page) sp.set("page", String(req.query.page));
@@ -27,5 +27,16 @@ export function createNotesClient(fetchFn: FetchFn) {
       }),
     deleteNote: (req: { params: { id: string } }) =>
       fetchFn<void>(`/notes/${encodeURIComponent(req.params.id)}`, { method: "DELETE" }),
+  };
+
+  // Keep ergonomic aliases while preserving the explicit HTTP method names.
+  return {
+    ...client,
+    list: (input: { page?: number; limit?: number } = {}) =>
+      client.getNotes({ query: { page: input.page ?? 1, limit: input.limit ?? 20 } }),
+    get: (id: string) => client.getNoteById({ params: { id } }),
+    create: client.createNote,
+    update: (id: string, body: UpdateNoteDto) => client.updateNote({ params: { id }, body }),
+    remove: (id: string) => client.deleteNote({ params: { id } }),
   };
 }

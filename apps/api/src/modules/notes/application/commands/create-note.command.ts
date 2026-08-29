@@ -7,12 +7,14 @@ import { Note } from "../../domain/entities/note.entity";
 import { NotesRepository } from "../../infrastructure/notes.repository";
 import { NoteCreatedEvent } from "../../domain/events/note.events";
 import type { AuthenticatedUser } from "@repo/contracts";
+import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 
 @Injectable()
 export class CreateNoteCommand {
   constructor(
     private readonly repository: NotesRepository,
     private readonly eventEmitter: EventEmitter2,
+    private readonly outbox?: OutboxService,
   ) {}
 
   async execute(
@@ -26,16 +28,24 @@ export class CreateNoteCommand {
     });
 
     if (result.isOk()) {
-      this.eventEmitter.emit(
-        "note.created",
-        new NoteCreatedEvent(
+      const event = new NoteCreatedEvent(
           result.value.id,
           actor.sub,
           result.value.title,
           result.value.content,
           result.value.tenantId,
-        ),
-      );
+        );
+      if (this.outbox) await this.outbox.dispatch("note.created", event);
+      else this.eventEmitter.emit("note.created", event);
+      this.eventEmitter.emit("database.mutated", {
+        collectionName: "notes",
+        documentId: result.value.id,
+        action: "CREATE",
+        actorId: actor.sub,
+        tenantId: result.value.tenantId,
+        before: null,
+        after: { id: result.value.id, title: result.value.title },
+      });
     }
 
     return result;

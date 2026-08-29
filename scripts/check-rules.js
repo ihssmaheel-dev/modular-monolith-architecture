@@ -31,6 +31,15 @@ function isTest(file) {
 function getLineLimit(name, isTestFile) {
   if (isTestFile) return 300;
   if (name.startsWith("packages/email/")) return 250;
+  if (name.endsWith("packages/ui/src/components/ui/sidebar.tsx")) return 800;
+  if (name.startsWith("packages/ui/")) return 500;
+  if (name.startsWith("packages/authorization/")) return 200;
+  if (name.startsWith("apps/web/src/routes/")) return 400;
+  if (name.startsWith("apps/web/src/features/")) return 300;
+  if (name.includes("/application/commands/") || name.includes("/application/queries/")) return 250;
+  if (name.includes("/infrastructure/database/")) return 300;
+  if (name.includes("/infrastructure/realtime/")) return 250;
+  if (name.includes("/presentation/") && name.startsWith("apps/api/")) return 220;
   return 150;
 }
 

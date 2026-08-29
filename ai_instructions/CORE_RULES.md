@@ -22,10 +22,9 @@ Supreme laws of this codebase. These are never negotiable.
 | Result Type | neverthrow 8 |
 | Client SDK | @repo/api-client (oRPC client + RPCLink + TanStack Query) |
 | Frontend Web | TanStack Start 1 (Vite 8 + TanStack Router 1 file-based + TanStack Query 5 + Zustand 5 + react-i18next) |
-| Frontend Mobile | Expo SDK 53 + expo-router 5 + NativeWind 4 + Zustand 5 + react-i18next + TanStack Query 5 |
 | UI System | @repo/ui — Tailwind CSS 4 + tw-animate-css + shadcn base-nova + Base UI React 1 + lucide-react + CVA |
-| i18n Sources | @repo/i18n (en/es/fr) — backend I18nService + react-i18next (web localStorage, mobile SecureStore) |
-| Testing | Vitest 4 (api) + Playwright (web) + Maestro (mobile) |
+| i18n Sources | @repo/i18n (en/es/fr) — backend I18nService + web react-i18next |
+| Testing | Vitest 4 (api) + Playwright (web) |
 
 **No paid services. No proprietary dependencies. No exceptions.**
 
@@ -65,7 +64,7 @@ Supreme laws of this codebase. These are never negotiable.
 
 ## Single Source of Truth
 
-- **`@repo/contracts`**: Zod 4 schemas, DTO types, oRPC contracts, and error constants. Env schemas for api + web (`VITE_*`) + mobile (`EXPO_PUBLIC_*`).
+- **`@repo/contracts`**: Zod 4 schemas, DTO types, oRPC contracts, and error constants. Env schemas for the API and web (`VITE_*`).
 - **`@repo/authorization`**: FGA types, action permissions vocabulary, and pure evaluator.
 - **`@repo/i18n`**: Multi-language locale dictionaries (JSON) and locale config. Consumed via backend `I18nService` and frontend `react-i18next`.
 - **`@repo/api-client`**: Type-safe API client factory using oRPC + `RPCLink` + `createORPCClient` + `createTanstackQueryUtils`. Provides `authenticatedFetch` with auto-refresh, tenant + locale headers, idempotency-key.

@@ -33,7 +33,10 @@ export class RegisterCommand {
       },
       locale,
     );
-    if (result.isErr()) return err({ type: "EMAIL_TAKEN" });
+    if (result.isErr()) {
+      if (result.error.type === "EMAIL_TAKEN") return err({ type: "EMAIL_TAKEN" });
+      return err({ type: "TRANSACTION_FAILED" });
+    }
 
     const user = result.value;
     const accessToken = signAccessToken(user.id, user.email, user.name, user.role);

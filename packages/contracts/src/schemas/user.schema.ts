@@ -19,6 +19,7 @@ export const UserResponseSchema = z.object({
   id: z.string(),
   email: z.string(),
   name: z.string(),
+  role: z.enum(["admin", "user"]),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
@@ -28,6 +29,7 @@ export const UserListResponseSchema = z.object({
   total: z.number(),
   page: z.number(),
   limit: z.number(),
+  totalPages: z.number().int().positive(),
 });
 
 export type CreateUserInput = z.infer<typeof CreateUserSchema>;

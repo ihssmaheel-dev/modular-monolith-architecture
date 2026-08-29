@@ -28,6 +28,14 @@ import {
   type InvitationResponse,
   type InvitationListResponse,
 } from "@repo/contracts";
+import {
+  AcceptInvitationSchema,
+  InviteMemberSchema,
+  UpdateMemberSchema,
+  PaginationQuerySchema,
+} from "@repo/contracts";
+import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
+import { z } from "zod";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
 import { AcceptInvitationCommand } from "../application/commands/accept-invitation.command";
@@ -54,7 +62,7 @@ export class MembershipsController {
   @Get("members")
   @RequirePermission("team:read")
   async listMemberPage(
-    @Query() query: PaginationQuery,
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
     @Req() request: FastifyRequest,
   ): Promise<MemberListResponse> {
     const result = await this.listMembers.execute(
@@ -69,8 +77,8 @@ export class MembershipsController {
   @Idempotent()
   @RequirePermission("team:manage")
   async update(
-    @Param("userId") userId: string,
-    @Body() body: UpdateMemberInput,
+    @Param("userId", new ZodValidationPipe(z.string().min(1))) userId: string,
+    @Body(new ZodValidationPipe(UpdateMemberSchema)) body: UpdateMemberInput,
     @Req() request: FastifyRequest,
   ): Promise<MemberResponse> {
     const result = await this.updateMember.execute(userId, body.role);
@@ -81,7 +89,10 @@ export class MembershipsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
   @RequirePermission("team:remove")
-  async remove(@Param("userId") userId: string, @Req() request: FastifyRequest): Promise<void> {
+  async remove(
+    @Param("userId", new ZodValidationPipe(z.string().min(1))) userId: string,
+    @Req() request: FastifyRequest,
+  ): Promise<void> {
     this.handle(await this.removeMember.execute(userId), MEMBERSHIP_ERRORS, request);
   }
 
@@ -90,7 +101,7 @@ export class MembershipsController {
   @Idempotent()
   @RequirePermission("team:invite")
   async invite(
-    @Body() body: InviteMemberInput,
+    @Body(new ZodValidationPipe(InviteMemberSchema)) body: InviteMemberInput,
     @Req() request: FastifyRequest,
   ): Promise<InvitationResponse> {
     const actor = requireAuthenticatedUser(request);
@@ -102,7 +113,7 @@ export class MembershipsController {
   @Get("invitations")
   @RequirePermission("team:read")
   async listInvitationPage(
-    @Query() query: PaginationQuery,
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
     @Req() request: FastifyRequest,
   ): Promise<InvitationListResponse> {
     const value = this.handle(
@@ -118,7 +129,7 @@ export class MembershipsController {
   @TenantAgnostic()
   @Idempotent()
   async accept(
-    @Body() body: AcceptInvitationInput,
+    @Body(new ZodValidationPipe(AcceptInvitationSchema)) body: AcceptInvitationInput,
     @Req() request: FastifyRequest,
   ): Promise<MemberResponse> {
     const actor = requireAuthenticatedUser(request);

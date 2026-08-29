@@ -7,7 +7,6 @@ const { generateContracts } = require("./generators/contracts.generator");
 const { generateClient } = require("./generators/client.generator");
 const { generatePresentation } = require("./generators/presentation.generator");
 const { generateWeb } = require("./generators/web.generator");
-const { generateMobile } = require("./generators/mobile.generator");
 
 const rawModule = process.argv[2];
 const rawFeature = process.argv[3] || rawModule;
@@ -71,9 +70,6 @@ generatePresentation(context);
 console.log("\n7. Generating Web Layer (TanStack Start route + queries + mutations)...");
 generateWeb(context);
 
-console.log("\n8. Generating Mobile Layer (Expo screen)...");
-generateMobile(context);
-
 console.log("\n=======================================================");
 console.log(`  Successfully generated vertical slice for '${feature}'!`);
 console.log("=======================================================");
@@ -83,4 +79,3 @@ console.log(` 2. Run 'pnpm db:generate && pnpm db:migrate' to create table migra
 console.log(` 3. Run 'pnpm test:unit' to run the new Vitest unit test suite.`);
 console.log(" 4. Run 'pnpm build' to verify end-to-end type safety.");
 console.log(` 5. Web route: apps/web/src/routes/${featurePlural}.tsx + features/${featurePlural}/*`);
-console.log(` 6. Mobile screen: apps/mobile/app/${featurePlural}.tsx\n`);

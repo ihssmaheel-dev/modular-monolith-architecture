@@ -11,7 +11,9 @@ import {
   Req,
 } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
+import { z } from "zod";
 import { Idempotent, RequirePermission, requireAuthenticatedUser } from "../../../common";
+import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import {
   type RequestUploadInput,
   type ConfirmUploadInput,
@@ -19,6 +21,10 @@ import {
   type FileMetadataResponse,
   type DownloadUrlResponse,
   type FileListResponse,
+  RequestUploadSchema,
+  ConfirmUploadSchema,
+  FileIdParamSchema,
+  PaginationQuerySchema,
 } from "@repo/contracts";
 import { RequestUploadCommand } from "../application/commands/request-upload.command";
 import { ConfirmUploadCommand } from "../application/commands/confirm-upload.command";
@@ -54,7 +60,7 @@ export class FilesController {
   @Idempotent()
   @RequirePermission("files:upload")
   async requestUpload(
-    @Body() body: RequestUploadInput,
+    @Body(new ZodValidationPipe(RequestUploadSchema)) body: RequestUploadInput,
     @Req() req: FastifyRequest,
   ): Promise<PresignedUrlResponse> {
     const lang = req?.headers["accept-language"];
@@ -68,7 +74,7 @@ export class FilesController {
   @Idempotent()
   @RequirePermission("files:upload")
   async confirmUpload(
-    @Body() body: ConfirmUploadInput,
+    @Body(new ZodValidationPipe(ConfirmUploadSchema)) body: ConfirmUploadInput,
     @Req() req: FastifyRequest,
   ): Promise<FileMetadataResponse> {
     const lang = req?.headers["accept-language"];
@@ -81,7 +87,7 @@ export class FilesController {
   @Get(":id/download-url")
   @RequirePermission("files:read")
   async getDownloadUrl(
-    @Param("id") id: string,
+    @Param("id", new ZodValidationPipe(FileIdParamSchema.shape.id)) id: string,
     @Req() req: FastifyRequest,
   ): Promise<DownloadUrlResponse> {
     const lang = req?.headers["accept-language"];
@@ -93,7 +99,7 @@ export class FilesController {
   @Get(":id")
   @RequirePermission("files:read")
   async getById(
-    @Param("id") id: string,
+    @Param("id", new ZodValidationPipe(FileIdParamSchema.shape.id)) id: string,
     @Req() req: FastifyRequest,
   ): Promise<FileMetadataResponse> {
     const lang = req?.headers["accept-language"];
@@ -106,13 +112,11 @@ export class FilesController {
   @Get()
   @RequirePermission("files:read")
   async listByParent(
-    @Query()
-    query: {
-      parentType: "note" | "user" | "general";
-      parentId?: string;
-      page?: number;
-      limit?: number;
-    },
+    @Query(new ZodValidationPipe(PaginationQuerySchema.extend({
+      parentType: z.enum(["note", "user", "general"]),
+      parentId: z.string().min(1).optional(),
+    })))
+    query: { parentType: "note" | "user" | "general"; parentId?: string; page: number; limit: number },
     @Req() req: FastifyRequest,
   ): Promise<FileListResponse> {
     const lang = req?.headers["accept-language"];
@@ -121,8 +125,8 @@ export class FilesController {
       query.parentType,
       actor,
       query.parentId,
-      Number(query.page ?? 1),
-      Number(query.limit ?? 20),
+      query.page,
+      query.limit,
     );
     const data = handleResult(result, {}, this.i18n, lang);
     return {
@@ -138,7 +142,10 @@ export class FilesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
   @RequirePermission("files:delete")
-  async delete(@Param("id") id: string, @Req() req: FastifyRequest): Promise<void> {
+  async delete(
+    @Param("id", new ZodValidationPipe(FileIdParamSchema.shape.id)) id: string,
+    @Req() req: FastifyRequest,
+  ): Promise<void> {
     const lang = req?.headers["accept-language"];
     const actor = requireAuthenticatedUser(req);
     const result = await this.deleteFileCmd.execute(id, actor);

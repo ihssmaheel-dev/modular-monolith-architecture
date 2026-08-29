@@ -3,6 +3,7 @@ import type { ErrorMap } from "../../../common/utils/presentation.utils";
 
 export const EMAIL_TAKEN_ERRORS: ErrorMap = {
   EMAIL_TAKEN: { status: HttpStatus.CONFLICT, i18nKey: "auth.emailTaken" },
+  TRANSACTION_FAILED: { status: HttpStatus.INTERNAL_SERVER_ERROR, i18nKey: "api.error.transactionFailed" },
 };
 
 export const LOGIN_ERRORS: ErrorMap = {

@@ -1,6 +1,6 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from "@nestjs/common";
 import { Observable } from "rxjs";
-import { tap } from "rxjs/operators";
+import { finalize } from "rxjs/operators";
 import { ClsService } from "nestjs-cls";
 import { randomUUID } from "crypto";
 
@@ -22,10 +22,6 @@ export class RequestIdInterceptor implements NestInterceptor {
       response.setHeader("x-request-id", requestId);
     }
 
-    return next.handle().pipe(
-      tap(() => {
-        this.cls.set("requestId", undefined);
-      }),
-    );
+    return next.handle().pipe(finalize(() => this.cls.set("requestId", undefined)));
   }
 }

@@ -63,7 +63,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9.0.0
+          version: 10.33.4
           run_install: false
 
       - name: Get pnpm store directory
@@ -90,6 +90,15 @@ jobs:
 
       - name: Unit Tests
         run: pnpm test:unit
+
+      - name: Typecheck all workspaces
+        run: pnpm typecheck
+
+      - name: Contract and migration checks
+        run: pnpm --filter @repo/contracts build
+
+      - name: Dependency audit
+        run: pnpm audit --audit-level high
 
       - name: Build
         run: pnpm run build

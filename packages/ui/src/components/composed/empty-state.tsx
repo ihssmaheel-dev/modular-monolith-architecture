@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { cn } from "@repo/ui/lib/utils"
-import { Button } from "@repo/ui/components/ui/button"
 
 export function EmptyState({
   icon,

@@ -17,8 +17,7 @@ Before creating any file, answer these questions in order:
 7. **Is it backend cross-cutting infrastructure?** → `apps/api/src/infrastructure/`
 8. **Is it a backend domain module?** → `apps/api/src/modules/[domain]/`
 9. **Is it frontend web — route, feature, store, or lib?** → `apps/web/src/`
-10. **Is it frontend mobile — screen, navigation, store, or lib?** → `apps/mobile/app/` or `apps/mobile/src/`
-11. **Is it config or docs?** → Root level or `docs/`
+10. **Is it config or docs?** → Root level or `docs/`
 
 ---
 
@@ -72,7 +71,6 @@ Focused capability packages: `@repo/contracts`, `@repo/authorization`, `@repo/i1
 ### Rules
 - UI primitives are unstyled Base UI (`@base-ui/react`) wrapped with CVA + Tailwind. shadcn CLI adds via `pnpm dlx shadcn@latest add <component> -c apps/web`.
 - `globals.css` is consumed by web via `import '@repo/ui/globals.css'` in `apps/web/src/routes/__root.tsx` (also imported once per app).
-- Mobile does NOT import `packages/ui` directly (React Native). It uses `nativewind` + shared tokens mirrored in `apps/mobile/tailwind.config.js`.
 
 ---
 
@@ -322,43 +320,6 @@ apps/web/
 - i18n: `useTranslation()` via `react-i18next`; keys from `@repo/i18n` (`common.*`, `auth.*`, `dashboard.*`, `notes.*`). See `I18N_RULES.md`.
 - Styling: Use `@repo/ui` components (`Button`, `Card`, `Input`, `Tabs`, `Badge`, etc) + `cn()` + Tailwind 4. No custom CSS libraries beyond Tailwind.
 
-### 7. `apps/mobile` — Expo + NativeWind
-
-```
-apps/mobile/
-├── app.json                    ← Expo config (name, slug, scheme modular-monolith, plugins: expo-router, expo-secure-store)
-├── metro.config.js             ← withNativeWind + watchFolders = workspaceRoot + nodeModulesPaths
-├── tailwind.config.js          ← NativeWind preset v4, content: app/** + src/**, colors mirrored from globals.css
-├── global.css                  ← @tailwind base/components/utilities (single entry)
-├── babel.config.js             ← babel-preset-expo + nativewind/babel + expo-router/babel + reanimated
-├── tsconfig.json               ← extends expo/tsconfig.base, paths @/* -> src/*
-├── app/
-│   ├── _layout.tsx             ← Stack + QueryClientProvider + I18nProvider (initI18n)
-│   ├── index.tsx               ← Landing (NativeWind + expo-router Link)
-│   ├── auth.tsx                ← Auth + SecureStore backed Zustand
-│   ├── notes.tsx               ← Notes slice (FlatList + refreshControl)
-│   └── (tabs)/
-│       ├── _layout.tsx         ← Tabs layout
-│       ├── index.tsx           ← Dashboard tab
-│       └── settings.tsx        ← Settings + locale switch + logout
-└── src/
-    ├── lib/
-    │   ├── env.ts              ← Zod for EXPO_PUBLIC_API_URL (expo-constants + process.env)
-    │   ├── api.ts              ← createApiClient(EXPO_PUBLIC_API_URL, { getAccessToken, getLocale, getTenantId })
-    │   └── i18n.ts             ← initI18n with @repo/i18n resources + SecureStore locale
-    └── stores/
-        ├── auth.store.ts       ← zustand + persist + expo-secure-store { accessToken, refreshToken, user }
-        ├── locale.store.ts     ← locale persist SecureStore
-        └── tenant.store.ts     ← tenantId persist SecureStore
-```
-
-### Rules
-- Entry is `expo-router/entry`. Routes are file-based via `app/` (Link, Stack, Tabs, router).
-- Styling is NativeWind 4 (`className` via nativewind). Do not import `@repo/ui` components (DOM-only). Mirror design tokens from `packages/ui/src/styles/globals.css` into `tailwind.config.js`.
-- Auth tokens in `expo-secure-store` via Zustand persist (createJSONStorage -> SecureStore adapter).
-- Same `getApiClient()` pattern as web, but env is `EXPO_PUBLIC_API_URL`.
-- i18n shares same `locales/*.json` via `@repo/i18n`; mobile uses SecureStore persistence, web uses localStorage.
-
 ## Docs
 
 ```
@@ -367,10 +328,10 @@ docs/
 ├── ARCHITECTURE_DEEP_DIVE.md   ← Plain-English guide
 ├── DATABASE.md                 ← Database guide
 ├── DEVELOPMENT.md              ← Dev setup guide
-├── ENVIRONMENT.md              ← Environment variables (api + web + mobile)
+├── ENVIRONMENT.md              ← Environment variables (api + web)
 ├── NEW_MODULE.md               ← Module creation guide
 ├── TENANCY.md                  ← Multi-tenancy architecture
-├── FRONTEND.md                 ← Web (TanStack Start) + Mobile (Expo) + UI system guide
+├── FRONTEND.md                 ← Web (TanStack Start) + UI system guide
 └── TENANCY.md                  ← Multi-tenancy architecture
 ```
 
@@ -453,10 +414,6 @@ docs/
 | Web store | `apps/web/src/stores/[name].store.ts` (zustand + persist localStorage) |
 | Web lib | `apps/web/src/lib/[name].ts` (api.ts, i18n.tsx, query-client.tsx, env.ts) |
 | Web component | `apps/web/src/components/[name].tsx` (theme-provider, etc) |
-| Mobile screen | `apps/mobile/app/[name].tsx` (+ (tabs)/ for Tabs) |
-| Mobile lib | `apps/mobile/src/lib/[name].ts` (api.ts, i18n.ts, env.ts) |
-| Mobile store | `apps/mobile/src/stores/[name].store.ts` (zustand + SecureStore) |
-| Mobile component | `apps/mobile/src/components/[name].tsx` (native) |
 | DB migration | `migrations/pg/` |
 | Docker config | `docker/` |
 | Documentation | `docs/` |

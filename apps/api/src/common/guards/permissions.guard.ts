@@ -3,10 +3,14 @@ import { Reflector } from "@nestjs/core";
 import { PERMISSIONS_KEY, type PermissionRequirement } from "../decorators/permissions.decorator";
 import { type TenantContext } from "@repo/contracts";
 import { hasPermission, resolveUserPermissions, type Permission } from "@repo/authorization";
+import { AuthorizationService } from "../../infrastructure/authorization";
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private readonly authorization?: AuthorizationService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const raw = this.reflector.getAllAndOverride<PermissionRequirement | Permission[]>(
@@ -31,9 +35,30 @@ export class PermissionsGuard implements CanActivate {
     }
 
     const tenant = request.tenant as TenantContext | undefined;
-    const userPermissions = resolveUserPermissions(user.role, tenant?.role);
-
-    const allowed = hasPermission(userPermissions, requirement.permissions, requirement.mode);
+    if (!this.authorization) {
+      const permissions = resolveUserPermissions(user.role, tenant?.role);
+      if (!hasPermission(permissions, requirement.permissions, requirement.mode)) {
+        throw new ForbiddenException();
+      }
+      return true;
+    }
+    const authorization = this.authorization;
+    const principal = {
+      id: user.sub,
+      email: user.email,
+      role: user.role,
+      tenantId: tenant?.tenantId,
+      tenantRole: tenant?.role,
+    };
+    const allowed = requirement.permissions
+      ? requirement.mode === "any"
+        ? requirement.permissions.some((action) =>
+            authorization.can(principal, action, undefined, "request"),
+          )
+        : requirement.permissions.every((action) =>
+            authorization.can(principal, action, undefined, "request"),
+          )
+      : false;
 
     if (!allowed) {
       throw new ForbiddenException();

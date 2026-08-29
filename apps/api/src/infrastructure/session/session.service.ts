@@ -51,6 +51,14 @@ export class SessionService {
     return session;
   }
 
+  async consumeRefreshToken(jti: string, userId: string, ttlSeconds: number): Promise<boolean> {
+    const client = this.redis.getClient();
+    if (!client) return false;
+    const key = `auth:refresh:used:${userId}:${jti}`;
+    const stored = await client.set(key, "1", "EX", ttlSeconds, "NX");
+    return stored === "OK";
+  }
+
   async getById(sessionId: string): Promise<SessionData | null> {
     const client = this.redis.getClient();
     if (!client) return null;

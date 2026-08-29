@@ -11,7 +11,7 @@ Test contract for the codebase. Quality without ceremony.
 | `domain/` | Unit | Vitest | Entities, value objects, business rules. Pure logic. |
 | `application/` | Unit | Vitest | Use cases, service logic. Mock repository. |
 | `infrastructure/` | Integration | Vitest + real Postgres/Redis (testcontainers or local docker) | Repositories, adapters. Real Postgres/Redis. |
-| `presentation/` + full flows | E2E | Supertest (API), Playwright (web), Maestro (mobile) | API endpoints, user journeys. |
+| `presentation/` + full flows | E2E | Supertest (API), Playwright (web) | API endpoints, user journeys. |
 
 ---
 
@@ -34,7 +34,6 @@ Test contract for the codebase. Quality without ceremony.
 - Test complete user journeys through the API.
 - Use Supertest for API tests.
 - Use Playwright for web browser tests.
-- Use Maestro for mobile tests.
 - Cover critical paths only: registration, login, core CRUD, payments.
 
 ---

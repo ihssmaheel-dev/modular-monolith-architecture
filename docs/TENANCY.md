@@ -18,8 +18,8 @@ organization, membership, and invitation API.
 
 ## Developer workflow
 
-The shared API client automatically sends the selected organization as `x-tenant-id`. Web and
-mobile persist the selection through their tenant stores. The first organization can be created
+The shared API client automatically sends the selected organization as `x-tenant-id`. The web
+client persists the selection through its tenant store. The first organization can be created
 from the built-in switcher or with `POST /api/tenancy/organizations`.
 
 Tenant-owned frontend caches must include the active tenant ID in their query key, or reset when

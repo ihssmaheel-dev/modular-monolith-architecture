@@ -44,7 +44,8 @@ export class FilesRepository extends BaseRepository<FileEntity, FileRow> {
     return this.updateOne({ key, status: "pending" }, { status: "uploading" });
   }
 
-  async findPendingFilesBefore(cutoff: Date): Promise<FileEntity[]> {
+  async findPendingFilesBefore(cutoff: Date, systemScope = false): Promise<FileEntity[]> {
+    if (!systemScope) return [];
     const db = this.getDb();
     const rows = await (
       db as unknown as {

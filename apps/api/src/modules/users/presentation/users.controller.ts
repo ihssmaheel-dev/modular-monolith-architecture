@@ -57,8 +57,8 @@ export class UsersController {
     const lang = req?.headers["accept-language"];
     const result = await this.getUsersQuery.execute(page, limit);
     const val = handleResult(result, {}, this.i18n, lang);
-    const { users, total, page: p, limit: l } = val;
-    return { users: users.map(toUserResponse), total, page: p, limit: l };
+    const { users, total, page: p, limit: l, totalPages } = val;
+    return { users: users.map(toUserResponse), total, page: p, limit: l, totalPages };
   }
 
   @Get(":id")

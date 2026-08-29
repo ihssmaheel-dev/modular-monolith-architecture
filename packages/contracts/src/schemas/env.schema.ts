@@ -28,6 +28,8 @@ export const envSchema = z
     METRICS_TOKEN: z.string().min(32).optional(),
     JWT_EXPIRES_IN: z.string().default("15m"),
     JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
+    JWT_ISSUER: z.string().min(1).default("modular-monolith-api"),
+    JWT_AUDIENCE: z.string().min(1).default("modular-monolith-client"),
 
     // Rate Limiting
     RATE_LIMIT_MAX: z.coerce.number().default(100),
