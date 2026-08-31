@@ -31,7 +31,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Modular Monolith — TanStack Start" },
+      { title: "Enterprise Modular Monolith — Architecture & Workspace" },
     ],
     links: [{ rel: "icon", href: "/favicon.ico" }],
   }),
