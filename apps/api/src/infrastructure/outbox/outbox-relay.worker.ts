@@ -136,13 +136,15 @@ export class OutboxRelayWorker {
     );
     if (recovered > 0) this.logger.warn({ recovered }, "Recovered stale outbox locks");
   }
-
   private recordLatency(event: OutboxEvent): void {
-    const latency = Date.now() - event.createdAt.getTime();
-    this.metrics.recordHistogram(
-      "outbox_processing_latency_ms",
-      "Latency between outbox event creation and processing",
-      latency,
-    );
+    try {
+      this.metrics.recordHistogram(
+        "outbox_processing_latency_ms",
+        "Latency between outbox event creation and processing",
+        Date.now() - event.createdAt.getTime(),
+      );
+    } catch (error) {
+      this.logger.warn({ err: error, eventId: event.id }, "Outbox latency metric recording failed");
+    }
   }
 }

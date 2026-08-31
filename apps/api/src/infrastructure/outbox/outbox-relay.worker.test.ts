@@ -73,6 +73,20 @@ describe("OutboxRelayWorker", () => {
     );
   });
 
+  it("does not retry a published event when latency metrics fail", async () => {
+    metrics.recordHistogram = vi.fn(() => {
+      throw new Error("metrics unavailable");
+    });
+
+    await worker.relayEvents();
+
+    expect(repository.updateById).toHaveBeenCalledTimes(1);
+    expect(repository.updateById).toHaveBeenCalledWith(
+      EVENT.id,
+      expect.objectContaining({ status: "PUBLISHED" }),
+    );
+  });
+
   it("moves event to DEAD_LETTER status when max attempts are exceeded", async () => {
     const exhaustedEvent: OutboxEvent = { ...EVENT, id: "event-exhausted", attempts: 4 };
     vi.mocked(repository.lockPendingEvents).mockResolvedValueOnce([exhaustedEvent]);

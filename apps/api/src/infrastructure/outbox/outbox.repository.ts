@@ -52,7 +52,18 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxRow> {
       )
       UPDATE outbox_events SET status = 'PROCESSING', locked_at = NOW(), updated_at = NOW()
       WHERE id IN (SELECT id FROM locked)
-      RETURNING *`);
+      RETURNING
+        id,
+        tenant_id AS "tenantId",
+        topic,
+        payload,
+        status,
+        attempts,
+        error,
+        next_attempt_at AS "nextAttemptAt",
+        locked_at AS "lockedAt",
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"`);
     return result.rows.map((row) => this.toDomain(row as OutboxRow));
   }
 
