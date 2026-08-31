@@ -41,7 +41,7 @@ Useful filtered runs:
 
 ```sh
 pnpm dev:api                  # api only
-pnpm dev:web                  # builds dependencies, then starts web -> http://localhost:5173
+pnpm dev:web                  # creates web env if needed, builds dependencies, then starts web -> http://localhost:5173
 pnpm --filter web build && pnpm --filter web start # standalone production-like web -> http://localhost:3000
 ```
 

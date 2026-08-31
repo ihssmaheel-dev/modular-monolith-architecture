@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ../../scripts/ensure-web-env.js",
     "dev": "vite dev --port 5173",
     "build": "vite build",
     "start": "srvx --prod --static=../client --entry=dist/server/server.js",
