@@ -347,14 +347,149 @@
       }
     },
     "decisions": {
-      "tag": "Fondations Architecturales",
-      "title": "Pourquoi Nous L'avons Conçu Ainsi: Matrice de Décisions",
-      "subtitle": "Chaque patron a été délibérément sélectionné pour maximiser la vélocité des développeurs, la résilience opérationnelle et la maintenabilité."
+      "tag": "Fondements Architecturaux",
+      "title": "Pourquoi Nous Avons Construit Cela Ainsi : Matrice de Décisions Techniques",
+      "subtitle": "Chaque modèle a été délibérément choisi pour maximiser la vitesse de développement, la résilience opérationnelle et la maintenabilité pour les humains et les agents de codage IA.",
+      "guaranteesTitle": "Garanties Architecturales Clés",
+      "items": {
+        "modularMonolith": {
+          "title": "Monolithe Modulaire vs Microservices",
+          "badge": "Paradigme d'Architecture",
+          "description": "Artéfact de déploiement unique contenant des modules métier strictement isolés (Authentification, Utilisateurs, Locataires, Notes, Fichiers). Communique en processus avec une latence réseau de 0 ms au lieu d'un maillage HTTP/gRPC distribué fragile.",
+          "guarantees": [
+            "Élimine les maux de tête liés aux transactions distribuées (Sagas, 2PC) et la taxe de sérialisation.",
+            "Limites strictes appliquées par des règles automatisées dependency-cruiser.",
+            "Déploiement en un seul conteneur Docker avec pool de connexions partagé.",
+            "Chemin de transition facile vers des services autonomes à l'avenir si nécessaire."
+          ]
+        },
+        "cqrsLite": {
+          "title": "Pourquoi CQRS Lite au lieu de CQRS Lourd / Event Sourcing ?",
+          "badge": "Modèle de Couche d'Application",
+          "description": "Nous séparons les requêtes de lecture des commandes de mutation dans des gestionnaires à responsabilité unique de moins de 150 lignes, retournant des types fonctionnels neverthrow Result<T, E> sans le fardeau des médiateurs ou du sourcing d'événements.",
+          "guarantees": [
+            "Évite l'indirection MediatR qui obscurcit les piles d'appels d'exécution.",
+            "Empêche les retards de synchronisation double lecture/écriture dans la base de données (décalage de cohérence à terme).",
+            "Élimine la complexité de migration des schémas de rejeu d'événements.",
+            "Chaque Commande et Requête est une classe déterministe avec des tests unitaires atomiques."
+          ]
+        },
+        "orpcContracts": {
+          "title": "Pourquoi oRPC pour les Contrats + REST Typé Sécurisé ?",
+          "badge": "Conception d'API et de Contrats",
+          "description": "@repo/contracts définit les plans de contrats avec oc.route() et les schémas Zod 4 comme Source Unique de Vérité. L'API Fastify expose un REST standard, tandis que @repo/api-client fournit une sécurité de type complète de bout en bout.",
+          "guarantees": [
+            "Sécurité de Type à 100% à la Compilation : Auto-complétion et erreurs de compilation en cas de dérive de schéma.",
+            "Standard OpenAPI 3.1 & REST : Les consommateurs publics, webhooks et curl fonctionnent avec HTTP standard.",
+            "Intercepteurs Automatiques : @repo/api-client attache les jetons Bearer, le locataire, l'idempotence et les paramètres régionaux.",
+            "Documentation Interactive Scalar : Référence OpenAPI 3.1 en direct servie sur /api/docs."
+          ]
+        },
+        "fgaSecurity": {
+          "title": "Autorisation à Grain Fin (FGA) : RBAC + ReBAC + ABAC",
+          "badge": "Sécurité Zéro Confiance",
+          "description": "Moteur d'autorisation fonctionnel pur dans @repo/authorization combinant l'évaluation Basée sur les Rôles, Basée sur les Relations (Propriété des Ressources) et Basée sur les Attributs.",
+          "guarantees": [
+            "Vocabulaire d'Action : Chaînes d'action de domaine standardisées avec correspondance générique (ex. notes:*).",
+            "Vérifications de Propriété ReBAC : Évalue les relations dynamiquement (ex. note.authorId === principal.id).",
+            "Application à Double Couche : Appliqué aux portes du Contrôleur et dans les Services d'Application.",
+            "Découplé des Frameworks : Logique TypeScript pure testable en millisecondes."
+          ]
+        },
+        "transactionalOutbox": {
+          "title": "Boîte d'Envoi Transactionnelle et Messagerie Fiable",
+          "badge": "Cohérence des Données",
+          "description": "Garantit la livraison des événements de domaine au moins une fois en écrivant les mutations d'entité et les lignes de la boîte d'envoi dans la même transaction de base de données PostgreSQL.",
+          "guarantees": [
+            "Élimine les Échecs de Double Écriture : L'état de l'entité et les événements sortants ne se désynchronisent jamais.",
+            "Relais Haute Performance : OutboxRelayWorker interroge avec FOR UPDATE SKIP LOCKED.",
+            "Dispatching Redis Streams & BullMQ : Relaye les événements vers les workers, emails et WebSockets.",
+            "Gestion des Messages Morts : Relances automatiques avec recul exponentiel et files d'attente d'échecs."
+          ]
+        },
+        "zeroTrustTenancy": {
+          "title": "Architecture Multi-Locataire Zéro Confiance",
+          "badge": "Isolation des Locataires",
+          "description": "Prend en charge les déploiements mono-locataire et multi-locataires via un commutateur d'exécution (TENANCY_MODE) avec isolation automatique des requêtes.",
+          "guarantees": [
+            "AsyncLocalStorage (CLS) : TenantContextGuard extrait le locataire et le lie au contexte.",
+            "TenantScopedRepository : Injecte automatiquement le filtre WHERE tenant_id dans toutes les requêtes.",
+            "Hiérarchie des Rôles : Prend en charge Propriétaire, Administrateur, Membre et Invité avec des flux d'invitation.",
+            "Agnostique au Locataire : @TenantAgnostic() marque explicitement les points de terminaison administratifs globaux."
+          ]
+        }
+      }
     },
     "layers": {
-      "tag": "Architecture Oignon Propre",
-      "title": "Explorez les 4 Couches et Paquets Monorepo",
-      "subtitle": "Le flux de dépendance strict vers l'intérieur garde la logique métier pure et découplée des bases de données et des frameworks HTTP."
+      "tag": "Architecture en Oignon Propre",
+      "title": "Explorez les 4 Couches et les Paquets Monorepo",
+      "subtitle": "Le flux de dépendance strict vers l'intérieur garde la logique métier pure et totalement découplée des bases de données, des frameworks HTTP et des applications clientes.",
+      "blueprint": "Plan d'Implémentation",
+      "responsibilities": "Responsabilités Clés",
+      "items": {
+        "presentation": {
+          "title": "Couche Présentation",
+          "badge": "Contrôleurs Fastify 5",
+          "description": "La passerelle HTTP. Les contrôleurs restent minces et n'exécutent aucune logique métier. Ils authentifient les requêtes, appliquent les permissions FGA, valident les DTO d'entrée, invoquent les commandes/requêtes CQRS et mappent Result<T, E> aux réponses HTTP avec des messages i18n localisés.",
+          "responsibilities": [
+            "Routes de contrôleur : Mappe les méthodes HTTP aux cas d'utilisation.",
+            "Gardes FGA : @RequirePermission() applique le RBAC/ReBAC.",
+            "Idempotence : @Idempotent() empêche les doubles mutations.",
+            "Contexte Locataire : @TenantAgnostic() déclare la portée.",
+            "Validation : ZodValidationPipe analyse par rapport à @repo/contracts.",
+            "Mappage des Erreurs : Charges utiles JSON d'erreur localisées."
+          ]
+        },
+        "application": {
+          "title": "Couche Application",
+          "badge": "Cas d'Utilisation CQRS Lite",
+          "description": "Orchestre les cas d'utilisation métier. Divisé en gestionnaires atomiques de Commandes (mutations) et gestionnaires de Requêtes (lectures). Les commandes coordonnent les entités du domaine, les référentiels et les événements de boîte d'envoi transactionnels, retournant un Result<T, E> neverthrow.",
+          "responsibilities": [
+            "Responsabilité Unique : Une commande/requête par fichier (<150 lignes).",
+            "Result Neverthrow : Les gestionnaires retournent Result<T, DomainError>.",
+            "Orchestration Transactionnelle : Sauvegarde l'entité et émet l'événement en 1 tx.",
+            "Écouteurs d'Événements de Domaine : Écoute les événements de domaine internes.",
+            "Évaluation des Politiques : Évalue les règles d'autorisation du domaine."
+          ]
+        },
+        "domain": {
+          "title": "Couche Domaine",
+          "badge": "Modèles Métier Purs",
+          "description": "Le cœur central de la logique d'entreprise. Contient des entités TypeScript pures, des objets de valeur, des événements de domaine et des erreurs de domaine avec ZÉRO dépendance externe à un framework, NestJS ou ORM.",
+          "responsibilities": [
+            "Invariants d'Entité : Les méthodes d'usine appliquent les règles métier.",
+            "Objets de Valeur : Structures immuables avec validation.",
+            "Événements de Domaine : Enregistrements de changement d'état fortement typés.",
+            "Erreurs de Domaine : Codes d'erreur de défaillance spécifiques.",
+            "Couplage Zéro Framework : 100% TypeScript pur."
+          ]
+        },
+        "infrastructure": {
+          "title": "Couche Infrastructure",
+          "badge": "Drizzle et Pilotes Techniques",
+          "description": "Adapte les fournisseurs techniques et la persistance des données. Contient les schémas ORM Drizzle, TenantScopedRepositories, la mise en cache et limitation de débit Redis, les files d'attente d'arrière-plan BullMQ, les pools de workers Piscina et les exportateurs OpenTelemetry.",
+          "responsibilities": [
+            "Drizzle ORM : Persistance relationnelle PostgreSQL.",
+            "TenantScopedRepository : Isolation multi-locataires automatique.",
+            "Mise en cache Redis et Limitation de débit avec TTL.",
+            "Fils de Worker Piscina : Décharge le travail CPU lourd.",
+            "Relais de Boîte d'Envoi Transactionnelle : Relaye les lignes vers Redis/BullMQ."
+          ]
+        },
+        "packages": {
+          "title": "Paquets de Capacités",
+          "badge": "Monorepo Central Partagé",
+          "description": "Paquets monorepo réutilisables et ciblés consommés par l'API, le Web et les travaux d'arrière-plan, assurant un alignement DRY absolu à travers la base de code.",
+          "responsibilities": [
+            "@repo/contracts : Schémas Zod 4 et routes oRPC.",
+            "@repo/authorization : RBAC+ReBAC+ABAC FGA pur.",
+            "@repo/i18n : Dictionnaires de paramètres régionaux et résolveurs de clés.",
+            "@repo/api-client : Client typé avec rafraîchissement automatique.",
+            "@repo/email : Modèles transactionnels React Email.",
+            "@repo/ui : Base UI Accessible + Système de conception Tailwind 4."
+          ]
+        }
+      }
     },
     "lifecycle": {
       "tag": "Cycles de Vie d'Exécution",
@@ -406,7 +541,27 @@
     "flow": {
       "legend": "Légende des Couches"
     },
-    "footer": "Monolithe Modulaire d'Entreprise · Construit avec Fastify 5, NestJS 11, React 19 et TanStack Start"
+    "footer": "Monolithe Modulaire d'Entreprise · Construit avec Fastify 5, NestJS 11, React 19 et TanStack Start",
+    "flows": {
+      "tag": "Cycles de Vie d'Exécution de Bout en Bout",
+      "title": "Cycle de Vie des Requêtes API et Traces de Pipeline",
+      "subtitle": "Pipeline chronologique clair, étape par étape, montrant l'ordre d'exécution exact, les fichiers touchés, les transformations de données et les événements asynchrones de la boîte d'envoi.",
+      "getTab": "HTTP GET (Flux de Requête)",
+      "postTab": "HTTP POST (Flux de Mutation)",
+      "step": "Étape {{number}}",
+      "asyncBranch": "Pipeline Asynchrone en Arrière-plan",
+      "responseBranch": "Réponse Client",
+      "filesTouched": "Fichiers Touchés",
+      "output": "Sortie"
+    },
+    "tree": {
+      "tag": "Organisation du Monorepo",
+      "title": "Arborescence Unifiée de l'Architecture Monorepo",
+      "subtitle": "Vue architecturale complète de toutes les applications, paquets de capacité, services d'infrastructure et application automatisée des limites.",
+      "collapseAll": "Tout Réduire",
+      "expandAll": "Tout Développer",
+      "layerLegend": "Règles de Limites de Couche"
+    }
   },
   "zod": {
     "errors": {

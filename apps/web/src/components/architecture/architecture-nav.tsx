@@ -15,13 +15,12 @@ export function ArchitectureNav() {
   const cycleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
   const navLinks = [
-    { href: "#techstack", label: t("architecture.nav.techStack") },
-    { href: "#decisions", label: t("architecture.nav.decisions") },
-    { href: "#layers", label: t("architecture.nav.layers") },
-    { href: "#lifecycle", label: t("architecture.nav.flows") },
-    { href: "#services", label: t("architecture.nav.services") },
-    { href: "#structure", label: t("architecture.nav.structure") },
-    { href: "#tooling", label: t("architecture.nav.tooling") },
+    { href: "#techstack", label: t("architecture.nav.techStack", "Tech Stack") },
+    { href: "#decisions", label: t("architecture.nav.decisions", "Decisions") },
+    { href: "#layers", label: t("architecture.nav.layers", "Layers") },
+    { href: "#lifecycle", label: t("architecture.nav.flows", "API Flows") },
+    { href: "#services", label: t("architecture.nav.services", "Services") },
+    { href: "#structure", label: t("architecture.nav.structure", "Structure") },
   ];
 
   return (

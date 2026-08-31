@@ -6,10 +6,9 @@ import { ArchitectureHero } from "@/components/architecture/architecture-hero";
 import { ArchitectureTechStack } from "@/components/architecture/architecture-tech-stack";
 import { ArchitectureDecisionPillars } from "@/components/architecture/architecture-decision-pillars";
 import { ArchitectureLayerExplorer } from "@/components/architecture/architecture-layer-explorer";
-import { ArchitectureFlowSection } from "@/components/architecture/architecture-flow-section";
+import { ArchitectureFlowPipeline } from "@/components/architecture/architecture-flow-pipeline";
 import { ArchitectureServicesMatrix } from "@/components/architecture/architecture-services-matrix";
 import { ArchitectureFolderTree } from "@/components/architecture/architecture-folder-tree";
-import { ArchitectureDevExperience } from "@/components/architecture/architecture-dev-experience";
 
 export const Route = createFileRoute("/")({ component: IndexPage });
 
@@ -21,19 +20,21 @@ function IndexPage() {
       <ArchitectureBackground />
       <ArchitectureNav />
 
-      <main className="w-full space-y-24 px-4 py-8 sm:px-8 sm:py-16 lg:px-12 xl:px-16 pb-28">
+      <main className="w-full space-y-20 px-4 py-6 sm:px-8 sm:py-12 lg:px-12 xl:px-16 pb-28">
         <ArchitectureHero />
         <ArchitectureTechStack />
         <ArchitectureDecisionPillars />
         <ArchitectureLayerExplorer />
-        <ArchitectureFlowSection />
+        <ArchitectureFlowPipeline />
         <ArchitectureServicesMatrix />
         <ArchitectureFolderTree />
-        <ArchitectureDevExperience />
       </main>
 
       <footer className="w-full border-t bg-background/80 py-8 px-4 sm:px-8 lg:px-12 xl:px-16 text-center text-xs text-muted-foreground font-mono">
-        {t("architecture.footer")}
+        {t(
+          "architecture.footer",
+          "Enterprise Modular Monolith · Built with Fastify 5, NestJS 11, React 19 & TanStack Start",
+        )}
       </footer>
     </div>
   );

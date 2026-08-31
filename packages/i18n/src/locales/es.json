@@ -347,14 +347,149 @@
       }
     },
     "decisions": {
-      "tag": "Fundamentos de Arquitectura",
-      "title": "Por Qué Lo Construimos Así: Matriz de Decisiones Técnicas",
-      "subtitle": "Cada patrón fue elegido deliberadamente para maximizar la velocidad de desarrollo, la resiliencia operativa y el mantenimiento para desarrolladores y agentes de IA."
+      "tag": "Fundamentos Arquitectónicos",
+      "title": "Por Qué lo Construimos Así: Matriz de Decisiones Técnicas",
+      "subtitle": "Cada patrón fue elegido deliberadamente para maximizar la velocidad de desarrollo, la resiliencia operativa y la mantenibilidad tanto para humanos como para agentes de codificación de IA.",
+      "guaranteesTitle": "Garantías Clave de la Arquitectura",
+      "items": {
+        "modularMonolith": {
+          "title": "Monolito Modular vs Microservicios",
+          "badge": "Paradigma de Arquitectura",
+          "description": "Artefacto desplegable único que contiene módulos de negocio estrictamente aislados (Autenticación, Usuarios, Inquilinos, Notas, Archivos). Se comunica en el proceso con latencia de red de 0ms en lugar de una frágil malla HTTP/gRPC distribuida.",
+          "guarantees": [
+            "Elimina los dolores de cabeza de las transacciones distribuidas (Sagas, 2PC) y el impuesto de serialización.",
+            "Límites estrictos aplicados por reglas automáticas de dependency-cruiser.",
+            "Despliegue en un solo contenedor Docker con agrupación de conexiones compartida.",
+            "Fácil ruta de transición a servicios independientes en el futuro si es necesario."
+          ]
+        },
+        "cqrsLite": {
+          "title": "¿Por qué CQRS Lite en lugar de CQRS Pesado / Event Sourcing?",
+          "badge": "Patrón de Capa de Aplicación",
+          "description": "Separamos las consultas de lectura de los comandos de mutación en manejadores de responsabilidad única de menos de 150 líneas, devolviendo tipos funcionales neverthrow Result<T, E> sin la sobrecarga de mediadores o event sourcing.",
+          "guarantees": [
+            "Evita la indirección de MediatR que oscurece las pilas de llamadas de ejecución.",
+            "Previene los retrasos de sincronización de doble lectura/escritura en la base de datos (retraso de consistencia eventual).",
+            "Elimina la complejidad de migración de esquemas de reproducción de eventos.",
+            "Cada Comando y Consulta es una clase determinista con pruebas unitarias atómicas."
+          ]
+        },
+        "orpcContracts": {
+          "title": "¿Por qué oRPC para Contratos + REST con Seguridad de Tipos?",
+          "badge": "Diseño de API y Contratos",
+          "description": "@repo/contracts define los planos de contratos con oc.route() y esquemas Zod 4 como Fuente Única de Verdad. La API de Fastify expone REST estándar, mientras que @repo/api-client proporciona seguridad de tipos completa de extremo a extremo.",
+          "guarantees": [
+            "100% de Seguridad de Tipos en Tiempo de Compilación: Autocompletado y errores de compilación ante la desviación de esquemas.",
+            "Estándar OpenAPI 3.1 y REST: Los consumidores públicos, webhooks y curl funcionan con HTTP estándar.",
+            "Interceptores Automáticos: @repo/api-client adjunta tokens Bearer, inquilino, idempotencia y configuración regional.",
+            "Documentos Interactivos de Scalar: Referencia en vivo de OpenAPI 3.1 servida en /api/docs."
+          ]
+        },
+        "fgaSecurity": {
+          "title": "Autorización de Grano Fino (FGA): RBAC + ReBAC + ABAC",
+          "badge": "Seguridad de Confianza Cero",
+          "description": "Motor de autorización funcional puro en @repo/authorization que combina la evaluación Basada en Roles, Basada en Relaciones (Propiedad de Recursos) y Basada en Atributos.",
+          "guarantees": [
+            "Vocabulario de Acción: Cadenas de acción de dominio estandarizadas con coincidencia de comodines (ej. notes:*).",
+            "Comprobaciones de Propiedad de ReBAC: Evalúa las relaciones dinámicamente (ej. note.authorId === principal.id).",
+            "Aplicación de Doble Capa: Se aplica en las puertas del Controlador y en los Servicios de Aplicación.",
+            "Desacoplado de Frameworks: Lógica TypeScript pura testable en milisegundos."
+          ]
+        },
+        "transactionalOutbox": {
+          "title": "Bandeja de Salida Transaccional y Mensajería Confiable",
+          "badge": "Consistencia de Datos",
+          "description": "Garantiza la entrega de eventos de dominio al menos una vez escribiendo las mutaciones de entidad y las filas de la bandeja de salida en la misma transacción exacta de la base de datos PostgreSQL.",
+          "guarantees": [
+            "Elimina Fallos de Doble Escritura: El estado de la entidad y los eventos salientes nunca se desincronizan.",
+            "Retransmisión de Alto Rendimiento: OutboxRelayWorker consulta con FOR UPDATE SKIP LOCKED.",
+            "Despacho con Redis Streams y BullMQ: Retransmite eventos a trabajadores, correos electrónicos y WebSockets.",
+            "Manejo de Mensajes no Entregados (Dead-Letter): Reintentos automáticos de retroceso exponencial y colas de fallos."
+          ]
+        },
+        "zeroTrustTenancy": {
+          "title": "Arquitectura Multi-Inquilino de Confianza Cero",
+          "badge": "Aislamiento de Inquilinos",
+          "description": "Soporta despliegues tanto de un solo inquilino como multi-inquilino a través de un interruptor en tiempo de ejecución (TENANCY_MODE) con aislamiento automático de consultas.",
+          "guarantees": [
+            "AsyncLocalStorage (CLS): TenantContextGuard extrae el inquilino y lo vincula al contexto.",
+            "TenantScopedRepository: Inyecta automáticamente el filtro WHERE tenant_id en todas las consultas.",
+            "Jerarquía de Roles: Soporta Propietario, Administrador, Miembro e Invitado con flujos de trabajo de invitación.",
+            "Agnóstico de Inquilino: @TenantAgnostic() marca explícitamente los puntos finales administrativos globales."
+          ]
+        }
+      }
     },
     "layers": {
       "tag": "Arquitectura Limpia Cebolla",
-      "title": "Explore las 4 Capas y Paquetes Monorepo",
-      "subtitle": "El flujo de dependencias hacia adentro mantiene la lógica de negocio pura y completamente desacoplada de bases de datos y frameworks HTTP."
+      "title": "Explora las 4 Capas y los Paquetes Monorepo",
+      "subtitle": "El flujo estricto de dependencias hacia adentro mantiene la lógica empresarial pura y totalmente desacoplada de bases de datos, marcos HTTP y aplicaciones cliente.",
+      "blueprint": "Plano de Implementación",
+      "responsibilities": "Responsabilidades Clave",
+      "items": {
+        "presentation": {
+          "title": "Capa de Presentación",
+          "badge": "Controladores de Fastify 5",
+          "description": "La puerta de enlace HTTP. Los controladores se mantienen delgados y realizan 0 lógica de negocios. Autentican las solicitudes, imponen permisos FGA, validan DTO de entrada, invocan comandos/consultas CQRS y mapean Result<T, E> a respuestas HTTP con mensajes i18n localizados.",
+          "responsibilities": [
+            "Rutas del controlador: Mapea los métodos HTTP a casos de uso.",
+            "Guardias FGA: @RequirePermission() aplica RBAC/ReBAC.",
+            "Idempotencia: @Idempotent() previene mutaciones dobles.",
+            "Contexto de Inquilino: @TenantAgnostic() declara el alcance.",
+            "Validación: ZodValidationPipe analiza frente a @repo/contracts.",
+            "Mapeo de Errores: Cargas útiles JSON de error localizadas."
+          ]
+        },
+        "application": {
+          "title": "Capa de Aplicación",
+          "badge": "Casos de Uso CQRS Lite",
+          "description": "Orquesta los casos de uso empresarial. Dividido en manejadores atómicos de Comandos (mutaciones) y manejadores de Consultas (lecturas). Los comandos coordinan las entidades de dominio, repositorios y eventos de la bandeja de salida transaccional, devolviendo Result<T, E> de neverthrow.",
+          "responsibilities": [
+            "Responsabilidad Única: Un comando/consulta por archivo (<150 líneas).",
+            "Result Neverthrow: Los manejadores devuelven Result<T, DomainError>.",
+            "Orquestación Transaccional: Guarda entidad y emite evento en 1 tx.",
+            "Oyentes de Eventos de Dominio: Escucha eventos de dominio internos.",
+            "Evaluación de Políticas: Evalúa las reglas de autorización del dominio."
+          ]
+        },
+        "domain": {
+          "title": "Capa de Dominio",
+          "badge": "Modelos Empresariales Puros",
+          "description": "El corazón central de la lógica empresarial. Contiene entidades TypeScript puras, objetos de valor, eventos de dominio y errores de dominio con CERO dependencias externas a frameworks, NestJS o ORM.",
+          "responsibilities": [
+            "Invariantes de Entidad: Métodos de fábrica hacen cumplir las reglas de negocio.",
+            "Objetos de Valor: Estructuras inmutables con validación.",
+            "Eventos de Dominio: Registros de cambio de estado fuertemente tipados.",
+            "Errores de Dominio: Códigos de error de falla específicos.",
+            "Acoplamiento Cero a Frameworks: 100% TypeScript puro."
+          ]
+        },
+        "infrastructure": {
+          "title": "Capa de Infraestructura",
+          "badge": "Drizzle y Controladores Técnicos",
+          "description": "Adapta los proveedores técnicos y la persistencia de datos. Contiene esquemas ORM de Drizzle, TenantScopedRepositories, almacenamiento en caché y limitadores de velocidad de Redis, colas en segundo plano BullMQ, grupos de trabajadores Piscina y exportadores OpenTelemetry.",
+          "responsibilities": [
+            "Drizzle ORM: Persistencia relacional PostgreSQL.",
+            "TenantScopedRepository: Aislamiento automático multi-inquilino.",
+            "Almacenamiento en caché de Redis y límite de velocidad con TTL.",
+            "Hilos de Trabajador Piscina: Descarga el trabajo pesado de CPU.",
+            "Relé de Bandeja de Salida Transaccional: Retransmite filas a Redis/BullMQ."
+          ]
+        },
+        "packages": {
+          "title": "Paquetes de Capacidades",
+          "badge": "Monorepo Central Compartido",
+          "description": "Paquetes reutilizables enfocados del monorepo consumidos por API, Web y trabajos en segundo plano, asegurando una alineación DRY absoluta en toda la base de código.",
+          "responsibilities": [
+            "@repo/contracts: Esquemas Zod 4 y rutas oRPC.",
+            "@repo/authorization: FGA puro RBAC+ReBAC+ABAC.",
+            "@repo/i18n: Diccionarios locales y resolutores de claves.",
+            "@repo/api-client: Cliente con seguridad de tipos con actualización automática.",
+            "@repo/email: Plantillas transaccionales de React Email.",
+            "@repo/ui: Base UI Accesible + Sistema de diseño Tailwind 4."
+          ]
+        }
+      }
     },
     "lifecycle": {
       "tag": "Ciclos de Vida de Ejecución",
@@ -406,7 +541,27 @@
     "flow": {
       "legend": "Leyenda de Capas"
     },
-    "footer": "Monolito Modular Empresarial · Construido con Fastify 5, NestJS 11, React 19 y TanStack Start"
+    "footer": "Monolito Modular Empresarial · Construido con Fastify 5, NestJS 11, React 19 y TanStack Start",
+    "flows": {
+      "tag": "Ciclos de Vida de Ejecución de Extremo a Extremo",
+      "title": "Ciclo de Vida de Solicitud API y Trazas de Pipeline",
+      "subtitle": "Pipeline cronológico claro paso a paso que muestra el orden de ejecución exacto, los archivos tocados, las transformaciones de datos y los eventos de bandeja de salida asíncronos.",
+      "getTab": "HTTP GET (Flujo de Consulta)",
+      "postTab": "HTTP POST (Flujo de Mutación)",
+      "step": "Paso {{number}}",
+      "asyncBranch": "Pipeline Asíncrono en Segundo Plano",
+      "responseBranch": "Respuesta del Cliente",
+      "filesTouched": "Archivos Tocados",
+      "output": "Salida"
+    },
+    "tree": {
+      "tag": "Organización del Monorepo",
+      "title": "Árbol de Directorios Unificado de Arquitectura Monorepo",
+      "subtitle": "Vista arquitectónica completa de todas las aplicaciones, paquetes de capacidad, servicios de infraestructura y aplicación de límites automatizada.",
+      "collapseAll": "Contraer Todo",
+      "expandAll": "Expandir Todo",
+      "layerLegend": "Reglas de Límites de Capa"
+    }
   },
   "zod": {
     "errors": {
