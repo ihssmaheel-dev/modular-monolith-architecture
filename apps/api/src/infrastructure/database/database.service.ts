@@ -163,22 +163,23 @@ export class DatabaseService implements OnModuleDestroy {
   private async configureTransactionContext(tx: DrizzleDb): Promise<void> {
     const execute = (tx as unknown as { execute?: (query: unknown) => Promise<unknown> }).execute;
     if (typeof execute !== "function") return;
+    const runQuery = execute.bind(tx);
     const current = (this.cls?.isActive() ? this.cls.get() : {}) as Record<string, unknown>;
     const mode = typeof current.tenantMode === "string" ? current.tenantMode : env.TENANCY_MODE;
     const tenantId = typeof current.tenantId === "string" ? current.tenantId : "";
     const userId = typeof current.userId === "string" ? current.userId : "";
     const userEmail = typeof current.userEmail === "string" ? current.userEmail : "";
     const systemScope = current.systemScope === true ? "true" : "false";
-    await execute(sql`select set_config('app.tenancy_mode', ${mode}, true)`);
-    await execute(sql`select set_config('app.current_tenant', ${tenantId}, true)`);
-    await execute(sql`select set_config('app.current_user', ${userId}, true)`);
-    await execute(sql`select set_config('app.current_user_email', ${userEmail}, true)`);
-    await execute(sql`select set_config('app.system_scope', ${systemScope}, true)`);
+    await runQuery(sql`select set_config('app.tenancy_mode', ${mode}, true)`);
+    await runQuery(sql`select set_config('app.current_tenant', ${tenantId}, true)`);
+    await runQuery(sql`select set_config('app.current_user', ${userId}, true)`);
+    await runQuery(sql`select set_config('app.current_user_email', ${userEmail}, true)`);
+    await runQuery(sql`select set_config('app.system_scope', ${systemScope}, true)`);
   }
 
   private async setConfig(tx: DrizzleDb, key: string, value: string): Promise<void> {
     const execute = (tx as unknown as { execute?: (query: unknown) => Promise<unknown> }).execute;
     if (typeof execute !== "function") return;
-    await execute(sql`select set_config(${key}, ${value}, true)`);
+    await execute.call(tx, sql`select set_config(${key}, ${value}, true)`);
   }
 }

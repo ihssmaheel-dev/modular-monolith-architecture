@@ -47,7 +47,7 @@ export class OutboxRelayWorker {
         },
       );
     } catch (error) {
-      this.logger.error({ error }, "Outbox relay failed");
+      this.logger.error({ err: error }, "Outbox relay failed");
     } finally {
       this.isProcessing = false;
     }
