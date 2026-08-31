@@ -13,13 +13,12 @@ import type { ServiceItem } from "./services-data";
 export function ServiceCard({ service }: { service: ServiceItem }) {
   const Icon = service.icon;
   const isLink = service.url.startsWith("http");
+
   return (
-    <Card className="flex flex-col border-muted/80 bg-background/60 backdrop-blur-xs hover:border-primary/50 transition-all shadow-xs">
+    <Card className="flex flex-col border-muted/60 bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300">
       <CardHeader className="p-4 space-y-2 pb-2">
         <div className="flex items-center justify-between gap-2">
-          <div
-            className={`flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary`}
-          >
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Icon className="size-4.5" />
           </div>
           <Badge variant="secondary" className="font-mono text-[10px]">
@@ -41,14 +40,14 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
               </a>
             )}
           </CardTitle>
-          <p className="text-[11px] font-mono text-primary font-medium">{service.protocol}</p>
+          <p className="text-[11px] font-mono text-primary/80 font-medium">{service.protocol}</p>
         </div>
         <CardDescription className="text-xs leading-relaxed text-muted-foreground">
           {service.description}
         </CardDescription>
       </CardHeader>
       <CardContent className="mt-auto p-4 pt-2 space-y-2 text-xs">
-        <div className="rounded-md border bg-muted/30 p-2 text-[11px] space-y-1">
+        <div className="rounded-md border border-muted/60 bg-muted/20 p-2 text-[11px] space-y-1">
           <div className="flex items-center justify-between text-muted-foreground">
             <span>Credentials:</span>
             <span className="font-mono text-foreground font-medium">{service.credentials}</span>

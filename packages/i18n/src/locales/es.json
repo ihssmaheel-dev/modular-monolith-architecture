@@ -26,7 +26,8 @@
     "name": "Nombre",
     "description": "Descripción",
     "manageItems": "Administra tus registros",
-    "contractDriven": "Validado por contratos compartidos"
+    "contractDriven": "Validado por contratos compartidos",
+    "copied": "Copiado al portapapeles"
   },
   "auth": {
     "welcomeBack": "Te damos la bienvenida de nuevo",
@@ -319,6 +320,7 @@
   },
   "architecture": {
     "nav": {
+      "techStack": "Tecnologías",
       "decisions": "Decisiones",
       "layers": "Capas",
       "flows": "Flujos API",
@@ -376,13 +378,35 @@
     "tooling": {
       "tag": "Velocidad de Ingeniería",
       "title": "Flujo de Trabajo del Desarrollador y Generadores CLI",
-      "subtitle": "Herramientas preconfiguradas para inicialización, generación de funciones, comprobación de reglas y ejecución de pruebas."
+      "subtitle": "Herramientas preconfiguradas para inicialización, generación de funciones, comprobación de reglas y ejecución de pruebas.",
+      "commands": {
+        "bootstrap": "Verificación automatizada de archivos de entorno locales, de node y pnpm.",
+        "generateFeature": "CLI interactiva que genera scaffolding de slices verticales CQRS de 4 capas.",
+        "generateModule": "Genera el scaffolding de un nuevo módulo de dominio con las 4 capas y archivos de prueba.",
+        "rulesCheck": "Verifica 0 violaciones de capa y aplica reglas de tamaño de archivo en el monorepo.",
+        "testUnit": "Ejecuta más de 262 pruebas unitarias deterministas con aislamiento neverthrow.",
+        "dbMigrate": "Aplica las migraciones de Drizzle ORM a la base de datos PostgreSQL local.",
+        "dockerUp": "Inicia los contenedores de PostgreSQL, Redis, MinIO, Mailpit y pgAdmin.",
+        "typecheck": "Ejecuta las comprobaciones del compilador TypeScript en todos los paquetes del monorepo."
+      }
     },
     "techStack": {
       "tag": "Directorio de Tecnologías",
       "title": "Pila Tecnológica Moderna Seleccionada",
-      "subtitle": "Bibliotecas y frameworks probados en producción que impulsan nuestro frontend, backend e infraestructura."
-    }
+      "subtitle": "Bibliotecas y frameworks probados en producción que impulsan nuestro frontend, backend e infraestructura.",
+      "categories": {
+        "backendCore": "Núcleo del Backend",
+        "frontendEngine": "Motor de Frontend",
+        "dataStorage": "Datos y Almacenamiento",
+        "observability": "Observabilidad",
+        "devops": "DevOps y Herramientas",
+        "security": "Seguridad y Autenticación"
+      }
+    },
+    "flow": {
+      "legend": "Leyenda de Capas"
+    },
+    "footer": "Monolito Modular Empresarial · Construido con Fastify 5, NestJS 11, React 19 y TanStack Start"
   },
   "zod": {
     "errors": {

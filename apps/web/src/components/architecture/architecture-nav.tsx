@@ -14,6 +14,16 @@ export function ArchitectureNav() {
 
   const cycleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
+  const navLinks = [
+    { href: "#techstack", label: t("architecture.nav.techStack") },
+    { href: "#decisions", label: t("architecture.nav.decisions") },
+    { href: "#layers", label: t("architecture.nav.layers") },
+    { href: "#lifecycle", label: t("architecture.nav.flows") },
+    { href: "#services", label: t("architecture.nav.services") },
+    { href: "#structure", label: t("architecture.nav.structure") },
+    { href: "#tooling", label: t("architecture.nav.tooling") },
+  ];
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/85 backdrop-blur">
       <div className="w-full flex h-16 items-center justify-between px-4 sm:px-8 lg:px-12 xl:px-16">
@@ -33,43 +43,16 @@ export function ArchitectureNav() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <nav className="hidden lg:flex items-center gap-1 text-sm font-medium me-2">
-            <a
-              href="#decisions"
-              className="px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-xs font-semibold"
-            >
-              {t("architecture.nav.decisions")}
-            </a>
-            <a
-              href="#layers"
-              className="px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-xs font-semibold"
-            >
-              {t("architecture.nav.layers")}
-            </a>
-            <a
-              href="#lifecycle"
-              className="px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-xs font-semibold"
-            >
-              {t("architecture.nav.flows")}
-            </a>
-            <a
-              href="#services"
-              className="px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-xs font-semibold"
-            >
-              {t("architecture.nav.services")}
-            </a>
-            <a
-              href="#structure"
-              className="px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-xs font-semibold"
-            >
-              {t("architecture.nav.structure")}
-            </a>
-            <a
-              href="#tooling"
-              className="px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-xs font-semibold"
-            >
-              {t("architecture.nav.tooling")}
-            </a>
+          <nav className="hidden xl:flex items-center gap-0.5 text-sm font-medium me-2">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-xs font-semibold"
+              >
+                {link.label}
+              </a>
+            ))}
           </nav>
 
           <Button

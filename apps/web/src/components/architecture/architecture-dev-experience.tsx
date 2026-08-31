@@ -5,34 +5,23 @@ import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 import { toast } from "@repo/ui/components/ui/toast";
 
+const COMMANDS = [
+  { cmd: "pnpm bootstrap", key: "architecture.tooling.commands.bootstrap" },
+  { cmd: "pnpm generate:feature", key: "architecture.tooling.commands.generateFeature" },
+  { cmd: "pnpm generate:module", key: "architecture.tooling.commands.generateModule" },
+  { cmd: "pnpm rules:check", key: "architecture.tooling.commands.rulesCheck" },
+  { cmd: "pnpm test:unit", key: "architecture.tooling.commands.testUnit" },
+  { cmd: "pnpm db:migrate", key: "architecture.tooling.commands.dbMigrate" },
+  { cmd: "pnpm docker:up", key: "architecture.tooling.commands.dockerUp" },
+  { cmd: "pnpm typecheck", key: "architecture.tooling.commands.typecheck" },
+] as const;
+
 export function ArchitectureDevExperience() {
   const { t } = useTranslation();
-  const commands = [
-    {
-      cmd: "pnpm bootstrap",
-      desc: "Automated verification of node, pnpm, and local environment files.",
-    },
-    {
-      cmd: "pnpm generate:feature",
-      desc: "Interactive CLI generator scaffolding full 4-layer CQRS vertical slices.",
-    },
-    {
-      cmd: "pnpm rules:check",
-      desc: "Verifies 0 layer violations and enforces the 150-line rule across files.",
-    },
-    {
-      cmd: "pnpm test:unit",
-      desc: "Runs all 262+ unit tests with 100% deterministic neverthrow isolation.",
-    },
-    {
-      cmd: "pnpm db:migrate",
-      desc: "Applies Drizzle ORM migrations to the local PostgreSQL database.",
-    },
-  ];
 
   const copyCommand = (cmd: string) => {
     navigator.clipboard.writeText(cmd);
-    toast.add({ title: "Command copied to clipboard", type: "success" } as never);
+    toast.add({ title: t("common.copied"), type: "success" } as never);
   };
 
   return (
@@ -52,29 +41,31 @@ export function ArchitectureDevExperience() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {commands.map((c) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {COMMANDS.map((c) => (
           <Card
             key={c.cmd}
-            className="border-muted/80 bg-background/60 backdrop-blur-xs font-mono text-xs shadow-xs hover:border-primary/40 transition-colors"
+            className="group border-muted/60 bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden"
           >
-            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-bold text-primary flex items-center gap-2">
-                <Terminal className="size-3.5" />
-                {c.cmd}
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7"
-                onClick={() => copyCommand(c.cmd)}
-                aria-label="Copy Command"
-              >
-                <Copy className="size-3 text-muted-foreground" />
-              </Button>
+            <CardHeader className="p-0">
+              <div className="flex items-center justify-between bg-zinc-900 dark:bg-zinc-950 px-3.5 py-2.5">
+                <CardTitle className="text-[11px] font-bold text-emerald-400 flex items-center gap-2 font-mono">
+                  <Terminal className="size-3.5 text-zinc-500" />
+                  <span className="text-zinc-400">$</span> {c.cmd}
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6 text-zinc-500 hover:text-zinc-300"
+                  onClick={() => copyCommand(c.cmd)}
+                  aria-label="Copy"
+                >
+                  <Copy className="size-3" />
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="p-4 pt-1 font-sans text-xs text-muted-foreground leading-relaxed">
-              {c.desc}
+            <CardContent className="p-3.5 text-xs text-muted-foreground leading-relaxed">
+              {t(c.key)}
             </CardContent>
           </Card>
         ))}

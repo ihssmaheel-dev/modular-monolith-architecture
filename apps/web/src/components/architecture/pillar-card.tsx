@@ -12,7 +12,9 @@ import type { PillarItem } from "./pillars-data";
 export function PillarCard({ pillar }: { pillar: PillarItem }) {
   const Icon = pillar.icon;
   return (
-    <Card className="flex flex-col border-muted/80 bg-background/60 backdrop-blur-xs hover:border-primary/50 transition-all shadow-xs hover:shadow-md">
+    <Card
+      className={`flex flex-col border-muted/60 bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 border-l-[3px] ${pillar.color.replace("text-", "border-l-")}`}
+    >
       <CardHeader className="space-y-3 pb-3">
         <div className="flex items-center justify-between gap-2">
           <div
@@ -32,7 +34,7 @@ export function PillarCard({ pillar }: { pillar: PillarItem }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="mt-auto pt-2 pb-4">
-        <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
+        <div className="rounded-lg border border-muted/60 bg-muted/20 p-3 space-y-2">
           <p className="text-[11px] font-bold uppercase tracking-wider text-foreground/80">
             Key Architectural Guarantees:
           </p>

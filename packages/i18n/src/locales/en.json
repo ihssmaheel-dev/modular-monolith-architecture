@@ -26,7 +26,8 @@
     "name": "Name",
     "description": "Description",
     "manageItems": "Manage your records",
-    "contractDriven": "Validated by shared contracts"
+    "contractDriven": "Validated by shared contracts",
+    "copied": "Copied to clipboard"
   },
   "email": {
     "welcome": {
@@ -154,6 +155,7 @@
   },
   "architecture": {
     "nav": {
+      "techStack": "Tech Stack",
       "decisions": "Decisions",
       "layers": "Layers",
       "flows": "API Flows",
@@ -211,13 +213,35 @@
     "tooling": {
       "tag": "Engineering Velocity",
       "title": "Developer Workflow & CLI Generators",
-      "subtitle": "Pre-wired tooling for bootstrapping, scaffolding features, running architecture checks, and executing tests."
+      "subtitle": "Pre-wired tooling for bootstrapping, scaffolding features, running architecture checks, and executing tests.",
+      "commands": {
+        "bootstrap": "Automated verification of node, pnpm, and local environment files.",
+        "generateFeature": "Interactive CLI scaffolding full 4-layer CQRS vertical slices.",
+        "generateModule": "Scaffolds a new domain module with all 4 layers and test files.",
+        "rulesCheck": "Verifies 0 layer violations and enforces file size rules across the monorepo.",
+        "testUnit": "Runs all 262+ deterministic unit tests with neverthrow isolation.",
+        "dbMigrate": "Applies Drizzle ORM migrations to the local PostgreSQL database.",
+        "dockerUp": "Starts PostgreSQL, Redis, MinIO, Mailpit, and pgAdmin containers.",
+        "typecheck": "Runs TypeScript compiler checks across all monorepo packages."
+      }
     },
     "techStack": {
       "tag": "Technology Directory",
       "title": "Curated Modern Tech Stack",
-      "subtitle": "Battle-tested libraries and frameworks powering our frontend, backend, and infrastructure."
-    }
+      "subtitle": "Battle-tested libraries and frameworks powering our frontend, backend, and infrastructure.",
+      "categories": {
+        "backendCore": "Backend Core",
+        "frontendEngine": "Frontend Engine",
+        "dataStorage": "Data & Storage",
+        "observability": "Observability",
+        "devops": "DevOps & Tooling",
+        "security": "Security & Auth"
+      }
+    },
+    "flow": {
+      "legend": "Layer Legend"
+    },
+    "footer": "Enterprise Modular Monolith · Built with Fastify 5, NestJS 11, React 19 & TanStack Start"
   },
   "auth": {
     "welcomeBack": "Welcome back",
