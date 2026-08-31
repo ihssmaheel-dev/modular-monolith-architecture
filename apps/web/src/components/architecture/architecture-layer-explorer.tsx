@@ -1,32 +1,32 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/components/ui/tabs";
 import { layersData } from "./layers-data";
 import { LayerDetailCard } from "./layer-detail-card";
 
 export function ArchitectureLayerExplorer() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("presentation");
 
   return (
-    <section id="layers" className="scroll-mt-24 space-y-8">
+    <section id="layers" className="scroll-mt-24 w-full space-y-8">
       <div className="space-y-2">
         <Badge
           variant="outline"
           className="text-xs font-semibold uppercase tracking-wider text-primary"
         >
-          Clean Architecture & Onion Layers
+          {t("architecture.layers.tag")}
         </Badge>
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-          Explore the 4 Layers & Monorepo Packages
+          {t("architecture.layers.title")}
         </h2>
         <p className="text-muted-foreground max-w-3xl text-base">
-          Our architecture adheres strictly to Clean Architecture principles. Dependencies always
-          point inward toward the Domain, keeping business rules independent of databases, HTTP
-          frameworks, and UI clients.
+          {t("architecture.layers.subtitle")}
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
         <TabsList className="w-full justify-start overflow-x-auto p-1 bg-muted/40 border border-muted/80 rounded-xl h-auto flex-wrap">
           {layersData.map((layer) => {
             const Icon = layer.icon;

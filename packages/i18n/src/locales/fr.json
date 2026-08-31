@@ -129,19 +129,15 @@
     }
   },
   "users": {
-    "eyebrow": "Identité et Accès",
-    "manage": "Gérez vos utilisateurs",
-    "add": "Ajouter un utilisateur",
-    "loadFailed": "Impossible de charger les utilisateurs. Réessayez.",
-    "userId": "ID utilisateur",
     "title": "Utilisateurs",
-    "list": "Liste des utilisateurs",
-    "create": "Créer un utilisateur",
-    "edit": "Modifier l'utilisateur",
-    "delete": "Supprimer l'utilisateur",
-    "profile": "Profil",
-    "noUsers": "Aucun utilisateur trouvé",
-    "verified": "Vérifié"
+    "description": "Gérer les utilisateurs du système et les autorisations d'accès.",
+    "noUsers": "Aucun utilisateur trouvé dans cette organisation.",
+    "name": "Nom d'utilisateur",
+    "email": "Adresse e-mail",
+    "role": "Rôle attribué",
+    "created": "Date d'adhésion",
+    "status": "Statut du compte",
+    "totalUsers": "Total des utilisateurs"
   },
   "settings": {
     "eyebrow": "Préférences et Système",
@@ -322,43 +318,71 @@
     "toggleSidebar": "Afficher ou réduire la barre latérale"
   },
   "architecture": {
-    "modular": "Monolithe modulaire",
-    "api": "API NestJS + Fastify",
-    "contracts": "REST + contrats partagés",
-    "data": "PostgreSQL + Drizzle",
-    "redis": "Infrastructure Redis",
-    "tenancy": "Locataire unique ou multiple",
-    "auth": "Sécurité JWT et sessions",
-    "events": "Événements, outbox et audit",
-    "storage": "Stockage compatible S3",
-    "observability": "Métriques, traces et journaux",
-    "tooling": "Outils du monorepo",
-    "security": "Centre de sécurité",
-    "step1": "Choisir le mode de tenancy",
-    "step2": "Définir les frontières et invariants du module",
-    "step3": "Ajouter les contrats et le client API typé",
-    "step4": "Construire les couches domaine, application, infrastructure et présentation",
-    "step5": "Ajouter l’autorisation et l’isolation des locataires",
-    "step6": "Persister mutations et événements outbox dans une transaction",
-    "step7": "Ajouter routes localisées, clés de requête et états UI",
-    "step8": "Ajouter tests, migrations, observabilité et déploiement",
-    "flowUi": "Interface web",
-    "flowClient": "Client API typé",
-    "flowContracts": "Contrats Zod / oRPC",
-    "flowApplication": "Commande ou requête applicative",
-    "flowRepository": "Dépôt du module",
-    "flowPersistence": "PostgreSQL + outbox + audit",
-    "modularDescription": "Les modules gardent explicites les frontières domaine, application, infrastructure et présentation.",
-    "apiDescription": "NestJS et Fastify fournissent le runtime HTTP avec des garde-fous globaux de sécurité et d’exploitation.",
-    "contractsDescription": "Les contrats Zod et oRPC définissent les formes validées partagées par l’API et les clients.",
-    "dataDescription": "Les repositories Drizzle accèdent à PostgreSQL sans partager directement les modèles entre modules.",
-    "redisDescription": "Cache distribué, limitation de débit, feature flags et coordination temps réel utilisent Redis.",
-    "tenancyDescription": "Le même code prend en charge les déploiements mono-locataire et multi-locataires avec contexte contrôlé.",
-    "authDescription": "Tokens courts, cookies de renouvellement, sessions, verrouillage et permissions protègent les requêtes.",
-    "eventsDescription": "Les mutations publient des événements outbox durables pour l’audit, les e-mails et le temps réel.",
-    "storageDescription": "Les fichiers utilisent un stockage compatible S3 avec validation et nettoyage.",
-    "observabilityDescription": "Journaux structurés, traces, métriques, contrôles de santé, Prometheus, Grafana et Loki sont intégrés.",
-    "toolingDescription": "pnpm, Turborepo, UI partagée, i18n, migrations, tests et générateurs rendent les modules reproductibles."
+    "nav": {
+      "decisions": "Décisions",
+      "layers": "Couches",
+      "flows": "Flux API",
+      "services": "Services",
+      "structure": "Structure",
+      "tooling": "Outils",
+      "scalarDocs": "Docs API Scalar",
+      "openApp": "Ouvrir l'App",
+      "signIn": "Se Connecter"
+    },
+    "hero": {
+      "tag": "Référence d'Architecture de Production",
+      "title": "Monolithe Modulaire d'Entreprise",
+      "subtitle": "Une architecture TypeScript haute performance combinant CQRS Lite, oRPC par contrats + REST, autorisation fine (FGA), événements outbox transactionnels et multi-tenancy zéro confiance.",
+      "exploreArchitecture": "Explorer le Flux d'Architecture",
+      "launchDashboard": "Lancer l'Application",
+      "stats": {
+        "packages": "Paquets Monorepo",
+        "domains": "Domaines Délimités",
+        "tests": "Tests Unitaires",
+        "violations": "Violations de Couche",
+        "typeSafety": "Sécurité des Types",
+        "tenancy": "Multi-Tenancy Isolé"
+      }
+    },
+    "decisions": {
+      "tag": "Fondations Architecturales",
+      "title": "Pourquoi Nous L'avons Conçu Ainsi: Matrice de Décisions",
+      "subtitle": "Chaque patron a été délibérément sélectionné pour maximiser la vélocité des développeurs, la résilience opérationnelle et la maintenabilité."
+    },
+    "layers": {
+      "tag": "Architecture Oignon Propre",
+      "title": "Explorez les 4 Couches et Paquets Monorepo",
+      "subtitle": "Le flux de dépendance strict vers l'intérieur garde la logique métier pure et découplée des bases de données et des frameworks HTTP."
+    },
+    "lifecycle": {
+      "tag": "Cycles de Vie d'Exécution",
+      "title": "Tracé du Flux API: Que se Passe-t-il sur GET et POST",
+      "subtitle": "Parcours chronologique détaillé montrant chaque fichier, garde, invariant, transaction et relais d'arrière-plan exécuté lors des requêtes.",
+      "getTab": "Flux HTTP GET (Requête)",
+      "postTab": "Flux HTTP POST (Commande / Mutation)",
+      "getSubtitle": "Cycle de Lecture: Routage Fastify -> Gardes -> Requête CQRS -> Cache -> Lecture DB Drizzle -> Réponse JSON",
+      "postSubtitle": "Cycle de Mutation: Routage Fastify -> Gardes FGA -> Validation Zod -> Commande CQRS -> Invariants de Domaine -> Unité de Travail DB + Outbox -> Worker Relais -> Diffusion Temps Réel"
+    },
+    "services": {
+      "tag": "Infrastructure Locale Complète",
+      "title": "Matrice des Services Locaux, Ports et Observabilité",
+      "subtitle": "Tout le nécessaire pour le développement est configuré via Docker Compose sans dépendance cloud."
+    },
+    "structure": {
+      "tag": "Organisation du Monorepo",
+      "title": "Arborescence des Répertoires et Règles de Limites",
+      "subtitle": "Une structure monorepo évolutive où les limites de domaine sont strictement appliquées lors de la compilation."
+    },
+    "tooling": {
+      "tag": "Vélocité d'Ingénierie",
+      "title": "Flux de Travail Développeur et Générateurs CLI",
+      "subtitle": "Outils préconfigurés pour l'amorçage, la génération de fonctionnalités, la vérification des règles et l'exécution des tests."
+    },
+    "techStack": {
+      "tag": "Répertoire des Technologies",
+      "title": "Pile Technologique Moderne Sélectionnée",
+      "subtitle": "Bibliothèques et frameworks éprouvés en production alimentant notre frontend, backend et infrastructure."
+    }
   },
   "zod": {
     "errors": {

@@ -1,27 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Code2, ExternalLink } from "lucide-react";
+import { FileText, Plus, ArrowRight } from "lucide-react";
+import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/ui/card";
 import { useAuthStore } from "@/stores/auth.store";
-import { useLocaleStore } from "@/stores/locale.store";
-import { getApiClient } from "@/lib/api";
 import { notesListQuery } from "@/features/notes/notes.queries";
-import { DashboardStatsGrid } from "@/components/dashboard/dashboard-stats-grid";
-import { DashboardHighlights } from "@/components/dashboard/dashboard-highlights";
-import { DashboardNotesCard } from "@/components/dashboard/dashboard-notes-card";
-import { DashboardToolingDock } from "@/components/dashboard/dashboard-tooling-dock";
 
 export const Route = createFileRoute("/_app/dashboard")({
   loader: ({ context }) => context.queryClient.ensureQueryData(notesListQuery(1, 5)),
   pendingComponent: () => (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       <div className="h-8 w-48 animate-pulse rounded bg-muted" />
-      <div className="grid gap-4 md:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
-        ))}
-      </div>
+      <div className="h-32 animate-pulse rounded-xl bg-muted" />
       <div className="h-48 animate-pulse rounded-xl bg-muted" />
     </div>
   ),
@@ -31,66 +29,18 @@ export const Route = createFileRoute("/_app/dashboard")({
 function DashboardPage() {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
-  const locale = useLocaleStore((state) => state.locale);
-
   const notesQuery = useQuery({ ...notesListQuery(1, 5), enabled: Boolean(user) });
 
-  const healthQuery = useQuery({
-    queryKey: ["health-status"],
-    queryFn: async () => {
-      try {
-        const res = await fetch("http://localhost:3000/api/health/live");
-        return res.ok ? "Healthy" : "Degraded";
-      } catch {
-        return "Connected";
-      }
-    },
-    refetchInterval: 15000,
-  });
-
-  const tenancyStatusQuery = useQuery({
-    queryKey: ["tenancy-status"],
-    queryFn: async () => {
-      try {
-        const res = await getApiClient().tenancy.status();
-        return res.status === 200 ? res.body : null;
-      } catch {
-        return null;
-      }
-    },
-  });
-
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6">
+    <div className="w-full space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="flex size-2 rounded-full bg-emerald-500 animate-ping" />
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Live Architecture Cockpit
-            </p>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-            {t("dashboard.welcome", { name: user?.name ?? "Engineer" })}
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+            {t("dashboard.welcome", { name: user?.name ?? "User" })}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("dashboard.subtitle")} · Operating in{" "}
-            <strong className="text-foreground">{locale.toUpperCase()}</strong> locale
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
         </div>
-
         <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5 text-xs"
-            render={<a href="http://localhost:3000/api/docs" target="_blank" rel="noreferrer" />}
-          >
-            <Code2 className="size-3.5 text-primary" />
-            <span>Scalar API Docs</span>
-            <ExternalLink className="size-3 text-muted-foreground" />
-          </Button>
-
           <Button size="sm" className="gap-1.5 text-xs shadow-xs" render={<Link to="/notes/new" />}>
             <Plus className="size-3.5" />
             <span>{t("notes.newNote")}</span>
@@ -98,26 +48,86 @@ function DashboardPage() {
         </div>
       </div>
 
-      <DashboardStatsGrid
-        apiStatus={healthQuery.data ?? "Healthy"}
-        tenancyMode={
-          tenancyStatusQuery.data?.mode
-            ? tenancyStatusQuery.data.mode.toUpperCase()
-            : "MULTI-TENANT"
-        }
-        userRole={user?.role ? user.role.toUpperCase() : "MEMBER"}
-        notesTotal={notesQuery.data?.total ? String(notesQuery.data.total) : "0"}
-      />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="border-muted/80 bg-background/60 shadow-xs hover:border-primary/40 transition-colors">
+          <CardHeader className="p-5 pb-2 space-y-1">
+            <CardDescription className="flex items-center justify-between text-xs font-medium">
+              <span>{t("notes.title")}</span>
+              <FileText className="size-4 text-primary" />
+            </CardDescription>
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+              {notesQuery.data?.total ? String(notesQuery.data.total) : "0"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-5 pt-1 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{t("common.items")}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1 p-0"
+              render={<Link to="/notes" />}
+            >
+              <span>{t("notes.title")}</span>
+              <ArrowRight className="size-3" />
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
-      <DashboardHighlights />
-
-      <DashboardNotesCard
-        isLoading={notesQuery.isLoading}
-        isError={notesQuery.isError}
-        notes={notesQuery.data?.items}
-      />
-
-      <DashboardToolingDock />
+      <Card className="border-muted/80 shadow-xs">
+        <CardHeader className="flex flex-row items-center justify-between gap-4 p-5 pb-3">
+          <div>
+            <CardTitle className="text-base sm:text-lg font-bold">
+              {t("dashboard.recentNotes")}
+            </CardTitle>
+            <CardDescription className="text-xs">{t("notes.description")}</CardDescription>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="gap-1.5 text-xs"
+            render={<Link to="/notes" />}
+          >
+            <span>{t("notes.title")}</span>
+            <ArrowRight className="size-3.5" />
+          </Button>
+        </CardHeader>
+        <CardContent className="p-5 pt-0">
+          {notesQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">{t("common.loading")}</p>
+          ) : notesQuery.isError ? (
+            <p className="text-sm text-destructive py-6 text-center">{t("errors.networkError")}</p>
+          ) : notesQuery.data?.items && notesQuery.data.items.length > 0 ? (
+            <div className="divide-y rounded-lg border bg-background">
+              {notesQuery.data.items.map((note) => (
+                <div
+                  key={note.id}
+                  className="flex items-center justify-between gap-4 p-3.5 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="truncate text-sm font-semibold text-foreground">{note.title}</p>
+                    <p className="truncate text-xs text-muted-foreground">{note.content}</p>
+                  </div>
+                  <Badge variant="outline" className="shrink-0 text-[10px] font-mono">
+                    {new Date(note.createdAt).toLocaleDateString()}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center rounded-lg border border-dashed bg-muted/20 space-y-3">
+              <FileText className="size-8 text-muted-foreground mx-auto opacity-50" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">{t("notes.noNotes")}</p>
+              </div>
+              <Button size="sm" render={<Link to="/notes/new" />} className="gap-1.5 text-xs">
+                <Plus className="size-3.5" />
+                <span>{t("notes.newNote")}</span>
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

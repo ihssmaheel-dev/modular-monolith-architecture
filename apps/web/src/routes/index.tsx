@@ -1,69 +1,36 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ArchitectureBackground } from "@/components/architecture/architecture-background";
 import { ArchitectureNav } from "@/components/architecture/architecture-nav";
 import { ArchitectureHero } from "@/components/architecture/architecture-hero";
+import { ArchitectureLifecycleFlow } from "@/components/architecture/architecture-lifecycle-flow";
 import { ArchitectureDecisionPillars } from "@/components/architecture/architecture-decision-pillars";
 import { ArchitectureLayerExplorer } from "@/components/architecture/architecture-layer-explorer";
-import { ArchitectureLifecycleFlow } from "@/components/architecture/architecture-lifecycle-flow";
 import { ArchitectureServicesMatrix } from "@/components/architecture/architecture-services-matrix";
 import { ArchitectureFolderTree } from "@/components/architecture/architecture-folder-tree";
 import { ArchitectureDevExperience } from "@/components/architecture/architecture-dev-experience";
 import { ArchitectureTechStack } from "@/components/architecture/architecture-tech-stack";
 
-export const Route = createFileRoute("/")({ component: HomePage });
+export const Route = createFileRoute("/")({ component: IndexPage });
 
-function HomePage() {
+function IndexPage() {
   return (
-    <div className="min-h-svh bg-muted/20 text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+    <div className="relative min-h-screen w-full bg-background font-sans overflow-x-hidden">
+      <ArchitectureBackground />
       <ArchitectureNav />
-      <main className="mx-auto max-w-7xl space-y-24 px-4 py-10 sm:px-6 sm:py-16">
+
+      <main className="w-full space-y-24 px-4 py-8 sm:px-8 sm:py-16 lg:px-12 xl:px-16 pb-28">
         <ArchitectureHero />
+        <ArchitectureLifecycleFlow />
         <ArchitectureDecisionPillars />
         <ArchitectureLayerExplorer />
-        <ArchitectureLifecycleFlow />
         <ArchitectureServicesMatrix />
         <ArchitectureFolderTree />
         <ArchitectureDevExperience />
         <ArchitectureTechStack />
       </main>
 
-      <footer className="border-t bg-background py-10 text-center text-xs text-muted-foreground mt-20">
-        <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2026 Enterprise Modular Monolith Architecture. Clean Architecture + CQRS Lite.</p>
-          <div className="flex items-center gap-4">
-            <a
-              href="http://localhost:3000/api/docs"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:underline"
-            >
-              Scalar API Docs
-            </a>
-            <a
-              href="http://localhost:3001"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:underline"
-            >
-              Grafana
-            </a>
-            <a
-              href="http://localhost:16686"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:underline"
-            >
-              Jaeger
-            </a>
-            <a
-              href="http://localhost:8025"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:underline"
-            >
-              Mailpit
-            </a>
-          </div>
-        </div>
+      <footer className="w-full border-t bg-background/80 py-8 px-4 sm:px-8 lg:px-12 xl:px-16 text-center text-xs text-muted-foreground font-mono">
+        Enterprise Modular Monolith · Built with Fastify 5, NestJS 11, React 19 & TanStack Start
       </footer>
     </div>
   );

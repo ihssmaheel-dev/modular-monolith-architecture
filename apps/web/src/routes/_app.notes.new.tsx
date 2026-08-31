@@ -38,8 +38,9 @@ function CreateNotePage() {
     },
     onError: () => toast.add({ title: t("api.note.createFailed"), type: "error" } as never),
   });
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="w-full space-y-6">
       <div>
         <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/notes" })}>
           {t("common.back")}

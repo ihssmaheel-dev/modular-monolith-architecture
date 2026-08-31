@@ -66,19 +66,15 @@
     }
   },
   "users": {
-    "eyebrow": "Identity & Access",
-    "manage": "Manage your users",
-    "add": "Add user",
-    "loadFailed": "Failed to load users. Please try again.",
-    "userId": "User ID",
     "title": "Users",
-    "list": "User List",
-    "create": "Create User",
-    "edit": "Edit User",
-    "delete": "Delete User",
-    "profile": "Profile",
-    "noUsers": "No users found",
-    "verified": "Verified"
+    "description": "Manage system users and access permissions.",
+    "noUsers": "No users found in this organization.",
+    "name": "User Name",
+    "email": "Email Address",
+    "role": "Assigned Role",
+    "created": "Joined Date",
+    "status": "Account Status",
+    "totalUsers": "Total Users"
   },
   "settings": {
     "eyebrow": "Preferences & System",
@@ -157,43 +153,71 @@
     "toggleSidebar": "Toggle sidebar"
   },
   "architecture": {
-    "modular": "Modular monolith",
-    "api": "NestJS + Fastify API",
-    "contracts": "REST + shared contracts",
-    "data": "PostgreSQL + Drizzle",
-    "redis": "Redis infrastructure",
-    "tenancy": "Single or multi-tenant",
-    "auth": "JWT and session security",
-    "events": "Events, outbox, and audit",
-    "storage": "S3-compatible storage",
-    "observability": "Metrics, traces, and logs",
-    "tooling": "Monorepo tooling",
-    "security": "Security center",
-    "step1": "Choose your tenancy mode",
-    "step2": "Define module boundaries and invariants",
-    "step3": "Add contracts and the typed API client",
-    "step4": "Build domain, application, infrastructure, and presentation layers",
-    "step5": "Add authorization and tenant isolation",
-    "step6": "Persist mutations and outbox events transactionally",
-    "step7": "Add localized routes, query keys, and UI states",
-    "step8": "Add tests, migrations, observability, and deployment",
-    "flowUi": "Web UI",
-    "flowClient": "Typed API client",
-    "flowContracts": "Zod / oRPC contracts",
-    "flowApplication": "Application command or query",
-    "flowRepository": "Module repository",
-    "flowPersistence": "PostgreSQL + outbox + audit",
-    "modularDescription": "Modules keep domain, application, infrastructure, and presentation boundaries explicit.",
-    "apiDescription": "NestJS and Fastify provide the HTTP runtime with global security and operational guards.",
-    "contractsDescription": "Zod and oRPC contracts define validated request and response shapes shared by API and clients.",
-    "dataDescription": "Drizzle repositories access PostgreSQL without allowing modules to share database models directly.",
-    "redisDescription": "Distributed caching, rate limiting, feature flags, and realtime coordination use Redis.",
-    "tenancyDescription": "The same code supports single-tenant and multi-tenant deployments with enforced context.",
-    "authDescription": "Short-lived access tokens, refresh cookies, sessions, lockout, and permissions protect requests.",
-    "eventsDescription": "Mutations publish durable outbox events and feed audit, email, and realtime workflows.",
-    "storageDescription": "File uploads use presigned S3-compatible storage with validation and cleanup workflows.",
-    "observabilityDescription": "Structured logs, traces, metrics, health checks, Prometheus, Grafana, and Loki are integrated.",
-    "toolingDescription": "pnpm, Turborepo, shared UI, i18n, migrations, tests, and generators make new modules repeatable."
+    "nav": {
+      "decisions": "Decisions",
+      "layers": "Layers",
+      "flows": "API Flows",
+      "services": "Services",
+      "structure": "Structure",
+      "tooling": "Tooling",
+      "scalarDocs": "Scalar API Docs",
+      "openApp": "Open App",
+      "signIn": "Sign In"
+    },
+    "hero": {
+      "tag": "Production Architecture Reference",
+      "title": "Enterprise Modular Monolith",
+      "subtitle": "A high-performance TypeScript architecture combining CQRS Lite, contract-first oRPC + REST, Fine-Grained Authorization (FGA), transactional outbox events, and zero-trust multi-tenancy.",
+      "exploreArchitecture": "Explore Architecture Flow",
+      "launchDashboard": "Launch Application",
+      "stats": {
+        "packages": "Monorepo Packages",
+        "domains": "Bounded Domains",
+        "tests": "Automated Unit Tests",
+        "violations": "Boundary Violations",
+        "typeSafety": "End-to-End Type Safety",
+        "tenancy": "Zero-Trust Tenancy"
+      }
+    },
+    "decisions": {
+      "tag": "Architectural Foundations",
+      "title": "Why We Built It This Way: Technical Decision Matrix",
+      "subtitle": "Every pattern was deliberately chosen to maximize developer velocity, operational resilience, and maintainability for both humans and AI coding agents."
+    },
+    "layers": {
+      "tag": "Clean Onion Architecture",
+      "title": "Explore the 4 Layers & Monorepo Packages",
+      "subtitle": "Strict inward dependency flow keeps business logic pure and fully decoupled from databases, HTTP frameworks, and client applications."
+    },
+    "lifecycle": {
+      "tag": "End-to-End Execution Lifecycles",
+      "title": "API Flow Trace: What Happens on GET & POST",
+      "subtitle": "Detailed chronological walkthrough showing every file, guard, invariant, transaction, and background relay touched during incoming requests.",
+      "getTab": "HTTP GET Flow (Query)",
+      "postTab": "HTTP POST Flow (Command / Mutation)",
+      "getSubtitle": "Read Request Lifecycle: Fastify Routing -> Guards -> CQRS Query -> Cache -> Drizzle DB Read -> JSON Response",
+      "postSubtitle": "Mutation Request Lifecycle: Fastify Routing -> FGA Guards -> Zod Validation -> CQRS Command -> Domain Invariants -> DB + Outbox Unit of Work -> Relay Worker -> Realtime Broadcast"
+    },
+    "services": {
+      "tag": "Complete Local Infrastructure",
+      "title": "Local Services, Ports & Observability Matrix",
+      "subtitle": "Everything required for development is wired out-of-the-box via Docker Compose with zero cloud dependencies."
+    },
+    "structure": {
+      "tag": "Monorepo Organization",
+      "title": "Directory Tree & Layer Boundary Rules",
+      "subtitle": "A scalable monorepo layout where domain boundaries are strictly enforced at build and lint time."
+    },
+    "tooling": {
+      "tag": "Engineering Velocity",
+      "title": "Developer Workflow & CLI Generators",
+      "subtitle": "Pre-wired tooling for bootstrapping, scaffolding features, running architecture checks, and executing tests."
+    },
+    "techStack": {
+      "tag": "Technology Directory",
+      "title": "Curated Modern Tech Stack",
+      "subtitle": "Battle-tested libraries and frameworks powering our frontend, backend, and infrastructure."
+    }
   },
   "auth": {
     "welcomeBack": "Welcome back",

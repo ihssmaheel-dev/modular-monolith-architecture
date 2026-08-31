@@ -1,22 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
-import { ConfirmDialog } from "@repo/ui/components/composed/confirm-dialog";
-import {
-  DataTable,
-  type DataTableColumn,
-  DataTablePagination,
-} from "@repo/ui/components/composed/data-table";
+import { DataTable, DataTablePagination } from "@repo/ui/components/composed/data-table";
 import { EmptyState } from "@repo/ui/components/composed/empty-state";
 import { PageHeader } from "@repo/ui/components/composed/page-header";
 import { toast } from "@repo/ui/components/ui/toast";
 import { PaginationQuerySchema } from "@repo/contracts";
 import { getApiClient } from "@/lib/api";
 import { notesListQuery } from "@/features/notes/notes.queries";
+import { getNotesColumns } from "@/features/notes/notes-table-columns";
 
 export const Route = createFileRoute("/_app/notes")({
   validateSearch: PaginationQuerySchema,
@@ -26,8 +22,6 @@ export const Route = createFileRoute("/_app/notes")({
   component: NotesPage,
 });
 
-type NoteRow = { id: string; title: string; content: string; createdAt: string };
-
 function NotesPage() {
   const { t } = useTranslation();
   const search = Route.useSearch();
@@ -36,6 +30,7 @@ function NotesPage() {
   const page = search.page ?? 1;
   const limit = search.limit ?? 20;
   const notesQuery = useQuery({ ...notesListQuery(page, limit) });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await getApiClient().notes.remove(id);
@@ -47,52 +42,11 @@ function NotesPage() {
     },
     onError: () => toast.add({ title: t("api.note.deleteFailed"), type: "error" } as never),
   });
-  const columns: DataTableColumn<NoteRow>[] = [
-    {
-      key: "title",
-      header: t("notes.noteTitle"),
-      cell: (row) => <span className="font-medium">{row.title}</span>,
-    },
-    {
-      key: "content",
-      header: t("notes.content"),
-      cell: (row) => <span className="line-clamp-2 text-muted-foreground">{row.content}</span>,
-    },
-    {
-      key: "createdAt",
-      header: t("common.created"),
-      cell: (row) => (
-        <span className="text-xs text-muted-foreground">
-          {new Date(row.createdAt).toLocaleDateString()}
-        </span>
-      ),
-      className: "hidden sm:table-cell",
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (row) => (
-        <ConfirmDialog
-          title={t("common.delete")}
-          description={t("notes.deleteConfirm", { title: row.title })}
-          confirmText={t("common.delete")}
-          cancelText={t("common.cancel")}
-          pendingText={t("common.saving")}
-          variant="destructive"
-          onConfirm={() => deleteMutation.mutate(row.id)}
-          trigger={
-            <Button variant="ghost" size="icon-sm" aria-label={t("common.delete")}>
-              <Trash2 className="size-3.5" />
-            </Button>
-          }
-        />
-      ),
-      className: "w-12",
-    },
-  ];
+
+  const columns = getNotesColumns(t, (id) => deleteMutation.mutate(id));
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="w-full space-y-6">
       <PageHeader
         title={t("notes.title")}
         description={t("notes.description")}

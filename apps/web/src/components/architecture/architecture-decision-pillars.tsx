@@ -1,24 +1,24 @@
+import { useTranslation } from "react-i18next";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { pillarsData } from "./pillars-data";
 import { PillarCard } from "./pillar-card";
 
 export function ArchitectureDecisionPillars() {
+  const { t } = useTranslation();
   return (
-    <section id="decisions" className="scroll-mt-24 space-y-8">
+    <section id="decisions" className="scroll-mt-24 w-full space-y-8">
       <div className="space-y-2">
         <Badge
           variant="outline"
           className="text-xs font-semibold uppercase tracking-wider text-primary"
         >
-          Core Architectural Principles
+          {t("architecture.decisions.tag")}
         </Badge>
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-          Why We Built It This Way: Technical Decision Matrix
+          {t("architecture.decisions.title")}
         </h2>
         <p className="text-muted-foreground max-w-3xl text-base">
-          Every layer and pattern in this codebase was deliberately selected to balance maximum
-          developer velocity, strict operational safety, and effortless maintainability for both
-          humans and AI agents.
+          {t("architecture.decisions.subtitle")}
         </p>
       </div>
 
