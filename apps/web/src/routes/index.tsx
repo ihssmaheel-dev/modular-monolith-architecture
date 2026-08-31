@@ -1,5 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import {
+  ArrowRight,
+  Boxes,
+  Check,
+  Database,
+  ExternalLink,
+  GitBranch,
+  Layers3,
+  LockKeyhole,
+  Radio,
+  Server,
+  ShieldCheck,
+  Workflow,
+  Zap,
+} from "lucide-react";
+import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
 import {
   Card,
@@ -8,108 +24,220 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/ui/card";
-import { Badge } from "@repo/ui/components/ui/badge";
-import { ArrowRight, Layers, Shield, Zap } from "lucide-react";
+import { useAuthStore } from "@/stores/auth.store";
 
-export const Route = createFileRoute("/")({
-  component: HomePage,
-});
+export const Route = createFileRoute("/")({ component: HomePage });
+
+const references = [
+  ["TanStack Start", "https://tanstack.com/start/latest/docs/framework/react/overview"],
+  ["TanStack Router", "https://tanstack.com/router/latest"],
+  ["TanStack Query", "https://tanstack.com/query/latest"],
+  ["NestJS", "https://docs.nestjs.com"],
+  ["Fastify", "https://fastify.dev/docs/latest"],
+  ["Drizzle", "https://orm.drizzle.team/docs/overview"],
+  ["PostgreSQL", "https://www.postgresql.org/docs/"],
+  ["Redis", "https://redis.io/docs/latest/"],
+  ["Zod", "https://zod.dev/"],
+  ["React Hook Form", "https://react-hook-form.com/"],
+  ["Zustand", "https://zustand.docs.pmnd.rs/"],
+  ["Tailwind CSS", "https://tailwindcss.com/docs"],
+  ["Base UI", "https://base-ui.com/react"],
+  ["Lucide", "https://lucide.dev/guide/"],
+  ["i18next", "https://www.i18next.com/"],
+  ["pnpm", "https://pnpm.io/"],
+  ["Turborepo", "https://turborepo.com/docs"],
+  ["OpenTelemetry", "https://opentelemetry.io/docs/"],
+  ["Prometheus", "https://prometheus.io/docs/introduction/overview/"],
+  ["Grafana", "https://grafana.com/docs/"],
+  ["Loki", "https://grafana.com/oss/loki/"],
+] as const;
 
 function HomePage() {
   const { t } = useTranslation();
-
+  const signedIn = Boolean(useAuthStore((state) => state.user));
+  const capabilities = [
+    [t("architecture.modular"), t("home.wiredDescription"), Boxes],
+    [t("architecture.api"), t("architecture.contracts"), Server],
+    [t("architecture.data"), t("architecture.redis"), Database],
+    [t("architecture.tenancy"), t("architecture.auth"), LockKeyhole],
+    [t("architecture.events"), t("architecture.observability"), Workflow],
+    [t("architecture.storage"), t("architecture.tooling"), Layers3],
+  ] as const;
+  const steps = [
+    t("architecture.step1"),
+    t("architecture.step2"),
+    t("architecture.step3"),
+    t("architecture.step4"),
+    t("architecture.step5"),
+    t("architecture.step6"),
+    t("architecture.step7"),
+    t("architecture.step8"),
+  ];
   return (
-    <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-        <div className="container mx-auto flex h-14 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Layers className="size-4" />
-            </div>
-            <span className="font-semibold">{t("common.appName")}</span>
-            <Badge variant="secondary" className="ml-2 hidden sm:inline-flex">
+    <div className="min-h-svh bg-muted/20">
+      <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link to="/" className="flex items-center gap-2.5">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+              <Layers3 className="size-4" />
+            </span>
+            <span className="font-semibold tracking-tight">{t("common.appName")}</span>
+            <Badge variant="secondary" className="hidden sm:inline-flex">
               {t("home.platformBadge")}
             </Badge>
-          </div>
-          <nav className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" render={<Link to="/auth" />}>
-              {t("auth.login")}
+          </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" render={<a href="#references" />}>
+              {t("home.referencesTitle")}
             </Button>
-            <Button size="sm" render={<Link to="/dashboard" />}>
-              {t("dashboard.title")}
+            <Button size="sm" render={<Link to={signedIn ? "/dashboard" : "/auth"} />}>
+              {signedIn ? t("dashboard.title") : t("home.proceed")}
               <ArrowRight className="size-3.5" />
             </Button>
-          </nav>
-        </div>
-      </header>
-
-      <main className="container mx-auto flex flex-1 flex-col px-4 py-10">
-        <div className="mx-auto max-w-3xl text-center">
-          <Badge variant="outline" className="mb-4">
-            {t("auth.heroTagline")}
-          </Badge>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{t("auth.heroTagline")}</h1>
-          <p className="mt-4 text-lg text-muted-foreground">{t("auth.heroDescription")}</p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Button size="lg" render={<Link to="/dashboard" />}>
-              {t("dashboard.title")}
-              <ArrowRight className="size-4" />
-            </Button>
-            <Button variant="outline" size="lg" render={<Link to="/notes" />}>
-              {t("notes.title")}
-            </Button>
           </div>
         </div>
-
-        <div className="mx-auto mt-12 grid w-full max-w-4xl gap-4 sm:grid-cols-3">
-          <Card>
+      </header>
+      <main className="mx-auto max-w-7xl space-y-20 px-4 py-14 sm:px-6 sm:py-20">
+        <section className="grid items-center gap-10 lg:grid-cols-[1.15fr_.85fr]">
+          <div>
+            <Badge variant="outline" className="mb-5">
+              <Zap className="size-3" />
+              {t("auth.heroTagline")}
+            </Badge>
+            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight sm:text-6xl">
+              {t("home.wiredTitle")}
+            </h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
+              {t("auth.heroDescription")}
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button size="lg" render={<Link to={signedIn ? "/dashboard" : "/auth"} />}>
+                {signedIn ? t("dashboard.title") : t("home.proceed")}
+                <ArrowRight className="size-4" />
+              </Button>
+              <Button size="lg" variant="outline" render={<a href="#architecture" />}>
+                {t("home.exploreArchitecture")}
+              </Button>
+            </div>
+          </div>
+          <Card className="overflow-hidden border-primary/20 bg-background shadow-lg">
             <CardHeader>
-              <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                <Zap className="size-4 text-primary" />
-              </div>
-              <CardTitle className="text-base">{t("home.routingTitle")}</CardTitle>
-              <CardDescription>{t("home.routingDescription")}</CardDescription>
+              <CardDescription>{t("home.flowTitle")}</CardDescription>
+              <CardTitle>{t("home.flowDescription")}</CardTitle>
             </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                <Shield className="size-4 text-primary" />
-              </div>
-              <CardTitle className="text-base">{t("home.contractsTitle")}</CardTitle>
-              <CardDescription>{t("home.contractsDescription")}</CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                <Layers className="size-4 text-primary" />
-              </div>
-              <CardTitle className="text-base">{t("home.uiTitle")}</CardTitle>
-              <CardDescription>{t("home.uiDescription")}</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <kbd className="rounded border bg-muted px-1.5 py-0.5">d</kbd>
-                {t("home.themeHint")}
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                {[
+                  "UI",
+                  "API client",
+                  "Contracts",
+                  "Application",
+                  "Repository",
+                  "Database + events",
+                ].map((label, index) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3"
+                  >
+                    <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                      {index + 1}
+                    </span>
+                    <span>{label}</span>
+                    {index < 5 && <ArrowRight className="ms-auto size-3 text-muted-foreground" />}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="mx-auto mt-10 flex flex-col items-center gap-2 text-sm text-muted-foreground">
-          <p>
-            {t("home.apiLabel")}: {t("dashboard.subtitle")}
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" render={<Link to="/auth" />}>
-              {t("home.authFlow")}
-            </Button>
-            <Button variant="outline" size="sm" render={<Link to="/notes" />}>
-              {t("home.notesSlice")}
-            </Button>
+        </section>
+        <section id="architecture" className="scroll-mt-24 space-y-6">
+          <div>
+            <p className="text-sm font-medium text-primary">{t("home.platformBadge")}</p>
+            <h2 className="mt-1 text-3xl font-semibold tracking-tight">{t("home.wiredTitle")}</h2>
+            <p className="mt-2 max-w-2xl text-muted-foreground">{t("home.wiredDescription")}</p>
           </div>
-        </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {capabilities.map(([title, description, Icon]) => (
+              <Card key={title} className="transition-colors hover:border-primary/40">
+                <CardHeader>
+                  <div className="mb-2 flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="size-4" />
+                  </div>
+                  <CardTitle className="text-base">{title}</CardTitle>
+                  <CardDescription>{description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </section>
+        <section className="grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("home.startTitle")}</CardTitle>
+              <CardDescription>{t("home.startDescription")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-3">
+                {steps.map((step) => (
+                  <li key={step} className="flex gap-3 text-sm">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("architecture.modular")}</CardTitle>
+              <CardDescription>{t("home.flowDescription")}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border bg-muted/30 p-4">
+                <GitBranch className="mb-3 size-5 text-primary" />
+                <p className="font-medium">{t("architecture.contracts")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("common.contractDriven")}</p>
+              </div>
+              <div className="rounded-xl border bg-muted/30 p-4">
+                <ShieldCheck className="mb-3 size-5 text-primary" />
+                <p className="font-medium">{t("architecture.tenancy")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("architecture.auth")}</p>
+              </div>
+              <div className="rounded-xl border bg-muted/30 p-4">
+                <Radio className="mb-3 size-5 text-primary" />
+                <p className="font-medium">{t("architecture.events")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t("architecture.observability")}
+                </p>
+              </div>
+              <div className="rounded-xl border bg-muted/30 p-4">
+                <LockKeyhole className="mb-3 size-5 text-primary" />
+                <p className="font-medium">{t("architecture.security")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("architecture.tooling")}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+        <section id="references" className="scroll-mt-24 space-y-6">
+          <div>
+            <h2 className="text-3xl font-semibold tracking-tight">{t("home.referencesTitle")}</h2>
+            <p className="mt-2 text-muted-foreground">{t("home.referencesDescription")}</p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {references.map(([name, href]) => (
+              <a
+                key={name}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-center justify-between rounded-lg border bg-background px-4 py-3 text-sm transition-colors hover:border-primary/50 hover:bg-muted/40"
+              >
+                <span>{name}</span>
+                <ExternalLink className="size-3.5 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </a>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );

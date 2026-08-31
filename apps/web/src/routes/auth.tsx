@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { Eye, EyeOff, Layers } from "lucide-react";
 import { LoginSchema, RegisterSchema, type LoginInput, type RegisterInput } from "@repo/contracts";
 import { Button } from "@repo/ui/components/ui/button";
 import {
@@ -18,65 +20,103 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/components/ui
 import { useAuthStore } from "@/stores/auth.store";
 import { getApiClient } from "@/lib/api";
 
-export const Route = createFileRoute("/auth")({
-  component: AuthPage,
-});
+export const Route = createFileRoute("/auth")({ component: AuthPage });
+
+function FieldError({ message }: { message?: string }) {
+  return message ? <p className="text-xs text-destructive">{message}</p> : null;
+}
+
+function PasswordInput({
+  id,
+  register,
+  placeholder,
+  invalid,
+  showLabel,
+  hideLabel,
+}: {
+  id: string;
+  register: UseFormRegister<LoginInput | RegisterInput>;
+  placeholder: string;
+  invalid?: boolean;
+  showLabel: string;
+  hideLabel: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        type={visible ? "text" : "password"}
+        placeholder={placeholder}
+        aria-invalid={invalid}
+        className="pe-10"
+        {...register("password")}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="absolute end-1 top-1/2 size-7 -translate-y-1/2"
+        onClick={() => setVisible((value) => !value)}
+        aria-label={visible ? hideLabel : showLabel}
+      >
+        {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+      </Button>
+    </div>
+  );
+}
 
 function AuthPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const setAuth = useAuthStore((s) => s.setAuth);
-
+  const setAuth = useAuthStore((state) => state.setAuth);
   const loginForm = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
     defaultValues: { email: "", password: "" },
   });
-
   const registerForm = useForm<RegisterInput>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: { name: "", email: "", password: "" },
   });
-
   const loginMutation = useMutation({
-    mutationFn: async (data: LoginInput) => {
-      const client = getApiClient();
-      const res = await client.auth.login({ body: data });
-      if (res.status !== 200) throw new Error("api.auth.loginFailed");
-      return res.body;
+    mutationFn: async (body: LoginInput) => {
+      const response = await getApiClient().auth.login({ body });
+      if (response.status !== 200)
+        throw new Error(response.status === 401 ? "auth.invalidCredentials" : "auth.loginFailed");
+      return response.body;
     },
     onSuccess: (data) => {
       setAuth(data);
       navigate({ to: "/dashboard" });
     },
   });
-
   const registerMutation = useMutation({
-    mutationFn: async (data: RegisterInput) => {
-      const client = getApiClient();
-      const res = await client.auth.register({ body: data });
-      if (res.status !== 201 && res.status !== 200) throw new Error("api.auth.registrationFailed");
-      return res.body;
+    mutationFn: async (body: RegisterInput) => {
+      const response = await getApiClient().auth.register({ body });
+      if (![200, 201].includes(response.status))
+        throw new Error(response.status === 409 ? "auth.emailTaken" : "auth.registrationFailed");
+      return response.body;
     },
     onSuccess: (data) => {
       setAuth(data);
       navigate({ to: "/dashboard" });
     },
   });
-
   return (
     <div className="flex min-h-svh items-center justify-center bg-muted/20 p-4">
-      <div className="w-full max-w-md space-y-4">
+      <div className="w-full max-w-md space-y-5">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold">{t("auth.welcomeBack")}</h1>
-          <p className="text-sm text-muted-foreground">{t("auth.loginDescription")}</p>
+          <div className="mx-auto mb-4 flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+            <Layers className="size-5" />
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("auth.welcomeBack")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("auth.loginDescription")}</p>
         </div>
-
         <Tabs defaultValue="login">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">{t("auth.login")}</TabsTrigger>
             <TabsTrigger value="register">{t("auth.register")}</TabsTrigger>
           </TabsList>
-
           <TabsContent value="login">
             <Card>
               <CardHeader>
@@ -85,7 +125,7 @@ function AuthPage() {
               </CardHeader>
               <CardContent>
                 <form
-                  onSubmit={loginForm.handleSubmit((d) => loginMutation.mutate(d))}
+                  onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))}
                   className="space-y-4"
                 >
                   <div className="space-y-2">
@@ -93,48 +133,48 @@ function AuthPage() {
                     <Input
                       id="login-email"
                       type="email"
-                      placeholder={t("auth.emailPlaceholder")}
+                      autoComplete="email"
+                      aria-invalid={Boolean(loginForm.formState.errors.email)}
                       {...loginForm.register("email")}
                     />
-                    {loginForm.formState.errors.email && (
-                      <p className="text-xs text-destructive">
-                        {loginForm.formState.errors.email.message}
-                      </p>
-                    )}
+                    <FieldError message={loginForm.formState.errors.email?.message} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">{t("auth.password")}</Label>
-                    <Input
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="login-password">{t("auth.password")}</Label>
+                      <Link
+                        to="/auth/forgot-password"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {t("auth.forgotPassword")}
+                      </Link>
+                    </div>
+                    <PasswordInput
                       id="login-password"
-                      type="password"
+                      register={loginForm.register}
                       placeholder={t("auth.passwordPlaceholder")}
-                      {...loginForm.register("password")}
+                      invalid={Boolean(loginForm.formState.errors.password)}
+                      showLabel={t("auth.showPassword")}
+                      hideLabel={t("auth.hidePassword")}
                     />
-                    {loginForm.formState.errors.password && (
-                      <p className="text-xs text-destructive">
-                        {loginForm.formState.errors.password.message}
-                      </p>
-                    )}
+                    <FieldError message={loginForm.formState.errors.password?.message} />
                   </div>
                   {loginMutation.isError && (
-                    <p className="text-sm text-destructive">{t("auth.loginFailed")}</p>
+                    <p className="text-sm text-destructive">{t(loginMutation.error.message)}</p>
                   )}
                   <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                     {loginMutation.isPending ? t("auth.signingIn") : t("auth.signIn")}
                   </Button>
-                  <div className="text-center text-sm">
-                    <Link
-                      to="/"
-                      className="text-muted-foreground underline-offset-4 hover:underline"
-                    >
-                      {t("common.back")}
-                    </Link>
-                  </div>
+                  <Link
+                    to="/"
+                    className="block text-center text-sm text-muted-foreground hover:underline"
+                  >
+                    {t("common.back")}
+                  </Link>
                 </form>
               </CardContent>
             </Card>
           </TabsContent>
-
           <TabsContent value="register">
             <Card>
               <CardHeader>
@@ -143,53 +183,45 @@ function AuthPage() {
               </CardHeader>
               <CardContent>
                 <form
-                  onSubmit={registerForm.handleSubmit((d) => registerMutation.mutate(d))}
+                  onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))}
                   className="space-y-4"
                 >
                   <div className="space-y-2">
                     <Label htmlFor="reg-name">{t("auth.name")}</Label>
                     <Input
                       id="reg-name"
-                      placeholder={t("auth.namePlaceholder")}
+                      autoComplete="name"
+                      aria-invalid={Boolean(registerForm.formState.errors.name)}
                       {...registerForm.register("name")}
                     />
-                    {registerForm.formState.errors.name && (
-                      <p className="text-xs text-destructive">
-                        {registerForm.formState.errors.name.message}
-                      </p>
-                    )}
+                    <FieldError message={registerForm.formState.errors.name?.message} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="reg-email">{t("auth.email")}</Label>
                     <Input
                       id="reg-email"
                       type="email"
-                      placeholder={t("auth.emailPlaceholder")}
+                      autoComplete="email"
+                      aria-invalid={Boolean(registerForm.formState.errors.email)}
                       {...registerForm.register("email")}
                     />
-                    {registerForm.formState.errors.email && (
-                      <p className="text-xs text-destructive">
-                        {registerForm.formState.errors.email.message}
-                      </p>
-                    )}
+                    <FieldError message={registerForm.formState.errors.email?.message} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="reg-password">{t("auth.password")}</Label>
-                    <Input
+                    <PasswordInput
                       id="reg-password"
-                      type="password"
+                      register={registerForm.register}
                       placeholder={t("auth.createPasswordPlaceholder")}
-                      {...registerForm.register("password")}
+                      invalid={Boolean(registerForm.formState.errors.password)}
+                      showLabel={t("auth.showPassword")}
+                      hideLabel={t("auth.hidePassword")}
                     />
-                    {registerForm.formState.errors.password && (
-                      <p className="text-xs text-destructive">
-                        {registerForm.formState.errors.password.message}
-                      </p>
-                    )}
+                    <FieldError message={registerForm.formState.errors.password?.message} />
                   </div>
                   <p className="text-xs text-muted-foreground">{t("auth.termsNotice")}</p>
                   {registerMutation.isError && (
-                    <p className="text-sm text-destructive">{t("auth.registrationFailed")}</p>
+                    <p className="text-sm text-destructive">{t(registerMutation.error.message)}</p>
                   )}
                   <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
                     {registerMutation.isPending

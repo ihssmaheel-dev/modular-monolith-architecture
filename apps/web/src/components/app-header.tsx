@@ -1,0 +1,108 @@
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import { ChevronRight, LogOut, Moon, Settings, Sun } from "lucide-react";
+import { Avatar, AvatarFallback } from "@repo/ui/components/ui/avatar";
+import { Badge } from "@repo/ui/components/ui/badge";
+import { Button } from "@repo/ui/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@repo/ui/components/ui/dropdown-menu";
+import { SidebarTrigger } from "@repo/ui/components/ui/sidebar";
+import { useAuthStore } from "@/stores/auth.store";
+import { getApiClient } from "@/lib/api";
+import { useTheme } from "@/components/theme-provider";
+
+export function AppHeader() {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const { theme, setTheme } = useTheme();
+  const [signingOut, setSigningOut] = useState(false);
+  const initials = user?.name?.slice(0, 2).toUpperCase() ?? "U";
+  const signOut = async () => {
+    setSigningOut(true);
+    try {
+      await getApiClient().auth.logout();
+    } finally {
+      clearAuth();
+      navigate({ to: "/auth" });
+      setSigningOut(false);
+    }
+  };
+  const cycleTheme = () =>
+    setTheme(theme === "light" ? "dark" : theme === "dark" ? "system" : "light");
+  const currentPage =
+    location.pathname === "/settings"
+      ? t("settings.title")
+      : location.pathname.startsWith("/notes")
+        ? t("notes.title")
+        : t("dashboard.title");
+  return (
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/90 px-4 backdrop-blur sm:px-6">
+      <div className="flex items-center gap-3">
+        <SidebarTrigger aria-label={t("navigation.toggleSidebar")} />
+        <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
+          <span>{t("common.appName")}</span>
+          <ChevronRight className="size-3" />
+          <span className="font-medium text-foreground">{currentPage}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={cycleTheme}
+          aria-label={t("settings.switchTheme", {
+            theme: theme === "dark" ? t("settings.lightMode") : t("settings.darkMode"),
+          })}
+        >
+          {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                className="h-9 gap-2 px-1.5"
+                aria-label={t("settings.profile")}
+              />
+            }
+          >
+            <Avatar size="sm">
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <span className="hidden max-w-32 truncate text-sm font-medium sm:inline">
+              {user?.name}
+            </span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuLabel>
+              <p className="font-medium">{user?.name}</p>
+              <p className="truncate text-xs font-normal text-muted-foreground">{user?.email}</p>
+              <Badge variant="secondary" className="mt-2">
+                {user?.role}
+              </Badge>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link to="/settings" />}>
+              <Settings />
+              {t("settings.title")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={signOut} disabled={signingOut} variant="destructive">
+              <LogOut />
+              {signingOut ? t("auth.signingOut") : t("auth.logout")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  );
+}
