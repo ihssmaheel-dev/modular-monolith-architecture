@@ -71,7 +71,7 @@ pnpm dev
 pnpm dev              # Start all (api + web) in development mode (Turborepo)
 pnpm dev:api          # Build dependencies and start API (http://localhost:3000)
 pnpm dev:api:debug    # Start API with Node inspector on port 9229
-pnpm --filter web dev # Start TanStack Start web only (http://localhost:5173)
+pnpm dev:web          # Build dependencies and start web (http://localhost:5173)
 pnpm --filter web build # Build the production SSR web bundle
 pnpm --filter web start # Run the built SSR web bundle
 ```

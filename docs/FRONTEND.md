@@ -23,6 +23,10 @@ pnpm --filter web start
 pnpm --filter web typecheck
 ```
 
+`start` runs the built SSR handler with the static client bundle on port `3000` (`PORT` can override it).
+It is independent of the API process, but requires a valid `VITE_API_URL` at build time and runtime so it can
+reach the separately deployed API.
+
 ### Structure
 
 ```

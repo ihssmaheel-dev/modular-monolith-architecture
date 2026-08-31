@@ -6,6 +6,7 @@
     "dev": "turbo dev",
     "dev:api": "pnpm build && pnpm --filter api dev",
     "dev:api:debug": "pnpm build && pnpm --filter api dev:debug",
+    "dev:web": "pnpm build && pnpm --filter web dev",
     "build": "turbo build",
     "build:api": "pnpm --filter api build",
     "lint": "turbo lint",

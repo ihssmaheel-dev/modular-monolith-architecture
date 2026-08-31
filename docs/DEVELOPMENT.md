@@ -41,7 +41,8 @@ Useful filtered runs:
 
 ```sh
 pnpm dev:api                  # api only
-pnpm --filter web dev         # TanStack Start web only -> http://localhost:5173
+pnpm dev:web                  # builds dependencies, then starts web -> http://localhost:5173
+pnpm --filter web build && pnpm --filter web start # standalone production-like web -> http://localhost:3000
 ```
 
 Local endpoints:
@@ -59,6 +60,10 @@ Web reads `apps/web/.env` (copied from `.env.example` on `pnpm bootstrap`):
 ```env
 VITE_API_URL=http://localhost:3000/api
 ```
+
+The web app is independently runnable, but it still needs `VITE_API_URL` to point to a separately running
+API. Set it before `build` because Vite embeds it in browser assets; the standalone SSR process also validates
+the same variable at startup.
 
 ## Database migrations
 

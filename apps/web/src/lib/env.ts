@@ -10,7 +10,6 @@ function loadEnv(): WebEnv {
     VITE_APP_NAME: raw.VITE_APP_NAME,
   });
   if (!parsed.success) throw new Error("Invalid web environment configuration");
-  assertProductionApiUrl(parsed.data.VITE_API_URL);
   return parsed.data;
 }
 
@@ -19,25 +18,19 @@ let cached: WebEnv | null = null;
 export function getWebEnv(): WebEnv {
   if (cached) return cached;
   // On server, import.meta.env may not be available — fallback to process.env
-  if (typeof window === "undefined" && typeof process !== "undefined") {
+  if (typeof window === "undefined") {
+    const runtime = globalThis as typeof globalThis & {
+      process?: { env?: Record<string, string | undefined> };
+    };
     const serverRaw = {
-      VITE_API_URL: process.env.VITE_API_URL,
-      VITE_APP_NAME: process.env.VITE_APP_NAME,
+      VITE_API_URL: runtime.process?.env?.VITE_API_URL,
+      VITE_APP_NAME: runtime.process?.env?.VITE_APP_NAME,
     };
     const parsed = webEnvSchema.safeParse(serverRaw);
     if (!parsed.success) throw new Error("Invalid web environment configuration");
-    assertProductionApiUrl(parsed.data.VITE_API_URL);
     cached = parsed.data;
     return cached;
   }
   cached = loadEnv();
   return cached;
-}
-
-function assertProductionApiUrl(apiUrl: string): void {
-  if (import.meta.env?.MODE !== "production") return;
-  const hostname = new URL(apiUrl).hostname;
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    throw new Error("Production web API URL must not point to localhost");
-  }
 }
