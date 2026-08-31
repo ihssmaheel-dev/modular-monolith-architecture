@@ -305,7 +305,15 @@
     "flowTitle": "De l’interface au domaine durable",
     "flowDescription": "Chaque requête suit une frontière explicite et testable.",
     "referencesTitle": "Références technologiques officielles",
-    "referencesDescription": "Accédez à la documentation de chaque outil de cette base."
+    "referencesDescription": "Accédez à la documentation de chaque outil de cette base.",
+    "wiredBadge": "Déjà intégré",
+    "patternTitle": "Le modèle : monolithe modulaire + CQRS en couches",
+    "patternDescription": "Une application déployable avec des frontières internes fortes, des modules métier indépendants et un parcours de requête prévisible.",
+    "patternModular": "Monolithe modulaire : les modules partagent le même runtime et la connexion base de données, mais communiquent par cas d’usage et événements publics, jamais par tables internes.",
+    "patternLayers": "Conception en couches : la présentation reste mince ; les commandes et requêtes applicatives orchestrent ; les entités métier protègent les invariants ; l’infrastructure adapte les bases et fournisseurs.",
+    "patternRuntime": "Comportement production : REST reste le transport de compatibilité, les contrats Zod/oRPC partagés alignent les formes et les événements outbox fiabilisent les effets critiques.",
+    "folderTitle": "Structure des dossiers en un coup d’œil",
+    "folderDescription": "La structure rend les responsabilités évidentes et donne à chaque nouveau module le même point de départ sûr."
   },
   "navigation": {
     "workspace": "Espace de travail",
@@ -333,7 +341,24 @@
     "step5": "Ajouter l’autorisation et l’isolation des locataires",
     "step6": "Persister mutations et événements outbox dans une transaction",
     "step7": "Ajouter routes localisées, clés de requête et états UI",
-    "step8": "Ajouter tests, migrations, observabilité et déploiement"
+    "step8": "Ajouter tests, migrations, observabilité et déploiement",
+    "flowUi": "Interface web",
+    "flowClient": "Client API typé",
+    "flowContracts": "Contrats Zod / oRPC",
+    "flowApplication": "Commande ou requête applicative",
+    "flowRepository": "Dépôt du module",
+    "flowPersistence": "PostgreSQL + outbox + audit",
+    "modularDescription": "Les modules gardent explicites les frontières domaine, application, infrastructure et présentation.",
+    "apiDescription": "NestJS et Fastify fournissent le runtime HTTP avec des garde-fous globaux de sécurité et d’exploitation.",
+    "contractsDescription": "Les contrats Zod et oRPC définissent les formes validées partagées par l’API et les clients.",
+    "dataDescription": "Les repositories Drizzle accèdent à PostgreSQL sans partager directement les modèles entre modules.",
+    "redisDescription": "Cache distribué, limitation de débit, feature flags et coordination temps réel utilisent Redis.",
+    "tenancyDescription": "Le même code prend en charge les déploiements mono-locataire et multi-locataires avec contexte contrôlé.",
+    "authDescription": "Tokens courts, cookies de renouvellement, sessions, verrouillage et permissions protègent les requêtes.",
+    "eventsDescription": "Les mutations publient des événements outbox durables pour l’audit, les e-mails et le temps réel.",
+    "storageDescription": "Les fichiers utilisent un stockage compatible S3 avec validation et nettoyage.",
+    "observabilityDescription": "Journaux structurés, traces, métriques, contrôles de santé, Prometheus, Grafana et Loki sont intégrés.",
+    "toolingDescription": "pnpm, Turborepo, UI partagée, i18n, migrations, tests et générateurs rendent les modules reproductibles."
   },
   "zod": {
     "errors": {

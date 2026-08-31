@@ -34,9 +34,15 @@ const references = [
   ["TanStack Query", "https://tanstack.com/query/latest"],
   ["NestJS", "https://docs.nestjs.com"],
   ["Fastify", "https://fastify.dev/docs/latest"],
+  ["oRPC", "https://orpc.unnoq.com/"],
+  ["OpenAPI", "https://spec.openapis.org/oas/latest.html"],
+  ["Scalar", "https://scalar.com/"],
   ["Drizzle", "https://orm.drizzle.team/docs/overview"],
   ["PostgreSQL", "https://www.postgresql.org/docs/"],
   ["Redis", "https://redis.io/docs/latest/"],
+  ["AWS S3", "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html"],
+  ["Nodemailer", "https://nodemailer.com/"],
+  ["BullMQ", "https://docs.bullmq.io/"],
   ["Zod", "https://zod.dev/"],
   ["React Hook Form", "https://react-hook-form.com/"],
   ["Zustand", "https://zustand.docs.pmnd.rs/"],
@@ -50,18 +56,43 @@ const references = [
   ["Prometheus", "https://prometheus.io/docs/introduction/overview/"],
   ["Grafana", "https://grafana.com/docs/"],
   ["Loki", "https://grafana.com/oss/loki/"],
+  ["Vitest", "https://vitest.dev/"],
+  ["Docker Compose", "https://docs.docker.com/compose/"],
 ] as const;
+
+const folderTree = `apps/
+├── api/src/
+│   ├── common/              cross-cutting guards and pipes
+│   ├── infrastructure/     database, Redis, queues, storage, observability
+│   └── modules/[domain]/    presentation → application → domain → infrastructure
+apps/web/src/
+├── routes/                  thin TanStack Start pages and layouts
+├── features/                typed queries and mutations
+├── components/              shared shell and composed UI
+└── stores/                  persisted auth, locale, and tenant context
+packages/
+├── contracts/               Zod schemas, DTOs, and oRPC contracts
+├── api-client/              typed REST client and middleware
+├── authorization/           RBAC + ReBAC + ABAC evaluator
+├── i18n/                    en / es / fr translations
+├── ui/                      Base UI + shadcn design system
+└── email/                   React Email templates`;
 
 function HomePage() {
   const { t } = useTranslation();
   const signedIn = Boolean(useAuthStore((state) => state.user));
   const capabilities = [
-    [t("architecture.modular"), t("home.wiredDescription"), Boxes],
-    [t("architecture.api"), t("architecture.contracts"), Server],
-    [t("architecture.data"), t("architecture.redis"), Database],
-    [t("architecture.tenancy"), t("architecture.auth"), LockKeyhole],
-    [t("architecture.events"), t("architecture.observability"), Workflow],
-    [t("architecture.storage"), t("architecture.tooling"), Layers3],
+    [t("architecture.modular"), t("architecture.modularDescription"), Boxes],
+    [t("architecture.api"), t("architecture.apiDescription"), Server],
+    [t("architecture.contracts"), t("architecture.contractsDescription"), GitBranch],
+    [t("architecture.data"), t("architecture.dataDescription"), Database],
+    [t("architecture.redis"), t("architecture.redisDescription"), Radio],
+    [t("architecture.tenancy"), t("architecture.tenancyDescription"), LockKeyhole],
+    [t("architecture.auth"), t("architecture.authDescription"), ShieldCheck],
+    [t("architecture.events"), t("architecture.eventsDescription"), Workflow],
+    [t("architecture.storage"), t("architecture.storageDescription"), Layers3],
+    [t("architecture.observability"), t("architecture.observabilityDescription"), Zap],
+    [t("architecture.tooling"), t("architecture.toolingDescription"), Check],
   ] as const;
   const steps = [
     t("architecture.step1"),
@@ -128,12 +159,12 @@ function HomePage() {
             <CardContent>
               <div className="space-y-2 text-sm">
                 {[
-                  "UI",
-                  "API client",
-                  "Contracts",
-                  "Application",
-                  "Repository",
-                  "Database + events",
+                  t("architecture.flowUi"),
+                  t("architecture.flowClient"),
+                  t("architecture.flowContracts"),
+                  t("architecture.flowApplication"),
+                  t("architecture.flowRepository"),
+                  t("architecture.flowPersistence"),
                 ].map((label, index) => (
                   <div
                     key={label}
@@ -163,12 +194,41 @@ function HomePage() {
                   <div className="mb-2 flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Icon className="size-4" />
                   </div>
-                  <CardTitle className="text-base">{title}</CardTitle>
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="text-base">{title}</CardTitle>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {t("home.wiredBadge")}
+                    </Badge>
+                  </div>
                   <CardDescription>{description}</CardDescription>
                 </CardHeader>
               </Card>
             ))}
           </div>
+        </section>
+        <section className="grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("home.patternTitle")}</CardTitle>
+              <CardDescription>{t("home.patternDescription")}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>{t("home.patternModular")}</p>
+              <p>{t("home.patternLayers")}</p>
+              <p>{t("home.patternRuntime")}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("home.folderTitle")}</CardTitle>
+              <CardDescription>{t("home.folderDescription")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="overflow-x-auto rounded-xl border bg-muted/40 p-4 font-mono text-xs leading-6 text-muted-foreground">
+                {folderTree}
+              </pre>
+            </CardContent>
+          </Card>
         </section>
         <section className="grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
           <Card>

@@ -18,6 +18,8 @@ type ThemeProviderState = {
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)";
 const THEME_VALUES: Theme[] = ["dark", "light", "system"];
 
+export const THEME_BOOTSTRAP_SCRIPT = `(function(){try{var key="theme";var value=localStorage.getItem(key);var valid=value==="dark"||value==="light"||value==="system";var theme=valid?value:"system";var dark=theme==="dark"||(theme==="system"&&window.matchMedia("${COLOR_SCHEME_QUERY}").matches);document.documentElement.classList.toggle("dark",dark);document.documentElement.classList.toggle("light",!dark);document.documentElement.style.colorScheme=dark?"dark":"light";}catch(_){}})();`;
+
 const ThemeProviderContext = React.createContext<ThemeProviderState | undefined>(undefined);
 
 function isTheme(value: string | null): value is Theme {

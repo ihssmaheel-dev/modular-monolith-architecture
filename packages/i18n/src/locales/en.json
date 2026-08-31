@@ -140,7 +140,15 @@
     "flowTitle": "From UI to durable domain behavior",
     "flowDescription": "Every request follows an explicit, testable boundary.",
     "referencesTitle": "Official technology references",
-    "referencesDescription": "Jump straight to the documentation for each tool in this foundation."
+    "referencesDescription": "Jump straight to the documentation for each tool in this foundation.",
+    "wiredBadge": "Wired today",
+    "patternTitle": "The pattern: modular monolith + layered CQRS",
+    "patternDescription": "One deployable application with strong internal boundaries, independent domain modules, and a predictable request path.",
+    "patternModular": "Modular monolith: modules share one runtime and database connection, but communicate through public use cases and events instead of internal tables.",
+    "patternLayers": "Layered design: presentation stays thin; application commands and queries orchestrate; domain entities enforce invariants; infrastructure adapts databases and providers.",
+    "patternRuntime": "Production behavior: REST remains the compatibility transport, shared Zod/oRPC contracts keep shapes aligned, and outbox events make critical side effects reliable.",
+    "folderTitle": "Folder structure at a glance",
+    "folderDescription": "The layout makes ownership obvious and gives every new module the same safe starting point."
   },
   "navigation": {
     "workspace": "Workspace",
@@ -168,7 +176,24 @@
     "step5": "Add authorization and tenant isolation",
     "step6": "Persist mutations and outbox events transactionally",
     "step7": "Add localized routes, query keys, and UI states",
-    "step8": "Add tests, migrations, observability, and deployment"
+    "step8": "Add tests, migrations, observability, and deployment",
+    "flowUi": "Web UI",
+    "flowClient": "Typed API client",
+    "flowContracts": "Zod / oRPC contracts",
+    "flowApplication": "Application command or query",
+    "flowRepository": "Module repository",
+    "flowPersistence": "PostgreSQL + outbox + audit",
+    "modularDescription": "Modules keep domain, application, infrastructure, and presentation boundaries explicit.",
+    "apiDescription": "NestJS and Fastify provide the HTTP runtime with global security and operational guards.",
+    "contractsDescription": "Zod and oRPC contracts define validated request and response shapes shared by API and clients.",
+    "dataDescription": "Drizzle repositories access PostgreSQL without allowing modules to share database models directly.",
+    "redisDescription": "Distributed caching, rate limiting, feature flags, and realtime coordination use Redis.",
+    "tenancyDescription": "The same code supports single-tenant and multi-tenant deployments with enforced context.",
+    "authDescription": "Short-lived access tokens, refresh cookies, sessions, lockout, and permissions protect requests.",
+    "eventsDescription": "Mutations publish durable outbox events and feed audit, email, and realtime workflows.",
+    "storageDescription": "File uploads use presigned S3-compatible storage with validation and cleanup workflows.",
+    "observabilityDescription": "Structured logs, traces, metrics, health checks, Prometheus, Grafana, and Loki are integrated.",
+    "toolingDescription": "pnpm, Turborepo, shared UI, i18n, migrations, tests, and generators make new modules repeatable."
   },
   "auth": {
     "welcomeBack": "Welcome back",

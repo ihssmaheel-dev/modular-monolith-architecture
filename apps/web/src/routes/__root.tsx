@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type { QueryClient } from "@tanstack/react-query";
-import { ThemeProvider } from "@/components/theme-provider";
+import { THEME_BOOTSTRAP_SCRIPT, ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@repo/ui/components/ui/toast";
 import { Button } from "@repo/ui/components/ui/button";
 import {
@@ -96,6 +96,7 @@ function RootComponent() {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body className="min-h-svh bg-background font-sans antialiased isolation-auto">
         <QueryProvider>
