@@ -90,6 +90,7 @@ describe("RefreshTokensCommand", () => {
       "test@example.com",
       "Test",
       "user",
+      0,
     );
     expect(jwtUtils.signRefreshToken).toHaveBeenCalledWith("user-123", 0);
   });

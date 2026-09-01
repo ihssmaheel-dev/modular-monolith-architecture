@@ -9,6 +9,7 @@ import { GetFileByIdQuery } from "./application/queries/get-file-by-id.query";
 import { GetFileDownloadUrlQuery } from "./application/queries/get-file-download-url.query";
 import { ListFilesByParentQuery } from "./application/queries/list-files-by-parent.query";
 import { FileCleanupWorker } from "./application/workers/file-cleanup.worker";
+import { FileScanWorker } from "./application/workers/file-scan.worker";
 import { FilesRepository } from "./infrastructure/files.repository";
 import { DatabaseModule } from "../../infrastructure/database";
 
@@ -23,6 +24,7 @@ import { DatabaseModule } from "../../infrastructure/database";
     GetFileDownloadUrlQuery,
     ListFilesByParentQuery,
     FileCleanupWorker,
+    FileScanWorker,
     FilesRepository,
   ],
   exports: [
@@ -33,6 +35,7 @@ import { DatabaseModule } from "../../infrastructure/database";
     GetFileDownloadUrlQuery,
     ListFilesByParentQuery,
     FileCleanupWorker,
+    FileScanWorker,
     FilesRepository,
   ],
 })

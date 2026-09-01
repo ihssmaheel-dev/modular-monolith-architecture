@@ -1,10 +1,12 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
 import { StorageService } from "../../../../infrastructure/storage/storage.service";
 import { env } from "../../../../config/env";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
 import type { AuthenticatedUser } from "@repo/contracts";
+import { resolveResourceOwnerId } from "@repo/authorization";
+import { DatabaseService } from "../../../../infrastructure/database";
 
 interface DownloadUrlResult {
   downloadUrl: string;
@@ -15,13 +17,16 @@ export class GetFileDownloadUrlQuery {
   constructor(
     private readonly storage: StorageService,
     private readonly filesRepo: FilesRepository,
+    @Optional() private readonly database?: DatabaseService,
   ) {}
 
   async execute(
     fileId: string,
     actor: AuthenticatedUser,
   ): Promise<Result<DownloadUrlResult, FileError>> {
-    const findResult = await this.filesRepo.findById(fileId);
+    const findResult = this.database
+      ? await this.database.runTransaction(() => this.filesRepo.findById(fileId))
+      : await this.filesRepo.findById(fileId);
 
     if (findResult.isErr() || !findResult.value) {
       return err({
@@ -31,7 +36,10 @@ export class GetFileDownloadUrlQuery {
     }
 
     const file = findResult.value;
-    if (actor.role !== "admin" && file.uploadedBy !== actor.sub) {
+    if (
+      actor.role !== "admin" &&
+      resolveResourceOwnerId("file", file as unknown as Record<string, unknown>) !== actor.sub
+    ) {
       return err({ type: "FILE_NOT_FOUND", message: "api.file.notFound" });
     }
     if (file.status !== "uploaded") {

@@ -13,18 +13,22 @@ Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/we
 
 ## API core and connectivity
 
-| Variable            | Default / purpose                                                  |
-| ------------------- | ------------------------------------------------------------------ |
-| `NODE_ENV`          | `development`; one of `development`, `test`, `production`          |
-| `PORT`              | `3000`; API listener port                                          |
-| `LOG_LEVEL`         | `info`; Pino level from `fatal` through `trace`                    |
-| `TENANCY_MODE`      | `single`; choose `single` or `multi` before production data exists |
-| `CLIENT_URL`        | `http://localhost:5173`; allowed browser origin                    |
-| `API_URL`           | `http://localhost:3000`; externally reachable API origin           |
-| `DATABASE_URL`      | Local PostgreSQL connection string (e.g. `postgres://...`)         |
-| `DB_MAX_POOL_SIZE`  | `10`; maximum PostgreSQL connections in pool                       |
-| `REDIS_URL`         | `redis://localhost:6379` locally; required in production           |
-| `TEST_DATABASE_URL` | Integration/E2E database; its name must contain `test`             |
+| Variable                            | Default / purpose                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------------ |
+| `NODE_ENV`                          | `development`; one of `development`, `test`, `production`                      |
+| `PROCESS_ROLE`                      | `all` locally; use `api` for HTTP-only or `worker` for queue/scheduled workers |
+| `PORT`                              | `3000`; API listener port                                                      |
+| `LOG_LEVEL`                         | `info`; Pino level from `fatal` through `trace`                                |
+| `TENANCY_MODE`                      | `single`; choose `single` or `multi` before production data exists             |
+| `CLIENT_URL`                        | `http://localhost:5173`; allowed browser origin                                |
+| `API_URL`                           | `http://localhost:3000`; externally reachable API origin                       |
+| `DATABASE_URL`                      | Local PostgreSQL connection string (e.g. `postgres://...`)                     |
+| `DB_MAX_POOL_SIZE`                  | `10`; maximum PostgreSQL connections in pool                                   |
+| `DB_STATEMENT_TIMEOUT_MS`           | `30000`; maximum statement duration                                            |
+| `DB_LOCK_TIMEOUT_MS`                | `5000`; maximum lock wait duration                                             |
+| `DB_IDLE_IN_TRANSACTION_TIMEOUT_MS` | `60000`; idle transaction guard                                                |
+| `REDIS_URL`                         | `redis://localhost:6379` locally; required in production                       |
+| `TEST_DATABASE_URL`                 | Integration/E2E database; its name must contain `test`                         |
 
 ## Authentication, security, and observability
 
@@ -43,18 +47,21 @@ Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/we
 
 ## Storage and CDN
 
-| Variable               | Default / purpose                              |
-| ---------------------- | ---------------------------------------------- |
-| `STORAGE_DRIVER`       | `s3`                                           |
-| `S3_ENDPOINT`          | `http://localhost:9000`; local MinIO endpoint  |
-| `S3_REGION`            | `us-east-1`                                    |
-| `S3_BUCKET`            | `uploads`                                      |
-| `S3_ACCESS_KEY_ID`     | `minioadmin` locally                           |
-| `S3_SECRET_ACCESS_KEY` | `minioadmin` locally                           |
-| `S3_FORCE_PATH_STYLE`  | `true`; required by local MinIO                |
-| `CDN_ENABLED`          | `false`; enable CDN URL generation             |
-| `CDN_DOMAIN`           | Optional public CDN hostname, without protocol |
-| `CDN_BUCKET_PATH`      | `uploads`; public bucket path prefix           |
+| Variable                | Default / purpose                                           |
+| ----------------------- | ----------------------------------------------------------- |
+| `STORAGE_DRIVER`        | `s3`                                                        |
+| `S3_ENDPOINT`           | `http://localhost:9000`; local MinIO endpoint               |
+| `S3_REGION`             | `us-east-1`                                                 |
+| `S3_BUCKET`             | `uploads`                                                   |
+| `S3_ACCESS_KEY_ID`      | `minioadmin` locally                                        |
+| `S3_SECRET_ACCESS_KEY`  | `minioadmin` locally                                        |
+| `S3_FORCE_PATH_STYLE`   | `true`; required by local MinIO                             |
+| `FILE_USER_QUOTA_BYTES` | `104857600`; active upload quota per user                   |
+| `FILE_AV_ENABLED`       | `false`; antivirus scan integration for quarantined uploads |
+| `FILE_AV_URL`           | Optional scanner endpoint returning `{ "clean": boolean }`  |
+| `CDN_ENABLED`           | `false`; enable CDN URL generation                          |
+| `CDN_DOMAIN`            | Optional public CDN hostname, without protocol              |
+| `CDN_BUCKET_PATH`       | `uploads`; public bucket path prefix                        |
 
 ## Email and seed
 

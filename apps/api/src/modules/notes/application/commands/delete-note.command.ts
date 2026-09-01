@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { ok, err, Result } from "neverthrow";
 import { NoteNotFound } from "../../domain/errors/note.errors";
@@ -7,6 +7,7 @@ import { NotesRepository } from "../../infrastructure/notes.repository";
 import { GetNoteByIdQuery } from "../queries/get-note-by-id.query";
 import type { AuthenticatedUser } from "@repo/contracts";
 import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
+import { DatabaseService } from "../../../../infrastructure/database";
 
 @Injectable()
 export class DeleteNoteCommand {
@@ -15,9 +16,24 @@ export class DeleteNoteCommand {
     private readonly getNoteById: GetNoteByIdQuery,
     private readonly eventEmitter: EventEmitter2,
     private readonly outbox: OutboxService,
+    @Optional() private readonly database?: DatabaseService,
   ) {}
 
   async execute(
+    id: string,
+    actor: AuthenticatedUser,
+  ): Promise<
+    Result<void, NoteNotFound | import("../../domain/errors/note.errors").NoteEventDispatchFailed>
+  > {
+    const operation = () => this.persist(id, actor);
+    if (!this.database) return operation();
+    const result = await this.database.withResultTransaction(operation);
+    return result.mapErr((error) =>
+      error.type === "TRANSACTION_FAILED" ? { type: "NOTE_EVENT_DISPATCH_FAILED" } : error,
+    );
+  }
+
+  private async persist(
     id: string,
     actor: AuthenticatedUser,
   ): Promise<

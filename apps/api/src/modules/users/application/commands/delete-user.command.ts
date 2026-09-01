@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { ok, err, Result } from "neverthrow";
 import type { UserNotFound, UserOwnsOrganization } from "../../domain/errors/user.errors";
@@ -9,6 +9,7 @@ import { DistributedCacheService } from "../../../../infrastructure/cache/distri
 import { CanDeleteUserQuery } from "../../../tenancy/application/queries/can-delete-user.query";
 import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
 import type { UserEventDispatchFailed } from "../../domain/errors/user.errors";
+import { DatabaseService } from "../../../../infrastructure/database";
 
 @Injectable()
 export class DeleteUserCommand {
@@ -19,9 +20,29 @@ export class DeleteUserCommand {
     private readonly cacheService: DistributedCacheService,
     private readonly canDeleteUser: CanDeleteUserQuery,
     private readonly outbox: OutboxService,
+    @Optional() private readonly database?: DatabaseService,
   ) {}
 
   async execute(
+    id: string,
+  ): Promise<Result<void, UserNotFound | UserOwnsOrganization | UserEventDispatchFailed>> {
+    const operation = () => this.persist(id);
+    if (!this.database) {
+      const result = await operation();
+      if (result.isOk()) await this.cacheService.invalidateGlobal(`user:${id}`);
+      return result;
+    }
+    const result = await this.database.withResultTransaction(operation);
+    if (result.isErr()) {
+      return result.mapErr((error) =>
+        error.type === "TRANSACTION_FAILED" ? { type: "USER_EVENT_DISPATCH_FAILED" } : error,
+      );
+    }
+    await this.cacheService.invalidateGlobal(`user:${id}`);
+    return ok(result.value);
+  }
+
+  private async persist(
     id: string,
   ): Promise<Result<void, UserNotFound | UserOwnsOrganization | UserEventDispatchFailed>> {
     const existing = await this.getUserById.execute(id);
@@ -33,7 +54,6 @@ export class DeleteUserCommand {
     if (deleted.isErr()) return err({ type: "USER_NOT_FOUND", userId: id });
     if (!deleted.value) return err({ type: "USER_NOT_FOUND", userId: id });
 
-    await this.cacheService.invalidateGlobal(`user:${id}`);
     const dispatched = await this.outbox.dispatchGlobal("user.deleted", new UserDeletedEvent(id));
     if (dispatched.isErr()) return err({ type: "USER_EVENT_DISPATCH_FAILED" });
     try {

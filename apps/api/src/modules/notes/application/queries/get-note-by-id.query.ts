@@ -4,6 +4,7 @@ import { Note } from "../../domain/entities/note.entity";
 import { NoteNotFound } from "../../domain/errors/note.errors";
 import { NotesRepository } from "../../infrastructure/notes.repository";
 import type { AuthenticatedUser } from "@repo/contracts";
+import { resolveResourceOwnerId } from "@repo/authorization";
 
 @Injectable()
 export class GetNoteByIdQuery {
@@ -13,7 +14,11 @@ export class GetNoteByIdQuery {
     const result = await this.repository.findById(id);
     if (result.isErr()) return err(result.error);
     if (!result.value) return err({ type: "NOTE_NOT_FOUND", noteId: id });
-    if (actor.role !== "admin" && result.value.createdBy !== actor.sub) {
+    if (
+      actor.role !== "admin" &&
+      resolveResourceOwnerId("note", result.value as unknown as Record<string, unknown>) !==
+        actor.sub
+    ) {
       return err({ type: "NOTE_NOT_FOUND", noteId: id });
     }
     return ok(result.value);

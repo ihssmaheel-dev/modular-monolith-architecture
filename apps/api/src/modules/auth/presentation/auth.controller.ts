@@ -1,7 +1,12 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/common";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { err } from "neverthrow";
-import { Public, TenantAgnostic, requireAuthenticatedUser } from "../../../common";
+import {
+  NoDatabaseTransaction,
+  Public,
+  TenantAgnostic,
+  requireAuthenticatedUser,
+} from "../../../common";
 import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
@@ -12,6 +17,7 @@ import {
   type ForgotPasswordInput,
   type ResetPasswordInput,
   type AuthResponse,
+  type CurrentUserResponse,
   type MessageResponse,
   RegisterSchema,
   LoginSchema,
@@ -28,6 +34,7 @@ import { ResetPasswordCommand } from "../application/commands/reset-password.com
 import { clearAuthCookies, setAuthCookies } from "./auth.cookies";
 import { EMAIL_TAKEN_ERRORS, INVALID_TOKEN_ERRORS, LOGIN_ERRORS } from "./auth.error-maps";
 import { AuthRateLimit } from "./auth-rate-limit.decorator";
+import { GetUserByIdQuery } from "../../users/application/queries/get-user-by-id.query";
 
 @Controller("auth")
 @TenantAgnostic()
@@ -39,8 +46,25 @@ export class AuthController {
     private readonly refreshCmd: RefreshTokensCommand,
     private readonly forgotPasswordCmd: ForgotPasswordCommand,
     private readonly resetPasswordCmd: ResetPasswordCommand,
+    private readonly getUserById: GetUserByIdQuery,
     private readonly i18n: I18nService,
   ) {}
+
+  @Get("me")
+  @HttpCode(HttpStatus.OK)
+  async me(@Req() req: FastifyRequest): Promise<CurrentUserResponse> {
+    const actor = requireAuthenticatedUser(req);
+    const result = await this.getUserById.execute(actor.sub);
+    const user = handleResult(
+      result,
+      INVALID_TOKEN_ERRORS,
+      this.i18n,
+      req.headers["accept-language"],
+    );
+    return {
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    };
+  }
 
   @Post("register")
   @HttpCode(HttpStatus.CREATED)
@@ -80,6 +104,7 @@ export class AuthController {
 
   @Post("logout")
   @HttpCode(HttpStatus.OK)
+  @NoDatabaseTransaction()
   async logout(
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
@@ -94,6 +119,7 @@ export class AuthController {
 
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
+  @NoDatabaseTransaction()
   @Public()
   @AuthRateLimit("refresh")
   async refresh(
@@ -116,6 +142,7 @@ export class AuthController {
   @Post("forgot-password")
   @HttpCode(HttpStatus.OK)
   @Public()
+  @NoDatabaseTransaction()
   @AuthRateLimit("forgotPassword")
   async forgotPassword(
     @Body(new ZodValidationPipe(ForgotPasswordSchema)) body: ForgotPasswordInput,
@@ -129,6 +156,7 @@ export class AuthController {
   @Post("reset-password")
   @HttpCode(HttpStatus.OK)
   @Public()
+  @NoDatabaseTransaction()
   @AuthRateLimit("resetPassword")
   async resetPassword(
     @Body(new ZodValidationPipe(ResetPasswordSchema)) body: ResetPasswordInput,

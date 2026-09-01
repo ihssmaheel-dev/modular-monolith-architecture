@@ -10,6 +10,7 @@ import { DatabaseService } from "../../../../infrastructure/database";
 import { env } from "../../../../config/env";
 
 const PENDING_EXPIRATION_HOURS = 24;
+const CLEANUP_BATCH_SIZE = 100;
 
 @Injectable()
 export class FileCleanupWorker {
@@ -29,6 +30,7 @@ export class FileCleanupWorker {
 
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async cleanupOrphanPendingFiles(): Promise<{ purgedCount: number; reclaimedBytes: number }> {
+    if (env.PROCESS_ROLE === "api") return { purgedCount: 0, reclaimedBytes: 0 };
     if (this.isRunning) {
       this.logger.warn({}, "File cleanup already in progress, skipping run");
       return { purgedCount: 0, reclaimedBytes: 0 };
@@ -44,22 +46,19 @@ export class FileCleanupWorker {
         const staleFiles = await this.database.runTransaction(() =>
           this.filesRepository.findPendingFilesBefore(cutoff, true),
         );
-        for (const file of staleFiles) {
-          try {
-            const deletedObject = await this.storageService.delete(file.key);
-            if (deletedObject.isErr()) continue;
-            const deletedRow = await this.database.runTransaction(() =>
-              this.filesRepository.deleteById(file.id),
-            );
-            if (deletedRow.isOk() && deletedRow.value) {
-              purgedCount += 1;
-              reclaimedBytes += file.fileSize;
-            }
-          } catch (error) {
-            this.logger.error(
-              { fileId: file.id, key: file.key, error },
-              "Failed to purge orphan file",
-            );
+        const repository = this.filesRepository as unknown as {
+          findDeletedFiles?: (limit: number) => Promise<typeof staleFiles>;
+        };
+        const deletedFiles = repository.findDeletedFiles
+          ? await this.database.runTransaction(() =>
+              repository.findDeletedFiles!(CLEANUP_BATCH_SIZE),
+            )
+          : [];
+        for (const file of [...staleFiles, ...deletedFiles]) {
+          const deleted = await this.purgeFile(file);
+          if (deleted) {
+            purgedCount += 1;
+            reclaimedBytes += file.fileSize;
           }
         }
       });
@@ -79,5 +78,19 @@ export class FileCleanupWorker {
     }
 
     return { purgedCount, reclaimedBytes };
+  }
+
+  private async purgeFile(file: { id: string; key: string; fileSize: number }): Promise<boolean> {
+    try {
+      const deletedObject = await this.storageService.delete(file.key);
+      if (deletedObject.isErr()) return false;
+      const deletedRow = await this.database.runTransaction(() =>
+        this.filesRepository.deleteById(file.id),
+      );
+      return deletedRow.isOk() && Boolean(deletedRow.value);
+    } catch (error) {
+      this.logger.error({ fileId: file.id, key: file.key, error }, "Failed to purge orphan file");
+      return false;
+    }
   }
 }

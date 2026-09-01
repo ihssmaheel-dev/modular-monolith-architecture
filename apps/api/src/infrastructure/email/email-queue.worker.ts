@@ -3,6 +3,7 @@ import type { EmailJobData } from "@repo/contracts";
 import { PinoLoggerService } from "../logger/logger.service";
 import { QueueService } from "../queue/queue.service";
 import { EmailService } from "./email.service";
+import { env } from "../../config/env";
 
 @Injectable()
 export class EmailQueueWorker implements OnModuleInit {
@@ -13,6 +14,7 @@ export class EmailQueueWorker implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    if (env.PROCESS_ROLE === "api") return;
     const worker = this.queueService.addWorker<EmailJobData>("email", async (job) =>
       this.send(job.data),
     );

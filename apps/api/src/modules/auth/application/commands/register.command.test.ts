@@ -98,6 +98,7 @@ describe("RegisterCommand", () => {
       "test@example.com",
       "Test",
       "user",
+      0,
     );
   });
 });

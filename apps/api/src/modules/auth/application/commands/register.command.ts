@@ -39,7 +39,13 @@ export class RegisterCommand {
     }
 
     const user = result.value;
-    const accessToken = signAccessToken(user.id, user.email, user.name, user.role);
+    const accessToken = signAccessToken(
+      user.id,
+      user.email,
+      user.name,
+      user.role,
+      user.authVersion,
+    );
     const refreshToken = signRefreshToken(user.id, user.authVersion);
 
     return ok({

@@ -36,7 +36,13 @@ export class RefreshTokensCommand {
     if (decoded.version !== user.authVersion) {
       return err({ type: "INVALID_TOKEN" });
     }
-    const newAccessToken = signAccessToken(user.id, user.email, user.name, user.role);
+    const newAccessToken = signAccessToken(
+      user.id,
+      user.email,
+      user.name,
+      user.role,
+      user.authVersion,
+    );
     const newRefreshToken = signRefreshToken(user.id, user.authVersion);
 
     return ok({

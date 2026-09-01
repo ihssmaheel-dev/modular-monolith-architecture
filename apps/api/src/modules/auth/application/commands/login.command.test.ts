@@ -77,6 +77,7 @@ describe("LoginCommand", () => {
       "test@example.com",
       "Test User",
       "user",
+      0,
     );
     expect(jwtUtils.signRefreshToken).toHaveBeenCalledWith("user-123", 0);
     expect(metricsService.incrementCounter).toHaveBeenCalledWith(

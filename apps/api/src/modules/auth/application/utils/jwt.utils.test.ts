@@ -25,7 +25,7 @@ describe("jwt.utils", () => {
 
       expect(token).toBe("mock-access-token");
       expect(jwt.sign).toHaveBeenCalledWith(
-        { sub: userId, email, name: "Test User", role },
+        { sub: userId, email, name: "Test User", role, authVersion: 0 },
         env.JWT_SECRET,
         {
           algorithm: "HS256",

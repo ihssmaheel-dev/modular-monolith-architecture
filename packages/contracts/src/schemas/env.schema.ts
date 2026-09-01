@@ -1,29 +1,27 @@
 import { z } from "zod";
 
-// Dev-only fallbacks — pnpm bootstrap generates cryptographically strong secrets into apps/api/.env
-// and these defaults are rejected in production via superRefine below.
 const DEFAULT_JWT_SECRET = "your-super-secret-jwt-key-change-in-prod";
 const DEFAULT_REFRESH_SECRET = "your-super-secret-refresh-key-change-in-prod";
 
 export const envSchema = z
   .object({
-    // Core
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    PROCESS_ROLE: z.enum(["all", "api", "worker"]).default("all"),
     PORT: z.coerce.number().default(3000),
     TRUST_PROXY: z.coerce.boolean().default(false),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
     TENANCY_MODE: z.enum(["single", "multi"]).default("single"),
 
-    // URLs
     CLIENT_URL: z.string().url().default("http://localhost:5173"),
     API_URL: z.string().url().default("http://localhost:3000"),
 
-    // Database & Cache
     DATABASE_URL: z.string().url().default("postgres://postgres:postgres@localhost:5432/app"),
     DB_MAX_POOL_SIZE: z.coerce.number().default(10),
+    DB_STATEMENT_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
+    DB_LOCK_TIMEOUT_MS: z.coerce.number().int().positive().default(5_000),
+    DB_IDLE_IN_TRANSACTION_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
     REDIS_URL: z.string().url().optional(),
 
-    // Auth & Security
     JWT_SECRET: z.string().min(32).default(DEFAULT_JWT_SECRET),
     JWT_REFRESH_SECRET: z.string().min(32).default(DEFAULT_REFRESH_SECRET),
     METRICS_TOKEN: z.string().min(32).optional(),
@@ -32,19 +30,15 @@ export const envSchema = z
     JWT_ISSUER: z.string().min(1).default("modular-monolith-api"),
     JWT_AUDIENCE: z.string().min(1).default("modular-monolith-client"),
 
-    // Rate Limiting
     RATE_LIMIT_MAX: z.coerce.number().default(100),
     RATE_LIMIT_TTL: z.coerce.number().default(60),
 
-    // Account Lockout
     LOCKOUT_MAX_ATTEMPTS: z.coerce.number().default(5),
     LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
 
-    // Tracing & Logging
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default("http://localhost:4318/v1/traces"),
     LOKI_HOST: z.string().url().default("http://localhost:3100"),
 
-    // Storage
     STORAGE_DRIVER: z.enum(["s3"]).default("s3"),
     S3_ENDPOINT: z.string().url().default("http://localhost:9000"),
     S3_REGION: z.string().default("us-east-1"),
@@ -52,13 +46,21 @@ export const envSchema = z
     S3_ACCESS_KEY_ID: z.string().default("minioadmin"),
     S3_SECRET_ACCESS_KEY: z.string().default("minioadmin"),
     S3_FORCE_PATH_STYLE: z.coerce.boolean().default(true),
+    FILE_USER_QUOTA_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(100 * 1024 * 1024),
+    FILE_AV_ENABLED: z.coerce.boolean().default(false),
+    FILE_AV_URL: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().url().optional(),
+    ),
 
-    // CDN
     CDN_ENABLED: z.coerce.boolean().default(false),
     CDN_DOMAIN: z.string().optional(),
     CDN_BUCKET_PATH: z.string().default("uploads"),
 
-    // Email
     EMAIL_DRIVER: z.enum(["resend", "smtp"]).default("smtp"),
     RESEND_API_KEY: z.string().default(""),
     EMAIL_FROM: z.string().email().default("noreply@example.com"),
@@ -67,7 +69,6 @@ export const envSchema = z
     SMTP_USER: z.string().default(""),
     SMTP_PASS: z.string().default(""),
 
-    // Optional one-time administrative seed
     SEED_ADMIN_EMAIL: z.string().email().optional(),
     SEED_ADMIN_PASSWORD: z.string().min(12).optional(),
   })
@@ -87,6 +88,13 @@ export const envSchema = z
       });
     }
 
+    if (env.FILE_AV_ENABLED && !env.FILE_AV_URL) {
+      context.addIssue({
+        code: "custom",
+        path: ["FILE_AV_URL"],
+        message: "FILE_AV_URL is required when antivirus scanning is enabled",
+      });
+    }
     if (env.NODE_ENV !== "production") return;
     if (!env.REDIS_URL) {
       context.addIssue({
@@ -133,10 +141,3 @@ export const envSchema = z
   });
 
 export type Env = z.infer<typeof envSchema>;
-
-export const webEnvSchema = z.object({
-  VITE_API_URL: z.string().url(),
-  VITE_APP_NAME: z.string().trim().min(1).max(100).default("Workspace"),
-});
-
-export type WebEnv = z.infer<typeof webEnvSchema>;

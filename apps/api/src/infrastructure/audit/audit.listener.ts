@@ -56,6 +56,28 @@ export class AuditListener {
     }
   }
 
+  @OnEvent("authorization.denied", { async: true })
+  async handleAuthorizationDenied(event: {
+    decisionId: string;
+    principalId: string;
+    action: string;
+    resourceType?: string;
+    tenantId?: string;
+    reason: string;
+  }): Promise<void> {
+    await this.handleDatabaseMutatedEvent(
+      new DatabaseMutatedEvent(
+        "authorization_decisions",
+        event.decisionId,
+        "CREATE",
+        event.principalId,
+        event.tenantId,
+        null,
+        { action: event.action, resourceType: event.resourceType, reason: event.reason },
+      ),
+    );
+  }
+
   private writeAuditRecord(event: DatabaseMutatedEvent): Promise<Result<void, TransactionError>> {
     return this.database.withTransaction(async () => {
       const db = this.database.getTx() ?? this.database.getDb();

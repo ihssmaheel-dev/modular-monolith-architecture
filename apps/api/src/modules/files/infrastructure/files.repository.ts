@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, lt } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { DatabaseService } from "../../../infrastructure/database";
 import { TenantContextService } from "../../../infrastructure/database";
 import { BaseRepository } from "../../../infrastructure/database";
@@ -54,7 +54,55 @@ export class FilesRepository extends BaseRepository<FileEntity, FileRow> {
     )
       .select()
       .from(files)
-      .where(and(eq(files.status, "pending"), lt(files.createdAt, cutoff)));
+      .where(and(inArray(files.status, ["pending", "uploading"]), lt(files.createdAt, cutoff)));
     return (rows ?? []).map((r) => this.toDomain(r));
+  }
+
+  async findUploadingFiles(limit: number): Promise<FileEntity[]> {
+    const db = this.getDb();
+    const rows = await (
+      db as unknown as {
+        select: () => {
+          from: (t: unknown) => {
+            where: (c: unknown) => { limit: (value: number) => Promise<FileRow[]> };
+          };
+        };
+      }
+    )
+      .select()
+      .from(files)
+      .where(and(eq(files.status, "uploading"), isNull(files.deletedAt)))
+      .limit(limit);
+    return (rows ?? []).map((r) => this.toDomain(r));
+  }
+
+  async findDeletedFiles(limit: number): Promise<FileEntity[]> {
+    const db = this.getDb();
+    const rows = await (
+      db as unknown as {
+        select: () => {
+          from: (t: unknown) => {
+            where: (c: unknown) => { limit: (value: number) => Promise<FileRow[]> };
+          };
+        };
+      }
+    )
+      .select()
+      .from(files)
+      .where(isNotNull(files.deletedAt))
+      .limit(limit);
+    return (rows ?? []).map((r) => this.toDomain(r));
+  }
+
+  async sumActiveBytes(uploadedBy: string): Promise<number> {
+    const db = this.getDb();
+    const result = await (
+      db as unknown as {
+        execute: (query: unknown) => Promise<{ rows: Array<{ total: number | string }> }>;
+      }
+    ).execute(
+      sql`select coalesce(sum(file_size), 0) as total from files where uploaded_by = ${uploadedBy} and deleted_at is null`,
+    );
+    return Number(result.rows[0]?.total ?? 0);
   }
 }

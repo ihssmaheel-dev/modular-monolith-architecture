@@ -50,11 +50,15 @@ services:
       - "3000"
     environment:
       NODE_ENV: production
+      PROCESS_ROLE: api
       TENANCY_MODE: ${TENANCY_MODE:-single}
       PORT: 3000
       TRUST_PROXY: "true"
       DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
       DB_MAX_POOL_SIZE: ${DB_MAX_POOL_SIZE:-10}
+      DB_STATEMENT_TIMEOUT_MS: ${DB_STATEMENT_TIMEOUT_MS:-30000}
+      DB_LOCK_TIMEOUT_MS: ${DB_LOCK_TIMEOUT_MS:-5000}
+      DB_IDLE_IN_TRANSACTION_TIMEOUT_MS: ${DB_IDLE_IN_TRANSACTION_TIMEOUT_MS:-60000}
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET}
@@ -72,6 +76,9 @@ services:
       S3_BUCKET: ${S3_BUCKET:-uploads}
       S3_ACCESS_KEY_ID: ${MINIO_USER:?set MINIO_USER}
       S3_SECRET_ACCESS_KEY: ${MINIO_PASSWORD:?set MINIO_PASSWORD}
+      FILE_USER_QUOTA_BYTES: ${FILE_USER_QUOTA_BYTES:-104857600}
+      FILE_AV_ENABLED: ${FILE_AV_ENABLED:-false}
+      FILE_AV_URL: ${FILE_AV_URL:-}
       S3_REGION: ${S3_REGION:-us-east-1}
       CDN_ENABLED: ${CDN_ENABLED:-false}
       CDN_DOMAIN: ${CDN_DOMAIN:-}
@@ -87,10 +94,64 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health/live || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health/live || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: monorepo-worker
+    command: ["node", "apps/api/dist/apps/api/src/main.js"]
+    environment:
+      NODE_ENV: production
+      PROCESS_ROLE: worker
+      TENANCY_MODE: ${TENANCY_MODE:-single}
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      DB_MAX_POOL_SIZE: ${DB_MAX_POOL_SIZE:-10}
+      DB_STATEMENT_TIMEOUT_MS: ${DB_STATEMENT_TIMEOUT_MS:-30000}
+      DB_LOCK_TIMEOUT_MS: ${DB_LOCK_TIMEOUT_MS:-5000}
+      DB_IDLE_IN_TRANSACTION_TIMEOUT_MS: ${DB_IDLE_IN_TRANSACTION_TIMEOUT_MS:-60000}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET}
+      METRICS_TOKEN: ${METRICS_TOKEN:?set METRICS_TOKEN}
+      CLIENT_URL: ${CLIENT_URL:?set CLIENT_URL}
+      EMAIL_DRIVER: ${EMAIL_DRIVER:-smtp}
+      EMAIL_FROM: ${EMAIL_FROM:?set EMAIL_FROM}
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-uploads}
+      S3_ACCESS_KEY_ID: ${MINIO_USER:?set MINIO_USER}
+      S3_SECRET_ACCESS_KEY: ${MINIO_PASSWORD:?set MINIO_PASSWORD}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      FILE_USER_QUOTA_BYTES: ${FILE_USER_QUOTA_BYTES:-104857600}
+      FILE_AV_ENABLED: ${FILE_AV_ENABLED:-false}
+      FILE_AV_URL: ${FILE_AV_URL:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    restart: unless-stopped
     networks:
       - app-network
 

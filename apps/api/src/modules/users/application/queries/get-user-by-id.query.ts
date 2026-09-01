@@ -13,11 +13,18 @@ export class GetUserByIdQuery {
   ) {}
 
   async execute(id: string): Promise<Result<User, UserNotFound>> {
-    return this.cacheService.getOrSet(`user:${id}`, 300, async () => {
-      const result = await this.repository.findById(id);
-      if (result.isErr()) return err(result.error);
-      if (!result.value) return err({ type: "USER_NOT_FOUND", userId: id });
-      return ok(result.value);
-    });
+    return this.cacheService.getOrSet(`user:${id}`, 300, () => this.fetch(id));
+  }
+
+  /** Used by token validation so a revoked auth version is observed immediately. */
+  executeFresh(id: string): Promise<Result<User, UserNotFound>> {
+    return this.fetch(id);
+  }
+
+  private async fetch(id: string): Promise<Result<User, UserNotFound>> {
+    const result = await this.repository.findById(id);
+    if (result.isErr()) return err(result.error);
+    if (!result.value) return err({ type: "USER_NOT_FOUND", userId: id });
+    return ok(result.value);
   }
 }

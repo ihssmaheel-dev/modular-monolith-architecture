@@ -22,4 +22,5 @@ export const LOGIN_ERRORS: ErrorMap = {
 
 export const INVALID_TOKEN_ERRORS: ErrorMap = {
   INVALID_TOKEN: { status: HttpStatus.UNAUTHORIZED, i18nKey: "auth.invalidToken" },
+  USER_NOT_FOUND: { status: HttpStatus.UNAUTHORIZED, i18nKey: "auth.invalidToken" },
 };

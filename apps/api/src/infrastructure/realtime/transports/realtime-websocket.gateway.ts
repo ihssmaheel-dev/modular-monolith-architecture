@@ -6,12 +6,14 @@ import {
   ConnectedSocket,
   SubscribeMessage,
 } from "@nestjs/websockets";
+import { Optional } from "@nestjs/common";
 import { Server, WebSocket } from "ws";
 import { RealtimeService } from "../realtime.service";
 import { PinoLoggerService } from "../../../infrastructure/logger/logger.service";
 import { env } from "../../../config/env";
 import { verifyAccessToken } from "../../../common/utils/access-token.utils";
 import { ResolveTenantAccessQuery } from "../../../modules/tenancy/application/queries/resolve-tenant-access.query";
+import { GetUserByIdQuery } from "../../../modules/users/application/queries/get-user-by-id.query";
 
 const WS_READY_STATE_OPEN = 1;
 const ACCESS_TOKEN_COOKIE = "access_token";
@@ -37,6 +39,7 @@ export class RealtimeWebsocketGateway implements OnGatewayConnection, OnGatewayD
     private readonly realtime: RealtimeService,
     private readonly tenantAccess: ResolveTenantAccessQuery,
     private readonly logger: PinoLoggerService,
+    @Optional() private readonly getUserById?: GetUserByIdQuery,
   ) {}
 
   async handleConnection(@ConnectedSocket() client: WebSocket, ...args: unknown[]): Promise<void> {
@@ -47,6 +50,14 @@ export class RealtimeWebsocketGateway implements OnGatewayConnection, OnGatewayD
     if (!user) {
       client.close();
       return;
+    }
+
+    if (this.getUserById) {
+      const current = await this.getUserById.execute(user.sub);
+      if (current.isErr() || user.authVersion !== current.value.authVersion) {
+        client.close();
+        return;
+      }
     }
 
     const access = await this.tenantAccess.execute(user.sub, this.extractTenantId(request));

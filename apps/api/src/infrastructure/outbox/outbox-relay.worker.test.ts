@@ -3,6 +3,7 @@ import type { EventEmitter2 } from "@nestjs/event-emitter";
 import type { MetricsService } from "../metrics/metrics.service";
 import type { PinoLoggerService } from "../logger/logger.service";
 import { OutboxRelayWorker } from "./outbox-relay.worker";
+import { OutboxRelayDelivery } from "./outbox-relay.delivery";
 import type { OutboxEvent, OutboxRepository } from "./outbox.repository";
 import type { DatabaseService, TenantContextService } from "../database";
 
@@ -21,6 +22,7 @@ describe("OutboxRelayWorker", () => {
   let emitter: EventEmitter2;
   let metrics: MetricsService;
   let worker: OutboxRelayWorker;
+  let delivery: OutboxRelayDelivery;
 
   beforeEach(() => {
     repository = {
@@ -30,7 +32,11 @@ describe("OutboxRelayWorker", () => {
       updateById: vi.fn(),
     } as unknown as OutboxRepository;
     emitter = { emitAsync: vi.fn().mockResolvedValue([]) } as unknown as EventEmitter2;
-    metrics = { setGauge: vi.fn(), recordHistogram: vi.fn() } as unknown as MetricsService;
+    metrics = {
+      setGauge: vi.fn(),
+      recordHistogram: vi.fn(),
+      incrementCounter: vi.fn(),
+    } as unknown as MetricsService;
     const logger = {
       child: vi.fn().mockReturnThis(),
       error: vi.fn(),
@@ -42,7 +48,8 @@ describe("OutboxRelayWorker", () => {
     const database = {
       runTransaction: vi.fn().mockImplementation(async (callback) => callback()),
     } as unknown as DatabaseService;
-    worker = new OutboxRelayWorker(repository, emitter, metrics, tenantContext, database, logger);
+    delivery = new OutboxRelayDelivery(repository, emitter, metrics, database, logger);
+    worker = new OutboxRelayWorker(repository, metrics, tenantContext, database, delivery, logger);
   });
 
   it("publishes and marks a locked event complete", async () => {

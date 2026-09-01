@@ -1,5 +1,5 @@
 import { randomBytes, createHash } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { err, ok, type Result } from "neverthrow";
 import {
   INVITATION_TOKEN_BYTES,
@@ -17,6 +17,7 @@ import { InvitationsRepository } from "../../infrastructure/invitations.reposito
 import { MembershipsRepository } from "../../infrastructure/memberships.repository";
 import { OrganizationsRepository } from "../../infrastructure/organizations.repository";
 import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
+import { DatabaseService } from "../../../../infrastructure/database";
 
 @Injectable()
 export class InviteMemberCommand {
@@ -26,9 +27,23 @@ export class InviteMemberCommand {
     private readonly organizations: OrganizationsRepository,
     private readonly context: TenantContextService,
     private readonly outbox: OutboxService,
+    @Optional() private readonly database?: DatabaseService,
   ) {}
 
   async execute(
+    input: InviteMemberInput,
+    actor: AuthenticatedUser,
+    locale: Locale,
+  ): Promise<Result<Invitation, TenancyError>> {
+    const operation = () => this.persist(input, actor, locale);
+    if (!this.database) return operation();
+    const result = await this.database.withResultTransaction(operation);
+    return result.mapErr((error) =>
+      error.type === "TRANSACTION_FAILED" ? { type: "TENANCY_OPERATION_FAILED" } : error,
+    );
+  }
+
+  private async persist(
     input: InviteMemberInput,
     actor: AuthenticatedUser,
     locale: Locale,

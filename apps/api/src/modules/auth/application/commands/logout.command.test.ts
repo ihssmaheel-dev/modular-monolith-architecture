@@ -17,12 +17,14 @@ const USER = User.fromPersistence({
 describe("LogoutCommand", () => {
   let incrementAuthVersion: IncrementAuthVersionCommand;
   let sessionService: SessionService;
+  let events: { emitAsync: ReturnType<typeof vi.fn> };
   let command: LogoutCommand;
 
   beforeEach(() => {
     incrementAuthVersion = { execute: vi.fn() } as unknown as IncrementAuthVersionCommand;
     sessionService = { revokeAllForUser: vi.fn() } as unknown as SessionService;
-    command = new LogoutCommand(incrementAuthVersion, sessionService);
+    events = { emitAsync: vi.fn().mockResolvedValue([]) };
+    command = new LogoutCommand(incrementAuthVersion, sessionService, events as never);
   });
 
   it("invalidates refresh tokens and server sessions", async () => {
@@ -32,6 +34,7 @@ describe("LogoutCommand", () => {
 
     expect(result.isOk()).toBe(true);
     expect(sessionService.revokeAllForUser).toHaveBeenCalledWith(USER.id);
+    expect(events.emitAsync).toHaveBeenCalledWith("auth.session.revoked", { userId: USER.id });
   });
 
   it("rejects an identity that no longer exists", async () => {

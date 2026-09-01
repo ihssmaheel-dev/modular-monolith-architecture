@@ -89,16 +89,16 @@ describe("ConfirmUploadCommand", () => {
     };
     vi.mocked(filesRepo.findByKey).mockResolvedValue(file);
 
-    const updatedFile: FileEntity = { ...file, status: "uploaded" };
+    const updatedFile: FileEntity = { ...file, status: "uploading" };
     vi.mocked(filesRepo.updateById).mockResolvedValue(ok(updatedFile));
 
     const result = await command.execute(file.key, ACTOR);
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
-      expect(result.value.status).toBe("uploaded");
+      expect(result.value.status).toBe("uploading");
     }
-    expect(filesRepo.updateById).toHaveBeenCalledWith(file.id, { status: "uploaded" });
+    expect(filesRepo.updateById).toHaveBeenCalledWith(file.id, { status: "uploading" });
   });
 });
 

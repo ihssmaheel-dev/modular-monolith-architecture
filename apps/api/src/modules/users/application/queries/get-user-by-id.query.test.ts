@@ -56,4 +56,23 @@ describe("GetUserByIdQuery", () => {
     }
     expect(mockFindById).toHaveBeenCalledWith("123");
   });
+
+  it("can bypass the cache for security-sensitive token validation", async () => {
+    const user = User.fromPersistence({
+      id: "fresh-user",
+      email: "fresh@example.com",
+      name: "Fresh",
+      role: "user",
+      authVersion: 2,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    vi.mocked(mockFindById).mockResolvedValue(ok(user));
+
+    const result = await query.executeFresh("fresh-user");
+
+    expect(result.isOk()).toBe(true);
+    expect(mockCacheGetOrSet).not.toHaveBeenCalled();
+    expect(mockFindById).toHaveBeenCalledWith("fresh-user");
+  });
 });

@@ -5,7 +5,7 @@ import { DatabaseService, TenantContextService } from "../database";
 import { env } from "../../config/env";
 
 export interface OutboxError {
-  type: "OUTBOX_WRITE_FAILED" | "TENANT_SCOPE_REQUIRED";
+  type: "OUTBOX_WRITE_FAILED" | "TENANT_SCOPE_REQUIRED" | "OUTBOX_NOT_FOUND";
 }
 
 @Injectable()
@@ -28,6 +28,13 @@ export class OutboxService {
   /** Global events are persisted only inside the internal system-scope capability. */
   async dispatchGlobal(topic: string, payload: unknown): Promise<Result<void, OutboxError>> {
     return this.database.withSystemScope(() => this.persist(topic, payload, undefined));
+  }
+
+  async replayDeadLetter(id: string): Promise<Result<void, OutboxError>> {
+    const replayed = await this.database.withSystemScope(() =>
+      this.outboxRepository.requeueDeadLetter(id),
+    );
+    return replayed ? ok(undefined) : err({ type: "OUTBOX_NOT_FOUND" });
   }
 
   private async persist(

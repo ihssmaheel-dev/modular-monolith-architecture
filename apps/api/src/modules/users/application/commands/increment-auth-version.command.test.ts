@@ -18,12 +18,14 @@ const USER = User.fromPersistence({
 describe("IncrementAuthVersionCommand", () => {
   let repository: UsersRepository;
   let cacheService: DistributedCacheService;
+  let events: { emitAsync: ReturnType<typeof vi.fn> };
   let command: IncrementAuthVersionCommand;
 
   beforeEach(() => {
     repository = { incrementAuthVersion: vi.fn() } as unknown as UsersRepository;
     cacheService = { invalidateGlobal: vi.fn() } as unknown as DistributedCacheService;
-    command = new IncrementAuthVersionCommand(repository, cacheService);
+    events = { emitAsync: vi.fn().mockResolvedValue([]) };
+    command = new IncrementAuthVersionCommand(repository, cacheService, events as never);
   });
 
   it("returns the user after invalidating prior refresh tokens", async () => {
@@ -34,6 +36,10 @@ describe("IncrementAuthVersionCommand", () => {
     expect(result.isOk()).toBe(true);
     expect(repository.incrementAuthVersion).toHaveBeenCalledWith(USER.id);
     expect(cacheService.invalidateGlobal).toHaveBeenCalledWith(`user:${USER.id}`);
+    expect(events.emitAsync).toHaveBeenCalledWith("user.auth-version.incremented", {
+      userId: USER.id,
+      authVersion: USER.authVersion,
+    });
   });
 
   it("returns USER_NOT_FOUND when the user is missing", async () => {

@@ -35,6 +35,10 @@ export const AuthResponseSchema = z.object({
   }),
 });
 
+export const CurrentUserResponseSchema = z.object({
+  user: AuthResponseSchema.shape.user,
+});
+
 export const MessageResponseSchema = z.object({
   message: z.string(),
 });
@@ -45,4 +49,5 @@ export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+export type CurrentUserResponse = z.infer<typeof CurrentUserResponseSchema>;
 export type MessageResponse = z.infer<typeof MessageResponseSchema>;

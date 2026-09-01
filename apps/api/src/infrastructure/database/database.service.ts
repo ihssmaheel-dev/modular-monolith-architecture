@@ -27,6 +27,8 @@ export class DatabaseService implements OnModuleDestroy {
       max: env.DB_MAX_POOL_SIZE,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
+      statement_timeout: env.DB_STATEMENT_TIMEOUT_MS,
+      query_timeout: env.DB_STATEMENT_TIMEOUT_MS,
     });
     this.pool.on("error", (error) => {
       this.logger.error({ error: String(error) }, "Postgres pool error");
@@ -195,6 +197,13 @@ export class DatabaseService implements OnModuleDestroy {
     await runQuery(sql`select set_config('app.current_user', ${userId}, true)`);
     await runQuery(sql`select set_config('app.current_user_email', ${userEmail}, true)`);
     await runQuery(sql`select set_config('app.system_scope', ${systemScope}, true)`);
+    await runQuery(
+      sql`select set_config('statement_timeout', ${String(env.DB_STATEMENT_TIMEOUT_MS)}, true)`,
+    );
+    await runQuery(sql`select set_config('lock_timeout', ${String(env.DB_LOCK_TIMEOUT_MS)}, true)`);
+    await runQuery(
+      sql`select set_config('idle_in_transaction_session_timeout', ${String(env.DB_IDLE_IN_TRANSACTION_TIMEOUT_MS)}, true)`,
+    );
   }
 
   private async setConfig(tx: DrizzleDb, key: string, value: string): Promise<void> {

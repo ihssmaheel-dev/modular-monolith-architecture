@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { evaluateAuthorization, type Policy, type Principal } from "./index";
+import {
+  evaluateAuthorization,
+  resolveResourceOwnerId,
+  type Policy,
+  type Principal,
+} from "./index";
 
 describe("Unified Authorization Engine (RBAC + ReBAC + ABAC)", () => {
   const alice: Principal = {
@@ -137,5 +142,19 @@ describe("Unified Authorization Engine (RBAC + ReBAC + ABAC)", () => {
 
     expect(decision.allowed).toBe(false);
     expect(decision.reason).toBe("DEFAULT_DENY");
+  });
+
+  it("normalizes module ownership fields consistently", () => {
+    expect(resolveResourceOwnerId("note", { createdBy: "user-alice" })).toBe("user-alice");
+    expect(resolveResourceOwnerId("file", { uploadedBy: "user-alice" })).toBe("user-alice");
+  });
+
+  it("derives ownership when a descriptor uses a module-specific field", () => {
+    const decision = evaluateAuthorization({
+      principal: alice,
+      action: "notes:update",
+      resource: { type: "note", id: "note-123", createdBy: "user-alice" },
+    });
+    expect(decision).toMatchObject({ allowed: true, reason: "REBAC_RELATION" });
   });
 });

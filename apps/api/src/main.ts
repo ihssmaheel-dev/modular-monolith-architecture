@@ -28,6 +28,11 @@ setGlobalDispatcher(
 const MAX_BODY_SIZE_BYTES = 1048576; // 1MB
 
 async function bootstrap() {
+  if (env.PROCESS_ROLE === "worker") {
+    const workerApp = await NestFactory.createApplicationContext(AppModule);
+    workerApp.enableShutdownHooks();
+    return;
+  }
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({

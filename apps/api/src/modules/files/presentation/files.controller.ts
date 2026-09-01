@@ -12,7 +12,12 @@ import {
 } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import { z } from "zod";
-import { Idempotent, RequirePermission, requireAuthenticatedUser } from "../../../common";
+import {
+  Idempotent,
+  NoDatabaseTransaction,
+  RequirePermission,
+  requireAuthenticatedUser,
+} from "../../../common";
 import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import {
   type RequestUploadInput,
@@ -57,6 +62,7 @@ export class FilesController {
 
   @Post("upload-url")
   @HttpCode(HttpStatus.CREATED)
+  @NoDatabaseTransaction()
   @Idempotent()
   @RequirePermission("files:upload")
   async requestUpload(
@@ -71,6 +77,7 @@ export class FilesController {
 
   @Post("confirm")
   @HttpCode(HttpStatus.OK)
+  @NoDatabaseTransaction()
   @Idempotent()
   @RequirePermission("files:upload")
   async confirmUpload(
@@ -85,6 +92,7 @@ export class FilesController {
   }
 
   @Get(":id/download-url")
+  @NoDatabaseTransaction()
   @RequirePermission("files:read")
   async getDownloadUrl(
     @Param("id", new ZodValidationPipe(FileIdParamSchema.shape.id)) id: string,
@@ -149,6 +157,7 @@ export class FilesController {
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @NoDatabaseTransaction()
   @Idempotent()
   @RequirePermission("files:delete")
   async delete(

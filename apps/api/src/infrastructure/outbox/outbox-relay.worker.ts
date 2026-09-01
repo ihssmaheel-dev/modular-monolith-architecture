@@ -1,16 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { MetricsService } from "../metrics/metrics.service";
 import { PinoLoggerService } from "../logger/logger.service";
-import { OutboxEvent, OutboxRepository } from "./outbox.repository";
-import { env } from "../../config/env";
 import { DatabaseService, TenantContextService } from "../database";
+import { env } from "../../config/env";
+import { OutboxEvent, OutboxRepository } from "./outbox.repository";
+import { OutboxRelayDelivery } from "./outbox-relay.delivery";
 
 const BATCH_SIZE = 10;
-const MAX_ATTEMPTS = 5;
-const RETRY_BASE_DELAY_MS = 5_000;
-const RETRY_MULTIPLIER = 2;
 const LOCK_TIMEOUT_MS = 60_000;
 
 @Injectable()
@@ -20,10 +17,10 @@ export class OutboxRelayWorker {
 
   constructor(
     private readonly repository: OutboxRepository,
-    private readonly eventEmitter: EventEmitter2,
     private readonly metrics: MetricsService,
     private readonly tenantContext: TenantContextService,
     private readonly database: DatabaseService,
+    private readonly delivery: OutboxRelayDelivery,
     logger: PinoLoggerService,
   ) {
     this.logger = logger.child({ module: "OutboxRelayWorker" });
@@ -31,7 +28,7 @@ export class OutboxRelayWorker {
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async relayEvents(): Promise<void> {
-    if (this.isProcessing) return;
+    if (env.PROCESS_ROLE === "api" || this.isProcessing) return;
     this.isProcessing = true;
     try {
       await this.tenantContext.runSystem({ mode: env.TENANCY_MODE }, async () => {
@@ -47,80 +44,24 @@ export class OutboxRelayWorker {
   }
 
   private async getPendingEvents(): Promise<OutboxEvent[]> {
-    const events = await this.database.runTransaction(async () => {
+    return this.database.runTransaction(async () => {
       const pendingCount = await this.repository.countPendingEvents();
+      this.metrics.setGauge("outbox_pending_events_depth", "Pending outbox events", pendingCount);
+      const events = await this.repository.lockPendingEvents(BATCH_SIZE);
+      const oldest = events[0];
       this.metrics.setGauge(
-        "outbox_pending_events_depth",
-        "Number of pending outbox events",
-        pendingCount,
+        "outbox_pending_age_ms",
+        "Age of oldest claimed outbox event",
+        oldest ? Math.max(0, Date.now() - oldest.createdAt.getTime()) : 0,
       );
-      return this.repository.lockPendingEvents(BATCH_SIZE);
+      return events;
     });
-    return events;
   }
 
   private async relayEvent(event: OutboxEvent): Promise<void> {
     await this.tenantContext.runSystem({ mode: env.TENANCY_MODE, tenantId: event.tenantId }, () =>
-      this.publishEvent(event),
+      this.delivery.deliver(event),
     );
-  }
-
-  private async publishEvent(event: OutboxEvent): Promise<void> {
-    try {
-      await this.eventEmitter.emitAsync(event.topic, event.payload);
-      await this.database.runTransaction(async () => {
-        await this.repository.updateById(event.id, {
-          status: "PUBLISHED",
-          lockedAt: null,
-          nextAttemptAt: null,
-          error: null,
-        });
-      });
-      this.recordLatency(event);
-    } catch (error) {
-      await this.scheduleRetry(event, error);
-    }
-  }
-
-  private async scheduleRetry(event: OutboxEvent, error: unknown): Promise<void> {
-    const attempts = event.attempts + 1;
-    const isExhausted = attempts >= MAX_ATTEMPTS;
-    const delay = RETRY_BASE_DELAY_MS * RETRY_MULTIPLIER ** Math.max(0, attempts - 1);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-
-    await this.database.runTransaction(async () => {
-      await this.repository.updateById(event.id, {
-        status: isExhausted ? "DEAD_LETTER" : "PENDING",
-        attempts,
-        error: errorMessage,
-        nextAttemptAt: isExhausted ? null : new Date(Date.now() + delay),
-        lockedAt: null,
-      });
-    });
-
-    if (isExhausted) {
-      this.metrics.incrementCounter(
-        "outbox_dead_letter_total",
-        "Total number of outbox events moved to dead-letter queue",
-        1,
-        { topic: event.topic },
-      );
-      this.logger.error(
-        { eventId: event.id, topic: event.topic, attempts, error: errorMessage },
-        "Outbox event moved to dead-letter queue (max attempts exceeded)",
-      );
-    } else {
-      this.logger.warn(
-        {
-          eventId: event.id,
-          topic: event.topic,
-          attempts,
-          nextDelayMs: delay,
-          error: errorMessage,
-        },
-        "Outbox event delivery failed, exponential retry scheduled",
-      );
-    }
   }
 
   private async recoverStaleLocks(): Promise<void> {
@@ -129,16 +70,5 @@ export class OutboxRelayWorker {
       this.repository.recoverStaleLocks(cutoff),
     );
     if (recovered > 0) this.logger.warn({ recovered }, "Recovered stale outbox locks");
-  }
-  private recordLatency(event: OutboxEvent): void {
-    try {
-      this.metrics.recordHistogram(
-        "outbox_processing_latency_ms",
-        "Latency between outbox event creation and processing",
-        Date.now() - event.createdAt.getTime(),
-      );
-    } catch (error) {
-      this.logger.warn({ err: error, eventId: event.id }, "Outbox latency metric recording failed");
-    }
   }
 }

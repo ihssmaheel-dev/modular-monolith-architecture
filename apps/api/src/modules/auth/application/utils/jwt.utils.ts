@@ -14,9 +14,10 @@ export function signAccessToken(
   email: string,
   name: string,
   role: UserRole,
+  authVersion = 0,
 ): string {
   return jwt.sign(
-    { sub: userId, email, name, role },
+    { sub: userId, email, name, role, authVersion },
     env.JWT_SECRET,
     tokenOptions(env.JWT_EXPIRES_IN, env.JWT_ISSUER, env.JWT_AUDIENCE),
   );

@@ -5,4 +5,6 @@ export interface AuthenticatedUser {
   email: string;
   name?: string;
   role: UserRole;
+  /** Monotonic account version used to revoke issued access tokens. */
+  authVersion?: number;
 }

@@ -18,11 +18,12 @@ export class DatabaseTransactionInterceptor implements NestInterceptor {
 
   private shouldSkip(context: ExecutionContext): boolean {
     if (context.getType() !== "http") return true;
-    return Boolean(
-      this.reflector.getAllAndOverride<boolean>(NO_DATABASE_TRANSACTION_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]),
-    );
+    const targets = [context.getHandler(), context.getClass()];
+    if (this.reflector.getAllAndOverride<boolean>(NO_DATABASE_TRANSACTION_KEY, targets)) {
+      return true;
+    }
+    // Database transactions are the default for HTTP handlers so PostgreSQL RLS
+    // context is always configured. External-I/O handlers explicitly opt out.
+    return false;
   }
 }

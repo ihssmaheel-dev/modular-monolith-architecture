@@ -4,6 +4,7 @@ import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import type { FileError } from "../../domain/errors/file.errors";
 import type { AuthenticatedUser } from "@repo/contracts";
+import { resolveResourceOwnerId } from "@repo/authorization";
 
 @Injectable()
 export class GetFileByIdQuery {
@@ -19,7 +20,11 @@ export class GetFileByIdQuery {
       });
     }
 
-    if (actor.role !== "admin" && findResult.value.uploadedBy !== actor.sub) {
+    if (
+      actor.role !== "admin" &&
+      resolveResourceOwnerId("file", findResult.value as unknown as Record<string, unknown>) !==
+        actor.sub
+    ) {
       return err({
         type: "FILE_NOT_FOUND",
         message: "api.file.notFound",

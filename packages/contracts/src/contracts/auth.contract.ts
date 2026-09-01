@@ -6,6 +6,7 @@ import {
   ResetPasswordSchema,
   RefreshTokenSchema,
   AuthResponseSchema,
+  CurrentUserResponseSchema,
   MessageResponseSchema,
 } from "../schemas/auth.schema";
 
@@ -21,6 +22,9 @@ export const authContract = oc.prefix("/auth").router({
   logout: oc
     .route({ method: "POST", path: "/logout", summary: "Log out user" })
     .output(MessageResponseSchema),
+  me: oc
+    .route({ method: "GET", path: "/me", summary: "Get the current authenticated user" })
+    .output(CurrentUserResponseSchema),
   refresh: oc
     .route({ method: "POST", path: "/refresh", summary: "Refresh access token" })
     .input(RefreshTokenSchema)

@@ -5,6 +5,7 @@ import type {
   Policy,
   ResourceDescriptor,
 } from "./types";
+import { resolveResourceOwnerId } from "./ownership";
 
 export function normalizeResource<T>(
   resource?: ResourceDescriptor<T> | T,
@@ -12,21 +13,20 @@ export function normalizeResource<T>(
 ): ResourceDescriptor<T> | undefined {
   if (!resource) return undefined;
   if (typeof resource === "object" && "type" in (resource as Record<string, unknown>)) {
-    return resource as ResourceDescriptor<T>;
+    const descriptor = resource as ResourceDescriptor<T>;
+    if (descriptor.ownerId) return descriptor;
+    const source = descriptor.attributes ?? descriptor.data ?? descriptor;
+    return {
+      ...descriptor,
+      ownerId: resolveResourceOwnerId(descriptor.type, source as Record<string, unknown>),
+    };
   }
   const obj = resource as Record<string, unknown>;
   return {
     type: typeof obj.type === "string" ? obj.type : fallbackType,
     id: typeof obj.id === "string" ? obj.id : undefined,
     tenantId: typeof obj.tenantId === "string" ? obj.tenantId : undefined,
-    ownerId:
-      typeof obj.ownerId === "string"
-        ? obj.ownerId
-        : typeof obj.authorId === "string"
-          ? obj.authorId
-          : typeof obj.userId === "string"
-            ? obj.userId
-            : undefined,
+    ownerId: resolveResourceOwnerId(typeof obj.type === "string" ? obj.type : fallbackType, obj),
     attributes: obj,
     data: resource as T,
   };

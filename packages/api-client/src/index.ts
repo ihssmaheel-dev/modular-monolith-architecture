@@ -51,7 +51,9 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     const url = `${baseUrl.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
     let res = await fetch(url, { ...init, headers, credentials: "include" });
 
-    if (res.status === 401 && !path.startsWith("auth/")) {
+    const normalizedPath = path.replace(/^\/+/, "");
+    const canRefresh = normalizedPath === "auth/me" || !normalizedPath.startsWith("auth/");
+    if (res.status === 401 && canRefresh) {
       if (!isRefreshing) {
         isRefreshing = true;
         refreshPromise = requestRefresh(baseUrl, options).finally(() => {

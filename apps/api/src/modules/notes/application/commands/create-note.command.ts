@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { err, Result } from "neverthrow";
 import { z } from "zod";
 import { EventEmitter2 } from "@nestjs/event-emitter";
@@ -9,6 +9,7 @@ import { NoteCreatedEvent } from "../../domain/events/note.events";
 import type { NoteEventDispatchFailed } from "../../domain/errors/note.errors";
 import type { AuthenticatedUser } from "@repo/contracts";
 import { OutboxService } from "../../../../infrastructure/outbox/outbox.service";
+import { DatabaseService } from "../../../../infrastructure/database";
 
 @Injectable()
 export class CreateNoteCommand {
@@ -16,9 +17,22 @@ export class CreateNoteCommand {
     private readonly repository: NotesRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly outbox: OutboxService,
+    @Optional() private readonly database?: DatabaseService,
   ) {}
 
   async execute(
+    data: z.infer<typeof CreateNoteSchema>,
+    actor: AuthenticatedUser,
+  ): Promise<Result<Note, NoteEventDispatchFailed>> {
+    const operation = () => this.persist(data, actor);
+    if (!this.database) return operation();
+    const result = await this.database.withResultTransaction(operation);
+    return result.mapErr((error) =>
+      error.type === "TRANSACTION_FAILED" ? { type: "NOTE_EVENT_DISPATCH_FAILED" } : error,
+    );
+  }
+
+  private async persist(
     data: z.infer<typeof CreateNoteSchema>,
     actor: AuthenticatedUser,
   ): Promise<Result<Note, NoteEventDispatchFailed>> {

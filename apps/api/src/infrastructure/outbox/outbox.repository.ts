@@ -32,10 +32,10 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxRow> {
       status: row.status as OutboxEvent["status"],
       error: row.error ?? undefined,
       attempts: row.attempts,
-      nextAttemptAt: row.nextAttemptAt ?? undefined,
-      lockedAt: row.lockedAt ?? undefined,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      nextAttemptAt: row.nextAttemptAt ? toDate(row.nextAttemptAt) : undefined,
+      lockedAt: row.lockedAt ? toDate(row.lockedAt) : undefined,
+      createdAt: toDate(row.createdAt),
+      updatedAt: toDate(row.updatedAt),
     };
   }
 
@@ -87,4 +87,31 @@ export class OutboxRepository extends BaseRepository<OutboxEvent, OutboxRow> {
       .returning();
     return rows.length;
   }
+
+  async requeueDeadLetter(id: string): Promise<boolean> {
+    const db = this.getDb();
+    const rows = await (
+      db as unknown as {
+        update: (t: unknown) => {
+          set: (v: unknown) => { where: (c: unknown) => { returning: () => Promise<OutboxRow[]> } };
+        };
+      }
+    )
+      .update(outboxEvents)
+      .set({
+        status: "PENDING",
+        attempts: 0,
+        error: null,
+        nextAttemptAt: null,
+        lockedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(outboxEvents.id, id), eq(outboxEvents.status, "DEAD_LETTER")))
+      .returning();
+    return rows.length > 0;
+  }
+}
+
+function toDate(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(value);
 }

@@ -1,15 +1,57 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { FRONTEND_ROUTES } from "@repo/contracts";
 import { useAuthStore } from "@/stores/auth.store";
 import { AppShell } from "@/components/app-shell";
+import { getApiClient } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/_app")({
-  beforeLoad: () => {
-    if (!useAuthStore.getState().user) throw redirect({ to: FRONTEND_ROUTES.auth });
-  },
-  component: () => (
+  component: ProtectedApp,
+});
+
+function ProtectedApp() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const status = useAuthStore((state) => state.status);
+  const setUser = useAuthStore((state) => state.setUser);
+  const setStatus = useAuthStore((state) => state.setStatus);
+
+  useEffect(() => {
+    if (status !== "loading") return;
+    let active = true;
+    void getApiClient()
+      .auth.me()
+      .then((response) => {
+        if (!active) return;
+        if (response.status === 200 && response.body?.user) setUser(response.body.user);
+        else setStatus("unauthenticated");
+      })
+      .catch(() => {
+        if (active) setStatus("unauthenticated");
+      });
+    return () => {
+      active = false;
+    };
+  }, [setStatus, setUser, status]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      void navigate({ to: FRONTEND_ROUTES.auth, replace: true });
+    }
+  }, [navigate, status]);
+
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-muted/20">
+        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+      </div>
+    );
+  }
+  if (status === "unauthenticated") return null;
+  return (
     <AppShell>
       <Outlet />
     </AppShell>
-  ),
-});
+  );
+}

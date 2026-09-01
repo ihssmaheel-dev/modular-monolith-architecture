@@ -4,10 +4,16 @@ import { RedisService } from "../../redis/redis.service";
 import { PinoLoggerService } from "../../logger/logger.service";
 import { MetricsService } from "../../metrics/metrics.service";
 import { RealtimeStreamRouter } from "./realtime-stream.router";
+import { hostname } from "node:os";
+import { randomUUID } from "node:crypto";
+import { env } from "../../../config/env";
 
 const STREAM_KEY = "realtime:events";
 const XREAD_BLOCK_MS = 5000;
 const RETRY_DELAY_MS = 2000;
+const CLAIM_IDLE_MS = 60_000;
+const MAX_DELIVERY_ATTEMPTS = 5;
+const DEAD_LETTER_STREAM_KEY = "realtime:events:dead-letter";
 
 type RedisStreamEntry = [id: string, fields: string[]];
 type RedisStreamResult = [stream: string, messages: RedisStreamEntry[]][] | null;
@@ -18,14 +24,24 @@ interface ParsedStreamMessage {
   payload: string;
 }
 
+type GroupedRedis = {
+  xreadgroup?: (...args: Array<string | number>) => Promise<RedisStreamResult>;
+  xack: (stream: string, group: string, id: string) => Promise<number>;
+  xautoclaim?: (...args: Array<string | number>) => Promise<unknown>;
+  incr?: (key: string) => Promise<number>;
+  expire?: (key: string, seconds: number) => Promise<number>;
+  xadd?: (...args: Array<string | number>) => Promise<string>;
+  del?: (key: string) => Promise<number>;
+};
+
 @Injectable()
 export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
   private subscriber: Redis | null = null;
   private logger: PinoLoggerService;
   private isShuttingDown = false;
   private lastId = "$";
-  private readonly groupName = `realtime-${process.pid}`;
-  private readonly consumerName = `api-${process.pid}`;
+  private readonly groupName = "realtime-dispatchers";
+  private readonly consumerName = `api-${hostname()}-${process.pid}-${randomUUID()}`;
 
   constructor(
     private readonly redis: RedisService,
@@ -37,6 +53,7 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit(): Promise<void> {
+    if (env.PROCESS_ROLE === "worker") return;
     const client = this.redis.getClient();
     if (!client) {
       this.logger.warn({}, "Redis client not available, stream realtime features disabled");
@@ -69,10 +86,10 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
     if (!this.subscriber || this.isShuttingDown) return;
 
     try {
-      const grouped = this.subscriber as Redis & {
-        xreadgroup: (...args: Array<string | number>) => Promise<RedisStreamResult>;
-        xack: (stream: string, group: string, id: string) => Promise<number>;
-      };
+      const grouped = this.subscriber as unknown as GroupedRedis;
+      if (grouped.xreadgroup) {
+        await this.claimStale(grouped);
+      }
       const result = grouped.xreadgroup
         ? await grouped.xreadgroup(
             "GROUP",
@@ -87,11 +104,10 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
             ">",
           )
         : await this.subscriber.xread("BLOCK", XREAD_BLOCK_MS, "STREAMS", STREAM_KEY, this.lastId);
-      this.processStreamResult(result as RedisStreamResult);
-      const stream = result?.[0];
-      if (stream && grouped.xack) {
-        for (const [id] of stream[1]) await grouped.xack(STREAM_KEY, this.groupName, id);
-      }
+      await this.processStreamResult(
+        result as RedisStreamResult,
+        grouped.xreadgroup ? grouped : null,
+      );
     } catch (err) {
       this.logger.error({ err }, "Redis XREAD error");
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
@@ -102,19 +118,29 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private processStreamResult(result: RedisStreamResult): void {
+  private async processStreamResult(
+    result: RedisStreamResult,
+    grouped: GroupedRedis | null,
+  ): Promise<void> {
     const stream = result?.[0];
     if (!stream) return;
     for (const message of stream[1]) {
-      this.processStreamMessage(message);
+      const processed = await this.processStreamMessage(message, grouped);
+      if (processed && grouped) await grouped.xack(STREAM_KEY, this.groupName, message[0]);
     }
   }
 
-  private processStreamMessage([id, fields]: RedisStreamEntry): void {
+  private async processStreamMessage(
+    [id, fields]: RedisStreamEntry,
+    grouped: GroupedRedis | null,
+  ): Promise<boolean> {
     this.lastId = id;
     this.recordConsumerLag(id);
     const message = parseStreamMessage(fields);
-    this.routeMessage(message, id);
+    const routed = this.routeMessage(message, id);
+    if (routed) return true;
+    if (!grouped) return false;
+    return this.handleFailedDelivery(grouped, id, fields);
   }
 
   private recordConsumerLag(id: string): void {
@@ -128,15 +154,68 @@ export class RealtimeStreamConsumer implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  private routeMessage(message: ParsedStreamMessage, id: string): void {
+  private routeMessage(message: ParsedStreamMessage, id: string): boolean {
+    if (!message.event) {
+      this.logger.error({ msgId: id }, "Rejected malformed realtime event");
+      return false;
+    }
     try {
       const payload = JSON.parse(message.payload);
       if (!this.router.route(message.target, message.event, payload)) {
         this.logger.warn({ target: message.target, msgId: id }, "Ignoring unknown realtime target");
+        return false;
       }
+      return true;
     } catch (err) {
       this.logger.error({ err, msgId: id }, "Failed to parse stream message");
+      return false;
     }
+  }
+
+  private async claimStale(grouped: GroupedRedis): Promise<void> {
+    if (!grouped.xautoclaim) return;
+    const result = await grouped.xautoclaim(
+      STREAM_KEY,
+      this.groupName,
+      this.consumerName,
+      CLAIM_IDLE_MS,
+      "0-0",
+      "COUNT",
+      50,
+    );
+    const entries =
+      Array.isArray(result) && Array.isArray(result[1]) ? (result[1] as RedisStreamEntry[]) : [];
+    await this.processStreamResult([[STREAM_KEY, entries]], grouped);
+  }
+
+  private async handleFailedDelivery(
+    redis: GroupedRedis,
+    id: string,
+    fields: string[],
+  ): Promise<boolean> {
+    const client = redis;
+    if (!client.incr) return false;
+    const attemptKey = `realtime:events:attempts:${id}`;
+    const attempts = await client.incr(attemptKey);
+    if (client.expire) await client.expire(attemptKey, 3600);
+    if (attempts < MAX_DELIVERY_ATTEMPTS) return false;
+    if (client.xadd) {
+      await client.xadd(
+        DEAD_LETTER_STREAM_KEY,
+        "*",
+        "sourceId",
+        id,
+        "fields",
+        JSON.stringify(fields),
+      );
+    }
+    if (client.del) await client.del(attemptKey);
+    this.metrics.incrementCounter(
+      "realtime_dead_letter_total",
+      "Realtime events moved to dead letter",
+      1,
+    );
+    return true;
   }
 
   async onModuleDestroy(): Promise<void> {

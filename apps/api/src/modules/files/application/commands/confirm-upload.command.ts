@@ -1,36 +1,49 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import type { FileError } from "../../domain/errors/file.errors";
 import type { AuthenticatedUser } from "@repo/contracts";
 import { StorageService } from "../../../../infrastructure/storage/storage.service";
+import { DatabaseService } from "../../../../infrastructure/database";
+import { resolveResourceOwnerId } from "@repo/authorization";
 
 @Injectable()
 export class ConfirmUploadCommand {
   constructor(
     private readonly filesRepo: FilesRepository,
     private readonly storage: StorageService,
+    @Optional() private readonly database?: DatabaseService,
   ) {}
 
   async execute(fileKey: string, actor: AuthenticatedUser): Promise<Result<FileEntity, FileError>> {
-    const file = await this.filesRepo.findByKey(fileKey);
+    const file = this.database
+      ? await this.database.runTransaction(() => this.filesRepo.findByKey(fileKey))
+      : await this.filesRepo.findByKey(fileKey);
 
-    if (!file || (actor.role !== "admin" && file.uploadedBy !== actor.sub)) {
+    if (
+      !file ||
+      (actor.role !== "admin" &&
+        resolveResourceOwnerId("file", file as unknown as Record<string, unknown>) !== actor.sub)
+    ) {
       return err({
         type: "FILE_NOT_FOUND",
         message: "api.note.notFound",
       });
     }
 
+    if (file.status !== "pending")
+      return err({ type: "UPLOAD_FAILED", message: "api.error.uploadFailed" });
+
     const metadata = await this.storage.getMetadata(file.key);
     if (metadata.isErr() || !this.matches(file, metadata.value)) {
       return err({ type: "UPLOAD_FAILED", message: "api.error.uploadFailed" });
     }
 
-    const updateResult = await this.filesRepo.updateById(file.id, {
-      status: "uploaded",
-    });
+    const update = () => this.filesRepo.updateById(file.id, { status: "uploading" });
+    const updateResult = this.database
+      ? await this.database.withResultTransaction(update)
+      : await update();
 
     if (updateResult.isErr() || !updateResult.value) {
       return err({

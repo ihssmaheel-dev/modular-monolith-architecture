@@ -1,5 +1,6 @@
 import type {
   AuthResponse,
+  CurrentUserResponse,
   ForgotPasswordInput,
   LoginInput,
   MessageResponse,
@@ -16,6 +17,7 @@ export function createAuthClient(fetchFn: FetchFn) {
     login: (req: { body: LoginInput }) =>
       fetchFn<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify(req.body) }),
     logout: () => fetchFn<MessageResponse>("/auth/logout", { method: "POST" }),
+    me: () => fetchFn<CurrentUserResponse>("/auth/me", { method: "GET" }),
     refresh: (req: { body: RefreshTokenInput }) =>
       fetchFn<AuthResponse>("/auth/refresh", { method: "POST", body: JSON.stringify(req.body) }),
     forgotPassword: (req: { body: ForgotPasswordInput }) =>
