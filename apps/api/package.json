@@ -22,6 +22,7 @@
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/infrastructure/database/migrate.ts",
+    "db:migrate:check": "tsx src/infrastructure/database/migration-check.ts",
     "db:migrate:raw": "drizzle-kit migrate",
     "db:migrate:status": "drizzle-kit check",
     "db:migrate:dev": "drizzle-kit push",

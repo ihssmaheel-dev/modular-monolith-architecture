@@ -1,7 +1,6 @@
 -- Production hardening migration. Every file in this folder must be represented
 -- in meta/_journal.json so Drizzle applies it on fresh and upgraded databases.
-
-ALTER TYPE "public"."outbox_status" ADD VALUE IF NOT EXISTS 'DEAD_LETTER';--> statement-breakpoint
+-- The outbox_status DEAD_LETTER value is owned by 0002_colossal_zodiak.sql.
 
 CREATE OR REPLACE FUNCTION purge_audit_logs_older_than(days_to_keep INT) RETURNS INT
 LANGUAGE plpgsql

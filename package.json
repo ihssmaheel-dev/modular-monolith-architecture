@@ -20,6 +20,7 @@
     "test:api:watch": "pnpm --filter api test:watch",
     "db:generate": "pnpm --filter api db:generate",
     "db:migrate": "pnpm --filter api db:migrate",
+    "db:migrate:check": "pnpm --filter api db:migrate:check",
     "db:migrate:status": "pnpm --filter api db:migrate:status",
     "db:migrate:dev": "pnpm --filter api db:migrate:dev",
     "db:studio": "pnpm --filter api db:studio",

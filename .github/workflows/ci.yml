@@ -95,9 +95,10 @@ jobs:
       - name: Unit Tests
         run: pnpm test:unit
 
-      - name: Contract and migration checks
+      - name: Contract and migration checks (fresh + upgrade)
         run: |
           pnpm --filter @repo/contracts build
+          pnpm db:migrate:check
           pnpm db:migrate
           pnpm db:migrate:status
 
