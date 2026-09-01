@@ -22,9 +22,11 @@ describe("AuditListener", () => {
         await callback();
         return ok(undefined);
       }),
+      withSystemScope: vi.fn().mockImplementation(async (callback) => callback()),
     } as unknown as DatabaseService;
     tenantContext = {
       run: vi.fn((_context, callback) => callback()),
+      runSystem: vi.fn((_context, callback) => callback()),
     } as unknown as TenantContextService;
     logger = { child: vi.fn(), error: vi.fn() } as unknown as PinoLoggerService;
     vi.mocked(logger.child).mockReturnValue(logger);
@@ -34,6 +36,26 @@ describe("AuditListener", () => {
   it("persists every database mutation as an audit record", async () => {
     await listener.handleDatabaseMutatedEvent(event);
     expect(mockInsert).toHaveBeenCalled();
+  });
+
+  it("uses trusted system scope for global mutations", async () => {
+    const globalEvent = new DatabaseMutatedEvent(
+      "users",
+      "user-1",
+      "CREATE",
+      undefined,
+      undefined,
+      null,
+      {},
+    );
+
+    await listener.handleDatabaseMutatedEvent(globalEvent);
+
+    expect(tenantContext.runSystem).toHaveBeenCalledWith(
+      { mode: expect.any(String) },
+      expect.any(Function),
+    );
+    expect(database.withSystemScope).toHaveBeenCalled();
   });
 
   it("logs failed audit writes so the mutation can roll back", async () => {

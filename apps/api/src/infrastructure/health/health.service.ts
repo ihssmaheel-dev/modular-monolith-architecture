@@ -9,9 +9,9 @@ import {
   MemoryHealthIndicator,
 } from "@nestjs/terminus";
 import { DatabaseService } from "../database";
+import { TenantContextService } from "../database";
 import { RedisService } from "../redis/redis.service";
 import { sql } from "drizzle-orm";
-import { ClsService } from "nestjs-cls";
 import { env } from "../../config/env";
 
 @Injectable()
@@ -63,28 +63,21 @@ export class OutboxHealthIndicator {
   constructor(
     private readonly database: DatabaseService,
     private readonly healthIndicatorService: HealthIndicatorService,
-    private readonly cls: ClsService,
+    private readonly tenantContext: TenantContextService,
   ) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     const session = this.healthIndicatorService.check(key);
     try {
-      const result = await this.cls.runWith(
-        { ...(this.cls.isActive() ? this.cls.get() : {}), systemScope: true } as unknown as Record<
-          string,
-          unknown
-        >,
-        () =>
-          this.database.runTransaction(async () => {
-            const db = this.database.getTx() ?? this.database.getDb();
-            return (
-              db as unknown as {
-                execute: (q: unknown) => Promise<{ rows: Array<{ count: string | number }> }>;
-              }
-            ).execute(
-              sql`SELECT count(*)::int AS count FROM outbox_events WHERE status = 'PENDING'`,
-            );
-          }),
+      const result = await this.tenantContext.runSystem({ mode: env.TENANCY_MODE }, () =>
+        this.database.runTransaction(async () => {
+          const db = this.database.getTx() ?? this.database.getDb();
+          return (
+            db as unknown as {
+              execute: (q: unknown) => Promise<{ rows: Array<{ count: string | number }> }>;
+            }
+          ).execute(sql`SELECT count(*)::int AS count FROM outbox_events WHERE status = 'PENDING'`);
+        }),
       );
       const pendingCount = Number(result.rows[0]?.count ?? 0);
       const isHealthy = pendingCount < 5000;

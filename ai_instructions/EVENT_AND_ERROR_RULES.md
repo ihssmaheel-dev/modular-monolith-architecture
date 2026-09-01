@@ -142,17 +142,38 @@ Two clear levels. No fuzzy hand-waving.
 ```typescript
 // modules/users/application/commands/create-user.command.ts
 async createUser(data: CreateUserInput): Promise<Result<User, UserError>> {
-  return await this.databaseService.transaction(async (session) => {
+  return await this.databaseService.withResultTransaction(async () => {
     // 1. Create user in the database
-    const user = await this.userRepository.save(data, { session });
+    const user = await this.userRepository.save(data);
     
-    // 2. Dispatch event to the outbox (saved atomically in the same session)
-    await this.outboxService.dispatch({ type: "user.created", payload: { userId: user.id, email: user.email } }, { session });
+    // 2. Dispatch the global event (saved atomically in the current transaction)
+    await this.outboxService.dispatchGlobal("user.created", {
+      userId: user.id,
+      email: user.email,
+    });
     
     return ok(user);
   });
 }
 ```
+
+### Outbox tenant and system scope
+
+Outbox writes have an explicit scope. The scope is never inferred from request input or selected by
+the client:
+
+- `dispatchTenant(topic, payload)` derives the tenant ID from `TenantContextService`. In multi-tenant
+  mode it returns `TENANT_SCOPE_REQUIRED` when no trusted tenant is active.
+- `dispatchGlobal(topic, payload)` writes a null `tenant_id` only through
+  `DatabaseService.withSystemScope`. This is used for global records such as user registration.
+- `TenantContextService.run()` always disables system scope. Only internal workers and infrastructure
+  workflows may call `runSystem()`; the `system` flag is not part of the public tenant contract.
+- PostgreSQL RLS permits global rows with null `tenant_id` in single mode, or while the trusted
+  transaction-local system scope is active in multi mode. Tenant rows must match the active tenant.
+
+Every new event must be classified as global or tenant-owned and use the corresponding method. Add
+RLS integration coverage for both accepted and rejected scopes, and test registration in every
+supported `TENANCY_MODE`.
 
 ### Level 2: Reliable Async Work (BullMQ)
 

@@ -34,7 +34,7 @@ export class DeleteUserCommand {
     if (!deleted.value) return err({ type: "USER_NOT_FOUND", userId: id });
 
     await this.cacheService.invalidateGlobal(`user:${id}`);
-    const dispatched = await this.outbox.dispatch("user.deleted", new UserDeletedEvent(id));
+    const dispatched = await this.outbox.dispatchGlobal("user.deleted", new UserDeletedEvent(id));
     if (dispatched.isErr()) return err({ type: "USER_EVENT_DISPATCH_FAILED" });
     try {
       await this.eventEmitter.emitAsync("database.mutated", {

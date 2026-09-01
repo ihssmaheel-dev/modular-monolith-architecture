@@ -37,7 +37,7 @@ describe("DeleteUserCommand", () => {
       execute: vi.fn().mockResolvedValue(ok(undefined)),
     } as unknown as CanDeleteUserQuery;
     outbox = {
-      dispatch: vi.fn().mockResolvedValue(resultOk(undefined)),
+      dispatchGlobal: vi.fn().mockResolvedValue(resultOk(undefined)),
     } as unknown as OutboxService;
 
     command = new DeleteUserCommand(
@@ -83,7 +83,7 @@ describe("DeleteUserCommand", () => {
     expect(result.isOk()).toBe(true);
     expect(repository.deleteById).toHaveBeenCalledWith("123");
     expect(cacheService.invalidateGlobal).toHaveBeenCalledWith("user:123");
-    expect(outbox.dispatch).toHaveBeenCalledWith("user.deleted", expect.anything());
+    expect(outbox.dispatchGlobal).toHaveBeenCalledWith("user.deleted", expect.anything());
   });
 
   it("should return USER_NOT_FOUND if repository delete fails", async () => {

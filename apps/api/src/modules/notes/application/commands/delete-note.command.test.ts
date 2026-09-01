@@ -29,7 +29,9 @@ describe("DeleteNoteCommand", () => {
       emit: vi.fn(),
       emitAsync: vi.fn().mockResolvedValue([]),
     } as unknown as EventEmitter2;
-    outbox = { dispatch: vi.fn().mockResolvedValue(ok(undefined)) } as unknown as OutboxService;
+    outbox = {
+      dispatchTenant: vi.fn().mockResolvedValue(ok(undefined)),
+    } as unknown as OutboxService;
 
     command = new DeleteNoteCommand(repository, getNoteById, eventEmitter, outbox);
   });

@@ -45,7 +45,7 @@ export class FilesRepository extends BaseRepository<FileEntity, FileRow> {
   }
 
   async findPendingFilesBefore(cutoff: Date, systemScope = false): Promise<FileEntity[]> {
-    if (!systemScope || !this.tenantContext.get().system) return [];
+    if (!systemScope || !this.tenantContext.isSystemScope()) return [];
     const db = this.getDb();
     const rows = await (
       db as unknown as {

@@ -32,6 +32,7 @@ describe("PostgreSQL tenant isolation", () => {
         END $$;
         GRANT USAGE ON SCHEMA public TO ${RLS_TEST_ROLE};
         GRANT SELECT ON TABLE public.notes TO ${RLS_TEST_ROLE};
+        GRANT SELECT, INSERT ON TABLE public.outbox_events TO ${RLS_TEST_ROLE};
       `);
     }
   });

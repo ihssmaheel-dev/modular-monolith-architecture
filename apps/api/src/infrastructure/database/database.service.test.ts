@@ -51,4 +51,12 @@ describe("DatabaseService", () => {
     );
     expect(result.isErr()).toBe(true);
   });
+
+  it("wraps system-scoped work in a transaction when none is active", async () => {
+    const transaction = vi.spyOn(service, "runTransaction");
+
+    await service.withSystemScope(async () => undefined);
+
+    expect(transaction).toHaveBeenCalledTimes(1);
+  });
 });

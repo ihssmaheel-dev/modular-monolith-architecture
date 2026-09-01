@@ -36,7 +36,7 @@ export class CreateNoteCommand {
         result.value.content,
         result.value.tenantId,
       );
-      const dispatched = await this.outbox.dispatch("note.created", event);
+      const dispatched = await this.outbox.dispatchTenant("note.created", event);
       if (dispatched.isErr()) return err({ type: "NOTE_EVENT_DISPATCH_FAILED" });
       try {
         await this.eventEmitter.emitAsync("database.mutated", {

@@ -85,6 +85,13 @@ await tenantContext.run({ mode: "multi", tenantId }, async () => {
 Include `tenantId` in every tenant-owned job or event payload. Never infer it from a user ID because
 one user may belong to multiple organizations.
 
+Outbox events use explicit scope methods. Call `dispatchTenant` for tenant-owned events; it derives
+the tenant from the trusted context and rejects missing scope in multi mode. Call `dispatchGlobal`
+for global events such as `user.created`; it runs inside the internal system-scope capability and
+persists a null `tenant_id`. Request payloads and the public `TenantContext` type cannot enable
+system scope. PostgreSQL RLS allows global rows in single mode or in an explicitly elevated system
+transaction in multi mode, and integration tests cover both paths.
+
 ## Switching an existing project
 
 Do not change a populated deployment from single to multi by changing the environment variable

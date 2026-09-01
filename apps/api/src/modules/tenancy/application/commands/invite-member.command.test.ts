@@ -33,7 +33,9 @@ describe("InviteMemberCommand", () => {
     context = {
       get: vi.fn().mockReturnValue({ tenantId: "org-1", role: "admin" }),
     } as unknown as TenantContextService;
-    outbox = { dispatch: vi.fn().mockResolvedValue(ok(undefined)) } as unknown as OutboxService;
+    outbox = {
+      dispatchTenant: vi.fn().mockResolvedValue(ok(undefined)),
+    } as unknown as OutboxService;
     command = new InviteMemberCommand(invitations, memberships, organizations, context, outbox);
   });
 
@@ -110,7 +112,7 @@ describe("InviteMemberCommand", () => {
         tokenHash: expect.any(String),
       }),
     );
-    expect(outbox.dispatch).toHaveBeenCalledWith(
+    expect(outbox.dispatchTenant).toHaveBeenCalledWith(
       "tenancy.invitation.created",
       expect.objectContaining({
         tenantId: "org-1",

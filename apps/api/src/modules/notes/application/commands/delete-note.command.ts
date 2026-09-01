@@ -35,7 +35,7 @@ export class DeleteNoteCommand {
       existing.value.createdBy ?? actor.sub,
       existing.value.tenantId,
     );
-    const dispatched = await this.outbox.dispatch("note.deleted", event);
+    const dispatched = await this.outbox.dispatchTenant("note.deleted", event);
     if (dispatched.isErr()) return err({ type: "NOTE_EVENT_DISPATCH_FAILED" });
     try {
       await this.eventEmitter.emitAsync("database.mutated", {

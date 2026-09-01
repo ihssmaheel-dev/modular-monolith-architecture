@@ -72,6 +72,7 @@ export class TenantContextGuard implements CanActivate {
     this.cls.set("tenantId", tenant.tenantId);
     this.cls.set("tenantMembershipId", tenant.membershipId);
     this.cls.set("tenantRole", tenant.role);
+    this.cls.set("systemScope", false);
     return true;
   }
 }

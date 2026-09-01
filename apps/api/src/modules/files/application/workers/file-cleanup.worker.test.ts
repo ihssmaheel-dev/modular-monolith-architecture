@@ -50,7 +50,7 @@ describe("FileCleanupWorker", () => {
     } as unknown as PinoLoggerService;
 
     const mockTenantContext = {
-      run: vi.fn(async (_ctx, fn) => await fn()),
+      runSystem: vi.fn(async (_ctx, fn) => await fn()),
     } as unknown as import("../../../../infrastructure/database").TenantContextService;
     mockDatabase = {
       runTransaction: vi.fn(async (fn) => await fn()),

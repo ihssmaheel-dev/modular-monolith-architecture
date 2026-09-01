@@ -9,15 +9,18 @@ export class TenantContextService {
 
   get(): TenantContext {
     if (env.TENANCY_MODE === "single") {
-      return { mode: "single", system: Boolean(this.cls.get("systemScope")) };
+      return { mode: "single" };
     }
     return {
       mode: "multi",
       tenantId: this.cls.get("tenantId"),
       membershipId: this.cls.get("tenantMembershipId"),
       role: this.cls.get("tenantRole"),
-      system: Boolean(this.cls.get("systemScope")),
     };
+  }
+
+  isSystemScope(): boolean {
+    return this.cls.get("systemScope") === true;
   }
 
   getRequiredTenantId(): string | null {
@@ -25,13 +28,22 @@ export class TenantContextService {
   }
 
   run<T>(context: TenantContext, callback: () => T): T {
+    return this.runWithScope(context, false, callback);
+  }
+
+  /** System scope is an internal capability; request data can never enable it. */
+  runSystem<T>(context: TenantContext, callback: () => T): T {
+    return this.runWithScope(context, true, callback);
+  }
+
+  private runWithScope<T>(context: TenantContext, systemScope: boolean, callback: () => T): T {
     const store = {
       ...this.cls.get(),
-      tenantMode: context.mode,
+      tenantMode: systemScope ? env.TENANCY_MODE : context.mode,
       tenantId: context.tenantId,
       tenantMembershipId: context.membershipId,
       tenantRole: context.role,
-      systemScope: context.system ?? false,
+      systemScope,
     };
     return this.cls.runWith(store, callback);
   }

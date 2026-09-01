@@ -74,7 +74,7 @@ export class InviteMemberCommand {
       token,
       locale,
     );
-    const dispatched = await this.outbox.dispatch("tenancy.invitation.created", event);
+    const dispatched = await this.outbox.dispatchTenant("tenancy.invitation.created", event);
     if (dispatched.isErr()) return err({ type: "TENANCY_EVENT_DISPATCH_FAILED" });
     return ok(result.value);
   }

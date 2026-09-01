@@ -138,6 +138,26 @@ export class DatabaseService implements OnModuleDestroy {
     this.cls?.set("tenantId", tenantId);
   }
 
+  /** Elevates one internal operation and opens a transaction when none is active. */
+  async withSystemScope<T>(fn: () => Promise<T>): Promise<T> {
+    if (!this.cls) return fn();
+    const current = (this.cls.isActive() ? this.cls.get() : {}) as Record<string, unknown>;
+    const previousSystemScope = current.systemScope === true;
+    const tx = this.getTx();
+    return this.cls.runWith(
+      { ...current, systemScope: true } as unknown as Parameters<typeof this.cls.runWith>[0],
+      async () => {
+        if (!tx) return this.runTransaction(fn);
+        await this.setConfig(tx, "app.system_scope", "true");
+        try {
+          return await fn();
+        } finally {
+          await this.setConfig(tx, "app.system_scope", previousSystemScope ? "true" : "false");
+        }
+      },
+    );
+  }
+
   getTx(): DrizzleDb | undefined {
     if (this.cls?.isActive()) {
       return this.cls.get("databaseTx" as never) as DrizzleDb | undefined;

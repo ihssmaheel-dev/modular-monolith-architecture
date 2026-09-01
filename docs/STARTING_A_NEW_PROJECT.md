@@ -14,7 +14,7 @@ Set `TENANCY_MODE=single` for a product with one logical workspace, or `TENANCY_
 4. Add the Drizzle schema and repository inside the module. Tenant-owned tables must use `TenantScopedRepository`; never import another module's table.
 5. Add commands and queries that return `neverthrow` `Result` values. Keep controllers thin and map errors through `I18nService`.
 6. Add authorization actions and policies before adding endpoints. Protect routes with `@RequirePermission` and enforce resource ownership/ABAC in the application layer.
-7. Put state changes and critical domain events in one database transaction. Persist a stable outbox event with tenant context and a versioned payload; add actor, correlation, causation, and idempotency metadata when the event contract or integration requires it.
+7. Put state changes and critical domain events in one database transaction. Use `dispatchTenant` for tenant-owned events and `dispatchGlobal` for global events; never accept scope from request data. Persist a stable, versioned payload and add actor, correlation, causation, and idempotency metadata when the event contract or integration requires it.
 8. Add the migration through Drizzle, update the migration journal, and test both single- and multi-tenant behavior.
 9. Add unit, integration, contract, and end-to-end tests before wiring the web feature.
 10. Add the web route, tenant-aware query keys, localized labels/errors, loading/empty/error states, and an accessible UI using `@repo/ui`.

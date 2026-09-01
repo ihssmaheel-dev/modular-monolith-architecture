@@ -41,7 +41,7 @@ export class CreateUserCommand {
 
       const user = created.value;
       const event = new UserCreatedEvent(user.id, user.email, user.name, locale);
-      const dispatched = await this.outboxService.dispatch("user.created", event);
+      const dispatched = await this.outboxService.dispatchGlobal("user.created", event);
       if (dispatched.isErr()) return err(this.transactionError());
       return ok(user);
     });

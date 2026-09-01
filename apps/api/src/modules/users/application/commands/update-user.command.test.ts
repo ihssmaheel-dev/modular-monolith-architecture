@@ -41,7 +41,7 @@ describe("UpdateUserCommand", () => {
       invalidateGlobal: vi.fn(),
     } as unknown as DistributedCacheService;
     outbox = {
-      dispatch: vi.fn().mockResolvedValue(resultOk(undefined)),
+      dispatchGlobal: vi.fn().mockResolvedValue(resultOk(undefined)),
     } as unknown as OutboxService;
 
     command = new UpdateUserCommand(
@@ -122,6 +122,6 @@ describe("UpdateUserCommand", () => {
       name: "New Name",
       role: "user",
     });
-    expect(outbox.dispatch).toHaveBeenCalledWith("user.updated", expect.anything());
+    expect(outbox.dispatchGlobal).toHaveBeenCalledWith("user.updated", expect.anything());
   });
 });

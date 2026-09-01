@@ -16,7 +16,7 @@ Each module owns its domain entities, application commands/queries, policies, ev
 
 ## Tenancy
 
-Single mode resolves a configured/default tenant context. Multi mode requires an authenticated membership for the requested tenant. Tenant-scoped repositories and PostgreSQL RLS provide defense in depth. System jobs must use an explicit system context and must be tested for cross-tenant isolation.
+Single mode resolves a configured/default tenant context. Multi mode requires an authenticated membership for the requested tenant. Tenant-scoped repositories and PostgreSQL RLS provide defense in depth. System jobs must use an explicit system context and must be tested for cross-tenant isolation. Outbox writes make this distinction explicit: `dispatchTenant` derives a trusted tenant scope, while `dispatchGlobal` uses the internal transaction-local system scope. The system flag is not accepted in public tenant context or request data.
 
 ## Events and side effects
 

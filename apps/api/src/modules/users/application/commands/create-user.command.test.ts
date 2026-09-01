@@ -34,7 +34,7 @@ describe("CreateUserCommand", () => {
     } as unknown as DatabaseService;
 
     outboxService = {
-      dispatch: vi.fn().mockResolvedValue(ok(undefined)),
+      dispatchGlobal: vi.fn().mockResolvedValue(ok(undefined)),
     } as unknown as OutboxService;
 
     command = new CreateUserCommand(repository, getUserByEmail, databaseService, outboxService);
@@ -96,7 +96,7 @@ describe("CreateUserCommand", () => {
       passwordHash: "hashed_pwd",
       role: "user",
     });
-    expect(outboxService.dispatch).toHaveBeenCalledWith(
+    expect(outboxService.dispatchGlobal).toHaveBeenCalledWith(
       "user.created",
       expect.any(UserCreatedEvent),
     );

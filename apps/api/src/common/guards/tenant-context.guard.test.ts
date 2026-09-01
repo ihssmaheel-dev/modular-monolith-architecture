@@ -21,6 +21,7 @@ describe("TenantContextGuard", () => {
     await expect(guard.canActivate(contextFor(request))).resolves.toBe(true);
     expect(request.tenant).toEqual({ mode: "single" });
     expect(cls.set).toHaveBeenCalledWith("tenantMode", "single");
+    expect(cls.set).toHaveBeenCalledWith("systemScope", false);
   });
 
   it("resolves membership and stores the trusted tenant context", async () => {

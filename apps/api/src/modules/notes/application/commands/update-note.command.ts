@@ -46,7 +46,7 @@ export class UpdateNoteCommand {
       data.content,
       saved.value.tenantId,
     );
-    const dispatched = await this.outbox.dispatch("note.updated", event);
+    const dispatched = await this.outbox.dispatchTenant("note.updated", event);
     if (dispatched.isErr()) return err({ type: "NOTE_EVENT_DISPATCH_FAILED" });
     try {
       await this.eventEmitter.emitAsync("database.mutated", {

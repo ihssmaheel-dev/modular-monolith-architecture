@@ -49,7 +49,7 @@ export class UpdateUserCommand {
     // Explicit Cache Invalidation
     await this.cacheService.invalidateGlobal(`user:${id}`);
 
-    const dispatched = await this.outbox.dispatch(
+    const dispatched = await this.outbox.dispatchGlobal(
       "user.updated",
       new UserUpdatedEvent(saved.value.id, data),
     );

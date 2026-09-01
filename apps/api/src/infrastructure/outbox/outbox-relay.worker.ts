@@ -4,9 +4,8 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { MetricsService } from "../metrics/metrics.service";
 import { PinoLoggerService } from "../logger/logger.service";
 import { OutboxEvent, OutboxRepository } from "./outbox.repository";
-import { ClsService } from "nestjs-cls";
 import { env } from "../../config/env";
-import { DatabaseService } from "../database";
+import { DatabaseService, TenantContextService } from "../database";
 
 const BATCH_SIZE = 10;
 const MAX_ATTEMPTS = 5;
@@ -23,7 +22,7 @@ export class OutboxRelayWorker {
     private readonly repository: OutboxRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly metrics: MetricsService,
-    private readonly cls: ClsService,
+    private readonly tenantContext: TenantContextService,
     private readonly database: DatabaseService,
     logger: PinoLoggerService,
   ) {
@@ -35,17 +34,11 @@ export class OutboxRelayWorker {
     if (this.isProcessing) return;
     this.isProcessing = true;
     try {
-      await this.cls.runWith(
-        { ...(this.cls.isActive() ? this.cls.get() : {}), systemScope: true } as unknown as Record<
-          string,
-          unknown
-        >,
-        async () => {
-          await this.recoverStaleLocks();
-          const events = await this.getPendingEvents();
-          for (const event of events) await this.relayEvent(event);
-        },
-      );
+      await this.tenantContext.runSystem({ mode: env.TENANCY_MODE }, async () => {
+        await this.recoverStaleLocks();
+        const events = await this.getPendingEvents();
+        for (const event of events) await this.relayEvent(event);
+      });
     } catch (error) {
       this.logger.error({ err: error }, "Outbox relay failed");
     } finally {
@@ -67,8 +60,9 @@ export class OutboxRelayWorker {
   }
 
   private async relayEvent(event: OutboxEvent): Promise<void> {
-    const context = { tenantMode: env.TENANCY_MODE, tenantId: event.tenantId, systemScope: true };
-    await this.cls.runWith(context, () => this.publishEvent(event));
+    await this.tenantContext.runSystem({ mode: env.TENANCY_MODE, tenantId: event.tenantId }, () =>
+      this.publishEvent(event),
+    );
   }
 
   private async publishEvent(event: OutboxEvent): Promise<void> {

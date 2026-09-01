@@ -40,7 +40,7 @@ export class FileCleanupWorker {
 
     try {
       const cutoff = new Date(Date.now() - PENDING_EXPIRATION_HOURS * 60 * 60 * 1000);
-      await this.tenantContext.run({ mode: env.TENANCY_MODE, system: true }, async () => {
+      await this.tenantContext.runSystem({ mode: env.TENANCY_MODE }, async () => {
         const staleFiles = await this.database.runTransaction(() =>
           this.filesRepository.findPendingFilesBefore(cutoff, true),
         );
