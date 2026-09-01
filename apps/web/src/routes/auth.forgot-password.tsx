@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, MailCheck } from "lucide-react";
-import { ForgotPasswordSchema, type ForgotPasswordInput } from "@repo/contracts";
+import { ForgotPasswordSchema, FRONTEND_ROUTES, type ForgotPasswordInput } from "@repo/contracts";
 import { Button } from "@repo/ui/components/ui/button";
 import {
   Card,
@@ -39,7 +39,12 @@ function ForgotPasswordPage() {
     <div className="flex min-h-svh items-center justify-center bg-muted/20 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <Button variant="ghost" size="sm" className="mb-3 w-fit" render={<Link to="/auth" />}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-3 w-fit"
+            render={<Link to={FRONTEND_ROUTES.auth} />}
+          >
             <ArrowLeft className="size-4" />
             {t("auth.backToLogin")}
           </Button>
@@ -51,7 +56,7 @@ function ForgotPasswordPage() {
             <div className="space-y-4 text-center">
               <MailCheck className="mx-auto size-10 text-primary" />
               <p className="text-sm text-muted-foreground">{t("auth.checkEmailDescription")}</p>
-              <Button className="w-full" render={<Link to="/auth" />}>
+              <Button className="w-full" render={<Link to={FRONTEND_ROUTES.auth} />}>
                 {t("auth.backToLogin")}
               </Button>
             </div>

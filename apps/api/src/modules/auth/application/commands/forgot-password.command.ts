@@ -1,5 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { MILLISECONDS_PER_MINUTE, PASSWORD_RESET_TTL_MINUTES } from "@repo/contracts";
+import {
+  buildFrontendUrl,
+  MILLISECONDS_PER_MINUTE,
+  PASSWORD_RESET_TTL_MINUTES,
+  FRONTEND_ROUTES,
+} from "@repo/contracts";
 import { ok, Result } from "neverthrow";
 import { generateSecureToken, hashPasswordResetToken } from "../utils/password.utils";
 import type { AuthError } from "../../domain/errors/auth.errors";
@@ -35,7 +40,9 @@ export class ForgotPasswordCommand {
     );
     if (stored.isErr()) return ok(undefined);
 
-    const resetLink = `${env.CLIENT_URL}/reset-password?token=${resetToken}`;
+    const resetLink = buildFrontendUrl(env.CLIENT_URL, FRONTEND_ROUTES.resetPassword, {
+      token: resetToken,
+    });
     const html = await render(
       React.createElement(PasswordResetEmail, {
         resetLink,

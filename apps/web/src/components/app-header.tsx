@@ -17,6 +17,7 @@ import { SidebarTrigger } from "@repo/ui/components/ui/sidebar";
 import { useAuthStore } from "@/stores/auth.store";
 import { getApiClient } from "@/lib/api";
 import { useTheme } from "@/components/theme-provider";
+import { FRONTEND_ROUTES } from "@repo/contracts";
 
 export function AppHeader() {
   const { t } = useTranslation();
@@ -34,7 +35,7 @@ export function AppHeader() {
       await getApiClient().auth.logout();
     } finally {
       clearAuth();
-      navigate({ to: "/auth" });
+      navigate({ to: FRONTEND_ROUTES.auth });
       setSigningOut(false);
     }
   };

@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ok } from "neverthrow";
+import type { ReactElement } from "react";
 
 vi.mock("@repo/email", () => ({
-  OrganizationInvitationEmail: () => null,
+  OrganizationInvitationEmail: vi.fn(() => null),
   render: vi.fn().mockResolvedValue("<html>invitation</html>"),
 }));
 vi.mock("../../../../config/env", () => ({ env: { CLIENT_URL: "https://app.example.com" } }));
@@ -41,6 +42,11 @@ describe("InvitationEmailListener", () => {
       expect.objectContaining({ to: "invitee@example.com", subject: "email.invitation.subject" }),
       expect.objectContaining({ attempts: 5 }),
     );
+    const element = vi.mocked(render).mock.calls[0]?.[0] as
+      ReactElement<{ acceptUrl?: string }> | undefined;
+    expect(element?.props.acceptUrl).toBe(
+      "https://app.example.com/accept-invitation?token=token%2Bwith+spaces",
+    );
     expect(email.send).not.toHaveBeenCalled();
   });
 
@@ -65,7 +71,7 @@ function event(): InvitationCreatedEvent {
     "Acme",
     "invitee@example.com",
     "member",
-    "token",
+    "token+with spaces",
     "en",
   );
 }

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppNotesRouteImport } from './routes/_app.notes'
@@ -27,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcceptInvitationRoute = AcceptInvitationRouteImport.update({
+  id: '/accept-invitation',
+  path: '/accept-invitation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -72,6 +78,7 @@ const AppNotesNewRoute = AppNotesNewRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/notes': typeof AppNotesRouteWithChildren
@@ -83,6 +90,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/notes': typeof AppNotesRouteWithChildren
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/notes': typeof AppNotesRouteWithChildren
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accept-invitation'
     | '/auth'
     | '/dashboard'
     | '/notes'
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accept-invitation'
     | '/auth'
     | '/dashboard'
     | '/notes'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_app'
+    | '/accept-invitation'
     | '/auth'
     | '/_app/dashboard'
     | '/_app/notes'
@@ -145,6 +157,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  AcceptInvitationRoute: typeof AcceptInvitationRoute
   AuthRoute: typeof AuthRouteWithChildren
 }
 
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accept-invitation': {
+      id: '/accept-invitation'
+      path: '/accept-invitation'
+      fullPath: '/accept-invitation'
+      preLoaderRoute: typeof AcceptInvitationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -266,6 +286,7 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  AcceptInvitationRoute: AcceptInvitationRoute,
   AuthRoute: AuthRouteWithChildren,
 }
 export const routeTree = rootRouteImport

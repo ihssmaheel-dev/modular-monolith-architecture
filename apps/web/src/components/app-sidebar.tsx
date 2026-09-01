@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { FRONTEND_ROUTES } from "@repo/contracts";
 import { FilePlus2, FileText, LayoutDashboard, Layers3, Users } from "lucide-react";
 import {
   Sidebar,
@@ -46,7 +47,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  render={<Link to="/dashboard" />}
+                  render={<Link to={FRONTEND_ROUTES.dashboard} />}
                   isActive={location.pathname === "/dashboard"}
                   tooltip={t("dashboard.title")}
                 >
@@ -57,7 +58,7 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  render={<Link to="/notes" />}
+                  render={<Link to={FRONTEND_ROUTES.notes} />}
                   isActive={isNotesActive}
                   tooltip={t("notes.title")}
                 >
@@ -67,7 +68,7 @@ export function AppSidebar() {
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton
-                      render={<Link to="/notes" />}
+                      render={<Link to={FRONTEND_ROUTES.notes} />}
                       isActive={location.pathname === "/notes"}
                     >
                       <FileText className="size-3.5" />
@@ -76,7 +77,7 @@ export function AppSidebar() {
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton
-                      render={<Link to="/notes/new" />}
+                      render={<Link to={FRONTEND_ROUTES.newNote} />}
                       isActive={location.pathname === "/notes/new"}
                     >
                       <FilePlus2 className="size-3.5" />
@@ -88,7 +89,7 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  render={<Link to="/users" />}
+                  render={<Link to={FRONTEND_ROUTES.users} />}
                   isActive={location.pathname.startsWith("/users")}
                   tooltip={t("users.title")}
                 >

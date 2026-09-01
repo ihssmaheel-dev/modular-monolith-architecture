@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ok } from "neverthrow";
+vi.mock("../../../../config/env", () => ({ env: { CLIENT_URL: "https://app.example.com" } }));
 import { User } from "../../../users/domain/entities/user.entity";
 import { GetUserByEmailQuery } from "../../../users/application/queries/get-user-by-email.query";
 import { SetPasswordResetTokenCommand } from "../../../users/application/commands/set-password-reset-token.command";
@@ -56,7 +57,7 @@ describe("ForgotPasswordCommand", () => {
     expect(emailService.send).toHaveBeenCalledWith({
       to: USER.email,
       subject: "email.passwordReset.subject",
-      html: expect.stringContaining("/reset-password?token="),
+      html: expect.stringContaining("https://app.example.com/auth/reset-password?token="),
     });
   });
 });

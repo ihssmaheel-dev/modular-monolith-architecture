@@ -13,6 +13,7 @@ import {
 } from "@repo/ui/components/ui/card";
 import { useAuthStore } from "@/stores/auth.store";
 import { notesListQuery } from "@/features/notes/notes.queries";
+import { FRONTEND_ROUTES } from "@repo/contracts";
 
 export const Route = createFileRoute("/_app/dashboard")({
   loader: ({ context }) => context.queryClient.ensureQueryData(notesListQuery(1, 5)),
@@ -41,7 +42,11 @@ function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" className="gap-1.5 text-xs shadow-xs" render={<Link to="/notes/new" />}>
+          <Button
+            size="sm"
+            className="gap-1.5 text-xs shadow-xs"
+            render={<Link to={FRONTEND_ROUTES.newNote} />}
+          >
             <Plus className="size-3.5" />
             <span>{t("notes.newNote")}</span>
           </Button>
@@ -65,7 +70,7 @@ function DashboardPage() {
               variant="ghost"
               size="sm"
               className="h-7 text-xs gap-1 p-0"
-              render={<Link to="/notes" />}
+              render={<Link to={FRONTEND_ROUTES.notes} />}
             >
               <span>{t("notes.title")}</span>
               <ArrowRight className="size-3" />
@@ -86,7 +91,7 @@ function DashboardPage() {
             size="sm"
             variant="ghost"
             className="gap-1.5 text-xs"
-            render={<Link to="/notes" />}
+            render={<Link to={FRONTEND_ROUTES.notes} />}
           >
             <span>{t("notes.title")}</span>
             <ArrowRight className="size-3.5" />
@@ -120,7 +125,11 @@ function DashboardPage() {
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground">{t("notes.noNotes")}</p>
               </div>
-              <Button size="sm" render={<Link to="/notes/new" />} className="gap-1.5 text-xs">
+              <Button
+                size="sm"
+                render={<Link to={FRONTEND_ROUTES.newNote} />}
+                className="gap-1.5 text-xs"
+              >
                 <Plus className="size-3.5" />
                 <span>{t("notes.newNote")}</span>
               </Button>

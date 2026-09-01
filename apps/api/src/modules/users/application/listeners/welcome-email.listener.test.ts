@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ok } from "neverthrow";
 import type { Queue } from "bullmq";
 import type { EmailJobData } from "@repo/contracts";
+vi.mock("../../../../config/env", () => ({ env: { CLIENT_URL: "https://app.example.com" } }));
 import { EmailService } from "../../../../infrastructure/email/email.service";
 import { I18nService } from "../../../../infrastructure/i18n/i18n.service";
 import { PinoLoggerService } from "../../../../infrastructure/logger/logger.service";
@@ -34,7 +35,7 @@ describe("WelcomeEmailListener", () => {
       {
         to: event.email,
         subject: "email.welcome.subject",
-        html: expect.stringContaining("email.welcome.body"),
+        html: expect.stringContaining("https://app.example.com/auth"),
       },
       {
         attempts: 5,

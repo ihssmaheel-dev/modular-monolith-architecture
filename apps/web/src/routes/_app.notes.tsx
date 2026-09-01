@@ -9,7 +9,7 @@ import { DataTable, DataTablePagination } from "@repo/ui/components/composed/dat
 import { EmptyState } from "@repo/ui/components/composed/empty-state";
 import { PageHeader } from "@repo/ui/components/composed/page-header";
 import { toast } from "@repo/ui/components/ui/toast";
-import { PaginationQuerySchema } from "@repo/contracts";
+import { FRONTEND_ROUTES, PaginationQuerySchema } from "@repo/contracts";
 import { getApiClient } from "@/lib/api";
 import { notesListQuery } from "@/features/notes/notes.queries";
 import { getNotesColumns } from "@/features/notes/notes-table-columns";
@@ -51,7 +51,7 @@ function NotesPage() {
         title={t("notes.title")}
         description={t("notes.description")}
         actions={
-          <Button render={<Link to="/notes/new" />}>
+          <Button render={<Link to={FRONTEND_ROUTES.newNote} />}>
             <Plus className="size-4" />
             {t("notes.newNote")}
           </Button>
@@ -88,7 +88,7 @@ function NotesPage() {
               title={t("notes.noNotes")}
               description={t("notes.description")}
               action={
-                <Button render={<Link to="/notes/new" />}>
+                <Button render={<Link to={FRONTEND_ROUTES.newNote} />}>
                   <Plus className="size-4" />
                   {t("notes.createNote")}
                 </Button>

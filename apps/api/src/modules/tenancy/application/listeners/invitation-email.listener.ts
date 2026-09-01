@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { OrganizationInvitationEmail, render } from "@repo/email";
-import type { EmailJobData } from "@repo/contracts";
+import { buildFrontendUrl, FRONTEND_ROUTES, type EmailJobData } from "@repo/contracts";
 import * as React from "react";
 import { env } from "../../../../config/env";
 import { EmailService } from "../../../../infrastructure/email/email.service";
@@ -51,7 +51,9 @@ export class InvitationEmailListener {
     const translate = (key: string) => this.i18n.t(key, event.locale, params);
     const html = await render(
       React.createElement(OrganizationInvitationEmail, {
-        acceptUrl: `${env.CLIENT_URL}/accept-invitation?token=${event.token}`,
+        acceptUrl: buildFrontendUrl(env.CLIENT_URL, FRONTEND_ROUTES.acceptInvitation, {
+          token: event.token,
+        }),
         preview: translate("email.invitation.preview"),
         heading: translate("email.invitation.heading"),
         body: translate("email.invitation.body"),

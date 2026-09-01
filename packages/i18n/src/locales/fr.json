@@ -270,12 +270,16 @@
     "createOrganizationDescription": "Créer une nouvelle organisation",
     "switcherLabel": "Changer d’organisation",
     "acceptInvitation": "Accepter l’invitation",
+    "acceptInvitationDescription": "Consultez votre invitation et rejoignez l’organisation.",
     "invitationAccepted": "Invitation acceptée",
+    "invitationAcceptedDescription": "Votre adhésion est prête. Accédez à votre espace de travail.",
     "acceptFailed": "Impossible d’accepter l’invitation",
     "accept": "Accepter",
     "accepting": "Acceptation...",
     "invalidInvitationLink": "Ce lien d’invitation est invalide.",
-    "signInToAccept": "Connectez-vous pour accepter l’invitation"
+    "invalidInvitationDescription": "Demandez un nouveau lien d’invitation à l’administrateur de votre organisation.",
+    "signInToAccept": "Connectez-vous pour accepter l’invitation",
+    "goToWorkspace": "Accéder à l’espace de travail"
   },
   "navigation": {
     "workspace": "Espace de travail",

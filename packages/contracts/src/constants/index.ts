@@ -6,3 +6,4 @@ export const PASSWORD_RESET_TTL_MINUTES = 30;
 export const MILLISECONDS_PER_MINUTE = 60_000;
 
 export * from "./tenancy.constants";
+export * from "./frontend-routes.constants";

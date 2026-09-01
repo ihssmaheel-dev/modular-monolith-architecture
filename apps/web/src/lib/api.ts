@@ -1,4 +1,5 @@
 import { createApiClient, type ApiClient } from "@repo/api-client";
+import { buildFrontendUrl, FRONTEND_ROUTES } from "@repo/contracts";
 import { getWebEnv } from "./env";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLocaleStore } from "@/stores/locale.store";
@@ -22,7 +23,16 @@ export function getApiClient(): ApiClient {
     onAuthFailure: () => {
       useAuthStore.getState().clearAuth();
       if (typeof window !== "undefined") {
-        window.location.href = "/auth";
+        const currentUrl = new URL(window.location.href);
+        const token =
+          currentUrl.pathname === FRONTEND_ROUTES.acceptInvitation
+            ? currentUrl.searchParams.get("token")
+            : null;
+        window.location.href = token
+          ? buildFrontendUrl(window.location.origin, FRONTEND_ROUTES.auth, {
+              inviteToken: token,
+            })
+          : FRONTEND_ROUTES.auth;
       }
     },
   });

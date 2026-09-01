@@ -5,7 +5,13 @@ import { useForm, type UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff, Layers } from "lucide-react";
-import { LoginSchema, RegisterSchema, type LoginInput, type RegisterInput } from "@repo/contracts";
+import {
+  FRONTEND_ROUTES,
+  LoginSchema,
+  RegisterSchema,
+  type LoginInput,
+  type RegisterInput,
+} from "@repo/contracts";
 import { Button } from "@repo/ui/components/ui/button";
 import {
   Card,
@@ -20,7 +26,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/components/ui
 import { useAuthStore } from "@/stores/auth.store";
 import { getApiClient } from "@/lib/api";
 
-export const Route = createFileRoute("/auth")({ component: AuthPage });
+export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    inviteToken: typeof search.inviteToken === "string" ? search.inviteToken : undefined,
+  }),
+  component: AuthPage,
+});
 
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-xs text-destructive">{message}</p> : null;
@@ -69,6 +80,7 @@ function PasswordInput({
 function AuthPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { inviteToken } = Route.useSearch();
   const setAuth = useAuthStore((state) => state.setAuth);
   const loginForm = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
@@ -87,7 +99,11 @@ function AuthPage() {
     },
     onSuccess: (data) => {
       setAuth(data);
-      navigate({ to: "/dashboard" });
+      if (inviteToken) {
+        navigate({ to: FRONTEND_ROUTES.acceptInvitation, search: { token: inviteToken } });
+        return;
+      }
+      navigate({ to: FRONTEND_ROUTES.dashboard });
     },
   });
   const registerMutation = useMutation({
@@ -99,7 +115,11 @@ function AuthPage() {
     },
     onSuccess: (data) => {
       setAuth(data);
-      navigate({ to: "/dashboard" });
+      if (inviteToken) {
+        navigate({ to: FRONTEND_ROUTES.acceptInvitation, search: { token: inviteToken } });
+        return;
+      }
+      navigate({ to: FRONTEND_ROUTES.dashboard });
     },
   });
   return (
@@ -143,7 +163,7 @@ function AuthPage() {
                     <div className="flex items-center justify-between">
                       <Label htmlFor="login-password">{t("auth.password")}</Label>
                       <Link
-                        to="/auth/forgot-password"
+                        to={FRONTEND_ROUTES.forgotPassword}
                         className="text-xs text-primary hover:underline"
                       >
                         {t("auth.forgotPassword")}

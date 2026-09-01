@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreateNoteSchema, type CreateNoteDto } from "@repo/contracts";
+import { CreateNoteSchema, FRONTEND_ROUTES, type CreateNoteDto } from "@repo/contracts";
 import { Button } from "@repo/ui/components/ui/button";
 import {
   Card,
@@ -34,7 +34,7 @@ function CreateNotePage() {
     },
     onSuccess: () => {
       toast.add({ title: t("api.note.created"), type: "success" } as never);
-      navigate({ to: "/notes" });
+      navigate({ to: FRONTEND_ROUTES.notes });
     },
     onError: () => toast.add({ title: t("api.note.createFailed"), type: "error" } as never),
   });
@@ -42,7 +42,7 @@ function CreateNotePage() {
   return (
     <div className="w-full space-y-6">
       <div>
-        <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/notes" })}>
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: FRONTEND_ROUTES.notes })}>
           {t("common.back")}
         </Button>
       </div>
@@ -77,7 +77,11 @@ function CreateNotePage() {
               )}
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => navigate({ to: "/notes" })}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate({ to: FRONTEND_ROUTES.notes })}
+              >
                 {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={mutation.isPending}>

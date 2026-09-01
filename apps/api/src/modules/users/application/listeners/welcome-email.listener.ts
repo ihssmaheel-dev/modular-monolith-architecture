@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { WelcomeEmail, render } from "@repo/email";
-import type { EmailJobData } from "@repo/contracts";
+import { buildFrontendUrl, FRONTEND_ROUTES, type EmailJobData } from "@repo/contracts";
 import * as React from "react";
 import { env } from "../../../../config/env";
 import { EmailService } from "../../../../infrastructure/email/email.service";
@@ -49,7 +49,7 @@ export class WelcomeEmailListener {
       this.i18n.t(key, event.locale, params);
     const html = await render(
       React.createElement(WelcomeEmail, {
-        loginUrl: `${env.CLIENT_URL}/login`,
+        loginUrl: buildFrontendUrl(env.CLIENT_URL, FRONTEND_ROUTES.auth),
         preview: translate("email.welcome.preview"),
         greeting: translate("email.welcome.greeting", { name: event.name }),
         body: translate("email.welcome.body"),

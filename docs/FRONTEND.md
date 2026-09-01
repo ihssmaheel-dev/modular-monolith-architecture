@@ -54,6 +54,16 @@ apps/web/
 - Authentication prefers httpOnly cookies, with short-lived Bearer tokens as a fallback.
 - `VITE_API_URL` is validated in `src/lib/env.ts`.
 
+### Public links and authentication handoff
+
+Public browser destinations are defined once in `@repo/contracts` as
+`FRONTEND_ROUTES`. The API uses `buildFrontendUrl` for password-reset, welcome,
+and organization-invitation emails, so links remain valid when route structure
+changes. The invitation destination is `/accept-invitation`; it validates the
+token, asks the recipient to sign in when necessary, and returns to the
+invitation after login or registration. Email listener tests assert the emitted
+paths and encoded token query values as link smoke tests.
+
 ## Shared UI
 
 Use primitives from `@repo/ui/components/ui/*` and composed components from `@repo/ui/components/composed/*`. Keep tokens in `packages/ui/src/styles/globals.css`; import that stylesheet once from the web root. Add new primitives through the shadcn CLI configured by `apps/web/components.json`.

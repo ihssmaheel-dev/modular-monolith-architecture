@@ -275,12 +275,16 @@
     "createOrganizationDescription": "Create a new workspace organization",
     "switcherLabel": "Switch organization",
     "acceptInvitation": "Accept invitation",
+    "acceptInvitationDescription": "Review your invitation and join the workspace.",
     "invitationAccepted": "Invitation accepted",
+    "invitationAcceptedDescription": "Your membership is ready. Continue to your workspace.",
     "acceptFailed": "Failed to accept invitation",
     "accept": "Accept",
     "accepting": "Accepting...",
     "invalidInvitationLink": "This invitation link is invalid.",
-    "signInToAccept": "Sign in to accept the invitation"
+    "invalidInvitationDescription": "Request a new invitation link from your organization administrator.",
+    "signInToAccept": "Sign in to accept the invitation",
+    "goToWorkspace": "Go to workspace"
   },
   "zod": {
     "errors": {
