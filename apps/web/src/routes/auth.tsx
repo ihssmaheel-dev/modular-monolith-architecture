@@ -165,12 +165,6 @@ function AuthPage() {
                   <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                     {loginMutation.isPending ? t("auth.signingIn") : t("auth.signIn")}
                   </Button>
-                  <Link
-                    to="/"
-                    className="block text-center text-sm text-muted-foreground hover:underline"
-                  >
-                    {t("common.back")}
-                  </Link>
                 </form>
               </CardContent>
             </Card>
