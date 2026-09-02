@@ -1,4 +1,5 @@
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { ApiErrorEnvelopeSchema } from "@repo/contracts";
 import type { ApiClientOptions, ApiResponse } from "./types";
 import {
   createIdempotencyKey,
@@ -68,7 +69,7 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
         } catch {
           body = null;
         }
-        return { status: res.status, body: body as T };
+        return { status: res.status, body: body as T, error: parseError(body) };
       }
 
       options.onAuthRefreshed?.(
@@ -87,7 +88,11 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
       }
     }
 
-    return { status: res.status, body: body as T };
+    return {
+      status: res.status,
+      body: body as T,
+      ...(res.ok ? {} : { error: parseError(body) }),
+    };
   };
 
   const orpcClient = createOrpcClient(baseUrl, options);
@@ -103,6 +108,16 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     client: orpcClient,
     getTransferHeaders: () => getTransferHeaders(options),
   };
+}
+
+function parseError(value: unknown) {
+  const direct = ApiErrorEnvelopeSchema.safeParse(value);
+  if (direct.success) return direct.data;
+  if (typeof value === "object" && value !== null && "data" in value) {
+    const nested = ApiErrorEnvelopeSchema.safeParse(value.data);
+    if (nested.success) return nested.data;
+  }
+  return undefined;
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;

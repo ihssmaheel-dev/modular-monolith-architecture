@@ -202,7 +202,11 @@
       "invalidToken": "Token invalide",
       "circuitOpen": "Service temporairement indisponible en raison d’une défaillance en amont",
       "bulkheadRejected": "Trop de requêtes simultanées, veuillez réessayer sous peu",
-      "eventDispatchFailed": "L'opération n'a pas pu être finalisée"
+      "eventDispatchFailed": "L'opération n'a pas pu être finalisée",
+      "responseValidationFailed": "Le serveur a renvoyé une réponse invalide",
+      "idempotencyConflict": "Cette clé d'idempotence a déjà été utilisée pour une autre requête",
+      "idempotencyInProgress": "Cette requête est toujours en cours de traitement",
+      "idempotencyRecordInvalid": "L'enregistrement de la requête précédente est invalide"
     },
     "health": {
       "redisUnconfigured": "Redis n’est pas configuré, mais il est facultatif",

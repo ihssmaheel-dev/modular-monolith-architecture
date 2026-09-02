@@ -6,6 +6,7 @@ import {
   Public,
   TenantAgnostic,
   requireAuthenticatedUser,
+  ResponseSchema,
 } from "../../../common";
 import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import { handleResult } from "../../../common/utils/presentation.utils";
@@ -24,6 +25,9 @@ import {
   RefreshTokenSchema,
   ForgotPasswordSchema,
   ResetPasswordSchema,
+  AuthResponseSchema,
+  CurrentUserResponseSchema,
+  MessageResponseSchema,
 } from "@repo/contracts";
 import { ForgotPasswordCommand } from "../application/commands/forgot-password.command";
 import { LoginCommand } from "../application/commands/login.command";
@@ -52,6 +56,7 @@ export class AuthController {
 
   @Get("me")
   @HttpCode(HttpStatus.OK)
+  @ResponseSchema(CurrentUserResponseSchema)
   async me(@Req() req: FastifyRequest): Promise<CurrentUserResponse> {
     const actor = requireAuthenticatedUser(req);
     const result = await this.getUserById.execute(actor.sub);
@@ -70,6 +75,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @Public()
   @AuthRateLimit("register")
+  @ResponseSchema(AuthResponseSchema)
   async register(
     @Body(new ZodValidationPipe(RegisterSchema)) body: RegisterInput,
     @Req() req: FastifyRequest,
@@ -91,6 +97,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Public()
   @AuthRateLimit("login")
+  @ResponseSchema(AuthResponseSchema)
   async login(
     @Body(new ZodValidationPipe(LoginSchema)) body: LoginInput,
     @Req() req: FastifyRequest,
@@ -105,6 +112,7 @@ export class AuthController {
   @Post("logout")
   @HttpCode(HttpStatus.OK)
   @NoDatabaseTransaction()
+  @ResponseSchema(MessageResponseSchema)
   async logout(
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
@@ -122,6 +130,7 @@ export class AuthController {
   @NoDatabaseTransaction()
   @Public()
   @AuthRateLimit("refresh")
+  @ResponseSchema(AuthResponseSchema)
   async refresh(
     @Body(new ZodValidationPipe(RefreshTokenSchema)) body: RefreshTokenInput,
     @Req() req: FastifyRequest,
@@ -144,6 +153,7 @@ export class AuthController {
   @Public()
   @NoDatabaseTransaction()
   @AuthRateLimit("forgotPassword")
+  @ResponseSchema(MessageResponseSchema)
   async forgotPassword(
     @Body(new ZodValidationPipe(ForgotPasswordSchema)) body: ForgotPasswordInput,
     @Req() req: FastifyRequest,
@@ -158,6 +168,7 @@ export class AuthController {
   @Public()
   @NoDatabaseTransaction()
   @AuthRateLimit("resetPassword")
+  @ResponseSchema(MessageResponseSchema)
   async resetPassword(
     @Body(new ZodValidationPipe(ResetPasswordSchema)) body: ResetPasswordInput,
     @Req() req: FastifyRequest,

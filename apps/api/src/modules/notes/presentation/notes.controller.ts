@@ -13,7 +13,12 @@ import {
 } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import { z } from "zod";
-import { RequirePermission, Idempotent, requireAuthenticatedUser } from "../../../common";
+import {
+  RequirePermission,
+  Idempotent,
+  requireAuthenticatedUser,
+  ResponseSchema,
+} from "../../../common";
 import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import {
   type CreateNoteDto,
@@ -24,6 +29,9 @@ import {
   CreateNoteSchema,
   UpdateNoteSchema,
   PaginationQuerySchema,
+  NoteListResponseSchema,
+  NoteResponseSchema,
+  EmptyResponseSchema,
 } from "@repo/contracts";
 import { CreateNoteCommand } from "../application/commands/create-note.command";
 import { UpdateNoteCommand } from "../application/commands/update-note.command";
@@ -47,6 +55,7 @@ export class NotesController {
 
   @Get()
   @RequirePermission("notes:read")
+  @ResponseSchema(NoteListResponseSchema)
   async list(
     @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
     @Req() req: FastifyRequest,
@@ -68,6 +77,7 @@ export class NotesController {
 
   @Get(":id")
   @RequirePermission("notes:read")
+  @ResponseSchema(NoteResponseSchema)
   async getById(
     @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Req() req: FastifyRequest,
@@ -94,6 +104,7 @@ export class NotesController {
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
   @RequirePermission("notes:create")
+  @ResponseSchema(NoteResponseSchema)
   async create(
     @Body(new ZodValidationPipe(CreateNoteSchema)) body: CreateNoteDto,
     @Req() req: FastifyRequest,
@@ -108,6 +119,7 @@ export class NotesController {
   @Patch(":id")
   @Idempotent()
   @RequirePermission("notes:update")
+  @ResponseSchema(NoteResponseSchema)
   async update(
     @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Body(new ZodValidationPipe(UpdateNoteSchema)) body: UpdateNoteDto,
@@ -135,6 +147,7 @@ export class NotesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
   @RequirePermission("notes:delete")
+  @ResponseSchema(EmptyResponseSchema)
   async delete(
     @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Req() req: FastifyRequest,

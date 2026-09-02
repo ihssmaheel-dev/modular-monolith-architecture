@@ -207,7 +207,11 @@
       "sendFailed": "Failed to send email",
       "circuitOpen": "Service temporarily unavailable due to upstream failure",
       "bulkheadRejected": "Too many concurrent requests, please retry shortly",
-      "eventDispatchFailed": "The operation could not be finalized"
+      "eventDispatchFailed": "The operation could not be finalized",
+      "responseValidationFailed": "The server returned an invalid response",
+      "idempotencyConflict": "This idempotency key was already used for a different request",
+      "idempotencyInProgress": "This request is still being processed",
+      "idempotencyRecordInvalid": "The previous request record is invalid"
     },
     "health": {
       "redisUnconfigured": "Redis unconfigured but optional",

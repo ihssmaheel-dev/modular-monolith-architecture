@@ -12,6 +12,7 @@ import {
   MemberUserIdParamSchema,
 } from "../schemas";
 import { z } from "zod";
+import { EmptyResponseSchema } from "../schemas/common.schema";
 
 export const membershipsContract = oc.prefix("/tenancy").router({
   listMembers: oc
@@ -47,7 +48,7 @@ export const membershipsContract = oc.prefix("/tenancy").router({
       inputStructure: "detailed",
     })
     .input(z.object({ params: MemberUserIdParamSchema, headers: TenantHeaderSchema }))
-    .output(z.undefined().or(z.null()).or(z.void())),
+    .output(EmptyResponseSchema),
   inviteMember: oc
     .route({
       method: "POST",

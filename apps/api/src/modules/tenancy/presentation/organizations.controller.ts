@@ -1,6 +1,11 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
-import { Idempotent, TenantAgnostic, requireAuthenticatedUser } from "../../../common";
+import {
+  Idempotent,
+  TenantAgnostic,
+  requireAuthenticatedUser,
+  ResponseSchema,
+} from "../../../common";
 import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import {
   type CreateOrganizationInput,
@@ -9,6 +14,8 @@ import {
   type OrganizationListResponse,
   CreateOrganizationSchema,
   PaginationQuerySchema,
+  OrganizationResponseSchema,
+  OrganizationListResponseSchema,
 } from "@repo/contracts";
 import { handleResult } from "../../../common/utils/presentation.utils";
 import { I18nService } from "../../../infrastructure/i18n/i18n.service";
@@ -29,6 +36,7 @@ export class OrganizationsController {
   @Post("organizations")
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
+  @ResponseSchema(OrganizationResponseSchema)
   async create(
     @Body(new ZodValidationPipe(CreateOrganizationSchema)) body: CreateOrganizationInput,
     @Req() request: FastifyRequest,
@@ -45,6 +53,7 @@ export class OrganizationsController {
   }
 
   @Get("organizations")
+  @ResponseSchema(OrganizationListResponseSchema)
   async list(
     @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
     @Req() request: FastifyRequest,

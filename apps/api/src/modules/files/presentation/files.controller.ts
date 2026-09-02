@@ -17,6 +17,7 @@ import {
   NoDatabaseTransaction,
   RequirePermission,
   requireAuthenticatedUser,
+  ResponseSchema,
 } from "../../../common";
 import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import {
@@ -30,6 +31,11 @@ import {
   ConfirmUploadSchema,
   FileIdParamSchema,
   PaginationQuerySchema,
+  PresignedUrlResponseSchema,
+  FileMetadataSchema,
+  DownloadUrlResponseSchema,
+  FileListResponseSchema,
+  EmptyResponseSchema,
 } from "@repo/contracts";
 import { RequestUploadCommand } from "../application/commands/request-upload.command";
 import { ConfirmUploadCommand } from "../application/commands/confirm-upload.command";
@@ -65,6 +71,7 @@ export class FilesController {
   @NoDatabaseTransaction()
   @Idempotent()
   @RequirePermission("files:upload")
+  @ResponseSchema(PresignedUrlResponseSchema)
   async requestUpload(
     @Body(new ZodValidationPipe(RequestUploadSchema)) body: RequestUploadInput,
     @Req() req: FastifyRequest,
@@ -80,6 +87,7 @@ export class FilesController {
   @NoDatabaseTransaction()
   @Idempotent()
   @RequirePermission("files:upload")
+  @ResponseSchema(FileMetadataSchema)
   async confirmUpload(
     @Body(new ZodValidationPipe(ConfirmUploadSchema)) body: ConfirmUploadInput,
     @Req() req: FastifyRequest,
@@ -94,6 +102,7 @@ export class FilesController {
   @Get(":id/download-url")
   @NoDatabaseTransaction()
   @RequirePermission("files:read")
+  @ResponseSchema(DownloadUrlResponseSchema)
   async getDownloadUrl(
     @Param("id", new ZodValidationPipe(FileIdParamSchema.shape.id)) id: string,
     @Req() req: FastifyRequest,
@@ -106,6 +115,7 @@ export class FilesController {
 
   @Get(":id")
   @RequirePermission("files:read")
+  @ResponseSchema(FileMetadataSchema)
   async getById(
     @Param("id", new ZodValidationPipe(FileIdParamSchema.shape.id)) id: string,
     @Req() req: FastifyRequest,
@@ -119,6 +129,7 @@ export class FilesController {
 
   @Get()
   @RequirePermission("files:read")
+  @ResponseSchema(FileListResponseSchema)
   async listByParent(
     @Query(
       new ZodValidationPipe(
@@ -160,6 +171,7 @@ export class FilesController {
   @NoDatabaseTransaction()
   @Idempotent()
   @RequirePermission("files:delete")
+  @ResponseSchema(EmptyResponseSchema)
   async delete(
     @Param("id", new ZodValidationPipe(FileIdParamSchema.shape.id)) id: string,
     @Req() req: FastifyRequest,

@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 import { z } from "zod";
-import { Idempotent, RequirePermission, TenantAgnostic } from "../../../common";
+import { Idempotent, RequirePermission, TenantAgnostic, ResponseSchema } from "../../../common";
 import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import {
   type CreateUserInput,
@@ -24,6 +24,9 @@ import {
   CreateUserSchema,
   UpdateUserSchema,
   PaginationQuerySchema,
+  UserListResponseSchema,
+  UserResponseSchema,
+  EmptyResponseSchema,
 } from "@repo/contracts";
 import { GetUsersQuery } from "../application/queries/get-users.query";
 import { GetUserByIdQuery } from "../application/queries/get-user-by-id.query";
@@ -48,6 +51,7 @@ export class UsersController {
 
   @Get()
   @RequirePermission("users:read")
+  @ResponseSchema(UserListResponseSchema)
   async list(
     @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
     @Req() req: FastifyRequest,
@@ -63,6 +67,7 @@ export class UsersController {
 
   @Get(":id")
   @RequirePermission("users:read")
+  @ResponseSchema(UserResponseSchema)
   async getById(
     @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Req() req: FastifyRequest,
@@ -84,6 +89,7 @@ export class UsersController {
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
   @RequirePermission("users:write")
+  @ResponseSchema(UserResponseSchema)
   async create(
     @Body(new ZodValidationPipe(CreateUserSchema)) body: CreateUserInput,
     @Req() req: FastifyRequest,
@@ -113,6 +119,7 @@ export class UsersController {
   @Patch(":id")
   @Idempotent()
   @RequirePermission("users:write")
+  @ResponseSchema(UserResponseSchema)
   async update(
     @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Body(new ZodValidationPipe(UpdateUserSchema)) body: UpdateUserInput,
@@ -136,6 +143,7 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
   @RequirePermission("users:delete")
+  @ResponseSchema(EmptyResponseSchema)
   async delete(
     @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Req() req: FastifyRequest,

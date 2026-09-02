@@ -202,7 +202,11 @@
       "invalidToken": "Token inválido",
       "circuitOpen": "Servicio no disponible temporalmente debido a un fallo ascendente",
       "bulkheadRejected": "Demasiadas solicitudes simultáneas, inténtelo de nuevo en breve",
-      "eventDispatchFailed": "No se pudo finalizar la operación"
+      "eventDispatchFailed": "No se pudo finalizar la operación",
+      "responseValidationFailed": "El servidor devolvió una respuesta no válida",
+      "idempotencyConflict": "Esta clave de idempotencia ya se usó para otra solicitud",
+      "idempotencyInProgress": "Esta solicitud todavía se está procesando",
+      "idempotencyRecordInvalid": "El registro de la solicitud anterior no es válido"
     },
     "health": {
       "redisUnconfigured": "Redis no está configurado, pero es opcional",

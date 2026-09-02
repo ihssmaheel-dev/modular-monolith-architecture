@@ -10,6 +10,7 @@ import {
 } from "../schemas/file.schema";
 import { PaginationQuerySchema } from "../schemas/pagination.schema";
 import { z } from "zod";
+import { EmptyResponseSchema } from "../schemas/common.schema";
 
 export const filesContract = oc.prefix("/files").router({
   requestUpload: oc
@@ -53,5 +54,5 @@ export const filesContract = oc.prefix("/files").router({
   delete: oc
     .route({ method: "DELETE", path: "/{id}", summary: "Delete a file", successStatus: 204 })
     .input(FileIdParamSchema)
-    .output(z.undefined().or(z.null()).or(z.void())),
+    .output(EmptyResponseSchema),
 });

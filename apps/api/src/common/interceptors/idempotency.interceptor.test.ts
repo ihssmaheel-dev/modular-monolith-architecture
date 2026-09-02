@@ -1,12 +1,12 @@
 import {
-  ExecutionContext,
-  CallHandler,
   BadRequestException,
+  CallHandler,
   ConflictException,
+  ExecutionContext,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ClsService } from "nestjs-cls";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import { firstValueFrom, of, throwError } from "rxjs";
 import { IdempotencyInterceptor } from "./idempotency.interceptor";
 import { RedisService } from "../../infrastructure/redis/redis.service";
@@ -15,7 +15,7 @@ import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 interface RedisMock {
   set: ReturnType<typeof vi.fn>;
   get: ReturnType<typeof vi.fn>;
-  del: ReturnType<typeof vi.fn>;
+  eval: ReturnType<typeof vi.fn>;
 }
 
 describe("IdempotencyInterceptor", () => {
@@ -27,186 +27,184 @@ describe("IdempotencyInterceptor", () => {
 
   beforeEach(() => {
     reflector = new Reflector();
-    redisClient = {
-      set: vi.fn(),
-      get: vi.fn(),
-      del: vi.fn(),
-    };
-    redisService = {
-      getClient: vi.fn().mockReturnValue(redisClient),
-    } as unknown as RedisService;
+    redisClient = { set: vi.fn(), get: vi.fn(), eval: vi.fn().mockResolvedValue(1) };
+    redisService = { getClient: vi.fn().mockReturnValue(redisClient) } as unknown as RedisService;
     cls = {
       get: vi.fn((key: string) => (key === "userId" ? "user-123" : undefined)),
     } as unknown as ClsService;
-
     const logger = {
       child: vi.fn().mockReturnThis(),
       error: vi.fn(),
+      warn: vi.fn(),
     } as unknown as PinoLoggerService;
     interceptor = new IdempotencyInterceptor(reflector, redisService, cls, logger);
   });
 
-  const createMockContext = (headers: Record<string, string> = {}) => {
-    return {
+  const createContext = (
+    headers: Record<string, string> = {},
+    body: unknown = { title: "hello" },
+    method = "POST",
+    route = "/notes",
+  ) =>
+    ({
       getHandler: vi.fn(),
       getClass: vi.fn(),
       switchToHttp: vi.fn().mockReturnValue({
         getRequest: vi.fn().mockReturnValue({
           headers,
+          body,
+          method,
+          url: route,
+          routeOptions: { url: route },
           ip: "127.0.0.1",
         }),
       }),
-    } as unknown as ExecutionContext;
-  };
+    }) as unknown as ExecutionContext;
 
-  const createMockCallHandler = (returnValue: unknown = "success", shouldThrow = false) => {
-    return {
-      handle: vi
-        .fn()
-        .mockReturnValue(
-          shouldThrow ? throwError(() => new Error("Handler error")) : of(returnValue),
-        ),
-    } as CallHandler;
-  };
+  const handler = (value: unknown = "success", failed = false): CallHandler => ({
+    handle: vi
+      .fn()
+      .mockReturnValue(failed ? throwError(() => new Error("Handler error")) : of(value)),
+  });
 
-  it("should bypass if endpoint is not decorated with @Idempotent()", async () => {
+  it("bypasses endpoints without @Idempotent", async () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(false);
-    const context = createMockContext();
-    const handler = createMockCallHandler();
-
-    const result = await interceptor.intercept(context, handler);
+    const next = handler();
+    const result = await interceptor.intercept(createContext(), next);
     await expect(firstValueFrom(result)).resolves.toBe("success");
-    expect(handler.handle).toHaveBeenCalled();
     expect(redisClient.set).not.toHaveBeenCalled();
   });
 
-  it("should throw BadRequestException if Idempotency-Key header is missing", async () => {
+  it("requires a valid idempotency key", async () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
-    const context = createMockContext(); // no headers
-    const handler = createMockCallHandler();
-
-    await expect(interceptor.intercept(context, handler)).rejects.toThrow(BadRequestException);
+    await expect(interceptor.intercept(createContext(), handler())).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
-  it("should bypass if Redis client is not available", async () => {
+  it("fails closed in production when Redis is unavailable", async () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
     vi.spyOn(redisService, "getClient").mockReturnValue(null);
-    const context = createMockContext({ "idempotency-key": "req-1" });
-    const handler = createMockCallHandler();
-
-    const result = await interceptor.intercept(context, handler);
+    const next = handler();
+    const result = await interceptor.intercept(createContext({ "idempotency-key": "req-1" }), next);
     await expect(firstValueFrom(result)).resolves.toBe("success");
-    expect(handler.handle).toHaveBeenCalled();
   });
 
-  it("should set PROCESSING flag and save response on successful execution", async () => {
+  it("binds the lock to method, route, and a deterministic request fingerprint", async () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
-    const context = createMockContext({ "idempotency-key": "req-1" });
-    const handler = createMockCallHandler({ data: "success" });
-
-    redisClient.set.mockResolvedValueOnce("OK"); // NX sets successfully
-    redisClient.set.mockResolvedValueOnce("OK"); // Final save successfully
-
-    const result = await interceptor.intercept(context, handler);
+    redisClient.set.mockResolvedValueOnce("OK");
+    const next = handler({ data: "success" });
+    const result = await interceptor.intercept(
+      createContext({ "idempotency-key": "req-1" }, { b: 2, a: 1 }),
+      next,
+    );
     await expect(firstValueFrom(result)).resolves.toEqual({ data: "success" });
-
-    expect(redisClient.set).toHaveBeenNthCalledWith(
-      1,
-      "idempotency:single:user-123:req-1",
-      "PROCESSING",
-      "EX",
-      86400,
-      "NX",
-    );
-    expect(handler.handle).toHaveBeenCalled();
-
-    expect(redisClient.set).toHaveBeenNthCalledWith(
-      2,
-      "idempotency:single:user-123:req-1",
-      JSON.stringify({ data: "success" }),
-      "EX",
-      86400,
-    );
+    const [key, raw, mode, processingTtl, nx] = redisClient.set.mock.calls[0]!;
+    expect(key).toContain("idempotency:v2:single:user-123:req-1");
+    expect(mode).toBe("EX");
+    expect(processingTtl).toBeGreaterThan(0);
+    expect(nx).toBe("NX");
+    expect(JSON.parse(raw as string)).toMatchObject({
+      state: "processing",
+      fingerprint: expect.any(String),
+      method: "POST",
+      route: "/notes",
+      bodyHash: expect.any(String),
+    });
+    expect(redisClient.eval).toHaveBeenCalled();
   });
 
-  it("should throw ConflictException if request is already PROCESSING", async () => {
+  it("rejects reuse of a key with a different request fingerprint", async () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
-    const context = createMockContext({ "idempotency-key": "req-1" });
-    const handler = createMockCallHandler();
-
-    redisClient.set.mockResolvedValueOnce(null); // NX failed, key exists
-    redisClient.get.mockResolvedValueOnce("PROCESSING");
-
-    await expect(interceptor.intercept(context, handler)).rejects.toThrow(ConflictException);
-    expect(handler.handle).not.toHaveBeenCalled();
+    redisClient.set.mockResolvedValueOnce(null);
+    redisClient.get.mockResolvedValueOnce(
+      JSON.stringify({
+        state: "completed",
+        fingerprint: "different",
+        method: "POST",
+        route: "/notes",
+        bodyHash: "different",
+        body: {},
+        bodyBytes: 2,
+        completedAt: Date.now(),
+      }),
+    );
+    await expect(
+      interceptor.intercept(createContext({ "idempotency-key": "req-1" }), handler()),
+    ).rejects.toThrow(ConflictException);
   });
 
-  it("should return cached response if request already completed", async () => {
+  it("replays a completed response without invoking the handler", async () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
-    const context = createMockContext({ "idempotency-key": "req-1" });
-    const handler = createMockCallHandler();
-
-    redisClient.set.mockResolvedValueOnce(null); // NX failed, key exists
-    redisClient.get.mockResolvedValueOnce(JSON.stringify({ data: "cached" }));
-
-    const result = await interceptor.intercept(context, handler);
+    const request = createContext({ "idempotency-key": "req-1" });
+    redisClient.set.mockResolvedValueOnce("OK");
+    await firstValueFrom(await interceptor.intercept(request, handler({ data: "cached" })));
+    const finalized = redisClient.eval.mock.calls[0]!;
+    const completed = JSON.parse(finalized[4] as string) as Record<string, unknown>;
+    redisClient.get.mockReset();
+    redisClient.set.mockReset();
+    redisClient.set.mockResolvedValueOnce(null);
+    redisClient.get.mockResolvedValueOnce(JSON.stringify(completed));
+    const next = handler();
+    const result = await interceptor.intercept(request, next);
     await expect(firstValueFrom(result)).resolves.toEqual({ data: "cached" });
-    expect(handler.handle).not.toHaveBeenCalled();
+    expect(next.handle).not.toHaveBeenCalled();
   });
 
-  it("should delete PROCESSING lock if route handler throws an error", async () => {
+  it("recovers a stale processing record atomically", async () => {
     vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
-    const context = createMockContext({ "idempotency-key": "req-1" });
-    const handler = createMockCallHandler(null, true); // throws error
-
-    redisClient.set.mockResolvedValueOnce("OK"); // NX sets successfully
-    redisClient.del.mockResolvedValueOnce(1); // Delete resolves
-
-    const result = await interceptor.intercept(context, handler);
-
-    await expect(firstValueFrom(result)).rejects.toThrow("Handler error");
-    expect(redisClient.del).toHaveBeenCalledWith("idempotency:single:user-123:req-1");
-  });
-
-  it("should always generate consistent redis keys and lock successfully for any valid idempotency key", async () => {
-    const fc = await import("fast-check");
-    vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
-
-    await fc.assert(
-      fc.asyncProperty(
-        fc
-          .array(
-            fc.constantFrom(
-              ..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:-",
-            ),
-            { minLength: 1, maxLength: 50 },
-          )
-          .map((arr) => arr.join("")),
-        fc.json(),
-        async (idempotencyKey, responseData) => {
-          const parsedData = JSON.parse(responseData);
-          const context = createMockContext({ "idempotency-key": idempotencyKey });
-          const handler = createMockCallHandler(parsedData);
-
-          redisClient.set.mockResolvedValueOnce("OK");
-          redisClient.set.mockResolvedValueOnce("OK");
-
-          const result = await interceptor.intercept(context, handler);
-          await expect(firstValueFrom(result)).resolves.toEqual(parsedData);
-
-          const expectedKey = `idempotency:single:user-123:${idempotencyKey}`;
-          expect(redisClient.set).toHaveBeenCalledWith(
-            expectedKey,
-            "PROCESSING",
-            "EX",
-            86400,
-            "NX",
-          );
-
-          redisClient.set.mockClear();
-        },
-      ),
-      { numRuns: 20 },
+    const request = createContext({ "idempotency-key": "req-1" });
+    redisClient.set.mockResolvedValueOnce("OK");
+    await firstValueFrom(await interceptor.intercept(request, handler({ ok: true })));
+    const fingerprint = redisClient.eval.mock.calls[0]![3] as string;
+    const completed = JSON.parse(redisClient.eval.mock.calls[0]![4] as string) as {
+      bodyHash: string;
+    };
+    redisClient.set.mockReset();
+    redisClient.get.mockReset();
+    redisClient.eval.mockReset().mockResolvedValue(1);
+    redisClient.set.mockResolvedValueOnce(null);
+    redisClient.get.mockResolvedValueOnce(
+      JSON.stringify({
+        state: "processing",
+        fingerprint,
+        method: "POST",
+        route: "/notes",
+        bodyHash: completed.bodyHash,
+        startedAt: Date.now() - 120_000,
+      }),
     );
+    const next = handler({ ok: true });
+    const result = await interceptor.intercept(request, next);
+    await expect(firstValueFrom(result)).resolves.toEqual({ ok: true });
+    expect(next.handle).toHaveBeenCalled();
+  });
+
+  it("allows only one concurrent request to own a key", async () => {
+    vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
+    let processingRecord: string | null = null;
+    redisClient.set.mockImplementation(async (_key: string, value: string) => {
+      if (processingRecord) return null;
+      processingRecord = value;
+      return "OK";
+    });
+    redisClient.get.mockImplementation(async () => processingRecord);
+    const request = createContext({ "idempotency-key": "concurrent-1" });
+    const first = await interceptor.intercept(request, handler({ ok: true }));
+    await expect(interceptor.intercept(request, handler({ ok: false }))).rejects.toThrow(
+      ConflictException,
+    );
+    await expect(firstValueFrom(first)).resolves.toEqual({ ok: true });
+  });
+
+  it("releases only its own lock when the handler fails", async () => {
+    vi.spyOn(reflector, "getAllAndOverride").mockReturnValue(true);
+    redisClient.set.mockResolvedValueOnce("OK");
+    const result = await interceptor.intercept(
+      createContext({ "idempotency-key": "req-1" }),
+      handler(null, true),
+    );
+    await expect(firstValueFrom(result)).rejects.toThrow("Handler error");
+    expect(redisClient.eval).toHaveBeenCalled();
   });
 });

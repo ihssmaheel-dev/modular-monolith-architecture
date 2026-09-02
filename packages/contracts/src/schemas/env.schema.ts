@@ -1,7 +1,5 @@
 import { z } from "zod";
-
-const DEFAULT_JWT_SECRET = "your-super-secret-jwt-key-change-in-prod";
-const DEFAULT_REFRESH_SECRET = "your-super-secret-refresh-key-change-in-prod";
+import { DEFAULT_JWT_SECRET, DEFAULT_REFRESH_SECRET, validateEnvironment } from "./env.refinement";
 
 export const envSchema = z
   .object({
@@ -32,6 +30,31 @@ export const envSchema = z
 
     RATE_LIMIT_MAX: z.coerce.number().default(100),
     RATE_LIMIT_TTL: z.coerce.number().default(60),
+
+    IDEMPOTENCY_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(7 * 24 * 60 * 60)
+      .default(24 * 60 * 60),
+    IDEMPOTENCY_PROCESSING_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(60 * 60)
+      .default(5 * 60),
+    IDEMPOTENCY_STALE_AFTER_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(60 * 60)
+      .default(60),
+    IDEMPOTENCY_MAX_RESPONSE_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(10 * 1024 * 1024)
+      .default(1024 * 1024),
 
     LOCKOUT_MAX_ATTEMPTS: z.coerce.number().default(5),
     LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
@@ -72,72 +95,6 @@ export const envSchema = z
     SEED_ADMIN_EMAIL: z.string().email().optional(),
     SEED_ADMIN_PASSWORD: z.string().min(12).optional(),
   })
-  .superRefine((env, context) => {
-    if (env.JWT_SECRET === env.JWT_REFRESH_SECRET) {
-      context.addIssue({
-        code: "custom",
-        path: ["JWT_REFRESH_SECRET"],
-        message: "JWT access and refresh secrets must differ",
-      });
-    }
-    if (Boolean(env.SEED_ADMIN_EMAIL) !== Boolean(env.SEED_ADMIN_PASSWORD)) {
-      context.addIssue({
-        code: "custom",
-        path: ["SEED_ADMIN_PASSWORD"],
-        message: "SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD must be set together",
-      });
-    }
-
-    if (env.FILE_AV_ENABLED && !env.FILE_AV_URL) {
-      context.addIssue({
-        code: "custom",
-        path: ["FILE_AV_URL"],
-        message: "FILE_AV_URL is required when antivirus scanning is enabled",
-      });
-    }
-    if (env.NODE_ENV !== "production") return;
-    if (!env.REDIS_URL) {
-      context.addIssue({
-        code: "custom",
-        path: ["REDIS_URL"],
-        message: "REDIS_URL must be set in production",
-      });
-    }
-    if (!env.METRICS_TOKEN) {
-      context.addIssue({
-        code: "custom",
-        path: ["METRICS_TOKEN"],
-        message: "METRICS_TOKEN must be set in production",
-      });
-    }
-    if (env.JWT_SECRET === DEFAULT_JWT_SECRET || env.JWT_SECRET.includes("change-in-prod")) {
-      context.addIssue({
-        code: "custom",
-        path: ["JWT_SECRET"],
-        message: "JWT_SECRET must be configured with a unique secret in production",
-      });
-    }
-    if (
-      env.JWT_REFRESH_SECRET === DEFAULT_REFRESH_SECRET ||
-      env.JWT_REFRESH_SECRET.includes("change-in-prod") ||
-      env.JWT_REFRESH_SECRET === "your-separate-refresh-secret-change-in-prod"
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["JWT_REFRESH_SECRET"],
-        message: "JWT_REFRESH_SECRET must be configured with a unique secret in production",
-      });
-    }
-    if (
-      env.STORAGE_DRIVER === "s3" &&
-      (env.S3_ACCESS_KEY_ID === "minioadmin" || env.S3_SECRET_ACCESS_KEY === "minioadmin")
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["S3_ACCESS_KEY_ID"],
-        message: "S3 credentials must not use default minioadmin in production",
-      });
-    }
-  });
+  .superRefine(validateEnvironment);
 
 export type Env = z.infer<typeof envSchema>;

@@ -1,20 +1,10 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from "@nestjs/common";
-import { ZodValidationException } from "../exceptions/zod-validation.exception";
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from "@nestjs/common";
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { ClsService } from "nestjs-cls";
 import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 import { I18nService } from "../../infrastructure/i18n/i18n.service";
-import { ClsService } from "nestjs-cls";
-
-const ERROR_MESSAGE_MAP: Record<number, string> = {
-  [HttpStatus.BAD_REQUEST]: "api.error.badRequest",
-  [HttpStatus.UNAUTHORIZED]: "api.error.unauthorized",
-  [HttpStatus.FORBIDDEN]: "api.error.forbidden",
-  [HttpStatus.NOT_FOUND]: "api.error.notFound",
-  [HttpStatus.CONFLICT]: "api.error.conflict",
-  [HttpStatus.SERVICE_UNAVAILABLE]: "api.error.serviceUnavailable",
-  [HttpStatus.TOO_MANY_REQUESTS]: "api.error.rateLimited",
-  [HttpStatus.INTERNAL_SERVER_ERROR]: "api.error.internal",
-};
+import { createApiErrorEnvelope } from "../utils/error-envelope.utils";
+import { REQUEST_ID_HEADER, resolveRequestId } from "../utils/request-id.utils";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -28,104 +18,46 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<FastifyReply>();
     const request = ctx.getRequest<FastifyRequest>();
-
     const status =
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
-
-    const acceptLanguage = request.headers["accept-language"];
-    const isOrpcRequest = (request.url?.split("?")[0] ?? "").includes("/rpc/");
-
-    if (exception instanceof ZodValidationException) {
-      const errors: Record<string, string[]> = {};
-      for (const issue of exception.zodError.issues) {
-        const path = issue.path.join(".") || "root";
-        if (!errors[path]) errors[path] = [];
-
-        // Zod issues contain dynamic properties like 'expected', 'received', 'minimum', etc.
-        const key = `zod.errors.${issue.code}`;
-        // We pass the issue as params so `{{expected}}` interpolates properly
-        const params = issue as unknown as Record<string, string | number>;
-        const translation = this.i18n.t(key, acceptLanguage, params);
-
-        // Never expose schema implementation messages; keep validation output localized.
-        const msg =
-          translation !== key
-            ? translation
-            : this.i18n.t("api.error.validationFailed", acceptLanguage);
-        errors[path].push(msg);
-      }
-
-      const validationResponse = {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: this.i18n.t("api.error.validationFailed", acceptLanguage),
-        code: "VALIDATION_FAILED",
-        requestId: this.requestId(),
-        path: request.url,
-        errors,
-      };
-      if (isOrpcRequest) {
-        response.status(HttpStatus.BAD_REQUEST).send({
-          defined: false,
-          code: validationResponse.code,
-          status: HttpStatus.BAD_REQUEST,
-          message: validationResponse.message,
-          data: validationResponse,
-        });
-      } else response.status(HttpStatus.BAD_REQUEST).send(validationResponse);
-      return;
-    }
-
-    const errorDetails = exception instanceof HttpException ? exception.getResponse() : null;
-    const customError = this.getCustomError(errorDetails);
-    const messageKey = ERROR_MESSAGE_MAP[status] ?? "api.error.internal";
-    const message = customError?.messageKey
-      ? this.i18n.t(customError.messageKey, acceptLanguage)
-      : (customError?.message ?? this.i18n.t(messageKey, acceptLanguage));
+    const requestId = this.requestId(request);
+    const envelope = createApiErrorEnvelope(
+      exception,
+      status,
+      request.headers["accept-language"],
+      requestId,
+      this.i18n,
+    );
 
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error({ err: exception }, "Unhandled exception");
+      this.logger.error({ err: exception, requestId }, "Unhandled exception");
     }
-
-    const errorResponse = {
-      statusCode: status,
-      message,
-      code: customError?.code ?? this.codeForStatus(status),
-      error: customError?.code ?? this.codeForStatus(status),
-      requestId: this.requestId(),
-      path: request.url,
-    };
-    if (isOrpcRequest) {
+    response.header(REQUEST_ID_HEADER, requestId);
+    if (this.isOrpcRequest(request)) {
       response.status(status).send({
         defined: false,
-        code: errorResponse.code,
-        status,
-        message,
-        data: errorResponse,
+        code: envelope.code,
+        status: envelope.status,
+        message: envelope.message,
+        i18nKey: envelope.i18nKey,
+        fieldErrors: envelope.fieldErrors,
+        requestId: envelope.requestId,
+        retry: envelope.retry,
+        data: envelope,
       });
-    } else response.status(status).send(errorResponse);
-  }
-
-  private getCustomError(
-    value: string | object | null,
-  ): { messageKey?: string; message?: string; code: string } | null {
-    if (typeof value !== "object" || value === null) return null;
-    if (!("message" in value) || !("error" in value)) return null;
-    if (typeof value.message !== "string" || typeof value.error !== "string") return null;
-    if (value.message === value.error) return null;
-    if (value.message.startsWith("api.")) {
-      return { messageKey: value.message, code: value.error };
+      return;
     }
-    if (/^[A-Z][A-Z0-9_]+$/.test(value.error)) {
-      return { message: value.message, code: value.error };
-    }
-    return null;
+    response.status(status).send(envelope);
   }
 
-  private requestId(): string | undefined {
-    return this.cls?.isActive() ? this.cls.get("requestId") : undefined;
+  private isOrpcRequest(request: FastifyRequest): boolean {
+    return (request.url?.split("?")[0] ?? "").includes("/rpc/");
   }
 
-  private codeForStatus(status: number): string {
-    return HttpStatus[status] ?? "INTERNAL_SERVER_ERROR";
+  private requestId(request: FastifyRequest): string {
+    const active = this.cls?.isActive() ? this.cls.get("requestId") : undefined;
+    return typeof active === "string" && active
+      ? active
+      : resolveRequestId(request.headers[REQUEST_ID_HEADER]);
   }
 }

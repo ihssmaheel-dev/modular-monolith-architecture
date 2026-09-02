@@ -32,18 +32,22 @@ Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/we
 
 ## Authentication, security, and observability
 
-| Variable                      | Default / purpose                                                  |
-| ----------------------------- | ------------------------------------------------------------------ |
-| `JWT_SECRET`                  | Access-token secret, minimum 32 characters; replace in production  |
-| `JWT_REFRESH_SECRET`          | Separate refresh-token secret, minimum 32 characters               |
-| `JWT_EXPIRES_IN`              | `15m`; access-token lifetime                                       |
-| `JWT_REFRESH_EXPIRES_IN`      | `7d`; refresh-token lifetime                                       |
-| `METRICS_TOKEN`               | Optional locally, minimum 32 characters and required in production |
-| `RATE_LIMIT_MAX`              | `100`; requests allowed per rate-limit window                      |
-| `RATE_LIMIT_TTL`              | `60`; rate-limit window in seconds                                 |
-| `LOCKOUT_MAX_ATTEMPTS`        | `5`; failed logins before account lockout                          |
-| `LOCKOUT_DURATION_MINUTES`    | `15`; account-lockout duration                                     |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318/v1/traces`; trace collector endpoint        |
+| Variable                             | Default / purpose                                                  |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| `JWT_SECRET`                         | Access-token secret, minimum 32 characters; replace in production  |
+| `JWT_REFRESH_SECRET`                 | Separate refresh-token secret, minimum 32 characters               |
+| `JWT_EXPIRES_IN`                     | `15m`; access-token lifetime                                       |
+| `JWT_REFRESH_EXPIRES_IN`             | `7d`; refresh-token lifetime                                       |
+| `METRICS_TOKEN`                      | Optional locally, minimum 32 characters and required in production |
+| `RATE_LIMIT_MAX`                     | `100`; requests allowed per rate-limit window                      |
+| `RATE_LIMIT_TTL`                     | `60`; rate-limit window in seconds                                 |
+| `IDEMPOTENCY_TTL_SECONDS`            | `86400`; maximum lifetime of a completed idempotent response       |
+| `IDEMPOTENCY_PROCESSING_TTL_SECONDS` | `300`; lease lifetime for in-flight idempotent requests            |
+| `IDEMPOTENCY_STALE_AFTER_SECONDS`    | `60`; age after which an abandoned lease may be recovered          |
+| `IDEMPOTENCY_MAX_RESPONSE_BYTES`     | `1048576`; maximum response size stored for replay                 |
+| `LOCKOUT_MAX_ATTEMPTS`               | `5`; failed logins before account lockout                          |
+| `LOCKOUT_DURATION_MINUTES`           | `15`; account-lockout duration                                     |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`        | `http://localhost:4318/v1/traces`; trace collector endpoint        |
 
 ## Storage and CDN
 

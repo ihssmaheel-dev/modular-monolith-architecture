@@ -23,6 +23,44 @@ the same global Nest security pipeline protects both transports. oRPC errors use
 error code and localized message envelope, while the REST surface remains a compatibility option
 without a second business implementation.
 
+### Response and error contracts
+
+Every REST controller method is decorated with the exact output schema used by its oRPC
+procedure. A global response interceptor parses the returned value at the HTTP boundary; contract
+violations become a safe 500 response and are logged with the request ID. oRPC's implementation
+interceptor performs the equivalent output validation for RPC calls. The parity suite fails when a
+route is missing a shared schema or its REST/oRPC method, path, or status diverges.
+
+All failures use `ApiErrorEnvelopeSchema`:
+
+```json
+{
+  "code": "VALIDATION_FAILED",
+  "i18nKey": "api.error.validationFailed",
+  "message": "Validation failed",
+  "status": 400,
+  "requestId": "request-id",
+  "fieldErrors": { "email": ["Invalid email"] },
+  "retry": { "retryable": false }
+}
+```
+
+The REST response is the envelope itself; the oRPC response keeps it in `data` and mirrors the
+stable fields at the transport level. Messages are translated by `I18nService`, field errors are
+safe for form rendering, and retry metadata is emitted for rate limits and transient upstream
+failures. No framework exception text or stack trace is returned to clients.
+
+### Idempotent mutations
+
+Endpoints marked `@Idempotent()` require a bounded `Idempotency-Key`. The Redis record is scoped
+to the trusted tenant and actor and stores a SHA-256 request fingerprint made from the HTTP method,
+route template, and canonical request-body hash. A key reused for another request is rejected;
+completed responses are replayed only when every fingerprint component matches. Processing records
+are short leases, recovered atomically after the stale threshold, and released conditionally by
+their owner when a handler fails. Responses larger than `IDEMPOTENCY_MAX_RESPONSE_BYTES` are not
+cached, and completed/processing TTLs are validated at startup. Concurrency tests cover one-owner
+claims, conflicts, replay, stale recovery, and lock release.
+
 ## Request security pipeline
 
 Request ID and trace context are established first, followed by origin/CSRF checks, authentication, tenant resolution, permission evaluation, resource policy evaluation, Zod validation, and the application command/query. Controllers contain no business logic.

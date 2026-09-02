@@ -5,6 +5,7 @@ import { organizationsContract } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
 import { TenancyStatusController } from "../../modules/tenancy/presentation/tenancy-status.controller";
 import { TenancyStatusOrpcController } from "../../modules/tenancy/presentation/tenancy-status.orpc.controller";
+import { RESPONSE_SCHEMA_KEY } from "../../common/decorators/response-schema.decorator";
 
 describe("oRPC tenancy status parity", () => {
   it("maps the public status procedure to both transports", () => {
@@ -13,6 +14,9 @@ describe("oRPC tenancy status parity", () => {
     expect(routePath(TenancyStatusOrpcController, "status")).toBe(`/rpc${contractRoute.path}`);
     expect(method(TenancyStatusController, "status")).toBe(contractRoute.method);
     expect(method(TenancyStatusOrpcController, "status")).toBe(contractRoute.method);
+    expect(Reflect.getMetadata(RESPONSE_SCHEMA_KEY, TenancyStatusController.prototype.status)).toBe(
+      organizationsContract.status["~orpc"].outputSchema,
+    );
   });
 });
 

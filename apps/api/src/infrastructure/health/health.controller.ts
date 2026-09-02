@@ -1,7 +1,8 @@
 import { Controller, Get } from "@nestjs/common";
 import { HealthCheck } from "@nestjs/terminus";
 import { AppHealthService } from "./health.service";
-import { NoDatabaseTransaction, Public } from "../../common";
+import { NoDatabaseTransaction, Public, ResponseSchema } from "../../common";
+import { HealthCheckResponseSchema, type HealthCheckResponse } from "@repo/contracts";
 
 @Controller("health")
 @Public()
@@ -11,18 +12,21 @@ export class HealthController {
 
   @Get()
   @HealthCheck()
-  health() {
+  @ResponseSchema(HealthCheckResponseSchema)
+  health(): Promise<HealthCheckResponse> {
     return this.healthService.check();
   }
 
   @Get("ready")
   @HealthCheck()
-  readiness() {
+  @ResponseSchema(HealthCheckResponseSchema)
+  readiness(): Promise<HealthCheckResponse> {
     return this.healthService.checkReadiness();
   }
 
   @Get("live")
-  liveness() {
+  @ResponseSchema(HealthCheckResponseSchema)
+  liveness(): { status: "ok" } {
     return { status: "ok" };
   }
 }

@@ -17,6 +17,7 @@ import {
   RequirePermission,
   TenantAgnostic,
   requireAuthenticatedUser,
+  ResponseSchema,
 } from "../../../common";
 import {
   type AcceptInvitationInput,
@@ -33,6 +34,11 @@ import {
   InviteMemberSchema,
   UpdateMemberSchema,
   PaginationQuerySchema,
+  MemberListResponseSchema,
+  MemberResponseSchema,
+  InvitationResponseSchema,
+  InvitationListResponseSchema,
+  EmptyResponseSchema,
 } from "@repo/contracts";
 import { ZodValidationPipe } from "../../../common/pipes/validation.pipe";
 import { z } from "zod";
@@ -61,6 +67,7 @@ export class MembershipsController {
 
   @Get("members")
   @RequirePermission("team:read")
+  @ResponseSchema(MemberListResponseSchema)
   async listMemberPage(
     @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
     @Req() request: FastifyRequest,
@@ -76,6 +83,7 @@ export class MembershipsController {
   @Patch("members/:userId")
   @Idempotent()
   @RequirePermission("team:manage")
+  @ResponseSchema(MemberResponseSchema)
   async update(
     @Param("userId", new ZodValidationPipe(z.string().min(1))) userId: string,
     @Body(new ZodValidationPipe(UpdateMemberSchema)) body: UpdateMemberInput,
@@ -89,6 +97,7 @@ export class MembershipsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
   @RequirePermission("team:remove")
+  @ResponseSchema(EmptyResponseSchema)
   async remove(
     @Param("userId", new ZodValidationPipe(z.string().min(1))) userId: string,
     @Req() request: FastifyRequest,
@@ -100,6 +109,7 @@ export class MembershipsController {
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
   @RequirePermission("team:invite")
+  @ResponseSchema(InvitationResponseSchema)
   async invite(
     @Body(new ZodValidationPipe(InviteMemberSchema)) body: InviteMemberInput,
     @Req() request: FastifyRequest,
@@ -112,6 +122,7 @@ export class MembershipsController {
 
   @Get("invitations")
   @RequirePermission("team:read")
+  @ResponseSchema(InvitationListResponseSchema)
   async listInvitationPage(
     @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
     @Req() request: FastifyRequest,
@@ -128,6 +139,7 @@ export class MembershipsController {
   @HttpCode(HttpStatus.OK)
   @TenantAgnostic()
   @Idempotent()
+  @ResponseSchema(MemberResponseSchema)
   async accept(
     @Body(new ZodValidationPipe(AcceptInvitationSchema)) body: AcceptInvitationInput,
     @Req() request: FastifyRequest,

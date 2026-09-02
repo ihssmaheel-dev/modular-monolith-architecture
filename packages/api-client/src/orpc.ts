@@ -1,6 +1,6 @@
 import { createORPCClient } from "@orpc/client";
 import { OpenAPILink } from "@orpc/openapi-client/fetch";
-import { apiContract, type AuthResponse } from "@repo/contracts";
+import { ApiErrorEnvelopeSchema, apiContract, type AuthResponse } from "@repo/contracts";
 import type { ContractRouterClient } from "@orpc/contract";
 import { createIdempotencyKey, readCookie, requestRefresh } from "./utils";
 import type { ApiClientOptions } from "./types";
@@ -49,8 +49,19 @@ export async function orpcResponse<T>(
     const body = await action();
     return { status: successStatus, body: (successStatus === 204 ? null : body) as T };
   } catch (error) {
-    return { status: readStatus(error), body: null as T };
+    const parsedError = parseError(error);
+    return {
+      status: readStatus(error),
+      body: null as T,
+      ...(parsedError ? { error: parsedError } : {}),
+    };
   }
+}
+
+function parseError(error: unknown) {
+  if (typeof error !== "object" || error === null || !("data" in error)) return undefined;
+  const parsed = ApiErrorEnvelopeSchema.safeParse(error.data);
+  return parsed.success ? parsed.data : undefined;
 }
 
 function withHeaders(request: Request, options: ApiClientOptions, accessToken?: string): Request {

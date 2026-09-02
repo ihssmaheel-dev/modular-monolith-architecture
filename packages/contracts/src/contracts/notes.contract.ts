@@ -7,7 +7,7 @@ import {
   NoteIdParamSchema,
 } from "../schemas/note.schema";
 import { PaginationQuerySchema } from "../schemas/pagination.schema";
-import { z } from "zod";
+import { EmptyResponseSchema } from "../schemas/common.schema";
 
 export const notesContract = oc.prefix("/notes").router({
   list: oc
@@ -29,5 +29,5 @@ export const notesContract = oc.prefix("/notes").router({
   delete: oc
     .route({ method: "DELETE", path: "/{id}", summary: "Delete a note", successStatus: 204 })
     .input(NoteIdParamSchema)
-    .output(z.undefined().or(z.null()).or(z.void())),
+    .output(EmptyResponseSchema),
 });

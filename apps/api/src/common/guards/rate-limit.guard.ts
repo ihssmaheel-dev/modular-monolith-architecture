@@ -8,6 +8,7 @@ import { HttpException } from "@nestjs/common";
 
 const DEFAULT_MAX_REQUESTS = 100;
 const DEFAULT_WINDOW_SECONDS = 60;
+const MILLISECONDS_PER_SECOND = 1000;
 
 const RATE_LIMIT_HEADERS = {
   REMAINING: "X-RateLimit-Remaining",
@@ -54,6 +55,12 @@ export class RateLimitGuard implements CanActivate {
         {
           statusCode: HttpStatus.TOO_MANY_REQUESTS,
           message: this.i18n.t("api.error.rateLimited", lang),
+          i18nKey: "api.error.rateLimited",
+          fieldErrors: {},
+          retry: {
+            retryable: true,
+            retryAfterMs: Math.max(0, result.resetAt * MILLISECONDS_PER_SECOND - Date.now()),
+          },
           error: "RATE_LIMITED",
         },
         HttpStatus.TOO_MANY_REQUESTS,

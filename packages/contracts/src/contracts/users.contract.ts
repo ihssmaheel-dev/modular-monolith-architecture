@@ -7,7 +7,7 @@ import {
   UserIdParamSchema,
 } from "../schemas/user.schema";
 import { PaginationQuerySchema } from "../schemas/pagination.schema";
-import { z } from "zod";
+import { EmptyResponseSchema } from "../schemas/common.schema";
 
 export const usersContract = oc.prefix("/users").router({
   list: oc
@@ -29,5 +29,5 @@ export const usersContract = oc.prefix("/users").router({
   delete: oc
     .route({ method: "DELETE", path: "/{id}", summary: "Delete user", successStatus: 204 })
     .input(UserIdParamSchema)
-    .output(z.undefined().or(z.null()).or(z.void())),
+    .output(EmptyResponseSchema),
 });

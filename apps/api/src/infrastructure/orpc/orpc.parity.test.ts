@@ -23,6 +23,7 @@ import { MembershipsController } from "../../modules/tenancy/presentation/member
 import { MembershipsOrpcController } from "../../modules/tenancy/presentation/memberships.orpc.controller";
 import { OrganizationsController } from "../../modules/tenancy/presentation/organizations.controller";
 import { OrganizationsOrpcController } from "../../modules/tenancy/presentation/organizations.orpc.controller";
+import { RESPONSE_SCHEMA_KEY } from "../../common/decorators/response-schema.decorator";
 type RoutePair = {
   contract: AnyContractProcedure;
   rpc: [object, string];
@@ -50,6 +51,7 @@ describe("oRPC and REST route parity", () => {
     const expectedStatus = contractRoute.successStatus ?? 200;
     expect(successStatus(route.rest[0], route.rest[1])).toBe(expectedStatus);
     expect(successStatus(route.rpc[0], route.rpc[1])).toBe(expectedStatus);
+    expect(responseSchema(route.rest[0], route.rest[1])).toBe(route.contract["~orpc"].outputSchema);
   });
 });
 function routePath(controller: object, method: string): string {
@@ -58,6 +60,11 @@ function routePath(controller: object, method: string): string {
   const callback = (type.prototype as Record<string, unknown>)[method] as object;
   const methodPath = Reflect.getMetadata(PATH_METADATA, callback) as string | undefined;
   return normalize([classPath, methodPath].filter(Boolean).join("/"));
+}
+function responseSchema(controller: object, method: string): unknown {
+  const type = controller as { prototype: object };
+  const callback = (type.prototype as Record<string, unknown>)[method] as object;
+  return Reflect.getMetadata(RESPONSE_SCHEMA_KEY, callback);
 }
 function methodName(controller: object, method: string): string {
   const type = controller as { prototype: object };

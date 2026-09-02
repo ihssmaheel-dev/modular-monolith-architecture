@@ -9,3 +9,6 @@ export * from "./note.schema";
 export * from "./file.schema";
 export * from "./tenancy.schema";
 export * from "./outbox.schema";
+export * from "./common.schema";
+export * from "./error.schema";
+export * from "./health.schema";

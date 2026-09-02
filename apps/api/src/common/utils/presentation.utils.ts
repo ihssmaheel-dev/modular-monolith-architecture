@@ -27,6 +27,8 @@ export function handleResult<T, E>(
       {
         statusCode: mapped.status,
         message: i18n.t(mapped.i18nKey, lang),
+        i18nKey: mapped.i18nKey,
+        fieldErrors: {},
         error: errorType,
       },
       mapped.status,
@@ -38,6 +40,8 @@ export function handleResult<T, E>(
     {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: i18n.t("api.error.internal", lang),
+      i18nKey: "api.error.internal",
+      fieldErrors: {},
       error: "INTERNAL_SERVER_ERROR",
     },
     HttpStatus.INTERNAL_SERVER_ERROR,

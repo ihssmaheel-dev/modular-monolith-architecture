@@ -1,108 +1,103 @@
 import {
+  BadRequestException,
+  CallHandler,
+  ExecutionContext,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  BadRequestException,
-  ConflictException,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { Observable, of, throwError } from "rxjs";
-import { catchError, concatMap, map, mergeMap } from "rxjs/operators";
-import { from } from "rxjs";
-import { Reflector } from "@nestjs/core";
+import type { FastifyRequest } from "fastify";
 import { ClsService } from "nestjs-cls";
+import { Reflector } from "@nestjs/core";
+import { from, of, type Observable } from "rxjs";
+import { catchError, concatMap, map, mergeMap } from "rxjs/operators";
+import { env } from "../../config/env";
+import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 import { RedisService } from "../../infrastructure/redis/redis.service";
 import { IDEMPOTENT_KEY } from "../decorators/idempotent.decorator";
-import type { FastifyRequest } from "fastify";
-import type Redis from "ioredis";
-import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
-import { env } from "../../config/env";
-
-const CACHE_TTL_SECONDS = 24 * 60 * 60;
-const MAX_KEY_LENGTH = 128;
-const VALID_KEY = /^[A-Za-z0-9._:-]+$/;
+import {
+  CACHE_KEY_PREFIX,
+  MAX_IDEMPOTENCY_KEY_LENGTH,
+  VALID_IDEMPOTENCY_KEY,
+  requestFingerprint,
+} from "../utils/idempotency.utils";
+import { IdempotencyStore } from "../utils/idempotency.store";
 
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
+  private readonly store: IdempotencyStore;
+
   constructor(
     private readonly reflector: Reflector,
-    private readonly redisService: RedisService,
+    redisService: RedisService,
     private readonly cls: ClsService,
     logger: PinoLoggerService,
   ) {
-    this.logger = logger.child({ module: "IdempotencyInterceptor" });
+    this.store = new IdempotencyStore(redisService, logger);
   }
-
-  private readonly logger: PinoLoggerService;
 
   async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
-    const isIdempotent = this.reflector.getAllAndOverride<boolean>(IDEMPOTENT_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (!isIdempotent) {
-      return next.handle();
-    }
-
+    if (!this.isIdempotent(context)) return next.handle();
     const request = context.switchToHttp().getRequest<FastifyRequest>();
-    const idempotencyKey = request.headers["idempotency-key"];
+    const key = request.headers["idempotency-key"];
+    this.assertValidKey(key);
+    if (!this.storeAvailable()) return next.handle();
 
-    if (!this.isValidKey(idempotencyKey)) {
-      throw new BadRequestException();
-    }
-
-    const redis = this.redisService.getClient();
-    if (!redis) {
-      if (env.NODE_ENV === "production") throw new ServiceUnavailableException();
-      // Local development can run without Redis; production must fail closed.
-      return next.handle();
-    }
-
-    const userId = this.cls.get("userId") || request.ip || "anonymous";
-    const tenantId = this.cls.get("tenantId") || "single";
-    const cacheKey = `idempotency:${tenantId}:${userId}:${idempotencyKey}`;
-
-    const cached = await this.claimOrRead(redis, cacheKey);
+    const scope = this.cls.get("tenantId") || "single";
+    const actor = this.cls.get("userId") || request.ip || "anonymous";
+    const cacheKey = `${CACHE_KEY_PREFIX}:${scope}:${actor}:${key}`;
+    const fingerprint = requestFingerprint(request);
+    const cached = await this.store.claimOrRead(cacheKey, fingerprint);
     if (cached !== undefined) return of(cached);
+
     return next.handle().pipe(
-      concatMap((response) =>
-        from(this.cacheResponse(redis, cacheKey, response)).pipe(map(() => response)),
+      concatMap((body) =>
+        from(this.store.cacheResponse(cacheKey, fingerprint, body)).pipe(map(() => body)),
       ),
-      catchError((error) => this.releaseAndRethrow(redis, cacheKey, error)),
+      catchError((error: unknown) =>
+        from(this.store.release(cacheKey, fingerprint)).pipe(
+          catchError(() => of(undefined)),
+          mergeMap(() => {
+            throw error;
+          }),
+        ),
+      ),
     );
   }
 
-  private isValidKey(value: string | string[] | undefined): value is string {
-    return typeof value === "string" && value.length <= MAX_KEY_LENGTH && VALID_KEY.test(value);
-  }
-
-  private async claimOrRead(redis: Redis, key: string): Promise<unknown | undefined> {
-    const claimed = await redis.set(key, "PROCESSING", "EX", CACHE_TTL_SECONDS, "NX");
-    if (claimed) return undefined;
-    const value = await redis.get(key);
-    if (!value || value === "PROCESSING") throw new ConflictException();
-    try {
-      return JSON.parse(value) as unknown;
-    } catch {
-      this.logger.error({ key }, "Invalid cached idempotency response");
-      throw new ConflictException();
-    }
-  }
-
-  private async cacheResponse(redis: Redis, key: string, response: unknown): Promise<void> {
-    try {
-      await redis.set(key, JSON.stringify(response), "EX", CACHE_TTL_SECONDS);
-    } catch (error) {
-      this.logger.error({ key, error }, "Failed to cache idempotent response");
-    }
-  }
-
-  private releaseAndRethrow(redis: Redis, key: string, error: unknown): Observable<never> {
-    return from(redis.del(key)).pipe(
-      catchError(() => of(0)),
-      mergeMap(() => throwError(() => error)),
+  private isIdempotent(context: ExecutionContext): boolean {
+    return Boolean(
+      this.reflector.getAllAndOverride<boolean>(IDEMPOTENT_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]),
     );
+  }
+
+  private assertValidKey(key: string | string[] | undefined): asserts key is string {
+    if (
+      typeof key !== "string" ||
+      key.length === 0 ||
+      key.length > MAX_IDEMPOTENCY_KEY_LENGTH ||
+      !VALID_IDEMPOTENCY_KEY.test(key)
+    ) {
+      throw new BadRequestException({
+        code: "IDEMPOTENCY_KEY_INVALID",
+        i18nKey: "api.error.invalidRequest",
+        fieldErrors: {},
+      });
+    }
+  }
+
+  private storeAvailable(): boolean {
+    if (this.store.isAvailable()) return true;
+    if (env.NODE_ENV === "production") {
+      throw new ServiceUnavailableException({
+        code: "IDEMPOTENCY_UNAVAILABLE",
+        i18nKey: "api.error.serviceUnavailable",
+        fieldErrors: {},
+      });
+    }
+    return false;
   }
 }
