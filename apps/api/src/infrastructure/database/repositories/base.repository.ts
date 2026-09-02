@@ -5,7 +5,7 @@ import type { Id, PaginatedResult, PaginationOptions } from "./repository.types"
 
 export abstract class BaseRepository<TEntity, TRow> extends BaseReadRepository<TEntity, TRow> {
   async create(data: Record<string, unknown>): Promise<Result<TEntity, never>> {
-    if (this.hasMissingTenantContext()) {
+    if (this.requiresTenantForWrite(data)) {
       throw new Error(
         "TENANT_REQUIRED: Cannot insert tenant-scoped entity without active tenant context",
       );
@@ -30,7 +30,7 @@ export abstract class BaseRepository<TEntity, TRow> extends BaseReadRepository<T
   }
 
   async createMany(data: Record<string, unknown>[]): Promise<Result<TEntity[], never>> {
-    if (this.hasMissingTenantContext()) {
+    if (data.some((item) => this.requiresTenantForWrite(item))) {
       throw new Error(
         "TENANT_REQUIRED: Cannot insert tenant-scoped entities without active tenant context",
       );
@@ -52,6 +52,12 @@ export abstract class BaseRepository<TEntity, TRow> extends BaseReadRepository<T
       .values(payloads as unknown as Record<string, unknown>[])
       .returning();
     return ok(rows.map((r) => this.toDomain(r)));
+  }
+
+  private requiresTenantForWrite(data: Record<string, unknown>): boolean {
+    if (!this.isTenantIsolationRequired() || this.tenantFilter()) return false;
+    if (!this.tenantContext.isSystemScope()) return true;
+    return typeof data.tenantId !== "string" || data.tenantId.length === 0;
   }
 
   async paginate(

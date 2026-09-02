@@ -10,6 +10,9 @@ import { EmptyState } from "@repo/ui/components/composed/empty-state";
 import { PageHeader } from "@repo/ui/components/composed/page-header";
 import { getApiClient } from "@/lib/api";
 import type { UserResponse } from "@repo/contracts";
+import { useTenantStore } from "@/stores/tenant.store";
+
+const USERS_LIST_FAILED = "USERS_LIST_FAILED";
 
 export const Route = createFileRoute("/_app/users")({
   component: UsersPage,
@@ -17,13 +20,13 @@ export const Route = createFileRoute("/_app/users")({
 
 function UsersPage() {
   const { t } = useTranslation();
+  const tenantId = useTenantStore((state) => state.tenantId);
   const usersQuery = useQuery({
-    queryKey: ["users-list"],
+    queryKey: ["users", tenantId, "list"],
     queryFn: async () => {
       const res = await getApiClient().users.list();
-      return res.status === 200
-        ? res.body
-        : { items: [], total: 0, page: 1, limit: 20, totalPages: 1 };
+      if (res.status !== 200) throw new Error(USERS_LIST_FAILED);
+      return res.body;
     },
   });
 
@@ -43,7 +46,7 @@ function UsersPage() {
       header: t("users.role"),
       cell: (row) => (
         <Badge
-          variant={row.role === "ADMIN" || row.role === "OWNER" ? "default" : "secondary"}
+          variant={row.role === "admin" ? "default" : "secondary"}
           className="text-[10px] font-mono"
         >
           {row.role}
@@ -90,7 +93,7 @@ function UsersPage() {
                 {t("common.retry")}
               </Button>
             </div>
-          ) : usersQuery.data?.items.length === 0 ? (
+          ) : usersQuery.data?.users.length === 0 ? (
             <EmptyState
               icon={<UsersIcon className="size-8" />}
               title={t("users.noUsers")}
@@ -98,7 +101,7 @@ function UsersPage() {
             />
           ) : (
             <DataTable
-              data={usersQuery.data?.items ?? []}
+              data={usersQuery.data?.users ?? []}
               columns={columns}
               getRowKey={(row) => row.id}
               isLoading={usersQuery.isFetching}

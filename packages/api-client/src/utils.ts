@@ -1,4 +1,5 @@
 import { AuthResponseSchema, type AuthResponse } from "@repo/contracts";
+import { DEFAULT_PAGE_LIMIT, type PaginationQuery } from "@repo/contracts";
 import type { ApiClientOptions } from "./types";
 
 const RPC_PATH = "/rpc";
@@ -33,21 +34,30 @@ export function readCookie(name: string): string | null {
   return encoded ? decodeURIComponent(encoded.slice(name.length + 1)) : null;
 }
 
+export function normalizePagination(query?: Partial<PaginationQuery>): PaginationQuery {
+  return { page: query?.page ?? 1, limit: query?.limit ?? DEFAULT_PAGE_LIMIT };
+}
+
 export async function requestRefresh(
   baseUrl: string,
   options: ApiClientOptions,
 ): Promise<AuthResponse | null> {
-  const response = await fetch(`${baseUrl.replace(/\/+$/, "")}${RPC_PATH}/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "content-type": "application/json",
-      "accept-language": options.getLocale?.() ?? "en",
-      ...(readCookie("XSRF-TOKEN") ? { "x-xsrf-token": readCookie("XSRF-TOKEN")! } : {}),
-    },
-    body: JSON.stringify({ refreshToken: options.getRefreshToken?.() ?? undefined }),
-  });
-  if (!response.ok) return null;
-  const parsed = AuthResponseSchema.safeParse(await response.json());
-  return parsed.success ? parsed.data : null;
+  try {
+    const csrf = readCookie("XSRF-TOKEN");
+    const response = await fetch(`${baseUrl.replace(/\/+$/, "")}${RPC_PATH}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "content-type": "application/json",
+        "accept-language": options.getLocale?.() ?? "en",
+        ...(csrf ? { "x-xsrf-token": csrf } : {}),
+      },
+      body: JSON.stringify({ refreshToken: options.getRefreshToken?.() ?? undefined }),
+    });
+    if (!response.ok) return null;
+    const parsed = AuthResponseSchema.safeParse(await response.json());
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
 }

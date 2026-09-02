@@ -7,6 +7,7 @@ import {
   RedisHealthIndicator,
   OutboxHealthIndicator,
 } from "./health.service";
+import { WorkerHealthIndicator } from "./worker-health.indicator";
 import { ShutdownService } from "./shutdown.service";
 
 @Module({
@@ -17,6 +18,7 @@ import { ShutdownService } from "./shutdown.service";
     PostgresHealthIndicator,
     RedisHealthIndicator,
     OutboxHealthIndicator,
+    WorkerHealthIndicator,
     ShutdownService,
   ],
 })

@@ -1,9 +1,10 @@
 import type { RefinementCtx } from "zod";
+import { validateProductionEndpoints } from "./env.production";
 
 export const DEFAULT_JWT_SECRET = "your-super-secret-jwt-key-change-in-prod";
 export const DEFAULT_REFRESH_SECRET = "your-super-secret-refresh-key-change-in-prod";
 
-type EnvironmentForValidation = {
+export type EnvironmentForValidation = {
   JWT_SECRET: string;
   JWT_REFRESH_SECRET: string;
   SEED_ADMIN_EMAIL?: string;
@@ -18,6 +19,20 @@ type EnvironmentForValidation = {
   STORAGE_DRIVER: "s3";
   S3_ACCESS_KEY_ID: string;
   S3_SECRET_ACCESS_KEY: string;
+  DATABASE_URL: string;
+  CLIENT_URL: string;
+  API_URL: string;
+  S3_ENDPOINT: string;
+  S3_REGION: string;
+  S3_BUCKET: string;
+  CDN_ENABLED: boolean;
+  CDN_DOMAIN?: string;
+  EMAIL_DRIVER: "smtp" | "resend";
+  RESEND_API_KEY: string;
+  EMAIL_FROM: string;
+  SMTP_HOST: string;
+  SMTP_PORT: number;
+  AUDIT_RETENTION_DAYS: number;
 };
 
 export function validateEnvironment(env: EnvironmentForValidation, context: RefinementCtx): void {
@@ -89,4 +104,5 @@ export function validateEnvironment(env: EnvironmentForValidation, context: Refi
       message: "S3 credentials must not use defaults in production",
     });
   }
+  validateProductionEndpoints(env, context);
 }

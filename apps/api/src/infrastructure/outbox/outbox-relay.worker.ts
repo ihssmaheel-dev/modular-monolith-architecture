@@ -52,7 +52,7 @@ export class OutboxRelayWorker {
       this.metrics.setGauge(
         "outbox_pending_age_ms",
         "Age of oldest claimed outbox event",
-        oldest ? Math.max(0, Date.now() - oldest.createdAt.getTime()) : 0,
+        oldest ? eventAgeMs(oldest.createdAt) : 0,
       );
       return events;
     });
@@ -71,4 +71,10 @@ export class OutboxRelayWorker {
     );
     if (recovered > 0) this.logger.warn({ recovered }, "Recovered stale outbox locks");
   }
+}
+
+function eventAgeMs(createdAt: Date | undefined): number {
+  if (!(createdAt instanceof Date)) return 0;
+  const timestamp = createdAt.getTime();
+  return Number.isFinite(timestamp) ? Math.max(0, Date.now() - timestamp) : 0;
 }

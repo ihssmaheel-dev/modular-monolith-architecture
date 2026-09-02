@@ -6,7 +6,7 @@ export function toFileResponse(file: FileEntity): FileMetadataResponse {
   const baseUrl =
     env.CDN_ENABLED && env.CDN_DOMAIN
       ? `https://${env.CDN_DOMAIN}/${env.CDN_BUCKET_PATH}`
-      : `https://${file.bucket}.s3.${env.S3_REGION}.amazonaws.com`;
+      : storageBaseUrl(file.bucket);
 
   return {
     id: file.id,
@@ -22,4 +22,12 @@ export function toFileResponse(file: FileEntity): FileMetadataResponse {
     status: file.status,
     createdAt: file.createdAt.toISOString(),
   };
+}
+
+function storageBaseUrl(bucket: string): string {
+  const endpoint = new URL(env.S3_ENDPOINT);
+  if (env.S3_FORCE_PATH_STYLE) {
+    return `${endpoint.toString().replace(/\/$/, "")}/${bucket}`;
+  }
+  return `${endpoint.protocol}//${bucket}.${endpoint.host}`;
 }

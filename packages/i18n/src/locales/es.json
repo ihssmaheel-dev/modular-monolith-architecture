@@ -211,7 +211,10 @@
     "health": {
       "redisUnconfigured": "Redis no está configurado, pero es opcional",
       "redisDown": "Redis no está disponible",
-      "redisUnavailable": "Redis no está disponible"
+      "redisUnavailable": "Redis no está disponible",
+      "databaseUnavailable": "La base de datos no está disponible",
+      "outboxUnavailable": "La cola de eventos no está disponible",
+      "workerUnavailable": "El trabajador en segundo plano no está disponible"
     },
     "file": {
       "notFound": "Archivo no encontrado"

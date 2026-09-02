@@ -5,7 +5,9 @@ import { env } from "../../../../config/env";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
 import type { AuthenticatedUser } from "@repo/contracts";
-import { resolveResourceOwnerId } from "@repo/authorization";
+import { AuthorizationService } from "../../../../infrastructure/authorization";
+import { TenantContextService } from "../../../../infrastructure/database";
+import { canAccessResource } from "../../../../common/utils/resource-authorization";
 import { DatabaseService } from "../../../../infrastructure/database";
 
 interface DownloadUrlResult {
@@ -18,6 +20,8 @@ export class GetFileDownloadUrlQuery {
     private readonly storage: StorageService,
     private readonly filesRepo: FilesRepository,
     @Optional() private readonly database?: DatabaseService,
+    @Optional() private readonly authorization?: AuthorizationService,
+    @Optional() private readonly tenantContext?: TenantContextService,
   ) {}
 
   async execute(
@@ -31,14 +35,13 @@ export class GetFileDownloadUrlQuery {
     if (findResult.isErr() || !findResult.value) {
       return err({
         type: "FILE_NOT_FOUND",
-        message: "api.note.notFound",
+        message: "api.file.notFound",
       });
     }
 
     const file = findResult.value;
     if (
-      actor.role !== "admin" &&
-      resolveResourceOwnerId("file", file as unknown as Record<string, unknown>) !== actor.sub
+      !canAccessResource(this.authorization, this.tenantContext, actor, "files:read", "file", file)
     ) {
       return err({ type: "FILE_NOT_FOUND", message: "api.file.notFound" });
     }

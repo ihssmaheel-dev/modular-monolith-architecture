@@ -9,7 +9,7 @@ import type { PinoLoggerService } from "../../../../infrastructure/logger/logger
 describe("FileScanWorker", () => {
   it("promotes an integrity-checked quarantine record", async () => {
     const files = {
-      findUploadingFiles: vi
+      claimUploadingFiles: vi
         .fn()
         .mockResolvedValue([{ id: "file-1", key: "key", fileSize: 10, contentType: "text/plain" }]),
       updateById: vi.fn().mockResolvedValue(ok({})),
@@ -33,5 +33,33 @@ describe("FileScanWorker", () => {
     await worker.scanQuarantinedFiles();
 
     expect(files.updateById).toHaveBeenCalledWith("file-1", { status: "uploaded" });
+  });
+
+  it("quarantines objects that fail antivirus or integrity checks", async () => {
+    const files = {
+      claimUploadingFiles: vi
+        .fn()
+        .mockResolvedValue([{ id: "file-2", key: "key", fileSize: 10, contentType: "text/plain" }]),
+      updateById: vi.fn().mockResolvedValue(ok({})),
+    } as unknown as FilesRepository;
+    const scanner = {
+      scan: vi.fn().mockResolvedValue({ result: "infected" }),
+    } as unknown as FileScannerService;
+    const database = {
+      runTransaction: vi.fn(async (callback: () => Promise<unknown>) => callback()),
+    } as unknown as DatabaseService;
+    const tenant = {
+      runSystem: vi.fn(async (_context, callback: () => Promise<void>) => callback()),
+    } as unknown as TenantContextService;
+    const logger = {
+      child: vi.fn().mockReturnThis(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    } as unknown as PinoLoggerService;
+    const worker = new FileScanWorker(files, scanner, database, tenant, logger);
+
+    await worker.scanQuarantinedFiles();
+
+    expect(files.updateById).toHaveBeenCalledWith("file-2", { status: "failed" });
   });
 });

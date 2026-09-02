@@ -31,7 +31,9 @@ describe("PostgreSQL tenant isolation", () => {
           END IF;
         END $$;
         GRANT USAGE ON SCHEMA public TO ${RLS_TEST_ROLE};
-        GRANT SELECT ON TABLE public.notes TO ${RLS_TEST_ROLE};
+        GRANT SELECT, INSERT ON TABLE public.notes TO ${RLS_TEST_ROLE};
+        GRANT SELECT, INSERT ON TABLE public.organizations TO ${RLS_TEST_ROLE};
+        GRANT SELECT, INSERT ON TABLE public.memberships TO ${RLS_TEST_ROLE};
         GRANT SELECT, INSERT ON TABLE public.outbox_events TO ${RLS_TEST_ROLE};
       `);
     }
@@ -46,6 +48,8 @@ describe("PostgreSQL tenant isolation", () => {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
+      await client.query(`SET LOCAL ROLE ${RLS_TEST_ROLE}`);
+      await setScope(client, "multi", undefined, true);
       await client.query(
         "INSERT INTO public.notes (id, tenant_id, title, content, created_by) VALUES ($1, $2, $3, $4, $5), ($6, $7, $8, $9, $10)",
         [
@@ -61,13 +65,7 @@ describe("PostgreSQL tenant isolation", () => {
           "integration-test-user",
         ],
       );
-      await client.query(`SET LOCAL ROLE ${RLS_TEST_ROLE}`);
-      await client.query("SELECT set_config('app.tenancy_mode', 'multi', true)");
-      await client.query(
-        "SELECT set_config('app.current_tenant', '00000000-0000-0000-0000-000000000001', true)",
-      );
-      await client.query("SELECT set_config('app.current_user', 'integration-test-user', true)");
-      await client.query("SELECT set_config('app.system_scope', 'false', true)");
+      await setScope(client, "multi", "00000000-0000-0000-0000-000000000001", false);
       const result = await client.query("SELECT tenant_id FROM notes");
       expect(result.rows).toHaveLength(1);
       expect(
@@ -78,4 +76,51 @@ describe("PostgreSQL tenant isolation", () => {
       client.release();
     }
   });
+
+  it("requires trusted system scope to bootstrap a multi-tenant membership", async () => {
+    if (!databaseAvailable || !pool) return;
+    const client = await pool.connect();
+    const tenantId = crypto.randomUUID();
+    try {
+      await client.query("BEGIN");
+      await client.query(`SET LOCAL ROLE ${RLS_TEST_ROLE}`);
+      await setScope(client, "multi", undefined, false);
+      await client.query("SAVEPOINT bootstrap_denied");
+      await expect(insertMembership(client, tenantId, "bootstrap-user")).rejects.toThrow();
+      await client.query("ROLLBACK TO SAVEPOINT bootstrap_denied");
+
+      await setScope(client, "multi", undefined, true);
+      await client.query(
+        "INSERT INTO public.organizations (id, name, slug, created_by) VALUES ($1, $2, $3, $4)",
+        [tenantId, "Bootstrap Organization", `bootstrap-${tenantId}`, "bootstrap-user"],
+      );
+      await expect(insertMembership(client, tenantId, "bootstrap-user")).resolves.toBeDefined();
+    } finally {
+      await client.query("ROLLBACK").catch(() => undefined);
+      client.release();
+    }
+  });
 });
+
+async function setScope(
+  client: import("pg").PoolClient,
+  mode: "single" | "multi",
+  tenantId: string | undefined,
+  systemScope: boolean,
+): Promise<void> {
+  await client.query("SELECT set_config('app.tenancy_mode', $1, true)", [mode]);
+  await client.query("SELECT set_config('app.current_tenant', $1, true)", [tenantId ?? ""]);
+  await client.query("SELECT set_config('app.current_user', $1, true)", ["bootstrap-user"]);
+  await client.query("SELECT set_config('app.system_scope', $1, true)", [String(systemScope)]);
+}
+
+function insertMembership(
+  client: import("pg").PoolClient,
+  tenantId: string,
+  userId: string,
+): Promise<import("pg").QueryResult> {
+  return client.query(
+    "INSERT INTO public.memberships (id, tenant_id, user_id, user_email, user_name, role) VALUES ($1, $2, $3, $4, $5, $6)",
+    [crypto.randomUUID(), tenantId, userId, "bootstrap@example.test", "Bootstrap User", "owner"],
+  );
+}

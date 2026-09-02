@@ -23,7 +23,8 @@ export class FileScannerService {
     contentType: string;
   }): Promise<{ result: FileScanResult } | { error: FileScanError }> {
     const metadata = await this.storage.getMetadata(file.key);
-    if (metadata.isErr() || !metadata.value) return { error: "OBJECT_MISSING" };
+    if (metadata.isErr()) return { error: "SCANNER_UNAVAILABLE" };
+    if (!metadata.value) return { error: "OBJECT_MISSING" };
     if (metadata.value.size !== file.fileSize || metadata.value.contentType !== file.contentType) {
       return { error: "OBJECT_MISSING" };
     }

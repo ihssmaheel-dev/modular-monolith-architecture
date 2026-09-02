@@ -1,7 +1,13 @@
 import { pgTable, text, timestamp, integer, pgEnum, index } from "drizzle-orm/pg-core";
 
 export const fileParentTypeEnum = pgEnum("file_parent_type", ["note", "user", "general"]);
-export const fileStatusEnum = pgEnum("file_status", ["pending", "uploading", "uploaded", "failed"]);
+export const fileStatusEnum = pgEnum("file_status", [
+  "pending",
+  "uploading",
+  "scanning",
+  "uploaded",
+  "failed",
+]);
 
 export const files = pgTable(
   "files",

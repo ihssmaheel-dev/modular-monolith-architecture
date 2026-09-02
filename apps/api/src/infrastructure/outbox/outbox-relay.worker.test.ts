@@ -10,7 +10,12 @@ import type { DatabaseService, TenantContextService } from "../database";
 const EVENT: OutboxEvent = {
   id: "event-1",
   topic: "user.created",
-  payload: { userId: "user-1" },
+  payload: {
+    userId: "user-1",
+    email: "user@example.test",
+    name: "Test User",
+    locale: "en",
+  },
   status: "PROCESSING",
   attempts: 0,
   createdAt: new Date(),

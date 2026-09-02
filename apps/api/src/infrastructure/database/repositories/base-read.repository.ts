@@ -31,7 +31,11 @@ export abstract class BaseReadRepository<TEntity, TRow> {
   }
 
   protected hasMissingTenantContext(): boolean {
-    return this.isTenantIsolationRequired() && !this.tenantFilter();
+    return (
+      this.isTenantIsolationRequired() &&
+      !this.tenantFilter() &&
+      !this.tenantContext.isSystemScope()
+    );
   }
 
   async findById(id: Id, _options: BaseFindOptions = {}): Promise<Result<TEntity | null, never>> {

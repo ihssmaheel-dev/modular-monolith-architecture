@@ -13,11 +13,13 @@ import { TenantContextService } from "../database";
 import { RedisService } from "../redis/redis.service";
 import { sql } from "drizzle-orm";
 import { env } from "../../config/env";
+import { WorkerHealthIndicator } from "./worker-health.indicator";
 
 @Injectable()
 export class PostgresHealthIndicator {
   constructor(
     private readonly database: DatabaseService,
+    private readonly i18n: I18nService,
     private readonly healthIndicatorService: HealthIndicatorService,
   ) {}
 
@@ -27,8 +29,8 @@ export class PostgresHealthIndicator {
       const db = this.database.getDb();
       await (db as unknown as { execute: (q: unknown) => Promise<void> }).execute(sql`SELECT 1`);
       return session.up();
-    } catch (error) {
-      return session.down({ error: String(error) });
+    } catch {
+      return session.down({ message: this.i18n.t("api.health.databaseUnavailable") });
     }
   }
 }
@@ -64,6 +66,7 @@ export class OutboxHealthIndicator {
     private readonly database: DatabaseService,
     private readonly healthIndicatorService: HealthIndicatorService,
     private readonly tenantContext: TenantContextService,
+    private readonly i18n: I18nService,
   ) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
@@ -82,8 +85,8 @@ export class OutboxHealthIndicator {
       const pendingCount = Number(result.rows[0]?.count ?? 0);
       const isHealthy = pendingCount < 5000;
       return isHealthy ? session.up({ pendingCount }) : session.down({ pendingCount });
-    } catch (error) {
-      return session.down({ error: String(error) });
+    } catch {
+      return session.down({ message: this.i18n.t("api.health.outboxUnavailable") });
     }
   }
 }
@@ -96,6 +99,7 @@ export class AppHealthService {
     private readonly postgres: PostgresHealthIndicator,
     private readonly redis: RedisHealthIndicator,
     private readonly outbox: OutboxHealthIndicator,
+    private readonly worker: WorkerHealthIndicator,
   ) {}
 
   @HealthCheck()
@@ -113,6 +117,7 @@ export class AppHealthService {
       () => this.postgres.isHealthy("postgres"),
       () => this.redis.isHealthy("redis"),
       () => this.outbox.isHealthy("outbox_queue"),
+      () => this.worker.isHealthy("worker"),
     ]);
   }
 }

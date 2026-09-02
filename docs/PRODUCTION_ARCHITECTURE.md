@@ -95,7 +95,7 @@ The outbox relay claims rows briefly, validates a versioned envelope, and publis
 
 ## Worker separation
 
-Queue and scheduled workers are infrastructure providers so they can run in a dedicated worker deployment using the same AppModule and configuration, while the API process remains stateless. Production orchestration should scale API and worker replicas independently and expose queue depth, outbox age, retry, dead-letter, and realtime lag metrics.
+Queue and scheduled workers are infrastructure providers so they can run in a dedicated worker deployment using the same AppModule and configuration, while the API process remains stateless. Production orchestration should scale API and worker replicas independently and expose queue depth, outbox age, retry, dead-letter, and realtime lag metrics. The bundled Prometheus configuration loads `docker/observability/prometheus/alerts.yml` for outbox lag/dead-letter/retry and file-reconciliation alerts; route those alerts to the on-call channel before production traffic.
 
 ## Verification gate
 

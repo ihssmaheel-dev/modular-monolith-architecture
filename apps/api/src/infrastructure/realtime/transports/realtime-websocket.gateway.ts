@@ -53,7 +53,8 @@ export class RealtimeWebsocketGateway implements OnGatewayConnection, OnGatewayD
     }
 
     if (this.getUserById) {
-      const current = await this.getUserById.execute(user.sub);
+      const current = await (this.getUserById.executeFresh?.(user.sub) ??
+        this.getUserById.execute(user.sub));
       if (current.isErr() || user.authVersion !== current.value.authVersion) {
         client.close();
         return;

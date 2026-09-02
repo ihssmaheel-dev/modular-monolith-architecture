@@ -105,6 +105,9 @@ jobs:
       - name: Integration Tests
         run: pnpm test:integration
 
+      - name: Install Playwright browser
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
       - name: End-to-End Tests
         run: pnpm test:e2e
 
@@ -119,13 +122,17 @@ jobs:
 
       - name: Production compose validation
         run: |
-          POSTGRES_USER=postgres \
-          POSTGRES_PASSWORD=postgres \
-          MINIO_USER=ci-minio-user \
-          MINIO_PASSWORD=ci-minio-password \
-          CLIENT_URL=http://localhost:5173 \
-          VITE_API_URL=http://localhost:3000 \
-          EMAIL_FROM=ci@example.com \
+          DATABASE_URL=postgres://ci_user:ci_password@db.example.net:5432/app?sslmode=require \
+          REDIS_URL=rediss://redis.example.net:6380 \
+          JWT_SECRET=ci-production-access-secret-32-characters \
+          JWT_REFRESH_SECRET=ci-production-refresh-secret-32chars \
+          CLIENT_URL=https://app.example.test \
+          API_URL=https://api.example.test \
+          VITE_API_URL=https://api.example.test/api \
+          S3_ENDPOINT=https://storage.example.test \
+          S3_ACCESS_KEY_ID=ci-storage-key \
+          S3_SECRET_ACCESS_KEY=ci-storage-secret \
+          EMAIL_FROM=ci@app.example.test \
           METRICS_TOKEN=ci-metrics-token-32-characters-long \
           docker compose -f docker/docker-compose.prod.yml config
 

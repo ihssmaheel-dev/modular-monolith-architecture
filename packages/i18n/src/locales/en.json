@@ -216,7 +216,10 @@
     "health": {
       "redisUnconfigured": "Redis unconfigured but optional",
       "redisDown": "Redis is unavailable",
-      "redisUnavailable": "Redis is unavailable"
+      "redisUnavailable": "Redis is unavailable",
+      "databaseUnavailable": "Database is unavailable",
+      "outboxUnavailable": "Outbox is unavailable",
+      "workerUnavailable": "Background worker is unavailable"
     },
     "user": {
       "created": "User created successfully",

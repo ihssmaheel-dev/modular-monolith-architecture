@@ -38,35 +38,22 @@ export class RequestUploadCommand {
     input: RequestUploadInput,
     userId: string,
   ): Promise<Result<RequestUploadResult, FileError>> {
-    const quota = await this.checkQuota(input.fileSize, userId);
-    if (!quota) {
-      return err({ type: "UPLOAD_FAILED", message: "api.error.uploadFailed" });
-    }
     const fileKey = this.buildKey(input, userId);
 
-    const transfer = await this.createTransfer(fileKey, input.contentType);
-
-    if (transfer.isErr()) {
-      return err({
-        type: "PRESIGN_FAILED",
-        message: "api.error.presignFailed",
-      });
-    }
-
     const createResult = await this.createFileRecord(fileKey, input, userId);
-
     if (createResult.isErr()) {
-      if (
-        typeof (
-          this.storage as unknown as { delete?: (key: string) => Promise<{ isErr: () => boolean }> }
-        ).delete === "function"
-      ) {
-        const cleanup = await this.storage.delete(fileKey);
-        if (cleanup.isErr()) this.logger?.warn({ key: fileKey }, "Orphan upload cleanup deferred");
-      }
       return err({
         type: "UPLOAD_FAILED",
         message: "api.error.uploadFailed",
+      });
+    }
+
+    const transfer = await this.createTransfer(fileKey, input.contentType);
+    if (transfer.isErr()) {
+      await this.markFailed(createResult.value.id);
+      return err({
+        type: "PRESIGN_FAILED",
+        message: "api.error.presignFailed",
       });
     }
 
@@ -74,8 +61,10 @@ export class RequestUploadCommand {
   }
 
   private async createFileRecord(fileKey: string, input: RequestUploadInput, userId: string) {
-    const create = () =>
-      this.filesRepo.create({
+    const create = async () => {
+      const quota = await this.checkQuota(input.fileSize, userId);
+      if (!quota) return err({ type: "UPLOAD_FAILED", message: "api.error.uploadFailed" });
+      return this.filesRepo.create({
         key: fileKey,
         fileName: input.fileName,
         contentType: input.contentType,
@@ -86,7 +75,22 @@ export class RequestUploadCommand {
         uploadedBy: userId,
         status: "pending",
       });
+    };
     return this.database ? this.database.withResultTransaction(create) : create();
+  }
+
+  private async markFailed(fileId: string): Promise<void> {
+    const repository = this.filesRepo as unknown as {
+      updateById?: (id: string, update: Record<string, string>) => Promise<unknown>;
+    };
+    if (!repository.updateById) return;
+    try {
+      const update = () => repository.updateById!(fileId, { status: "failed" });
+      if (this.database) await this.database.runTransaction(update);
+      else await update();
+    } catch (error) {
+      this.logger?.warn({ fileId, error }, "Failed upload cleanup deferred");
+    }
   }
 
   private async checkQuota(fileSize: number, userId: string): Promise<boolean> {

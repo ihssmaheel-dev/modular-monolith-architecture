@@ -185,6 +185,30 @@ async function assertHardeningObjects(client: Client): Promise<void> {
   if (!functionResult.rows[0]?.procedure) {
     throw new Error("Audit retention function is missing after production hardening");
   }
+
+  const auditId = `migration-check-audit-${Date.now()}`;
+  await client.query("SELECT set_config('app.system_scope', 'true', false)");
+  await client.query(
+    `INSERT INTO public.audit_logs
+      (id, collection_name, document_id, action, created_at)
+     VALUES ($1, 'migration_check', $2, 'CREATE', NOW() - INTERVAL '31 days')`,
+    [auditId, auditId],
+  );
+  await client.query("SELECT set_config('app.system_scope', 'false', false)");
+  let directDeleteRejected = false;
+  try {
+    await client.query("DELETE FROM public.audit_logs WHERE id = $1", [auditId]);
+  } catch {
+    directDeleteRejected = true;
+  }
+  if (!directDeleteRejected) throw new Error("Audit logs must reject direct deletes");
+  const purgeResult = await client.query<{ purged: number }>(
+    "SELECT public.purge_audit_logs_older_than($1)::int AS purged",
+    [30],
+  );
+  if (Number(purgeResult.rows[0]?.purged ?? 0) < 1) {
+    throw new Error("Audit retention function did not purge an expired audit record");
+  }
 }
 
 async function assertMigrationState(database: string, expectedCount: number): Promise<void> {

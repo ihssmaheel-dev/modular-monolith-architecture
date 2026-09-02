@@ -22,7 +22,7 @@ describe("RequestUploadCommand", () => {
     } as unknown as StorageService;
 
     filesRepo = {
-      create: vi.fn(),
+      create: vi.fn().mockResolvedValue(ok(defaultFile())),
     } as unknown as FilesRepository;
 
     const tenantContext = {
@@ -181,3 +181,19 @@ describe("RequestUploadCommand", () => {
     }
   });
 });
+
+function defaultFile(): FileEntity {
+  return {
+    id: "file-default",
+    key: "general/user-1/default-file.txt",
+    fileName: "test.pdf",
+    contentType: "application/pdf",
+    fileSize: 1024,
+    bucket: "test-bucket",
+    parentType: "general",
+    uploadedBy: "user-1",
+    status: "pending",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}

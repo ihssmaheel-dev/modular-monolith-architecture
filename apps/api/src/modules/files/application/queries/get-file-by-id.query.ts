@@ -1,14 +1,20 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { ok, err, Result } from "neverthrow";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import type { FileError } from "../../domain/errors/file.errors";
 import type { AuthenticatedUser } from "@repo/contracts";
-import { resolveResourceOwnerId } from "@repo/authorization";
+import { AuthorizationService } from "../../../../infrastructure/authorization";
+import { TenantContextService } from "../../../../infrastructure/database";
+import { canAccessResource } from "../../../../common/utils/resource-authorization";
 
 @Injectable()
 export class GetFileByIdQuery {
-  constructor(private readonly filesRepo: FilesRepository) {}
+  constructor(
+    private readonly filesRepo: FilesRepository,
+    @Optional() private readonly authorization?: AuthorizationService,
+    @Optional() private readonly tenantContext?: TenantContextService,
+  ) {}
 
   async execute(fileId: string, actor: AuthenticatedUser): Promise<Result<FileEntity, FileError>> {
     const findResult = await this.filesRepo.findById(fileId);
@@ -16,14 +22,19 @@ export class GetFileByIdQuery {
     if (findResult.isErr() || !findResult.value) {
       return err({
         type: "FILE_NOT_FOUND",
-        message: "api.note.notFound",
+        message: "api.file.notFound",
       });
     }
 
     if (
-      actor.role !== "admin" &&
-      resolveResourceOwnerId("file", findResult.value as unknown as Record<string, unknown>) !==
-        actor.sub
+      !canAccessResource(
+        this.authorization,
+        this.tenantContext,
+        actor,
+        "files:read",
+        "file",
+        findResult.value,
+      )
     ) {
       return err({
         type: "FILE_NOT_FOUND",

@@ -5,6 +5,8 @@ import type { ContractRouterClient } from "@orpc/contract";
 import { createIdempotencyKey, readCookie, requestRefresh } from "./utils";
 import type { ApiClientOptions } from "./types";
 import type { ApiResponse } from "./types";
+import type { ZodType } from "zod";
+import { invalidResponseError } from "./response";
 
 const RPC_PATH = "/rpc";
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -44,10 +46,19 @@ export type OrpcClient = ContractRouterClient<typeof apiContract>;
 export async function orpcResponse<T>(
   action: () => Promise<T>,
   successStatus: number,
+  schema?: ZodType<T>,
 ): Promise<ApiResponse<T>> {
   try {
     const body = await action();
-    return { status: successStatus, body: (successStatus === 204 ? null : body) as T };
+    const value = successStatus === 204 ? null : body;
+    if (schema) {
+      const parsed = schema.safeParse(value);
+      if (!parsed.success) {
+        return { status: 502, body: null as T, error: invalidResponseError() };
+      }
+      return { status: successStatus, body: parsed.data };
+    }
+    return { status: successStatus, body: value as T };
   } catch (error) {
     const parsedError = parseError(error);
     return {

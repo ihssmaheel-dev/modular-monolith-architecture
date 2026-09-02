@@ -1,0 +1,53 @@
+groups:
+  - name: modular-monolith-reliability
+    rules:
+      - alert: OutboxPendingDepthHigh
+        expr: outbox_pending_events_depth > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Outbox queue depth is high
+          description: More than 1000 outbox events have been pending for at least 10 minutes.
+
+      - alert: OutboxEventLagHigh
+        expr: outbox_pending_age_ms > 300000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Outbox events are delayed
+          description: The oldest pending outbox event is older than five minutes.
+
+      - alert: OutboxDeadLettersCreated
+        expr: increase(outbox_dead_letter_total[10m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: Outbox events were dead-lettered
+          description: One or more outbox events exceeded their retry budget in the last 10 minutes.
+
+      - alert: OutboxRetryRateHigh
+        expr: increase(outbox_retry_total[10m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Outbox delivery retries are elevated
+          description: More than ten outbox retries occurred during a rolling 10-minute window.
+
+      - alert: FileReconciliationErrors
+        expr: increase(file_reconciliation_error_total[15m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: File reconciliation encountered storage errors
+          description: The file reconciler could not verify one or more objects in the last 15 minutes.
+
+      - alert: FileReconciliationRepairs
+        expr: increase(file_reconciliation_repaired_total[15m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: File metadata drift was repaired
+          description: One or more uploaded files were marked failed after object verification.

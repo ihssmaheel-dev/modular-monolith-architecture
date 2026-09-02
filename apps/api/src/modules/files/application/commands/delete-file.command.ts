@@ -5,7 +5,9 @@ import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
 import type { AuthenticatedUser } from "@repo/contracts";
 import { DatabaseService } from "../../../../infrastructure/database";
-import { resolveResourceOwnerId } from "@repo/authorization";
+import { AuthorizationService } from "../../../../infrastructure/authorization";
+import { TenantContextService } from "../../../../infrastructure/database";
+import { canAccessResource } from "../../../../common/utils/resource-authorization";
 
 @Injectable()
 export class DeleteFileCommand {
@@ -13,6 +15,8 @@ export class DeleteFileCommand {
     private readonly storage: StorageService,
     private readonly filesRepo: FilesRepository,
     @Optional() private readonly database?: DatabaseService,
+    @Optional() private readonly authorization?: AuthorizationService,
+    @Optional() private readonly tenantContext?: TenantContextService,
   ) {}
 
   async execute(fileId: string, actor: AuthenticatedUser): Promise<Result<void, FileError>> {
@@ -23,15 +27,21 @@ export class DeleteFileCommand {
     if (findResult.isErr() || !findResult.value) {
       return err({
         type: "FILE_NOT_FOUND",
-        message: "api.note.notFound",
+        message: "api.file.notFound",
       });
     }
 
     const file = findResult.value;
 
     if (
-      actor.role !== "admin" &&
-      resolveResourceOwnerId("file", file as unknown as Record<string, unknown>) !== actor.sub
+      !canAccessResource(
+        this.authorization,
+        this.tenantContext,
+        actor,
+        "files:delete",
+        "file",
+        file,
+      )
     ) {
       return err({
         type: "UNAUTHORIZED",

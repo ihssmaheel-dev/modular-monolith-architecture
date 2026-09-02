@@ -10,6 +10,7 @@ import { GetFileDownloadUrlQuery } from "./application/queries/get-file-download
 import { ListFilesByParentQuery } from "./application/queries/list-files-by-parent.query";
 import { FileCleanupWorker } from "./application/workers/file-cleanup.worker";
 import { FileScanWorker } from "./application/workers/file-scan.worker";
+import { FileReconciliationWorker } from "./application/workers/file-reconciliation.worker";
 import { FilesRepository } from "./infrastructure/files.repository";
 import { DatabaseModule } from "../../infrastructure/database";
 import { FilesOrpcController } from "./presentation/files.orpc.controller";
@@ -27,6 +28,7 @@ import { FilesOrpcController } from "./presentation/files.orpc.controller";
     ListFilesByParentQuery,
     FileCleanupWorker,
     FileScanWorker,
+    FileReconciliationWorker,
     FilesRepository,
   ],
   exports: [
@@ -38,6 +40,7 @@ import { FilesOrpcController } from "./presentation/files.orpc.controller";
     ListFilesByParentQuery,
     FileCleanupWorker,
     FileScanWorker,
+    FileReconciliationWorker,
     FilesRepository,
   ],
 })

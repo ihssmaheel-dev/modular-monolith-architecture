@@ -24,6 +24,7 @@ describe("CreateOrganizationCommand", () => {
     organizations = { findBySlug: vi.fn(), create: vi.fn() } as unknown as OrganizationsRepository;
     memberships = { create: vi.fn() } as unknown as MembershipsRepository;
     const database = {
+      withSystemScope: vi.fn().mockImplementation(async (callback) => callback()),
       withResultTransaction: vi.fn().mockImplementation(async (callback) => callback()),
     } as unknown as DatabaseService;
     command = new CreateOrganizationCommand(organizations, memberships, database);

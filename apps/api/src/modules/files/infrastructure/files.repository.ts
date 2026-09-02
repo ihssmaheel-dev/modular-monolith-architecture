@@ -54,11 +54,16 @@ export class FilesRepository extends BaseRepository<FileEntity, FileRow> {
     )
       .select()
       .from(files)
-      .where(and(inArray(files.status, ["pending", "uploading"]), lt(files.createdAt, cutoff)));
+      .where(
+        and(
+          inArray(files.status, ["pending", "uploading", "scanning", "failed"]),
+          lt(files.createdAt, cutoff),
+        ),
+      );
     return (rows ?? []).map((r) => this.toDomain(r));
   }
 
-  async findUploadingFiles(limit: number): Promise<FileEntity[]> {
+  async findUploadedFiles(limit: number): Promise<FileEntity[]> {
     const db = this.getDb();
     const rows = await (
       db as unknown as {
@@ -71,9 +76,45 @@ export class FilesRepository extends BaseRepository<FileEntity, FileRow> {
     )
       .select()
       .from(files)
-      .where(and(eq(files.status, "uploading"), isNull(files.deletedAt)))
+      .where(and(eq(files.status, "uploaded"), isNull(files.deletedAt)))
       .limit(limit);
     return (rows ?? []).map((r) => this.toDomain(r));
+  }
+
+  async claimUploadingFiles(limit: number): Promise<FileEntity[]> {
+    const db = this.getDb();
+    const result = await (
+      db as unknown as { execute: (query: unknown) => Promise<{ rows: FileRow[] }> }
+    ).execute(sql`
+      WITH candidates AS (
+        SELECT id
+        FROM files
+        WHERE status = 'uploading'
+           OR (status = 'scanning' AND updated_at < NOW() - INTERVAL '10 minutes')
+        ORDER BY updated_at ASC
+        LIMIT ${limit}
+        FOR UPDATE SKIP LOCKED
+      )
+      UPDATE files
+      SET status = 'scanning', updated_at = NOW()
+      WHERE id IN (SELECT id FROM candidates)
+      RETURNING
+        id,
+        tenant_id AS "tenantId",
+        key,
+        file_name AS "fileName",
+        content_type AS "contentType",
+        file_size AS "fileSize",
+        bucket,
+        parent_id AS "parentId",
+        parent_type AS "parentType",
+        uploaded_by AS "uploadedBy",
+        status,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt",
+        deleted_at AS "deletedAt"
+    `);
+    return result.rows.map((row) => this.toDomain(row));
   }
 
   async findDeletedFiles(limit: number): Promise<FileEntity[]> {

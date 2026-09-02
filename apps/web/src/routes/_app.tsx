@@ -15,7 +15,7 @@ function ProtectedApp() {
   const navigate = useNavigate();
   const status = useAuthStore((state) => state.status);
   const setUser = useAuthStore((state) => state.setUser);
-  const setStatus = useAuthStore((state) => state.setStatus);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   useEffect(() => {
     if (status !== "loading") return;
@@ -25,15 +25,15 @@ function ProtectedApp() {
       .then((response) => {
         if (!active) return;
         if (response.status === 200 && response.body?.user) setUser(response.body.user);
-        else setStatus("unauthenticated");
+        else clearAuth();
       })
       .catch(() => {
-        if (active) setStatus("unauthenticated");
+        if (active) clearAuth();
       });
     return () => {
       active = false;
     };
-  }, [setStatus, setUser, status]);
+  }, [clearAuth, setUser, status]);
 
   useEffect(() => {
     if (status === "unauthenticated") {

@@ -1,5 +1,5 @@
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import { ApiErrorEnvelopeSchema } from "@repo/contracts";
+import type { ZodType } from "zod";
 import type { ApiClientOptions, ApiResponse } from "./types";
 import {
   createIdempotencyKey,
@@ -16,6 +16,7 @@ import {
   createUsersClient,
 } from "./subclients";
 import { createOrpcClient } from "./orpc";
+import { invalidResponseError, parseError } from "./response";
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -26,6 +27,7 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
   const authenticatedFetch = async <T>(
     path: string,
     init: RequestInit = {},
+    schema?: ZodType<T>,
   ): Promise<ApiResponse<T>> => {
     const method = (init.method ?? "GET").toUpperCase();
     const headers: Record<string, string> = {
@@ -88,6 +90,18 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
       }
     }
 
+    if (res.ok && res.status !== 204 && schema) {
+      const parsed = schema.safeParse(body);
+      if (!parsed.success) {
+        return {
+          status: 502,
+          body: null as T,
+          error: invalidResponseError(),
+        };
+      }
+      body = parsed.data;
+    }
+
     return {
       status: res.status,
       body: body as T,
@@ -108,16 +122,6 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     client: orpcClient,
     getTransferHeaders: () => getTransferHeaders(options),
   };
-}
-
-function parseError(value: unknown) {
-  const direct = ApiErrorEnvelopeSchema.safeParse(value);
-  if (direct.success) return direct.data;
-  if (typeof value === "object" && value !== null && "data" in value) {
-    const nested = ApiErrorEnvelopeSchema.safeParse(value.data);
-    if (nested.success) return nested.data;
-  }
-  return undefined;
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;

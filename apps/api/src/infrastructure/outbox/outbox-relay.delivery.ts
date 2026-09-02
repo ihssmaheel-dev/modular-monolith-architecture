@@ -1,14 +1,14 @@
 import { Injectable, Optional } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { OutboxEventEnvelopeSchema } from "@repo/contracts";
+import { parseOutboxEventEnvelope } from "@repo/contracts";
 import { MetricsService } from "../metrics/metrics.service";
 import { PinoLoggerService } from "../logger/logger.service";
 import { DatabaseService } from "../database";
 import { QueueService } from "../queue/queue.service";
 import { OutboxEvent, OutboxRepository } from "./outbox.repository";
-import { OUTBOX_QUEUE } from "./outbox-event.worker";
+import { OUTBOX_MAX_ATTEMPTS, OUTBOX_QUEUE } from "./outbox.constants";
+import { env } from "../../config/env";
 
-const MAX_ATTEMPTS = 5;
 const RETRY_BASE_DELAY_MS = 5_000;
 const RETRY_MULTIPLIER = 2;
 
@@ -29,7 +29,7 @@ export class OutboxRelayDelivery {
 
   async deliver(event: OutboxEvent): Promise<void> {
     try {
-      const envelope = OutboxEventEnvelopeSchema.parse({
+      const envelope = parseOutboxEventEnvelope({
         id: event.id,
         topic: event.topic,
         version: 1,
@@ -40,12 +40,15 @@ export class OutboxRelayDelivery {
       if (queue) {
         await queue.add(event.topic, envelope, {
           jobId: event.id,
-          attempts: MAX_ATTEMPTS,
+          attempts: OUTBOX_MAX_ATTEMPTS,
           backoff: { type: "exponential", delay: RETRY_BASE_DELAY_MS },
           removeOnComplete: 1000,
           removeOnFail: false,
         });
       } else {
+        if (env.NODE_ENV === "production") {
+          throw new Error("OUTBOX_DURABLE_QUEUE_UNAVAILABLE");
+        }
         await this.eventEmitter.emitAsync(event.topic, event.payload);
       }
       await this.database.runTransaction(() =>
@@ -64,7 +67,7 @@ export class OutboxRelayDelivery {
 
   private async scheduleRetry(event: OutboxEvent, error: unknown): Promise<void> {
     const attempts = event.attempts + 1;
-    const exhausted = attempts >= MAX_ATTEMPTS;
+    const exhausted = attempts >= OUTBOX_MAX_ATTEMPTS;
     const delay = RETRY_BASE_DELAY_MS * RETRY_MULTIPLIER ** Math.max(0, attempts - 1);
     await this.database.runTransaction(() =>
       this.repository.updateById(event.id, {
@@ -96,6 +99,10 @@ export class OutboxRelayDelivery {
 
   private recordLatency(event: OutboxEvent): void {
     try {
+      if (!(event.createdAt instanceof Date) || Number.isNaN(event.createdAt.getTime())) {
+        this.logger.warn({ eventId: event.id }, "Outbox event has no valid creation timestamp");
+        return;
+      }
       this.metrics.recordHistogram(
         "outbox_processing_latency_ms",
         "Latency between outbox event creation and processing",

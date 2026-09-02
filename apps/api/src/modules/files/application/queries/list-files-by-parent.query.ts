@@ -1,13 +1,20 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { Result } from "neverthrow";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import { FileEntity } from "../../domain/entities/file.entity";
 import type { AuthenticatedUser } from "@repo/contracts";
 import type { PaginatedResult } from "../../../../infrastructure/database";
+import { AuthorizationService } from "../../../../infrastructure/authorization";
+import { TenantContextService } from "../../../../infrastructure/database";
+import { canListTenantResources } from "../../../../common/utils/resource-authorization";
 
 @Injectable()
 export class ListFilesByParentQuery {
-  constructor(private readonly filesRepo: FilesRepository) {}
+  constructor(
+    private readonly filesRepo: FilesRepository,
+    @Optional() private readonly authorization?: AuthorizationService,
+    @Optional() private readonly tenantContext?: TenantContextService,
+  ) {}
 
   async execute(
     parentType: string,
@@ -18,7 +25,9 @@ export class ListFilesByParentQuery {
   ): Promise<Result<PaginatedResult<FileEntity>, never>> {
     const filter: Record<string, string> = { parentType };
     if (parentId) filter.parentId = parentId;
-    if (actor.role !== "admin") filter.uploadedBy = actor.sub;
+    if (!canListTenantResources(this.authorization, this.tenantContext, actor, "files:read")) {
+      filter.uploadedBy = actor.sub;
+    }
     return this.filesRepo.paginate(filter, {
       page,
       limit,

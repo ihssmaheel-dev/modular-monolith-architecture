@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware, HttpStatus } from "@nestjs/common";
+import { BadRequestException, Injectable, NestMiddleware, HttpStatus } from "@nestjs/common";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import {
   XSS_PATTERNS,
@@ -9,6 +9,8 @@ import {
   containsPattern,
 } from "./waf.patterns";
 import { I18nService } from "../i18n/i18n.service";
+import { createApiErrorEnvelope } from "../../common/utils/error-envelope.utils";
+import { REQUEST_ID_HEADER, resolveRequestId } from "../../common/utils/request-id.utils";
 
 const MAX_URL_LENGTH = 2048;
 
@@ -21,10 +23,7 @@ export class WafMiddleware implements NestMiddleware {
     const lang = req.headers["accept-language"] as string | undefined;
 
     if (url.length > MAX_URL_LENGTH) {
-      res.status(HttpStatus.BAD_REQUEST).send({
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: this.i18n.t("api.error.urlTooLong", lang),
-      });
+      this.reject(res, req, "api.error.urlTooLong", lang);
       return;
     }
 
@@ -35,49 +34,50 @@ export class WafMiddleware implements NestMiddleware {
         ...NOSQL_INJECTION_PATTERNS,
       ])
     ) {
-      res.status(HttpStatus.BAD_REQUEST).send({
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: this.i18n.t("api.error.invalidRequest", lang),
-      });
+      this.reject(res, req, "api.error.invalidRequest", lang);
       return;
     }
 
     const query = (req.query ?? {}) as Record<string, unknown>;
     if (Object.keys(query).length > 0) {
-      const violations = scanObject(query);
-      if (violations.length > 0) {
-        res.status(HttpStatus.BAD_REQUEST).send({
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: this.i18n.t("api.error.invalidRequest", lang),
-          violations,
-        });
+      if (scanObject(query).length > 0) {
+        this.reject(res, req, "api.error.invalidRequest", lang);
         return;
       }
     }
 
     const body = req.body as Record<string, unknown> | undefined;
     if (body && typeof body === "object") {
-      const violations = scanObject(body);
-      if (violations.length > 0) {
-        res.status(HttpStatus.BAD_REQUEST).send({
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: this.i18n.t("api.error.blockedContent", lang),
-          violations,
-        });
+      if (scanObject(body).length > 0) {
+        this.reject(res, req, "api.error.blockedContent", lang);
         return;
       }
     }
 
     for (const [, value] of Object.entries(req.headers)) {
       if (typeof value === "string" && containsPattern(value, HEADER_INJECTION_PATTERNS)) {
-        res.status(HttpStatus.BAD_REQUEST).send({
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: this.i18n.t("api.error.invalidHeader", lang),
-        });
+        this.reject(res, req, "api.error.invalidHeader", lang);
         return;
       }
     }
 
     next();
+  }
+
+  private reject(
+    response: FastifyReply,
+    request: FastifyRequest,
+    i18nKey: string,
+    language: string | undefined,
+  ): void {
+    const requestId = resolveRequestId(request.headers[REQUEST_ID_HEADER]);
+    const envelope = createApiErrorEnvelope(
+      new BadRequestException({ code: "INVALID_REQUEST", i18nKey }),
+      HttpStatus.BAD_REQUEST,
+      language,
+      requestId,
+      this.i18n,
+    );
+    response.header(REQUEST_ID_HEADER, requestId).status(HttpStatus.BAD_REQUEST).send(envelope);
   }
 }

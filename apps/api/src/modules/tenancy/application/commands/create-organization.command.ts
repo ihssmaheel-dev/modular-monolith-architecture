@@ -31,23 +31,25 @@ export class CreateOrganizationCommand {
     if (existing.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" });
     if (existing.value) return err({ type: "ORGANIZATION_SLUG_TAKEN" });
 
-    const result = await this.database.withResultTransaction(async () => {
-      const organization = await this.organizations.create({
-        name: input.name,
-        slug,
-        createdBy: actor.sub,
-      });
-      if (organization.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" } as const);
-      const membership = await this.memberships.create({
-        tenantId: organization.value.data.id,
-        userId: actor.sub,
-        userEmail: actor.email,
-        userName: actor.name ?? actor.email,
-        role: "owner",
-      });
-      if (membership.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" } as const);
-      return ok({ organization: organization.value, membership: membership.value });
-    });
+    const result = await this.database.withSystemScope(() =>
+      this.database.withResultTransaction(async () => {
+        const organization = await this.organizations.create({
+          name: input.name,
+          slug,
+          createdBy: actor.sub,
+        });
+        if (organization.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" } as const);
+        const membership = await this.memberships.create({
+          tenantId: organization.value.data.id,
+          userId: actor.sub,
+          userEmail: actor.email,
+          userName: actor.name ?? actor.email,
+          role: "owner",
+        });
+        if (membership.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" } as const);
+        return ok({ organization: organization.value, membership: membership.value });
+      }),
+    );
 
     if (result.isErr()) return err({ type: "TENANCY_OPERATION_FAILED" });
     return ok(result.value);

@@ -1,11 +1,14 @@
 import { z } from "zod";
 import { DEFAULT_JWT_SECRET, DEFAULT_REFRESH_SECRET, validateEnvironment } from "./env.refinement";
 
+const MAX_PORT = 65_535;
+const MAX_POOL_SIZE = 200;
+
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PROCESS_ROLE: z.enum(["all", "api", "worker"]).default("all"),
-    PORT: z.coerce.number().default(3000),
+    PORT: z.coerce.number().int().min(1).max(MAX_PORT).default(3000),
     TRUST_PROXY: z.coerce.boolean().default(false),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
     TENANCY_MODE: z.enum(["single", "multi"]).default("single"),
@@ -14,10 +17,11 @@ export const envSchema = z
     API_URL: z.string().url().default("http://localhost:3000"),
 
     DATABASE_URL: z.string().url().default("postgres://postgres:postgres@localhost:5432/app"),
-    DB_MAX_POOL_SIZE: z.coerce.number().default(10),
+    DB_MAX_POOL_SIZE: z.coerce.number().int().min(1).max(MAX_POOL_SIZE).default(10),
     DB_STATEMENT_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
     DB_LOCK_TIMEOUT_MS: z.coerce.number().int().positive().default(5_000),
     DB_IDLE_IN_TRANSACTION_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
+    AUDIT_RETENTION_DAYS: z.coerce.number().int().min(30).max(3650).default(365),
     REDIS_URL: z.string().url().optional(),
 
     JWT_SECRET: z.string().min(32).default(DEFAULT_JWT_SECRET),
@@ -28,8 +32,8 @@ export const envSchema = z
     JWT_ISSUER: z.string().min(1).default("modular-monolith-api"),
     JWT_AUDIENCE: z.string().min(1).default("modular-monolith-client"),
 
-    RATE_LIMIT_MAX: z.coerce.number().default(100),
-    RATE_LIMIT_TTL: z.coerce.number().default(60),
+    RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+    RATE_LIMIT_TTL: z.coerce.number().int().positive().default(60),
 
     IDEMPOTENCY_TTL_SECONDS: z.coerce
       .number()
@@ -56,8 +60,8 @@ export const envSchema = z
       .max(10 * 1024 * 1024)
       .default(1024 * 1024),
 
-    LOCKOUT_MAX_ATTEMPTS: z.coerce.number().default(5),
-    LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
+    LOCKOUT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
+    LOCKOUT_DURATION_MINUTES: z.coerce.number().int().positive().default(15),
 
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default("http://localhost:4318/v1/traces"),
     LOKI_HOST: z.string().url().default("http://localhost:3100"),
@@ -88,7 +92,7 @@ export const envSchema = z
     RESEND_API_KEY: z.string().default(""),
     EMAIL_FROM: z.string().email().default("noreply@example.com"),
     SMTP_HOST: z.string().default("localhost"),
-    SMTP_PORT: z.coerce.number().default(1025),
+    SMTP_PORT: z.coerce.number().int().min(1).max(MAX_PORT).default(1025),
     SMTP_USER: z.string().default(""),
     SMTP_PASS: z.string().default(""),
 

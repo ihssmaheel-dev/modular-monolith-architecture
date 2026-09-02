@@ -9,6 +9,7 @@
     "build": "vite build",
     "start": "srvx --prod --static=../client --entry=dist/server/server.js",
     "preview": "vite preview",
+    "test:e2e": "playwright test",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.1.0",
     "@tanstack/react-router-devtools": "^1.167.1",
     "@tanstack/router-plugin": "^1.121.0",

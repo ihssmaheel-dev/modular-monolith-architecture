@@ -53,6 +53,7 @@ describe("BaseRepository Tenant Isolation", () => {
 
     mockContext = {
       get: vi.fn(() => ({ mode: "multi", tenantId: undefined })),
+      isSystemScope: vi.fn(() => false),
     } as unknown as TenantContextService;
   });
 
@@ -78,5 +79,14 @@ describe("BaseRepository Tenant Isolation", () => {
     if (result.isOk()) {
       expect(result.value.id).toBe("1");
     }
+  });
+
+  it("allows trusted system scope without a tenant id", async () => {
+    vi.mocked(mockContext.isSystemScope).mockReturnValue(true);
+    const repo = new TestRepo(mockDb, mockContext, true);
+
+    const result = await repo.create({ name: "System repair", tenantId: "tenant-123" });
+
+    expect(result.isOk()).toBe(true);
   });
 });

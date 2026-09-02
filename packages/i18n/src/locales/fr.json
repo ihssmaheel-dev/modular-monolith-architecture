@@ -211,7 +211,10 @@
     "health": {
       "redisUnconfigured": "Redis n’est pas configuré, mais il est facultatif",
       "redisDown": "Redis est indisponible",
-      "redisUnavailable": "Redis est indisponible"
+      "redisUnavailable": "Redis est indisponible",
+      "databaseUnavailable": "La base de données est indisponible",
+      "outboxUnavailable": "La file d’événements est indisponible",
+      "workerUnavailable": "Le processus en arrière-plan est indisponible"
     },
     "file": {
       "notFound": "Fichier introuvable"

@@ -45,7 +45,7 @@ export const FileMetadataSchema = z.object({
   parentId: z.string().optional(),
   parentType: z.string(),
   uploadedBy: z.string(),
-  status: z.enum(["pending", "uploading", "uploaded", "failed"]),
+  status: z.enum(["pending", "uploading", "scanning", "uploaded", "failed"]),
   createdAt: z.string().datetime(),
 });
 
