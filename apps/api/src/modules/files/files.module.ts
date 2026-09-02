@@ -12,11 +12,13 @@ import { FileCleanupWorker } from "./application/workers/file-cleanup.worker";
 import { FileScanWorker } from "./application/workers/file-scan.worker";
 import { FilesRepository } from "./infrastructure/files.repository";
 import { DatabaseModule } from "../../infrastructure/database";
+import { FilesOrpcController } from "./presentation/files.orpc.controller";
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [FilesController],
+  controllers: [FilesController, FilesOrpcController],
   providers: [
+    FilesController,
     RequestUploadCommand,
     ConfirmUploadCommand,
     DeleteFileCommand,

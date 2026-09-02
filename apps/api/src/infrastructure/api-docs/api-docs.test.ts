@@ -28,7 +28,14 @@ describe("setupApiDocs", () => {
 
     const spec = jsonRes.json();
     expect(spec.paths["/auth/register"].post.requestBody).toBeDefined();
-    expect(spec.paths["/auth/register"].post.responses["200"]).toBeDefined();
+    expect(spec.paths["/auth/register"].post.responses["201"]).toBeDefined();
+    expect(spec.servers.map((server: { url: string }) => server.url)).toContain("/api/rpc");
+    expect(
+      spec.paths["/tenancy/members/{userId}"].patch.parameters.some(
+        (parameter: { name: string; in: string }) =>
+          parameter.name === "x-tenant-id" && parameter.in === "header",
+      ),
+    ).toBe(true);
 
     const docsRes = await fastify.inject({ method: "GET", url: "/api/docs" });
     expect([200, 301, 302]).toContain(docsRes.statusCode);

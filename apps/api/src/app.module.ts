@@ -41,12 +41,14 @@ import {
   RequestIdInterceptor,
   DatabaseTransactionInterceptor,
 } from "./common";
+import { ORPCModule } from "./infrastructure/orpc/orpc-runtime";
 
 @Module({
   imports: [
     ClsModule.forRoot({ global: true, middleware: { mount: true } }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
+    ORPCModule.forRoot({}),
     RedisModule,
     QueueModule,
     LoggerModule,

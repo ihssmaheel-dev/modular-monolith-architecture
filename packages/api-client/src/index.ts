@@ -1,5 +1,3 @@
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import type { ApiClientOptions, ApiResponse } from "./types";
 import {
@@ -16,6 +14,7 @@ import {
   createTenancyClient,
   createUsersClient,
 } from "./subclients";
+import { createOrpcClient } from "./orpc";
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -91,40 +90,15 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     return { status: res.status, body: body as T };
   };
 
-  const orpcLink = new RPCLink({
-    url: baseUrl,
-    fetch: async (input, init) => {
-      const headers = new Headers((init as RequestInit | undefined)?.headers);
-      const auth = getAuthorizationHeader(options);
-      if (auth) headers.set("authorization", auth);
-      const tenantId = options.getTenantId?.();
-      if (tenantId) headers.set("x-tenant-id", tenantId);
-      headers.set("accept-language", options.getLocale?.() ?? "en");
-      const method = ((init as RequestInit | undefined)?.method ?? "GET").toUpperCase();
-      if (MUTATING_METHODS.has(method) && !headers.has("idempotency-key")) {
-        headers.set("idempotency-key", createIdempotencyKey());
-      }
-      if (MUTATING_METHODS.has(method) && !headers.has("x-xsrf-token")) {
-        const csrf = readCookie("XSRF-TOKEN");
-        if (csrf) headers.set("x-xsrf-token", csrf);
-      }
-      return fetch(input, {
-        ...(init as RequestInit | undefined),
-        headers,
-        credentials: "include",
-      });
-    },
-  });
-
-  const orpcClient = createORPCClient(orpcLink);
+  const orpcClient = createOrpcClient(baseUrl, options);
   const orpc = createTanstackQueryUtils(orpcClient);
 
   return {
-    auth: createAuthClient(authenticatedFetch),
-    files: createFilesClient(authenticatedFetch),
-    notes: createNotesClient(authenticatedFetch),
-    tenancy: createTenancyClient(authenticatedFetch),
-    users: createUsersClient(authenticatedFetch),
+    auth: createAuthClient(authenticatedFetch, orpcClient),
+    files: createFilesClient(authenticatedFetch, orpcClient),
+    notes: createNotesClient(authenticatedFetch, orpcClient),
+    tenancy: createTenancyClient(authenticatedFetch, orpcClient, options.getTenantId),
+    users: createUsersClient(authenticatedFetch, orpcClient),
     orpc,
     client: orpcClient,
     getTransferHeaders: () => getTransferHeaders(options),
@@ -135,4 +109,5 @@ export type ApiClient = ReturnType<typeof createApiClient>;
 export * from "./types";
 export * from "./utils";
 export * from "./subclients";
-export { createORPCClient, RPCLink, createTanstackQueryUtils };
+export { createOrpcClient } from "./orpc";
+export { createTanstackQueryUtils };

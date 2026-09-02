@@ -33,6 +33,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const acceptLanguage = request.headers["accept-language"];
+    const isOrpcRequest = (request.url?.split("?")[0] ?? "").includes("/rpc/");
 
     if (exception instanceof ZodValidationException) {
       const errors: Record<string, string[]> = {};
@@ -54,14 +55,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
         errors[path].push(msg);
       }
 
-      response.status(HttpStatus.BAD_REQUEST).send({
+      const validationResponse = {
         statusCode: HttpStatus.BAD_REQUEST,
         message: this.i18n.t("api.error.validationFailed", acceptLanguage),
         code: "VALIDATION_FAILED",
         requestId: this.requestId(),
         path: request.url,
         errors,
-      });
+      };
+      if (isOrpcRequest) {
+        response.status(HttpStatus.BAD_REQUEST).send({
+          defined: false,
+          code: validationResponse.code,
+          status: HttpStatus.BAD_REQUEST,
+          message: validationResponse.message,
+          data: validationResponse,
+        });
+      } else response.status(HttpStatus.BAD_REQUEST).send(validationResponse);
       return;
     }
 
@@ -76,14 +86,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.logger.error({ err: exception }, "Unhandled exception");
     }
 
-    response.status(status).send({
+    const errorResponse = {
       statusCode: status,
       message,
       code: customError?.code ?? this.codeForStatus(status),
       error: customError?.code ?? this.codeForStatus(status),
       requestId: this.requestId(),
       path: request.url,
-    });
+    };
+    if (isOrpcRequest) {
+      response.status(status).send({
+        defined: false,
+        code: errorResponse.code,
+        status,
+        message,
+        data: errorResponse,
+      });
+    } else response.status(status).send(errorResponse);
   }
 
   private getCustomError(

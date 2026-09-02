@@ -15,19 +15,19 @@ export const notesContract = oc.prefix("/notes").router({
     .input(PaginationQuerySchema)
     .output(NoteListResponseSchema),
   getById: oc
-    .route({ method: "GET", path: "/:id", summary: "Get a note by ID" })
+    .route({ method: "GET", path: "/{id}", summary: "Get a note by ID" })
     .input(NoteIdParamSchema)
     .output(NoteResponseSchema),
   create: oc
-    .route({ method: "POST", path: "/", summary: "Create a new note" })
+    .route({ method: "POST", path: "/", summary: "Create a new note", successStatus: 201 })
     .input(CreateNoteSchema)
     .output(NoteResponseSchema),
   update: oc
-    .route({ method: "PATCH", path: "/:id", summary: "Update a note" })
+    .route({ method: "PATCH", path: "/{id}", summary: "Update a note" })
     .input(NoteIdParamSchema.and(UpdateNoteSchema))
     .output(NoteResponseSchema),
   delete: oc
-    .route({ method: "DELETE", path: "/:id", summary: "Delete a note" })
+    .route({ method: "DELETE", path: "/{id}", summary: "Delete a note", successStatus: 204 })
     .input(NoteIdParamSchema)
     .output(z.undefined().or(z.null()).or(z.void())),
 });

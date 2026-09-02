@@ -4,7 +4,7 @@ This is the supported local-development path for the monorepo.
 
 ## Prerequisites
 
-- Node.js 20 or newer (tested on 20 + 22)
+- Node.js 20.19 or newer (tested on Node 20 + 22)
 - pnpm 10.33.4 (`corepack enable` then `corepack prepare pnpm@10.33.4 --activate`)
 - Docker Desktop, or Docker Engine with Compose v2.17+
 - Git

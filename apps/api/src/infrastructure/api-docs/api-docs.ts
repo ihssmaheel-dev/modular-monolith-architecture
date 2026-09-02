@@ -19,8 +19,9 @@ export async function setupApiDocs(app: NestFastifyApplication): Promise<void> {
         description: "Auto-generated OpenAPI 3.1 Documentation via oRPC and Zod 4 schemas.",
       },
       servers: [
-        { url: "/api", description: "Default API server (relative)" },
-        { url: `${env.API_URL}/api`, description: "Direct API server" },
+        { url: "/api/rpc", description: "oRPC runtime transport (relative)" },
+        { url: `${env.API_URL}/api/rpc`, description: "Direct oRPC runtime transport" },
+        { url: "/api", description: "REST compatibility transport" },
       ],
     });
 

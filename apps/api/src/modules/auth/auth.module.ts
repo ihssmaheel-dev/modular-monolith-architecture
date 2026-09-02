@@ -8,11 +8,13 @@ import { ResetPasswordCommand } from "./application/commands/reset-password.comm
 import { LogoutCommand } from "./application/commands/logout.command";
 import { UsersModule } from "../users/users.module";
 import { EmailModule } from "../../infrastructure/email/email.module";
+import { AuthOrpcController } from "./presentation/auth.orpc.controller";
 
 @Module({
   imports: [UsersModule, EmailModule],
-  controllers: [AuthController],
+  controllers: [AuthController, AuthOrpcController],
   providers: [
+    AuthController,
     RegisterCommand,
     LoginCommand,
     RefreshTokensCommand,

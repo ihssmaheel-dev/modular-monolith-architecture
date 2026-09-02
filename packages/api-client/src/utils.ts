@@ -1,6 +1,8 @@
 import { AuthResponseSchema, type AuthResponse } from "@repo/contracts";
 import type { ApiClientOptions } from "./types";
 
+const RPC_PATH = "/rpc";
+
 export function createIdempotencyKey(): string {
   if (typeof globalThis.crypto?.randomUUID === "function") return globalThis.crypto.randomUUID();
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
@@ -35,7 +37,7 @@ export async function requestRefresh(
   baseUrl: string,
   options: ApiClientOptions,
 ): Promise<AuthResponse | null> {
-  const response = await fetch(`${baseUrl}/auth/refresh`, {
+  const response = await fetch(`${baseUrl.replace(/\/+$/, "")}${RPC_PATH}/auth/refresh`, {
     method: "POST",
     credentials: "include",
     headers: {

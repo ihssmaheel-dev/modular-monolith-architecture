@@ -6,7 +6,9 @@ The repository currently ships one browser client (`apps/web`) backed by the mod
 
 - `apps/web` — TanStack Start, TanStack Router, TanStack Query, Zustand, i18n, and the shared UI system.
 - `packages/contracts` — Zod schemas, DTOs, oRPC contracts, pagination, and error constants.
-- `packages/api-client` — typed REST compatibility clients and oRPC/TanStack Query utilities with auth refresh, tenant, locale, and idempotency headers.
+- `packages/api-client` — typed oRPC clients (OpenAPI link) used by default, REST compatibility
+  fallbacks, and TanStack Query utilities with auth refresh, tenant, locale, CSRF, and idempotency
+  headers.
 - `packages/i18n` — locale dictionaries and shared locale configuration.
 - `packages/ui` — Base UI/shadcn primitives, Tailwind tokens, and composed components.
 

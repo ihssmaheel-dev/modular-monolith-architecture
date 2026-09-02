@@ -15,19 +15,19 @@ export const usersContract = oc.prefix("/users").router({
     .input(PaginationQuerySchema)
     .output(UserListResponseSchema),
   getById: oc
-    .route({ method: "GET", path: "/:id", summary: "Get user by ID" })
+    .route({ method: "GET", path: "/{id}", summary: "Get user by ID" })
     .input(UserIdParamSchema)
     .output(UserResponseSchema),
   create: oc
-    .route({ method: "POST", path: "/", summary: "Create user" })
+    .route({ method: "POST", path: "/", summary: "Create user", successStatus: 201 })
     .input(CreateUserSchema)
     .output(UserResponseSchema),
   update: oc
-    .route({ method: "PATCH", path: "/:id", summary: "Update user" })
+    .route({ method: "PATCH", path: "/{id}", summary: "Update user" })
     .input(UserIdParamSchema.and(UpdateUserSchema))
     .output(UserResponseSchema),
   delete: oc
-    .route({ method: "DELETE", path: "/:id", summary: "Delete user" })
+    .route({ method: "DELETE", path: "/{id}", summary: "Delete user", successStatus: 204 })
     .input(UserIdParamSchema)
     .output(z.undefined().or(z.null()).or(z.void())),
 });

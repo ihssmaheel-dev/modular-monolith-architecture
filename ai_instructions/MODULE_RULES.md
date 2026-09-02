@@ -164,6 +164,7 @@ export class AppModule {}
 1. Create the folder structure above in `modules/[name]/`.
 2. Define Zod schemas in `packages/contracts/src/schemas/`.
 3. Define oRPC contract (`oc.route().input().output()`) in `packages/contracts/src/contracts/`.
+   Use OpenAPI path placeholders such as `/{id}`; the Nest adapter translates them to `:id`.
 4. Implement domain entities in `domain/entities/`.
 5. Implement repository in `infrastructure/`.
 6. Implement use-cases in `application/commands/` and `application/queries/`.
@@ -179,9 +180,10 @@ export class AppModule {}
 - **Use standard Nest decorators**: Controllers use `@Controller()` with `@Post()`, `@Get()`, `@Body()`, `@Query()` etc., validated via Zod schemas from `@repo/contracts` (or oRPC `oc.route().input()`).
 - **Enforce Fine-Grained Authorization**: Protect endpoints with `@RequirePermission('...')` to enforce RBAC action vocabulary and multi-tenant scoping.
 - Validate input via Zod schemas from `@repo/contracts` before calling application layer.
-- `apiContract` (`oc.router` in `@repo/contracts`) is for OpenAPI and optional typed transports, not a
-  Nest handler. REST controllers and `packages/api-client` are the canonical runtime API until a complete
-  oRPC server adapter is introduced and tested end-to-end.
+- `apiContract` (`oc.router` in `@repo/contracts`) is the runtime contract source. Each procedure
+  must have a Nest `@Implement(...)` oRPC handler served under `/api/rpc`, with REST controllers
+  retained only as compatibility mappings where required. Both transports delegate to the same
+  application command/query and are covered by parity/smoke tests.
 - **Protect mutations with Idempotency**: All critical POST, PUT, or DELETE endpoints (e.g., payments, resource creation) MUST be protected using the `@Idempotent()` decorator. The client is required to send an `idempotency-key` header to prevent duplicate processing.
 - **Domain Policies Registration**: If a domain module has domain-specific access rules, implement `OnModuleInit` in `[domain].module.ts` and call `this.authService.registerPolicies([domain]Policies)`.
 - Call exactly one application command/query per route.

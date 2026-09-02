@@ -1,6 +1,6 @@
 # Modular Monolith Architecture
 
-A production-grade, highly scalable TypeScript modular monolith architecture designed for enterprise-ready applications. Built with NestJS, Fastify, PostgreSQL, Drizzle ORM, REST + typed oRPC contracts, fine-grained authorization, a transactional outbox, distributed caching, and full local observability.
+A production-grade, highly scalable TypeScript modular monolith architecture designed for enterprise-ready applications. Built with NestJS, Fastify, PostgreSQL, Drizzle ORM, a runtime oRPC transport with REST compatibility, fine-grained authorization, a transactional outbox, distributed caching, and full local observability.
 
 ---
 
@@ -12,7 +12,7 @@ A production-grade, highly scalable TypeScript modular monolith architecture des
   - `@repo/contracts`: Zod 4 schemas, oRPC type-safe API contracts, DTO types, pagination & error constants, env schemas (API + VITE_*)
   - `@repo/authorization`: Fine-Grained Authorization engine (RBAC + ReBAC + ABAC) & action vocabulary
   - `@repo/i18n`: Multi-language JSON locale dictionaries (en, es, fr) & locale resolver (I18nService + react-i18next)
-  - `@repo/api-client`: Type-safe REST client factory with optional RPCLink utilities, auto-refresh, tenant + locale + idempotency
+  - `@repo/api-client`: Type-safe oRPC client factory (OpenAPI link) with REST compatibility fallback, auto-refresh, tenant + locale + CSRF + idempotency
   - `@repo/ui`: Base UI React 1 + shadcn base-nova + Tailwind 4 + tw-animate-css + CVA + lucide-react (single `globals.css` + `cn()`)
   - `@repo/email`: React Email templates with isolated HTML renderer
   - `@repo/typescript-config`: Centralized TypeScript configurations (TS ~6)
@@ -24,7 +24,7 @@ A production-grade, highly scalable TypeScript modular monolith architecture des
 
 ## Prerequisites
 
-- **Node.js**: `>= 20.0.0`
+- **Node.js**: `>= 20.19.0` (required for the CommonJS API build to load oRPC's ESM runtime)
 - **pnpm**: `>= 10.33.4` (`corepack enable` then `corepack prepare pnpm@10.33.4 --activate`)
 - **Docker**: Docker Engine with Docker Compose v2.17+
 
@@ -52,7 +52,7 @@ pnpm dev
 │   ├── contracts/       # Zod 4 Schemas, oRPC API contracts, DTO types, constants, env schemas
 │   ├── authorization/   # Pure FGA Evaluator (RBAC + ReBAC + ABAC) & Action Vocabulary
 │   ├── i18n/            # Multi-language locale dictionaries (en, es, fr) & config, react-i18next resources
-│   ├── api-client/      # Type-safe REST client (auto-refresh + CSRF + tenant + locale + idempotency)
+│   ├── api-client/      # Type-safe oRPC client + REST compatibility (auto-refresh + CSRF + tenant + locale + idempotency)
 │   ├── ui/              # Base UI + shadcn base-nova + Tailwind 4 (globals.css, components, hooks, lib)
 │   ├── email/           # Email templates (React Email)
 │   └── typescript-config/ # Base TypeScript configurations
@@ -166,7 +166,7 @@ Every domain module in `apps/api/src/modules/[domain]/` adheres to CQRS:
 - **`domain/`**: Pure `entities/`, `value-objects/`, `events/`, and domain `errors/` (zero framework deps).
 - **`infrastructure/`**: Drizzle table schemas and repositories (`BaseRepository`/`TenantScopedRepository` + `DatabaseService` + `TenantContextService`).
 
-The web client (`apps/web`, TanStack Start) consumes the same schemas/contracts as the API via `react-hook-form` + `zodResolver` + `getApiClient()` (`@repo/api-client`). One source of truth — compiler catches drift.
+The web client (`apps/web`, TanStack Start) consumes the same schemas/contracts as the API via `react-hook-form` + `zodResolver` + `getApiClient()` (`@repo/api-client`). Its subclients use the live oRPC OpenAPI transport by default, with REST compatibility available during migrations. One source of truth — compiler catches drift.
 
 ### 2. Frontend — TanStack Start (Web) + `@repo/ui`
 

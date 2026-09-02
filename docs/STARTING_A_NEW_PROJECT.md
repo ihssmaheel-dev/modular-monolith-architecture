@@ -37,4 +37,10 @@ The notes feature shows the intended path: Zod contract → API client → authe
 
 ## API transport decision
 
-REST is the canonical public transport because the API controllers, web client, health endpoints, uploads, and operational tooling use stable HTTP resources. oRPC definitions in `@repo/contracts` are the typed contract and documentation source for the same routes; they are not a second business implementation or an alternate persistence path. Any new route must have one REST implementation and one contract, with parity tests.
+oRPC is the canonical application transport. Contracts in `@repo/contracts` define the input,
+output, method, path, and success status once; the Nest `@orpc/nest` adapter exposes those
+procedures under `/api/rpc/*`, and `@repo/api-client` calls them by default. The oRPC adapter and
+the compatibility REST controllers delegate to the same application commands and queries, so
+business rules are never duplicated. REST remains available at `/api/*` for health checks,
+integrations, uploads, and gradual migrations. Every new route must add the contract, oRPC
+presentation handler, REST compatibility mapping when needed, and a parity/smoke test.

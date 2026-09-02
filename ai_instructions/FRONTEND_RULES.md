@@ -13,7 +13,7 @@ These rules govern `apps/web` and the shared UI/client packages. The workspace c
 | UI | `@repo/ui` — Base UI React + shadcn base-nova + lucide + CVA |
 | Forms | react-hook-form + `@hookform/resolvers` + Zod 4 from `@repo/contracts` |
 | i18n | react-i18next + i18next-browser-languagedetector |
-| API | `@repo/api-client` with REST compatibility clients and oRPC utilities |
+| API | `@repo/api-client` with oRPC clients by default and REST compatibility fallbacks |
 
 No alternatives without architecture review (see `PACKAGE_POLICY.md`).
 

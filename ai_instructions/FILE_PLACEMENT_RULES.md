@@ -87,8 +87,8 @@ packages/api-client/src/
 ### Rules
 - Client uses `createApiClient(baseUrl)` pattern.
 - No `process.env` at import time.
-- Uses the canonical typed REST methods from `@repo/api-client`; oRPC utilities are optional and may
-  only be used when a matching server handler is enabled and covered by parity tests.
+- Uses the canonical typed oRPC methods from `@repo/api-client`; REST methods are compatibility
+  fallbacks. Every oRPC method must have a matching Nest handler and parity/smoke coverage.
 
 ---
 
@@ -314,8 +314,9 @@ apps/web/
 
 ### Rules
 - Routes are **file-based** via TanStack Router. Add via new file in `src/routes/`. `routeTree.gen.ts` is auto-generated.
-- Never `fetch` in components directly — use `getApiClient()` and its typed REST subclients. Use the
-  optional `orpc` client only for an explicitly enabled, end-to-end tested oRPC server route.
+- Never `fetch` in components directly — use `getApiClient()` and its typed oRPC-backed subclients.
+  REST subclients remain compatibility fallbacks while both transports share contracts and parity
+  tests.
 - Forms: `react-hook-form` + `@hookform/resolvers/zod` + `@repo/contracts` schemas (LoginSchema, RegisterSchema, CreateNoteSchema).
 - Auth: Zustand stores `accessToken/refreshToken/user` (persist localStorage). `getApiClient` wires refresh via `requestRefresh` + `onAuthFailure` -> redirect `/auth`.
 - Tenant: `useTenantStore.tenantId` automatically sent as `x-tenant-id` via api-client.

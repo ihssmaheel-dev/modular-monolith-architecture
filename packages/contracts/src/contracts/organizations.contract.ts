@@ -16,6 +16,7 @@ export const organizationsContract = oc.prefix("/tenancy").router({
       method: "POST",
       path: "/organizations",
       summary: "Create an organization and owner membership",
+      successStatus: 201,
     })
     .input(CreateOrganizationSchema)
     .output(OrganizationResponseSchema),

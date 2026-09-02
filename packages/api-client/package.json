@@ -13,6 +13,7 @@
   "dependencies": {
     "@orpc/client": "^1.15.0",
     "@orpc/contract": "^1.15.0",
+    "@orpc/openapi-client": "^1.15.0",
     "@orpc/tanstack-query": "^1.15.0",
     "@repo/contracts": "workspace:*"
   },

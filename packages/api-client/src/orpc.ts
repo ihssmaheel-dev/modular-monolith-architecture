@@ -1,0 +1,82 @@
+import { createORPCClient } from "@orpc/client";
+import { OpenAPILink } from "@orpc/openapi-client/fetch";
+import { apiContract, type AuthResponse } from "@repo/contracts";
+import type { ContractRouterClient } from "@orpc/contract";
+import { createIdempotencyKey, readCookie, requestRefresh } from "./utils";
+import type { ApiClientOptions } from "./types";
+import type { ApiResponse } from "./types";
+
+const RPC_PATH = "/rpc";
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+export function createOrpcClient(baseUrl: string, options: ApiClientOptions = {}) {
+  const rpcUrl = `${baseUrl.replace(/\/+$/, "")}${RPC_PATH}`;
+  let refreshPromise: Promise<AuthResponse | null> | null = null;
+
+  const link = new OpenAPILink(apiContract, {
+    url: rpcUrl,
+    fetch: async (request) => {
+      const initial = request.clone();
+      const response = await fetch(withHeaders(request, options), { credentials: "include" });
+      if (response.status !== 401 || !canRefreshRequest(request)) return response;
+
+      refreshPromise ??= requestRefresh(baseUrl, options).finally(() => {
+        refreshPromise = null;
+      });
+      const refreshed = await refreshPromise;
+      if (!refreshed) {
+        options.onAuthFailure?.();
+        return response;
+      }
+
+      options.onAuthRefreshed?.(refreshed);
+      return fetch(withHeaders(initial, options, refreshed.accessToken), {
+        credentials: "include",
+      });
+    },
+  });
+
+  return createORPCClient(link) as ContractRouterClient<typeof apiContract>;
+}
+
+export type OrpcClient = ContractRouterClient<typeof apiContract>;
+
+export async function orpcResponse<T>(
+  action: () => Promise<T>,
+  successStatus: number,
+): Promise<ApiResponse<T>> {
+  try {
+    const body = await action();
+    return { status: successStatus, body: (successStatus === 204 ? null : body) as T };
+  } catch (error) {
+    return { status: readStatus(error), body: null as T };
+  }
+}
+
+function withHeaders(request: Request, options: ApiClientOptions, accessToken?: string): Request {
+  const headers = new Headers(request.headers);
+  const token = accessToken ?? options.getAccessToken?.();
+  if (token) headers.set("authorization", `Bearer ${token}`);
+  const tenantId = options.getTenantId?.();
+  if (tenantId) headers.set("x-tenant-id", tenantId);
+  headers.set("accept-language", options.getLocale?.() ?? "en");
+  if (MUTATING_METHODS.has(request.method)) {
+    if (!headers.has("idempotency-key")) headers.set("idempotency-key", createIdempotencyKey());
+    if (!headers.has("x-xsrf-token")) {
+      const csrf = readCookie("XSRF-TOKEN");
+      if (csrf) headers.set("x-xsrf-token", csrf);
+    }
+  }
+  return new Request(request, { headers, credentials: "include" });
+}
+
+function canRefreshRequest(request: Request): boolean {
+  const path = new URL(request.url).pathname;
+  return path.endsWith(`${RPC_PATH}/auth/me`) || !path.includes(`${RPC_PATH}/auth/`);
+}
+
+function readStatus(error: unknown): number {
+  if (typeof error !== "object" || error === null || !("status" in error)) return 500;
+  const status = (error as { status?: unknown }).status;
+  return typeof status === "number" ? status : 500;
+}

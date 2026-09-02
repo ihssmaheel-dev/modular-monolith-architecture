@@ -4,7 +4,24 @@ This repository is a modular monolith with one deployable API and one web client
 
 ## API and contracts
 
-`@repo/contracts` is the schema source of truth. REST controllers are the compatibility transport and must validate input/output against those schemas. The oRPC contracts are used for generated clients and documentation; parity tests are required for every route.
+`@repo/contracts` is the schema source of truth and the oRPC contract registry. The Nest
+`@orpc/nest` adapter serves the contracts as the runtime transport at `/api/rpc/*`; the typed
+`@repo/api-client` uses this transport by default. Compatibility REST controllers remain at
+`/api/*` and call the same application commands/queries. A route is complete only when its
+contract, oRPC handler, REST compatibility mapping (where required), and transport parity smoke
+test are present.
+
+### oRPC request flow
+
+```text
+oRPC client → OpenAPI link → Nest @orpc/nest adapter → guards/interceptors
+  → contract validation → application command/query → repository → database/outbox/audit
+```
+
+Authentication, tenant, locale, CSRF, and idempotency headers are injected by the shared client;
+the same global Nest security pipeline protects both transports. oRPC errors use the stable API
+error code and localized message envelope, while the REST surface remains a compatibility option
+without a second business implementation.
 
 ## Request security pipeline
 

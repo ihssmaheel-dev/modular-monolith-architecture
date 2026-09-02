@@ -38,6 +38,9 @@ In workspace packages add:
 
 Never duplicate these definitions inside the API module.
 
+Use OpenAPI placeholders (`/{id}`) in contract paths. The Nest adapter translates them to its
+`:id` route syntax, and the OpenAPI client substitutes values safely at runtime.
+
 ## 3. Implement the domain
 
 Add entities and value objects containing pure business behavior. Define expected failures as typed
@@ -69,6 +72,12 @@ Keep each class focused; do not replace commands and queries with a flat service
 Use `@Controller()` with standard NestJS HTTP decorators (`@Post`, `@Get`, `@Patch`, `@Delete`).
 Each route calls exactly one command or query and maps its `Result` through localized presentation error maps.
 Protect mutations with permissions and idempotency where required.
+
+Add the oRPC presentation adapter beside the REST controller. Decorate each procedure with
+`@Implement(contract.procedure)`, use `implement(contract.procedure).handler(...)`, and delegate
+to the same command/query as REST. The adapter is served below `/api/rpc`; keep it free of a
+second business implementation. Add a parity test that compares contract metadata and a smoke
+test that exercises at least one authenticated and one public procedure.
 
 ## 7. Wire the module
 

@@ -17,6 +17,7 @@ export const filesContract = oc.prefix("/files").router({
       method: "POST",
       path: "/upload-url",
       summary: "Request a direct S3 presigned upload URL",
+      successStatus: 201,
     })
     .input(RequestUploadSchema)
     .output(PresignedUrlResponseSchema),
@@ -31,13 +32,13 @@ export const filesContract = oc.prefix("/files").router({
   getDownloadUrl: oc
     .route({
       method: "GET",
-      path: "/:id/download-url",
+      path: "/{id}/download-url",
       summary: "Get a direct S3 presigned download URL",
     })
     .input(FileIdParamSchema)
     .output(DownloadUrlResponseSchema),
   getById: oc
-    .route({ method: "GET", path: "/:id", summary: "Get file metadata by ID" })
+    .route({ method: "GET", path: "/{id}", summary: "Get file metadata by ID" })
     .input(FileIdParamSchema)
     .output(FileMetadataSchema),
   listByParent: oc
@@ -50,7 +51,7 @@ export const filesContract = oc.prefix("/files").router({
     )
     .output(FileListResponseSchema),
   delete: oc
-    .route({ method: "DELETE", path: "/:id", summary: "Delete a file" })
+    .route({ method: "DELETE", path: "/{id}", summary: "Delete a file", successStatus: 204 })
     .input(FileIdParamSchema)
     .output(z.undefined().or(z.null()).or(z.void())),
 });

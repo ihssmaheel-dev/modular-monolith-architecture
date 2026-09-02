@@ -12,7 +12,12 @@ import {
 
 export const authContract = oc.prefix("/auth").router({
   register: oc
-    .route({ method: "POST", path: "/register", summary: "Register a new user" })
+    .route({
+      method: "POST",
+      path: "/register",
+      summary: "Register a new user",
+      successStatus: 201,
+    })
     .input(RegisterSchema)
     .output(AuthResponseSchema),
   login: oc

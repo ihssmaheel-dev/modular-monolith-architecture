@@ -14,11 +14,13 @@ import { UsersRepository } from "./infrastructure/users.repository";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { WelcomeEmailListener } from "./application/listeners/welcome-email.listener";
 import { OutboxModule } from "../../infrastructure/outbox/outbox.module";
+import { UsersOrpcController } from "./presentation/users.orpc.controller";
 
 @Module({
   imports: [EventEmitterModule, OutboxModule],
-  controllers: [UsersController],
+  controllers: [UsersController, UsersOrpcController],
   providers: [
+    UsersController,
     GetUsersQuery,
     GetUserByIdQuery,
     GetUserByEmailQuery,

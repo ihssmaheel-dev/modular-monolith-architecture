@@ -6,10 +6,17 @@ import type {
   UpdateNoteDto,
 } from "@repo/contracts";
 import type { FetchFn } from "../types";
+import { orpcResponse, type OrpcClient } from "../orpc";
 
-export function createNotesClient(fetchFn: FetchFn) {
+export function createNotesClient(fetchFn: FetchFn, orpc?: OrpcClient) {
   const client = {
     getNotes: (req: { query?: PaginationQuery } = {}) => {
+      if (orpc) {
+        return orpcResponse(
+          () => orpc.notes.list({ page: req.query?.page, limit: req.query?.limit }),
+          200,
+        );
+      }
       const sp = new URLSearchParams();
       if (req.query?.page) sp.set("page", String(req.query.page));
       if (req.query?.limit) sp.set("limit", String(req.query.limit));
@@ -17,16 +24,27 @@ export function createNotesClient(fetchFn: FetchFn) {
       return fetchFn<NoteListResponseDto>(`/notes${qs ? `?${qs}` : ""}`);
     },
     getNoteById: (req: { params: { id: string } }) =>
-      fetchFn<NoteResponseDto>(`/notes/${encodeURIComponent(req.params.id)}`),
+      orpc
+        ? orpcResponse(() => orpc.notes.getById({ id: req.params.id }), 200)
+        : fetchFn<NoteResponseDto>(`/notes/${encodeURIComponent(req.params.id)}`),
     createNote: (req: { body: CreateNoteDto }) =>
-      fetchFn<NoteResponseDto>("/notes", { method: "POST", body: JSON.stringify(req.body) }),
+      orpc
+        ? orpcResponse(() => orpc.notes.create(req.body), 201)
+        : fetchFn<NoteResponseDto>("/notes", {
+            method: "POST",
+            body: JSON.stringify(req.body),
+          }),
     updateNote: (req: { params: { id: string }; body: UpdateNoteDto }) =>
-      fetchFn<NoteResponseDto>(`/notes/${encodeURIComponent(req.params.id)}`, {
-        method: "PATCH",
-        body: JSON.stringify(req.body),
-      }),
+      orpc
+        ? orpcResponse(() => orpc.notes.update({ id: req.params.id, ...req.body }), 200)
+        : fetchFn<NoteResponseDto>(`/notes/${encodeURIComponent(req.params.id)}`, {
+            method: "PATCH",
+            body: JSON.stringify(req.body),
+          }),
     deleteNote: (req: { params: { id: string } }) =>
-      fetchFn<void>(`/notes/${encodeURIComponent(req.params.id)}`, { method: "DELETE" }),
+      orpc
+        ? orpcResponse(() => orpc.notes.delete({ id: req.params.id }), 204)
+        : fetchFn<void>(`/notes/${encodeURIComponent(req.params.id)}`, { method: "DELETE" }),
   };
 
   // Keep ergonomic aliases while preserving the explicit HTTP method names.

@@ -35,6 +35,32 @@ describe("API liveness", () => {
     expect(response.json()).toEqual({ status: "ok" });
   });
 
+  it("serves the tenancy status through REST and oRPC transports", async () => {
+    if (process.env.E2E_SKIP === "true") return;
+    const instance = app.getHttpAdapter().getInstance();
+    const [rest, orpc] = await Promise.all([
+      instance.inject({ method: "GET", url: "/api/tenancy/status" }),
+      instance.inject({ method: "GET", url: "/api/rpc/tenancy/status" }),
+    ]);
+
+    expect(rest.statusCode).toBe(200);
+    expect(orpc.statusCode).toBe(200);
+    expect(orpc.json()).toEqual(rest.json());
+  });
+
+  it("enforces authentication on REST and oRPC resource routes", async () => {
+    if (process.env.E2E_SKIP === "true") return;
+    const instance = app.getHttpAdapter().getInstance();
+    const [rest, orpc] = await Promise.all([
+      instance.inject({ method: "GET", url: "/api/notes" }),
+      instance.inject({ method: "GET", url: "/api/rpc/notes" }),
+    ]);
+
+    expect(rest.statusCode).toBe(401);
+    expect(orpc.statusCode).toBe(401);
+    expect(orpc.json()).toMatchObject({ defined: false, status: 401 });
+  });
+
   it.each(["single", "multi"] as const)(
     "registers a global user and outbox event in %s-tenant mode",
     async (mode) => {

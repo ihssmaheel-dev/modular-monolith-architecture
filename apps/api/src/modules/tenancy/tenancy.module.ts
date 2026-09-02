@@ -20,6 +20,9 @@ import { MembershipsController } from "./presentation/memberships.controller";
 import { OrganizationsController } from "./presentation/organizations.controller";
 import { TenancyStatusController } from "./presentation/tenancy-status.controller";
 import { OutboxModule } from "../../infrastructure/outbox/outbox.module";
+import { TenancyStatusOrpcController } from "./presentation/tenancy-status.orpc.controller";
+import { OrganizationsOrpcController } from "./presentation/organizations.orpc.controller";
+import { MembershipsOrpcController } from "./presentation/memberships.orpc.controller";
 
 const providers = [
   OrganizationsRepository,
@@ -44,12 +47,23 @@ const providers = [
 export class TenancyModule {
   static forRoot(): DynamicModule {
     const domainControllers =
-      env.TENANCY_MODE === "multi" ? [OrganizationsController, MembershipsController] : [];
+      env.TENANCY_MODE === "multi"
+        ? [
+            OrganizationsController,
+            MembershipsController,
+            OrganizationsOrpcController,
+            MembershipsOrpcController,
+          ]
+        : [];
     return {
       module: TenancyModule,
       imports: [EventEmitterModule, OutboxModule],
-      controllers: [TenancyStatusController, ...domainControllers],
-      providers,
+      controllers: [TenancyStatusController, TenancyStatusOrpcController, ...domainControllers],
+      providers: [
+        ...providers,
+        TenancyStatusController,
+        ...(env.TENANCY_MODE === "multi" ? [OrganizationsController, MembershipsController] : []),
+      ],
       exports: [ResolveTenantAccessQuery, CanDeleteUserQuery],
     };
   }

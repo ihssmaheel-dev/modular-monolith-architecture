@@ -10,11 +10,13 @@ import { GetNoteByIdQuery } from "./application/queries/get-note-by-id.query";
 import { NotesRealtimeListener } from "./application/listeners/notes-realtime.listener";
 import { NotesController } from "./presentation/notes.controller";
 import { OutboxModule } from "../../infrastructure/outbox/outbox.module";
+import { NotesOrpcController } from "./presentation/notes.orpc.controller";
 
 @Module({
   imports: [OutboxModule],
-  controllers: [NotesController],
+  controllers: [NotesController, NotesOrpcController],
   providers: [
+    NotesController,
     NotesRepository,
     CreateNoteCommand,
     UpdateNoteCommand,
