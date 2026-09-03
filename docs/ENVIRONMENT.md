@@ -32,9 +32,9 @@ the same checks. See `docker/.env.prod.example` for the compose-side pattern.
 | ----------------------------------- | ------------------------------------------------------------------------------ |
 | `NODE_ENV`                          | `development`; one of `development`, `test`, `production`                      |
 | `PROCESS_ROLE`                      | `all` locally; use `api` for HTTP-only or `worker` for queue/scheduled workers |
-| `PORT`                              | `3000`; API listener port                                          |
-| `TRUST_PROXY`                       | `false`; set `true` behind nginx/LB so `req.ip` rate-limiting works |
-| `LOG_LEVEL`                         | `info`; Pino level from `fatal` through `trace`                    |
+| `PORT`                              | `3000`; API listener port                                                      |
+| `TRUST_PROXY`                       | `false`; set `true` behind nginx/LB so `req.ip` rate-limiting works            |
+| `LOG_LEVEL`                         | `info`; Pino level from `fatal` through `trace`                                |
 | `TENANCY_MODE`                      | `single`; choose `single` or `multi` before production data exists             |
 | `CLIENT_URL`                        | `http://localhost:5173`; allowed browser origin                                |
 | `API_URL`                           | `http://localhost:3000`; externally reachable API origin                       |
@@ -54,7 +54,7 @@ the same checks. See `docker/.env.prod.example` for the compose-side pattern.
 | `JWT_SECRET`                         | Access-token secret, minimum 32 characters; replace in production  |
 | `JWT_REFRESH_SECRET`                 | Separate refresh-token secret, minimum 32 characters               |
 | `JWT_EXPIRES_IN`                     | `15m`; access-token lifetime                                       |
-| `JWT_REFRESH_EXPIRES_IN`      | `7d`; refresh-token lifetime                                       |
+| `JWT_REFRESH_EXPIRES_IN`             | `7d`; refresh-token lifetime                                       |
 | `JWT_ISSUER`                         | `modular-monolith-api`; `iss` claim verified on access tokens      |
 | `JWT_AUDIENCE`                       | `modular-monolith-client`; `aud` claim verified on access tokens   |
 | `METRICS_TOKEN`                      | Optional locally, minimum 32 characters and required in production |

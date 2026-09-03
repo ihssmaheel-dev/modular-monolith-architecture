@@ -14,7 +14,7 @@ The repository currently ships one browser client (`apps/web`) backed by the mod
 
 ## Web — `apps/web`
 
-**Stack:** Vite 8 + TanStack Start 1 + TanStack Router 1 (file-based SSR) + TanStack Query 5 + Zustand 5 + react-i18next + Tailwind 4 + `@repo/ui` + react-hook-form + Zod 4.
+**Stack:** Vite 8 + TanStack Start 1 + TanStack Router 1 (file-based SSR) + TanStack Query 5 + Zustand 5 + react-i18next + Tailwind 4 + `@repo/ui` + react-hook-form + Zod 4 + date-fns (locale-aware dates via `src/lib/format.ts`).
 
 ### Commands
 
@@ -38,12 +38,13 @@ apps/web/
   src/
     router.tsx
     routeTree.gen.ts       # generated; never hand-edit
-    routes/                # thin file-based routes
-    components/            # app-level components/providers
-    features/              # query and mutation helpers by domain
+    routes/                # thin file-based routes (validateSearch/beforeLoad/loader/errorComponent + one feature)
+    components/            # app-level components/providers + RouteErrorFallback
+    features/              # per domain: *.queries.ts, *.mutations.ts, components/, hooks/
     stores/                # auth, locale, and tenant state
     hooks/
-    lib/                   # env, API client, i18n, query client
+    lib/                   # env, API client, i18n, query client, query-keys, format
+    e2e/                   # Playwright journeys (auth-and-notes, guards)
 ```
 
 ### Invariants
