@@ -7,6 +7,7 @@ import { WsAdapter } from "@nestjs/platform-ws";
 import helmet from "@fastify/helmet";
 import compress from "@fastify/compress";
 import cookie from "@fastify/cookie";
+import underPressure from "@fastify/under-pressure";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { PinoLoggerService } from "./infrastructure/logger/logger.service";
@@ -26,6 +27,19 @@ setGlobalDispatcher(
 );
 
 const MAX_BODY_SIZE_BYTES = 1048576; // 1MB
+
+const UNDER_PRESSURE_MAX_EVENT_LOOP_DELAY_MS = 1000;
+const UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION = 0.98;
+const UNDER_PRESSURE_RETRY_AFTER_SECONDS = 30;
+// Probes and docs must keep answering during load spikes so the
+// orchestrator does not restart a merely busy (not dead) process.
+const UNDER_PRESSURE_BYPASS_PREFIXES = ["/api/health", "/metrics", "/api/docs", "/docs"];
+
+interface FastifyPressureReply {
+  code: (status: number) => FastifyPressureReply;
+  header: (name: string, value: number) => FastifyPressureReply;
+  send: (payload: unknown) => void;
+}
 
 async function bootstrap() {
   if (env.PROCESS_ROLE === "worker") {
@@ -97,6 +111,27 @@ async function bootstrap() {
   const logger = app.get(PinoLoggerService);
   const i18n = app.get(I18nService);
   app.useGlobalFilters(new AllExceptionsFilter(logger, i18n, app.get(ClsService)));
+
+  await app.register(underPressure as unknown as never, {
+    maxEventLoopDelay: UNDER_PRESSURE_MAX_EVENT_LOOP_DELAY_MS,
+    maxEventLoopUtilization: UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION,
+    retryAfter: UNDER_PRESSURE_RETRY_AFTER_SECONDS,
+    pressureHandler: (request: { url?: string }, reply: FastifyPressureReply, type: string) => {
+      const url = request.url?.split("?")[0] ?? "";
+      // Let probes and docs through; returning without sending lets
+      // Fastify handle the request normally.
+      if (UNDER_PRESSURE_BYPASS_PREFIXES.some((prefix) => url.startsWith(prefix))) return;
+      logger.warn({ pressureType: type, url }, "Shedding load: server under pressure");
+      reply
+        .code(503)
+        .header("Retry-After", UNDER_PRESSURE_RETRY_AFTER_SECONDS)
+        .send({
+          statusCode: 503,
+          message: "Service temporarily unavailable",
+          error: "UNDER_PRESSURE",
+        });
+    },
+  });
 
   app.setGlobalPrefix("api", { exclude: ["metrics", "docs", "api/docs"] });
   app.enableCors({
