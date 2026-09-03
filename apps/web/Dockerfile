@@ -30,4 +30,5 @@ USER webuser
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
-CMD ["pnpm", "--filter", "web", "start"]
+WORKDIR /app/apps/web
+CMD ["node", "/app/node_modules/srvx/dist/cli.mjs", "--prod", "--static=../client", "--entry=dist/server/server.js"]

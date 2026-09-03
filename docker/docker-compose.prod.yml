@@ -165,7 +165,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: ["pnpm", "--filter", "api", "db:migrate"]
+    command: ["node", "apps/api/dist/apps/api/src/infrastructure/database/migrate.js"]
     environment:
       DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
     networks:
