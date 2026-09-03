@@ -1,6 +1,7 @@
 import { Badge } from "@repo/ui/components/ui/badge";
 import type { DataTableColumn } from "@repo/ui/components/composed/data-table";
 import type { UserResponse } from "@repo/contracts";
+import { formatDate } from "@/lib/format";
 
 export function getUsersColumns(
   t: (key: string) => string,
@@ -32,9 +33,7 @@ export function getUsersColumns(
       key: "createdAt",
       header: t("users.created"),
       cell: (row) => (
-        <span className="text-xs text-muted-foreground">
-          {new Date(row.createdAt).toLocaleDateString()}
-        </span>
+        <span className="text-xs text-muted-foreground">{formatDate(row.createdAt)}</span>
       ),
       className: "hidden sm:table-cell",
     },

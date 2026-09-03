@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PaginationQuerySchema } from "@repo/contracts";
+import { RouteErrorFallback } from "@/components/error-boundary";
 import { notesListQuery } from "@/features/notes/notes.queries";
 import { NotesList } from "@/features/notes/components/notes-list";
 
@@ -8,6 +9,7 @@ export const Route = createFileRoute("/_app/notes")({
   loaderDeps: ({ search }) => ({ page: search.page, limit: search.limit }),
   loader: ({ deps, context }) =>
     context.queryClient.ensureQueryData(notesListQuery(deps.page, deps.limit)),
+  errorComponent: RouteErrorFallback,
   component: NotesPage,
 });
 
