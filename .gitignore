@@ -40,3 +40,8 @@ coverage/
 
 # Docker
 docker/data/
+
+# Backups
+backups/
+*.dump
+*.sql.gz
