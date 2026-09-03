@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { FRONTEND_ROUTES } from "@repo/contracts";
+import { useAuthStore } from "@/stores/auth.store";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Users as UsersIcon } from "lucide-react";
@@ -15,6 +17,11 @@ import { useTenantStore } from "@/stores/tenant.store";
 const USERS_LIST_FAILED = "USERS_LIST_FAILED";
 
 export const Route = createFileRoute("/_app/users")({
+  beforeLoad: () => {
+    if (useAuthStore.getState().user?.role !== "admin") {
+      throw redirect({ to: FRONTEND_ROUTES.dashboard, replace: true });
+    }
+  },
   component: UsersPage,
 });
 
