@@ -1,13 +1,5 @@
+import type { UserResponse } from "@repo/contracts";
 import { User } from "../domain/entities/user.entity";
-
-export interface UserResponse {
-  id: string;
-  email: string;
-  name: string;
-  role: "admin" | "user";
-  createdAt: string;
-  updatedAt: string;
-}
 
 export function toUserResponse(user: User): UserResponse {
   return {

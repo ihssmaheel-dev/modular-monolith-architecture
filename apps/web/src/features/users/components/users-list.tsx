@@ -8,7 +8,7 @@ import { DataTable, DataTablePagination } from "@repo/ui/components/composed/dat
 import { EmptyState } from "@repo/ui/components/composed/empty-state";
 import { PageHeader } from "@repo/ui/components/composed/page-header";
 import { usersListQuery } from "@/features/users/users.queries";
-import { getUsersColumns } from "@/features/users/users-table-columns";
+import { getUsersColumns } from "@/features/users/components/users-table-columns";
 
 export function UsersList({
   page,

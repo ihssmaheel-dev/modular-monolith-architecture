@@ -11,7 +11,7 @@ import { PageHeader } from "@repo/ui/components/composed/page-header";
 import { FRONTEND_ROUTES } from "@repo/contracts";
 import { notesListQuery } from "@/features/notes/notes.queries";
 import { useDeleteNoteMutation } from "@/features/notes/notes.mutations";
-import { getNotesColumns } from "@/features/notes/notes-table-columns";
+import { getNotesColumns } from "@/features/notes/components/notes-table-columns";
 
 export function NotesList({
   page,
