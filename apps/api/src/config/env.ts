@@ -1,7 +1,39 @@
 import "dotenv/config";
+import { readFileSync } from "node:fs";
 import { envSchema, type Env } from "@repo/contracts";
 
+const SECRET_FILE_VARS = [
+  "DATABASE_URL",
+  "REDIS_URL",
+  "JWT_SECRET",
+  "JWT_REFRESH_SECRET",
+  "METRICS_TOKEN",
+  "S3_ACCESS_KEY_ID",
+  "S3_SECRET_ACCESS_KEY",
+  "SMTP_USER",
+  "SMTP_PASS",
+  "RESEND_API_KEY",
+  "SEED_ADMIN_PASSWORD",
+] as const;
+
+function resolveFileSecrets(source: Record<string, string | undefined>): void {
+  for (const name of SECRET_FILE_VARS) {
+    const fileVar = `${name}_FILE`;
+    const filePath = source[fileVar];
+    if (!filePath) continue;
+    try {
+      const value = readFileSync(filePath, "utf8").trim();
+      if (value) source[name] = value;
+    } catch (error) {
+      throw new Error(
+        `Failed to read secret file for ${name} from ${filePath}: ${(error as Error).message}`,
+      );
+    }
+  }
+}
+
 function loadEnv(): Env {
+  resolveFileSecrets(process.env as Record<string, string | undefined>);
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
