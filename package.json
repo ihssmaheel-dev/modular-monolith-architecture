@@ -7,6 +7,7 @@
     "dev:api": "pnpm build && pnpm --filter api dev",
     "dev:api:debug": "pnpm build && pnpm --filter api dev:debug",
     "dev:web": "node scripts/ensure-web-env.js && pnpm build && pnpm --filter web dev",
+    "dev:mobile": "node scripts/ensure-mobile-env.js && pnpm build && pnpm --filter mobile dev",
     "build": "turbo build",
     "build:api": "pnpm --filter api build",
     "lint": "turbo lint",
@@ -61,10 +62,10 @@
   "packageManager": "pnpm@10.33.4",
   "pnpm": {
     "overrides": {
-      "react": "19.0.0",
-      "react-dom": "19.0.0",
-      "@types/react": "19.0.14",
-      "@types/react-dom": "19.0.4"
+      "react": "19.2.8",
+      "react-dom": "19.2.8",
+      "@types/react": "19.2.18",
+      "@types/react-dom": "19.2.7"
     }
   },
   "engines": {

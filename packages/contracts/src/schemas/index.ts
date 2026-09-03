@@ -1,7 +1,9 @@
 export { envSchema } from "./env.schema";
 export { webEnvSchema } from "./web-env.schema";
+export { mobileEnvSchema } from "./mobile-env.schema";
 export type { Env } from "./env.schema";
 export type { WebEnv } from "./web-env.schema";
+export type { MobileEnv } from "./mobile-env.schema";
 export * from "./pagination.schema";
 export * from "./user.schema";
 export * from "./auth.schema";

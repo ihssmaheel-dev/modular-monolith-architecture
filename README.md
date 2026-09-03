@@ -48,6 +48,7 @@ pnpm dev
 ├── apps/
 │   ├── api/             # NestJS Fastify backend (Modular Monolith + CQRS + FGA + Drizzle)
 │   ├── web/             # TanStack Start web (Vite 8 + Router file-based SSR + Query + Zustand + i18n + @repo/ui)
+│   ├── mobile/          # Expo native app (expo-router file-based + Query + NativeWind, @repo/contracts + i18n)
 ├── packages/
 │   ├── contracts/       # Zod 4 Schemas, oRPC API contracts, DTO types, constants, env schemas
 │   ├── authorization/   # Pure FGA Evaluator (RBAC + ReBAC + ABAC) & Action Vocabulary

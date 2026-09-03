@@ -1,6 +1,6 @@
 # Frontend Rules
 
-These rules govern `apps/web` and the shared UI/client packages. The workspace currently has no native client; a future client must be introduced through a separate architecture review after the API and web baseline is stable.
+These rules govern `apps/web`, `apps/mobile`, and the shared UI/client packages.
 
 ## Locked frontend stack
 

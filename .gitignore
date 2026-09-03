@@ -8,6 +8,7 @@ node_modules/
 dist/
 build/
 .turbo/
+.expo/
 *.tsbuildinfo
 .tanstack/
 apps/web/.tanstack/

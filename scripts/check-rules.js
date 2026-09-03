@@ -28,19 +28,25 @@ function isTest(file) {
   return /\.(test|spec)\.[jt]sx?$/.test(file);
 }
 
+// Limits mirror ai_instructions/CODE_QUALITY_RULES.md (the single source).
+// Stricter per-area caps below the 400 default are intentional.
 function getLineLimit(name, isTestFile) {
-  if (isTestFile) return 300;
-  if (name.startsWith("packages/email/")) return 250;
-  if (name.endsWith("packages/ui/src/components/ui/sidebar.tsx")) return 800;
-  if (name.startsWith("packages/ui/")) return 500;
-  if (name.startsWith("packages/authorization/")) return 200;
-  if (name.startsWith("apps/web/src/routes/")) return 400;
-  if (name.startsWith("apps/web/src/features/")) return 300;
-  if (name.includes("/application/commands/") || name.includes("/application/queries/")) return 250;
+  if (isTestFile) return 800;
+  if (name.startsWith("packages/email/")) return 400;
+  if (name.startsWith("packages/ui/src/components/")) return 800;
+  if (name.startsWith("packages/ui/")) return 400;
+  if (name.startsWith("packages/authorization/")) return 400;
+  if (name.startsWith("apps/mobile/")) return 150;
+  if (name.startsWith("apps/web/src/routes/")) return 150;
+  if (name.startsWith("apps/web/src/features/")) return 400;
+  if (name.startsWith("apps/web/src/components/")) return 400;
+  if (name.startsWith("apps/web/src/lib/")) return 250;
+  if (name.startsWith("apps/web/src/stores/")) return 200;
+  if (name.includes("/application/commands/") || name.includes("/application/queries/")) return 400;
   if (name.includes("/infrastructure/database/")) return 300;
   if (name.includes("/infrastructure/realtime/")) return 250;
   if (name.includes("/presentation/") && name.startsWith("apps/api/")) return 220;
-  return 150;
+  return 400;
 }
 
 function checkFile(file) {

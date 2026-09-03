@@ -17,7 +17,8 @@ Before creating any file, answer these questions in order:
 7. **Is it backend cross-cutting infrastructure?** → `apps/api/src/infrastructure/`
 8. **Is it a backend domain module?** → `apps/api/src/modules/[domain]/`
 9. **Is it frontend web — route, feature, store, or lib?** → `apps/web/src/`
-10. **Is it config or docs?** → Root level or `docs/`
+10. **Is it frontend mobile — screen, feature, store, or lib?** → `apps/mobile/app/` (routes) or `apps/mobile/src/`
+11. **Is it config or docs?** → Root level or `docs/`
 
 ---
 
@@ -332,6 +333,33 @@ apps/web/
 - Tenant: `useTenantStore.tenantId` automatically sent as `x-tenant-id` via api-client.
 - i18n: `useTranslation()` via `react-i18next`; keys from `@repo/i18n` (`common.*`, `auth.*`, `dashboard.*`, `notes.*`). See `I18N_RULES.md`.
 - Styling: Use `@repo/ui` components (`Button`, `Card`, `Input`, `Tabs`, `Badge`, etc) + `cn()` + Tailwind 4. No custom CSS libraries beyond Tailwind.
+
+### 7. `apps/mobile` — Expo (native iOS + Android)
+
+```
+apps/mobile/
+├── app.json                  ← Expo config (name/slug/scheme/plugins; icons in assets/)
+├── metro.config.js           ← monorepo Metro: watchFolders=[workspaceRoot] + nodeModulesPaths (app + workspace)
+├── babel.config.js           ← presets: babel-preset-expo + nativewind/babel (preset-shaped export goes in presets, not plugins)
+├── tailwind.config.js        ← content: app/** + src/** + global.css, preset: nativewind/preset
+├── global.css                ← @tailwind base/components/utilities entry (imported once in app/_layout.tsx)
+├── nativewind-env.d.ts       ← doctor-managed NativeWind types (do not hand-edit)
+├── app/
+│   ├── _layout.tsx           ← QueryProvider + StatusBar + Stack (thin shell only)
+│   └── index.tsx             ← placeholder screen (env + shared-contracts wiring proof)
+├── assets/                   ← icon/splash/adaptive-icon/favicon PNG placeholders (replace with brand art)
+└── src/
+    ├── lib/
+    │   ├── env.ts            ← Zod env for EXPO_PUBLIC_API_URL (process.env, inlined at export)
+    │   └── query-client.tsx  ← getQueryClient() singleton, same options as web
+    └── nativewind-env.d.ts   ← `declare module "*.css"` for tsc (NativeWind types come from the root file)
+```
+
+### Rules
+- Screens are **file-based** via expo-router. Add via new file in `app/`. Keep screens thin; business UI goes in `src/features/[domain]/components/` mirroring web feature names.
+- Never import `@repo/ui` components in mobile (DOM-only) — design tokens only. Never `fetch` outside `src/lib/api.ts`; no raw env outside `src/lib/env.ts`.
+- `pnpm --filter mobile build` runs `expo export --platform ios --platform android` (native only; web already exists as `apps/web`). Verify with `expo export` in CI, not simulators.
+- Do not run `expo install --fix` (it fights the monorepo's single-React pnpm overrides); pin versions manually to the Expo SDK set.
 
 ## Docs
 
