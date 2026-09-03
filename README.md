@@ -201,6 +201,7 @@ Unified **RBAC + ReBAC + ABAC** engine:
 - Migrations are journaled, locked, and applied before the API starts; images run as non-root users with health checks.
 
 For a new product or module, follow [Starting a New Project](docs/STARTING_A_NEW_PROJECT.md).
+For delivery, TLS, secrets, alerting, backups, and load shedding, follow [Production Ops](docs/PRODUCTION_OPS.md).
 
 ---
 

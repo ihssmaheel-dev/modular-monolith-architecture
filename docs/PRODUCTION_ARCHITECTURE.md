@@ -100,3 +100,8 @@ Queue and scheduled workers are infrastructure providers so they can run in a de
 ## Verification gate
 
 Production changes require passing architecture rules, API/web typechecks, all package builds, unit/integration/contract/E2E tests, migration checks, security scans, dependency audit, and container/SBOM checks. The CI workflow is the enforcement point; local development should run the same commands before review.
+
+## Operations runbook
+
+Step-by-step delivery, TLS, secrets, workers, alerting, backups, and load shedding live in
+[`PRODUCTION_OPS.md`](./PRODUCTION_OPS.md). Read it before your first production deploy.
