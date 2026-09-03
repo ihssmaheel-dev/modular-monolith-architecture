@@ -61,7 +61,8 @@ Focused capability packages: `@repo/contracts`, `@repo/authorization`, `@repo/i1
 - Templates (`templates/*.tsx`): React Email transactional templates
 
 ### 5. `@repo/ui` (`packages/ui/src/`)
-- Components (`components/*.tsx`): Base UI + shadcn primitives (button, dialog, card, etc), one family per file ≤250 lines
+- Primitives (`components/ui/*.tsx`): Base UI + shadcn primitives (button, dialog, card, etc), one family per file (limits in `CODE_QUALITY_RULES.md`)
+- Composed (`components/composed/*.tsx`): reusable multi-primitive components (DataTable, PageHeader, EmptyState, ConfirmDialog), one per file
 - Styles (`styles/globals.css`): Single Tailwind 4 entry with `@import "tailwindcss"` + design tokens + `@source` for `apps/web` + `packages/ui`
 - Hooks (`hooks/*.ts`): Headless helpers (use-mobile)
 - Lib (`lib/utils.ts`): `cn()` via `clsx` + `tailwind-merge`
@@ -69,7 +70,7 @@ Focused capability packages: `@repo/contracts`, `@repo/authorization`, `@repo/i1
 - **No business logic. No `fetch`, no Zustand, no i18n. Pure presentational primitives.**
 
 ### Rules
-- UI primitives are unstyled Base UI (`@base-ui/react`) wrapped with CVA + Tailwind. shadcn CLI adds via `pnpm dlx shadcn@latest add <component> -c apps/web`.
+- UI primitives are unstyled Base UI (`@base-ui/react`) wrapped with CVA + Tailwind. shadcn CLI adds via `pnpm dlx shadcn@latest add <component> -c apps/web` (lands in `components/ui/`).
 - `globals.css` is consumed by web via `import '@repo/ui/globals.css'` in `apps/web/src/routes/__root.tsx` (also imported once per app).
 
 ---
@@ -373,7 +374,8 @@ docs/
 | Pure FGA evaluator | `packages/authorization/src/evaluator.ts` |
 | i18n translations | `packages/i18n/src/locales/[locale].json` |
 | Email template | `packages/email/src/templates/[name].tsx` |
-| UI primitive | `packages/ui/src/components/[name].tsx` |
+| UI primitive | `packages/ui/src/components/ui/[name].tsx` |
+| Composed component | `packages/ui/src/components/composed/[name].tsx` |
 | UI style | `packages/ui/src/styles/globals.css` |
 | UI hook | `packages/ui/src/hooks/[name].ts` |
 | UI lib | `packages/ui/src/lib/[name].ts` |

@@ -106,6 +106,6 @@ pnpm test:integration
 pnpm build
 ```
 
-Before review, ask: “Is this the simplest structure that could work?” Confirm files are under 150
-lines, functions under 30 lines, list endpoints are paginated, translations have locale parity, and
-schema changes have reversible migrations.
+Before review, ask: “Is this the simplest structure that could work?” Confirm files respect the
+`ai_instructions/CODE_QUALITY_RULES.md` limits (one job per file), list endpoints are paginated,
+translations have locale parity, and schema changes have reversible migrations.

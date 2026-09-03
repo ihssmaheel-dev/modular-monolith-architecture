@@ -224,5 +224,5 @@ chore: update dependencies
 - [ ] Logs are structured with Pino
 - [ ] New DB fields have indexes (via migration)
 - [ ] Commit message follows `type(scope): description`
-- [ ] File is under 150 lines
+- [ ] File respects `CODE_QUALITY_RULES.md` limits (one job per file)
 - [ ] No `any`, no magic numbers, no console.log

@@ -8,17 +8,19 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 
 | File Type / Location | Max Lines | Action if Exceeded |
 |----------------------|-----------|-------------------|
-| App code: `apps/*`, `packages/contracts`, `packages/authorization`, `packages/i18n`, `packages/api-client`, `packages/ui` lib/hooks | **300** | Split by responsibility if file does 2 jobs or is hard to scan in 2 minutes |
-| Backend Command / Query / Controller / Service | **300** | Extract helper; keep one use-case per file |
-| Frontend Route / Page `apps/web/src/routes/*` | **400** | Split into `features/*` components if route mixes data + UI + form logic |
-| Feature Component / Hook / Utility `apps/web/src/features/*`, `apps/web/src/lib/*`, `apps/web/src/hooks/*` | **300** | Extract sub-component/hook |
-| UI Primitive `packages/ui/src/components/ui/*` | **500** | One shadcn family per file; primitives like `sidebar` legitimately 300-500 due to ~10 exports. Split only if >500 or mixes 2 families |
-| Composed Component `packages/ui/src/components/composed/*` (DataTable, PageHeader, etc) | **350** | One reusable composed component per file (composes 3-6 primitives) |
-| Email Template `packages/email/src/*` | **350** | One template per file |
-| Test file `*.test.ts`, `*.spec.ts`, `*.e2e.ts` | **600** | Split by describe block or scenario |
+| App code: `apps/*`, `packages/contracts`, `packages/authorization`, `packages/i18n`, `packages/api-client`, `packages/ui` lib/hooks | **400** | Split by responsibility if file does 2 jobs or is hard to scan in 3 minutes |
+| Backend Command / Query / Controller / Service | **400** | Extract helper; keep one use-case per file |
+| Frontend Route / Page `apps/web/src/routes/*` | **150** | Split into `features/*` components if route mixes data + UI + form logic |
+| Feature Component / Hook / Utility `apps/web/src/features/*`, `apps/web/src/lib/*`, `apps/web/src/hooks/*` | **400** | Extract sub-component/hook |
+| Web lib `apps/web/src/lib/*` | **250** | Extract helper module |
+| Store `apps/web/src/stores/*`, `packages/*` stores | **200** | Split slices |
+| UI Primitive `packages/ui/src/components/ui/*` | **800** | One shadcn family per file; large families like `sidebar` are fine. Split only if mixing 2 families |
+| Composed Component `packages/ui/src/components/composed/*` (DataTable, PageHeader, etc) | **400** | One reusable composed component per file (composes 3-6 primitives) |
+| Email Template `packages/email/src/*` | **400** | One template per file |
+| Test file `*.test.ts`, `*.spec.ts`, `*.e2e.ts` | **800** | Split by describe block or scenario |
 
 **How we count:** `source.trimEnd().split(/\r?\n/).length` — trailing final newline is not counted.  
-**The rule is single-responsibility, not line-count.** If a file does one thing well and is readable in 2 minutes, 280 lines is fine. If it does two jobs, split at 150. Hard caps above are when you must split; soft target is 150-300 for most files.
+**The rule is single-responsibility, not line-count.** Caps are backstops with ~2x headroom over today's largest files — they should never nag during normal work. If a file does one thing well, even 350 lines is fine. If it does two jobs, split regardless of count. This table is the single source for all limits; other rule files point here instead of restating numbers.
 
 ---
 
@@ -31,7 +33,7 @@ Keep files small, clean, and maintainable. Every file should be easy to understa
 
 ### Small Functions
 - Functions should be 5–25 lines.
-- If a function exceeds 45 lines, extract helpers.
+- If a function exceeds 60 lines, extract helpers.
 - Early returns over nested conditionals.
 
 ```typescript
@@ -84,7 +86,7 @@ function processOrder(order: Order): Result<Order, OrderError> {
 ### No Magic
 - No magic numbers. Use named constants.
 - No nested ternaries.
-- No more than 2 levels of nesting.
+- No more than 3 levels of nesting.
 - No `else` when `if` returns.
 
 ```typescript

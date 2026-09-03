@@ -52,7 +52,7 @@ No alternatives without architecture review (see `PACKAGE_POLICY.md`).
 - Pagination is mandatory (`page`, `limit`, `total`, `totalPages`) with shared limits from `@repo/contracts`.
 - Mutations send idempotency keys automatically through the API client.
 - Type suppression, duplicate schemas, hardcoded messages, and raw exception text are prohibited.
-- File limits: route ≤120 lines, feature component/hook ≤300, lib ≤200, store ≤150, UI primitive ≤500. Split by responsibility before exceeding a limit. Verify with: no `getApiClient`/`useMutation` imports under `src/routes`, no raw `toLocaleDateString` outside `src/lib/format.ts`.
+- File limits (see `CODE_QUALITY_RULES.md`, the single source): route ≤150, feature component/hook ≤400, lib ≤250, store ≤200. Split by responsibility before exceeding a limit. Verify with: no `getApiClient`/`useMutation` imports under `src/routes`, no raw `toLocaleDateString` outside `src/lib/format.ts`.
 
 ## Adding a feature
 
