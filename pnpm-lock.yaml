@@ -306,6 +306,9 @@ importers:
       '@tanstack/react-start':
         specifier: ^1.121.0
         version: 1.168.49(esbuild@0.28.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(rolldown@1.2.4)(rollup@4.62.5)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0))(webpack@5.106.2(esbuild@0.28.2))
+      date-fns:
+        specifier: ^4.4.0
+        version: 4.4.0
       i18next:
         specifier: ^24.2.3
         version: 24.2.3(typescript@6.0.3)
@@ -13639,7 +13642,7 @@ snapshots:
       obug: 2.1.4
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1)(msw@2.15.0(@types/node@26.2.0)(typescript@5.9.3))(vite@8.2.2(@types/node@26.2.0)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1)(msw@2.15.0(@types/node@26.2.0)(typescript@5.9.3))(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0))
 
   '@vitest/expect@4.1.11':
     dependencies:
