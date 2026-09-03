@@ -1,0 +1,20 @@
+# Copy to alertmanager.yml and set SLACK_WEBHOOK_URL (or PagerDuty routing).
+# Run alongside Prometheus, e.g. prom/alertmanager + --config.file=/etc/alertmanager/alertmanager.yml
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ["alertname", "service"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: on-call
+
+receivers:
+  - name: on-call
+    slack_configs:
+      - api_url: ${SLACK_WEBHOOK_URL:?set SLACK_WEBHOOK_URL}
+        channel: "#on-call"
+        send_resolved: true
+        title: "{{ .GroupLabels.alertname }} ({{ .Status }})"
+        text: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
