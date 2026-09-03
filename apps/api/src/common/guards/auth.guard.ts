@@ -2,7 +2,6 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
-  Optional,
   UnauthorizedException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
@@ -20,7 +19,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private cls: ClsService,
-    @Optional() private readonly getUserById?: GetUserByIdQuery,
+    private readonly getUserById: GetUserByIdQuery,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -44,12 +43,10 @@ export class AuthGuard implements CanActivate {
     const decoded = verifyAccessToken(token);
     if (!decoded) throw new UnauthorizedException();
 
-    if (this.getUserById) {
-      const current = await (this.getUserById.executeFresh?.(decoded.sub) ??
-        this.getUserById.execute(decoded.sub));
-      if (current.isErr() || decoded.authVersion !== current.value.authVersion) {
-        throw new UnauthorizedException();
-      }
+    const current = await (this.getUserById.executeFresh?.(decoded.sub) ??
+      this.getUserById.execute(decoded.sub));
+    if (current.isErr() || decoded.authVersion !== current.value.authVersion) {
+      throw new UnauthorizedException();
     }
 
     request.user = decoded;

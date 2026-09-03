@@ -21,7 +21,11 @@ describe("AuthGuard", () => {
   beforeEach(() => {
     reflector = { getAllAndOverride: vi.fn().mockReturnValue(false) } as unknown as Reflector;
     cls = { set: vi.fn() } as unknown as ClsService;
-    guard = new AuthGuard(reflector, cls);
+    const users = {
+      execute: vi.fn().mockResolvedValue(ok({ authVersion: undefined })),
+      executeFresh: vi.fn().mockResolvedValue(ok({ authVersion: undefined })),
+    } as unknown as GetUserByIdQuery;
+    guard = new AuthGuard(reflector, cls, users);
   });
 
   it("accepts and stores a verified access-token actor", async () => {
