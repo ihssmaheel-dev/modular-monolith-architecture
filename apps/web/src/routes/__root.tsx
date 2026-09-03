@@ -20,6 +20,7 @@ import {
 import { QueryProvider } from "@/lib/query-client";
 import { I18nProvider } from "@/lib/i18n";
 import { useTranslation } from "react-i18next";
+import { FRONTEND_ROUTES } from "@repo/contracts";
 import "@repo/ui/globals.css";
 
 export interface RouterContext {
@@ -51,7 +52,7 @@ function NotFound() {
           <CardDescription>{t("errors.notFound")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button render={<Link to="/" />} className="w-full">
+          <Button render={<Link to={FRONTEND_ROUTES.home} />} className="w-full">
             {t("common.back")}
           </Button>
         </CardContent>
@@ -73,7 +74,7 @@ function RootError() {
           <Button variant="outline" className="flex-1" onClick={() => window.location.reload()}>
             {t("common.retry")}
           </Button>
-          <Button className="flex-1" render={<Link to="/" />}>
+          <Button className="flex-1" render={<Link to={FRONTEND_ROUTES.home} />}>
             {t("common.back")}
           </Button>
         </CardContent>

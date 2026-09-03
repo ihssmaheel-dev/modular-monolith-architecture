@@ -14,11 +14,12 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
-import { Route as AppNotesRouteImport } from './routes/_app.notes'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppUsersRouteImport } from './routes/_app.users'
+import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
+import { Route as AppNotesIndexRouteImport } from './routes/_app.notes.index'
 import { Route as AppNotesNewRouteImport } from './routes/_app.notes.new'
 
 const IndexRoute = IndexRouteImport.update({
@@ -45,11 +46,6 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
-const AppNotesRoute = AppNotesRouteImport.update({
-  id: '/notes',
-  path: '/notes',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -59,6 +55,11 @@ const AppUsersRoute = AppUsersRouteImport.update({
   id: '/users',
   path: '/users',
   getParentRoute: () => AppRoute,
+} as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/forgot-password',
@@ -70,10 +71,15 @@ const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => AuthRoute,
 } as any)
+const AppNotesIndexRoute = AppNotesIndexRouteImport.update({
+  id: '/notes/',
+  path: '/notes/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppNotesNewRoute = AppNotesNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AppNotesRoute,
+  id: '/notes/new',
+  path: '/notes/new',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -81,24 +87,25 @@ export interface FileRoutesByFullPath {
   '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
-  '/notes': typeof AppNotesRouteWithChildren
   '/settings': typeof AppSettingsRoute
   '/users': typeof AppUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/': typeof AuthIndexRoute
   '/notes/new': typeof AppNotesNewRoute
+  '/notes/': typeof AppNotesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
-  '/auth': typeof AuthRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
-  '/notes': typeof AppNotesRouteWithChildren
   '/settings': typeof AppSettingsRoute
   '/users': typeof AppUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth': typeof AuthIndexRoute
   '/notes/new': typeof AppNotesNewRoute
+  '/notes': typeof AppNotesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,12 +114,13 @@ export interface FileRoutesById {
   '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
-  '/_app/notes': typeof AppNotesRouteWithChildren
   '/_app/settings': typeof AppSettingsRoute
   '/_app/users': typeof AppUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/': typeof AuthIndexRoute
   '/_app/notes/new': typeof AppNotesNewRoute
+  '/_app/notes/': typeof AppNotesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,24 +129,25 @@ export interface FileRouteTypes {
     | '/accept-invitation'
     | '/auth'
     | '/dashboard'
-    | '/notes'
     | '/settings'
     | '/users'
     | '/auth/forgot-password'
     | '/auth/reset-password'
+    | '/auth/'
     | '/notes/new'
+    | '/notes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/accept-invitation'
-    | '/auth'
     | '/dashboard'
-    | '/notes'
     | '/settings'
     | '/users'
     | '/auth/forgot-password'
     | '/auth/reset-password'
+    | '/auth'
     | '/notes/new'
+    | '/notes'
   id:
     | '__root__'
     | '/'
@@ -146,12 +155,13 @@ export interface FileRouteTypes {
     | '/accept-invitation'
     | '/auth'
     | '/_app/dashboard'
-    | '/_app/notes'
     | '/_app/settings'
     | '/_app/users'
     | '/auth/forgot-password'
     | '/auth/reset-password'
+    | '/auth/'
     | '/_app/notes/new'
+    | '/_app/notes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,13 +208,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/notes': {
-      id: '/_app/notes'
-      path: '/notes'
-      fullPath: '/notes'
-      preLoaderRoute: typeof AppNotesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -218,6 +221,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/users'
       preLoaderRoute: typeof AppUsersRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/auth/': {
+      id: '/auth/'
+      path: '/'
+      fullPath: '/auth/'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/auth/forgot-password': {
       id: '/auth/forgot-password'
@@ -233,40 +243,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthResetPasswordRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_app/notes/': {
+      id: '/_app/notes/'
+      path: '/notes'
+      fullPath: '/notes/'
+      preLoaderRoute: typeof AppNotesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/notes/new': {
       id: '/_app/notes/new'
-      path: '/new'
+      path: '/notes/new'
       fullPath: '/notes/new'
       preLoaderRoute: typeof AppNotesNewRouteImport
-      parentRoute: typeof AppNotesRoute
+      parentRoute: typeof AppRoute
     }
   }
 }
 
-interface AppNotesRouteChildren {
-  AppNotesNewRoute: typeof AppNotesNewRoute
-}
-
-const AppNotesRouteChildren: AppNotesRouteChildren = {
-  AppNotesNewRoute: AppNotesNewRoute,
-}
-
-const AppNotesRouteWithChildren = AppNotesRoute._addFileChildren(
-  AppNotesRouteChildren,
-)
-
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
-  AppNotesRoute: typeof AppNotesRouteWithChildren
   AppSettingsRoute: typeof AppSettingsRoute
   AppUsersRoute: typeof AppUsersRoute
+  AppNotesNewRoute: typeof AppNotesNewRoute
+  AppNotesIndexRoute: typeof AppNotesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
-  AppNotesRoute: AppNotesRouteWithChildren,
   AppSettingsRoute: AppSettingsRoute,
   AppUsersRoute: AppUsersRoute,
+  AppNotesNewRoute: AppNotesNewRoute,
+  AppNotesIndexRoute: AppNotesIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -274,11 +281,13 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 interface AuthRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthIndexRoute: typeof AuthIndexRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthIndexRoute: AuthIndexRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
