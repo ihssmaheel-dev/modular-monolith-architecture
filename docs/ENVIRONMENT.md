@@ -11,14 +11,30 @@ Local setup copies the committed examples to ignored `.env` files (`pnpm bootstr
 
 Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/web/.env.example`.
 
+## File-based secrets (`*_FILE`)
+
+For Docker secrets, Vault Agent, or AWS Secrets Manager file mounts, any sensitive variable below
+may be supplied via a `<NAME>_FILE` path instead of inline. The file content (trimmed) wins over the
+inline value. Supported: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `METRICS_TOKEN`,
+`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `SMTP_USER`, `SMTP_PASS`, `RESEND_API_KEY`, `SEED_ADMIN_PASSWORD`.
+
+```env
+JWT_SECRET_FILE=/run/secrets/jwt_secret
+DATABASE_URL_FILE=/run/secrets/database_url
+```
+
+Resolution happens in `apps/api/src/config/env.ts` before Zod validation, so file-supplied values face
+the same checks. See `docker/.env.prod.example` for the compose-side pattern.
+
 ## API core and connectivity
 
 | Variable                            | Default / purpose                                                              |
 | ----------------------------------- | ------------------------------------------------------------------------------ |
 | `NODE_ENV`                          | `development`; one of `development`, `test`, `production`                      |
 | `PROCESS_ROLE`                      | `all` locally; use `api` for HTTP-only or `worker` for queue/scheduled workers |
-| `PORT`                              | `3000`; API listener port                                                      |
-| `LOG_LEVEL`                         | `info`; Pino level from `fatal` through `trace`                                |
+| `PORT`                              | `3000`; API listener port                                          |
+| `TRUST_PROXY`                       | `false`; set `true` behind nginx/LB so `req.ip` rate-limiting works |
+| `LOG_LEVEL`                         | `info`; Pino level from `fatal` through `trace`                    |
 | `TENANCY_MODE`                      | `single`; choose `single` or `multi` before production data exists             |
 | `CLIENT_URL`                        | `http://localhost:5173`; allowed browser origin                                |
 | `API_URL`                           | `http://localhost:3000`; externally reachable API origin                       |
@@ -38,7 +54,9 @@ Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/we
 | `JWT_SECRET`                         | Access-token secret, minimum 32 characters; replace in production  |
 | `JWT_REFRESH_SECRET`                 | Separate refresh-token secret, minimum 32 characters               |
 | `JWT_EXPIRES_IN`                     | `15m`; access-token lifetime                                       |
-| `JWT_REFRESH_EXPIRES_IN`             | `7d`; refresh-token lifetime                                       |
+| `JWT_REFRESH_EXPIRES_IN`      | `7d`; refresh-token lifetime                                       |
+| `JWT_ISSUER`                         | `modular-monolith-api`; `iss` claim verified on access tokens      |
+| `JWT_AUDIENCE`                       | `modular-monolith-client`; `aud` claim verified on access tokens   |
 | `METRICS_TOKEN`                      | Optional locally, minimum 32 characters and required in production |
 | `RATE_LIMIT_MAX`                     | `100`; requests allowed per rate-limit window                      |
 | `RATE_LIMIT_TTL`                     | `60`; rate-limit window in seconds                                 |
@@ -49,6 +67,7 @@ Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/we
 | `LOCKOUT_MAX_ATTEMPTS`               | `5`; failed logins before account lockout                          |
 | `LOCKOUT_DURATION_MINUTES`           | `15`; account-lockout duration                                     |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`        | `http://localhost:4318/v1/traces`; trace collector endpoint        |
+| `LOKI_HOST`                          | `http://localhost:3100`; Loki log aggregation endpoint             |
 
 ## Storage and CDN
 
