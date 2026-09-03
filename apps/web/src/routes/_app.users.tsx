@@ -1,76 +1,40 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { FRONTEND_ROUTES } from "@repo/contracts";
-import { useAuthStore } from "@/stores/auth.store";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Users as UsersIcon } from "lucide-react";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
-import { DataTable, type DataTableColumn } from "@repo/ui/components/composed/data-table";
+import { DataTable, DataTablePagination } from "@repo/ui/components/composed/data-table";
 import { EmptyState } from "@repo/ui/components/composed/empty-state";
 import { PageHeader } from "@repo/ui/components/composed/page-header";
-import { getApiClient } from "@/lib/api";
-import type { UserResponse } from "@repo/contracts";
-import { useTenantStore } from "@/stores/tenant.store";
-
-const USERS_LIST_FAILED = "USERS_LIST_FAILED";
+import { FRONTEND_ROUTES, PaginationQuerySchema } from "@repo/contracts";
+import { useAuthStore } from "@/stores/auth.store";
+import { usersListQuery } from "@/features/users/users.queries";
+import { getUsersColumns } from "@/features/users/users-table-columns";
 
 export const Route = createFileRoute("/_app/users")({
+  validateSearch: PaginationQuerySchema,
   beforeLoad: () => {
     if (useAuthStore.getState().user?.role !== "admin") {
       throw redirect({ to: FRONTEND_ROUTES.dashboard, replace: true });
     }
   },
+  loaderDeps: ({ search }) => ({ page: search.page, limit: search.limit }),
+  loader: ({ deps, context }) =>
+    context.queryClient.ensureQueryData(usersListQuery(deps.page, deps.limit)),
   component: UsersPage,
 });
 
 function UsersPage() {
   const { t } = useTranslation();
-  const tenantId = useTenantStore((state) => state.tenantId);
-  const usersQuery = useQuery({
-    queryKey: ["users", tenantId, "list"],
-    queryFn: async () => {
-      const res = await getApiClient().users.list();
-      if (res.status !== 200) throw new Error(USERS_LIST_FAILED);
-      return res.body;
-    },
-  });
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const page = search.page ?? 1;
+  const limit = search.limit ?? 20;
+  const usersQuery = useQuery({ ...usersListQuery(page, limit) });
 
-  const columns: DataTableColumn<UserResponse>[] = [
-    {
-      key: "name",
-      header: t("users.name"),
-      cell: (row) => <span className="font-semibold text-foreground">{row.name}</span>,
-    },
-    {
-      key: "email",
-      header: t("users.email"),
-      cell: (row) => <span className="text-muted-foreground font-mono text-xs">{row.email}</span>,
-    },
-    {
-      key: "role",
-      header: t("users.role"),
-      cell: (row) => (
-        <Badge
-          variant={row.role === "admin" ? "default" : "secondary"}
-          className="text-[10px] font-mono"
-        >
-          {row.role}
-        </Badge>
-      ),
-    },
-    {
-      key: "createdAt",
-      header: t("users.created"),
-      cell: (row) => (
-        <span className="text-xs text-muted-foreground">
-          {new Date(row.createdAt).toLocaleDateString()}
-        </span>
-      ),
-      className: "hidden sm:table-cell",
-    },
-  ];
+  const columns = getUsersColumns(t);
 
   return (
     <div className="w-full space-y-6">
@@ -107,13 +71,29 @@ function UsersPage() {
               description={t("users.description")}
             />
           ) : (
-            <DataTable
-              data={usersQuery.data?.users ?? []}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              isLoading={usersQuery.isFetching}
-              emptyText={t("common.noResults")}
-            />
+            <>
+              <DataTable
+                data={usersQuery.data?.users ?? []}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                isLoading={usersQuery.isFetching}
+                emptyText={t("common.noResults")}
+              />
+              {usersQuery.data && usersQuery.data.totalPages > 1 && (
+                <DataTablePagination
+                  page={page}
+                  totalPages={usersQuery.data.totalPages}
+                  onPageChange={(next) =>
+                    navigate({ search: (previous) => ({ ...previous, page: next }) })
+                  }
+                  pageLabel={(current, total) =>
+                    t("common.pageOf", { page: current, totalPages: total })
+                  }
+                  previousLabel={t("common.previous")}
+                  nextLabel={t("common.next")}
+                />
+              )}
+            </>
           )}
         </CardContent>
       </Card>
