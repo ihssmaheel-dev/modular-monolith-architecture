@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { FRONTEND_ROUTES } from "@repo/contracts";
 import { useAuthStore } from "@/stores/auth.store";
@@ -7,6 +7,13 @@ import { getApiClient } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/_app")({
+  beforeLoad: () => {
+    // Sync guard after hydration: avoids rendering protected shell
+    // when the persisted store already knows we are logged out.
+    if (useAuthStore.getState().status === "unauthenticated") {
+      throw redirect({ to: FRONTEND_ROUTES.auth, replace: true });
+    }
+  },
   component: ProtectedApp,
 });
 

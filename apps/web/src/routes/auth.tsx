@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useForm, type UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +30,11 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>) => ({
     inviteToken: typeof search.inviteToken === "string" ? search.inviteToken : undefined,
   }),
+  beforeLoad: () => {
+    if (useAuthStore.getState().status === "authenticated") {
+      throw redirect({ to: FRONTEND_ROUTES.dashboard, replace: true });
+    }
+  },
   component: AuthPage,
 });
 
