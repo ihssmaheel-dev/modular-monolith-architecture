@@ -106,7 +106,7 @@ function RootComponent() {
                 <Outlet />
               </div>
               <Toaster />
-              <TanStackRouterDevtools position="bottom-right" />
+              {import.meta.env.DEV ? <TanStackRouterDevtools position="bottom-right" /> : null}
             </ThemeProvider>
           </I18nProvider>
         </QueryProvider>
