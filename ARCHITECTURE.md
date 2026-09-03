@@ -163,7 +163,7 @@ sequenceDiagram
   - **Commands:** Mutate state (e.g., `CreateNoteCommand`) -> `Result<T,E>`.
   - **Queries:** Read state without mutating (e.g., `GetUserByIdQuery`) -> `Result<T,E>`.
   - **Listeners:** React to events (`welcome-email.listener`, `notes-realtime.listener`) — idempotent, never throw.
-- **Why?** Flat services are globally banned. Isolated commands keep files `<150 lines`, testable, and highly specific.
+- **Why?** Flat services are globally banned. Isolated commands keep files small, testable, and highly specific (limits in `ai_instructions/CODE_QUALITY_RULES.md`).
 
 ### Layer 3: Domain Layer (`domain/`)
 
@@ -186,19 +186,19 @@ The web client is **fully wired** to the modular monolith via `@repo/contracts` 
 ### 4.1 Web — TanStack Start (SSR + SPA)
 
 - **Stack:** TanStack Start 1 (Vite 8, TanStack Router 1 file-based, streaming SSR, server functions), TanStack Query 5, Zustand 5 (persist localStorage), react-i18next + i18next-browser-languagedetector, Tailwind CSS 4 + `@repo/ui`, react-hook-form + zodResolver.
-- **Entry:** `apps/web/vite.config.ts` => `tanstackStart({ srcDirectory: 'src' }) + viteReact() + tailwindcss() + tsConfigPaths()`. Router defined in `src/router.tsx` via `createRouter({ routeTree, context: { queryClient } })` + `setupRouterSsrQueryIntegration`. Routes are file-based in `src/routes/__root.tsx`, `index.tsx`, `auth.tsx`, `dashboard.tsx`, `notes.tsx`. `routeTree.gen.ts` is generated.
+- **Entry:** `apps/web/vite.config.ts` => `tanstackStart({ srcDirectory: 'src' }) + viteReact() + tailwindcss() + tsConfigPaths()`. Router defined in `src/router.tsx` via `createRouter({ routeTree, context: { queryClient } })` + `setupRouterSsrQueryIntegration`, reusing the shared `getQueryClient()` singleton (one cache for loaders and components). Routes are thin composers under `src/routes/` (`__root.tsx`, `_app.tsx`, `_app.dashboard.tsx`, `_app.notes.tsx`, `_app.notes.new.tsx`, `_app.users.tsx`, `_app.settings.tsx`, `auth*.tsx`, `accept-invitation.tsx`): each holds `validateSearch`/`beforeLoad`/`loader`/`errorComponent` and renders one feature component. `routeTree.gen.ts` is generated.
 - **Contracts:** Forms use `LoginSchema`, `RegisterSchema`, `CreateNoteSchema` directly from `@repo/contracts` via `zodResolver`. No duplicate schemas.
 - **API:** `src/lib/api.ts` => `getApiClient()` singleton: `createApiClient(getWebEnv().VITE_API_URL, { getAccessToken: () => useAuthStore.getState().accessToken, getLocale: () => useLocaleStore.getState().locale, getTenantId: () => useTenantStore.getState().tenantId, onAuthRefreshed: (r) => useAuthStore.getState().setAuth(r), onAuthFailure: () => clearAuth + redirect /auth })`. Automatically sends `accept-language`, `x-tenant-id`, `idempotency-key` and 401-refreshes via `requestRefresh`.
-- **State:** `src/stores/auth.store.ts` (zustand persist `auth-storage`), `locale.store.ts`, `tenant.store.ts`. Query state via TanStack Query (`src/features/notes/notes.queries.ts` `queryOptions`) with invalidation after mutations.
-- **UI:** `@repo/ui` primitives (`Button`, `Card`, `Input`, `Tabs`, `Badge`, `Dialog`, etc) + Tailwind + `ThemeProvider` (light/dark/system, localStorage, `d` toggles). shadcn CLI: `pnpm dlx shadcn@latest add <component> -c apps/web` writes to `packages/ui/src/components`.
+- **State:** `src/stores/auth.store.ts` (zustand persist `auth-storage`), `locale.store.ts`, `tenant.store.ts`. Query keys come from `src/lib/query-keys.ts` (always tenant-scoped). Query/mutation helpers live in `src/features/[domain]/` with UI in `components/` subfolders; dates go through `src/lib/format.ts` (`date-fns`, locale-aware).
+- **UI:** `@repo/ui` primitives (`Button`, `Card`, `Input`, `Tabs`, `Badge`, `Dialog`, etc) + Tailwind + `ThemeProvider` (light/dark/system, localStorage, `d` toggles). shadcn CLI: `pnpm dlx shadcn@latest add <component> -c apps/web` writes to `packages/ui/src/components/ui`.
 - **Env:** `src/lib/env.ts` Zod `VITE_API_URL` from `import.meta.env` (default `http://localhost:3000/api`). Validated, never raw `process.env` beyond that file.
 - **i18n:** `src/lib/i18n.tsx` `resources = { en: { translation: locales.en }, es, fr }` + `LanguageDetector`. Keys like `auth.login`, `dashboard.welcome`, `notes.createNote` shared with backend.
 
 ### 4.2 The Single UI Source (`packages/ui`)
 
 - **What it is:** Headless Base UI (`@base-ui/react` 1) primitives wrapped with CVA + Tailwind. shadcn base-nova preset, neutral baseColor, cssVariables, lucide icons, Tailwind 4.
-- **Exports:** `exports: { "./globals.css": "./src/styles/globals.css", "./lib/*": "./src/lib/*.ts", "./components/*": "./src/components/*.tsx", "./hooks/*": "./src/hooks/*.ts" }`. `components.json` (RSC true, Tailwind 4).
-- **Why?** One place for the design system. Web is `import { Button } from '@repo/ui/components/button'` + `import '@repo/ui/globals.css'`. Changing a token updates the application globally.
+- **Exports:** `exports: { "./globals.css": "./src/styles/globals.css", "./lib/*": "./src/lib/*.ts", "./components/*" + "./components/ui/*": "./src/components/ui/*.tsx", "./components/composed/*": "./src/components/composed/*.tsx", "./hooks/*": "./src/hooks/*.ts" }`. `components.json` (RSC true, Tailwind 4).
+- **Why?** One place for the design system. Web is `import { Button } from '@repo/ui/components/ui/button'` (or the backward-compatible `@repo/ui/components/button`) + `import '@repo/ui/globals.css'`, with reusable `DataTable`/`PageHeader`/`EmptyState`/`ConfirmDialog` from `@repo/ui/components/composed/*`. Changing a token updates the application globally.
 - **Shadcn + Base UI docs:** Follow [`ui.shadcn.com/docs/installation/tanstack`](https://ui.shadcn.com/docs/installation/tanstack) for TanStack Start ( `pnpm dlx shadcn@latest init -t start --preset ...` ) and [`base-ui.com/react/overview/quick-start`](https://base-ui.com/react/overview/quick-start) for headless composition. Components like `button.tsx` (`ButtonPrimitive` from `@base-ui/react/button` + `cva`) and `dialog.tsx` (`DialogPrimitive` + backdrop/portal) are canonical examples.
 
 ---

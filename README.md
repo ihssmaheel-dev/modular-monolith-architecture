@@ -170,8 +170,8 @@ The web client (`apps/web`, TanStack Start) consumes the same schemas/contracts 
 
 ### 2. Frontend — TanStack Start (Web) + `@repo/ui`
 
-- **Web:** File-based TanStack Router (`src/routes/__root.tsx`, `index.tsx`, `auth.tsx`, `notes.tsx`), `src/router.tsx` + SSR query integration, Zustand persist (localStorage) + TanStack Query, react-i18next (`src/lib/i18n.tsx`), Tailwind 4 + `@repo/ui` (Base UI + shadcn base-nova + lucide), `src/lib/api.ts` singleton with 401 refresh + tenant + locale + idempotency-key, `src/lib/env.ts` `VITE_API_URL`.
-- **UI:** `packages/ui` single `globals.css` + CVA + `cn()`; shadcn CLI `pnpm dlx shadcn@latest add <c> -c apps/web` writes to `packages/ui`.
+- **Web:** Thin file-based TanStack Router routes (`__root.tsx`, `_app*.tsx`, `auth*.tsx`, `accept-invitation.tsx`) composing feature components from `src/features/[domain]/components/`, `src/router.tsx` + SSR query integration (shared `getQueryClient()`), Zustand persist (localStorage) + TanStack Query with tenant-scoped keys (`src/lib/query-keys.ts`), react-i18next (`src/lib/i18n.tsx`), Tailwind 4 + `@repo/ui` (Base UI + shadcn base-nova + lucide), `src/lib/api.ts` singleton with 401 refresh + tenant + locale + idempotency-key, `src/lib/env.ts` `VITE_API_URL`, locale-aware `src/lib/format.ts` (`date-fns`).
+- **UI:** `packages/ui` single `globals.css` + CVA + `cn()`; primitives in `components/ui/`, reusable `DataTable`/`PageHeader`/`EmptyState`/`ConfirmDialog` in `components/composed/`; shadcn CLI `pnpm dlx shadcn@latest add <c> -c apps/web` writes to `packages/ui/src/components/ui`.
 
 ### 3. Fine-Grained Authorization (FGA)
 
