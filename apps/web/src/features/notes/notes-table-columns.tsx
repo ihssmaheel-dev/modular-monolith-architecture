@@ -2,6 +2,7 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 import { ConfirmDialog } from "@repo/ui/components/composed/confirm-dialog";
 import type { DataTableColumn } from "@repo/ui/components/composed/data-table";
+import { formatDate } from "@/lib/format";
 
 export type NoteRow = { id: string; title: string; content: string; createdAt: string };
 
@@ -25,7 +26,7 @@ export function getNotesColumns(
       header: t("common.created"),
       cell: (row) => (
         <span className="text-xs text-muted-foreground">
-          {new Date(row.createdAt).toLocaleDateString()}
+          {formatDate(row.createdAt)}
         </span>
       ),
       className: "hidden sm:table-cell",

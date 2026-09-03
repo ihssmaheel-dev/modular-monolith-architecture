@@ -1,6 +1,11 @@
 import { mutationOptions } from "@tanstack/react-query";
 import { getApiClient } from "@/lib/api";
-import type { LoginInput, RegisterInput } from "@repo/contracts";
+import type {
+  ForgotPasswordInput,
+  LoginInput,
+  RegisterInput,
+  ResetPasswordInput,
+} from "@repo/contracts";
 
 export function loginMutationOptions() {
   return mutationOptions({
@@ -21,6 +26,30 @@ export function registerMutationOptions() {
       const client = getApiClient();
       const res = await client.auth.register({ body: data });
       if (res.status !== 201 && res.status !== 200) throw new Error("api.auth.registrationFailed");
+      return res.body;
+    },
+  });
+}
+
+export function forgotPasswordMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["auth", "forgot-password"] as const,
+    mutationFn: async (data: ForgotPasswordInput) => {
+      const client = getApiClient();
+      const res = await client.auth.forgotPassword({ body: data });
+      if (res.status !== 200) throw new Error("auth.requestFailed");
+      return res.body;
+    },
+  });
+}
+
+export function resetPasswordMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["auth", "reset-password"] as const,
+    mutationFn: async (data: ResetPasswordInput) => {
+      const client = getApiClient();
+      const res = await client.auth.resetPassword({ body: data });
+      if (res.status !== 200) throw new Error("auth.resetFailed");
       return res.body;
     },
   });

@@ -13,6 +13,7 @@ import {
 } from "@repo/ui/components/ui/card";
 import { FRONTEND_ROUTES } from "@repo/contracts";
 import { notesListQuery } from "@/features/notes/notes.queries";
+import { formatDate } from "@/lib/format";
 import { useAuthStore } from "@/stores/auth.store";
 
 export function RecentNotesWidget() {
@@ -55,7 +56,7 @@ export function RecentNotesWidget() {
                   <p className="truncate text-xs text-muted-foreground">{note.content}</p>
                 </div>
                 <Badge variant="outline" className="shrink-0 text-[10px] font-mono">
-                  {new Date(note.createdAt).toLocaleDateString()}
+                  {formatDate(note.createdAt)}
                 </Badge>
               </div>
             ))}
