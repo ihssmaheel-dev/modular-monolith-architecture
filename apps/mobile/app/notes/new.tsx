@@ -1,0 +1,88 @@
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CreateNoteSchema, type CreateNoteDto } from "@repo/contracts";
+import { useCreateNoteMutation } from "@/features/notes/notes.mutations";
+
+export default function NewNote() {
+  const { t } = useTranslation();
+  const form = useForm<CreateNoteDto>({
+    resolver: zodResolver(CreateNoteSchema),
+    defaultValues: { title: "", content: "" },
+  });
+  const mutation = useCreateNoteMutation({ onSuccess: () => router.back() });
+
+  return (
+    <ScrollView
+      className="flex-1 bg-slate-50"
+      contentContainerStyle={{ padding: 16, gap: 16 }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text className="text-2xl font-bold text-slate-900">{t("notes.createNote")}</Text>
+      <View className="gap-1.5">
+        <Text className="text-sm font-medium text-slate-700">{t("notes.noteTitle")}</Text>
+        <Controller
+          control={form.control}
+          name="title"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-900"
+              placeholder={t("notes.noteTitlePlaceholder")}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+            />
+          )}
+        />
+        {form.formState.errors.title && (
+          <Text className="text-xs text-red-600">{form.formState.errors.title.message}</Text>
+        )}
+      </View>
+      <View className="gap-1.5">
+        <Text className="text-sm font-medium text-slate-700">{t("notes.content")}</Text>
+        <Controller
+          control={form.control}
+          name="content"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-900"
+              placeholder={t("notes.contentPlaceholder")}
+              multiline
+              numberOfLines={9}
+              textAlignVertical="top"
+              style={{ minHeight: 180 }}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+            />
+          )}
+        />
+        {form.formState.errors.content && (
+          <Text className="text-xs text-red-600">{form.formState.errors.content.message}</Text>
+        )}
+      </View>
+      {mutation.isError && (
+        <Text className="text-sm text-red-600">{t("api.note.createFailed")}</Text>
+      )}
+      <View className="flex-row justify-end gap-2">
+        <Pressable
+          className="rounded-lg border border-slate-200 px-4 py-3"
+          onPress={() => router.back()}
+        >
+          <Text className="font-medium text-slate-700">{t("common.cancel")}</Text>
+        </Pressable>
+        <Pressable
+          className="rounded-lg bg-slate-900 px-4 py-3 disabled:opacity-50"
+          disabled={mutation.isPending}
+          onPress={form.handleSubmit((data) => mutation.mutate(data))}
+        >
+          <Text className="font-semibold text-white">
+            {mutation.isPending ? t("notes.creating") : t("notes.createButton")}
+          </Text>
+        </Pressable>
+      </View>
+    </ScrollView>
+  );
+}
