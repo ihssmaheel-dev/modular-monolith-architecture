@@ -21,10 +21,10 @@
   "dependencies": {
     "@orpc/contract": "^1.15.0",
     "@orpc/zod": "^1.15.0",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "tsup": "^8.5.1",
-    "typescript": "~6.0.0"
+    "typescript": "~6.0.3"
   }
 }
