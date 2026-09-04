@@ -2,8 +2,14 @@
   "$schema": "https://v2-10-12.turborepo.dev/schema.json",
   "ui": "tui",
   "tasks": {
+    "theme:generate": {
+      "cache": false
+    },
+    "theme:check": {
+      "cache": false
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "theme:generate"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".output/**", ".tanstack/**"]
     },

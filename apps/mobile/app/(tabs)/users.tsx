@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { useTheme } from "@/theme/theme-provider";
+import { mobileTokens } from "@/theme/tokens.generated";
 import { Redirect } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +10,8 @@ import { useAuthStore } from "@/stores/auth.store";
 
 export default function Users() {
   const { t } = useTranslation();
+  const { resolvedTheme } = useTheme();
+  const colors = mobileTokens[resolvedTheme];
   const role = useAuthStore((s) => s.user?.role);
   const [page, setPage] = useState(1);
   const usersQuery = useQuery({ ...usersListQuery(page, 20), enabled: role === "admin" });
@@ -15,7 +19,7 @@ export default function Users() {
   if (role !== "admin") return <Redirect href="/(tabs)" />;
 
   return (
-    <View className="flex-1 bg-background">
+    <View style={{ backgroundColor: colors.background }} className="flex-1">
       <FlatList
         data={usersQuery.data?.users ?? []}
         keyExtractor={(item) => item.id}
@@ -28,7 +32,7 @@ export default function Users() {
           </Text>
         }
         renderItem={({ item }) => (
-          <View className="rounded-xl bg-card p-4 shadow-sm">
+          <View style={{ backgroundColor: colors.card }} className="rounded-xl p-4 shadow-sm">
             <Text className="font-semibold text-foreground">{item.name}</Text>
             <Text className="font-mono text-xs text-muted-foreground">{item.email}</Text>
             <Text className="mt-1 text-[10px] font-medium uppercase text-muted-foreground">

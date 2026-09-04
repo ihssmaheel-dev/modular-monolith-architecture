@@ -45,7 +45,7 @@
     "theme:check": "pnpm --filter @repo/design-tokens check",
     "architecture:check": "depcruise --config .dependency-cruiser.cjs apps/api/src --output-type err",
     "rules:check-style": "node scripts/check-rules.js",
-    "rules:check": "pnpm architecture:check && node scripts/check-rules.js",
+    "rules:check": "pnpm architecture:check && pnpm theme:check && node scripts/check-rules.js",
     "up": "taze -r"
   },
   "devDependencies": {
@@ -62,13 +62,11 @@
     "typescript": "~6.0.0"
   },
   "packageManager": "pnpm@10.33.4",
-  "pnpm": {
-    "overrides": {
-      "react": "19.2.8",
-      "react-dom": "19.2.8",
-      "@types/react": "19.2.18",
-      "@types/react-dom": "19.2.7"
-    }
+  "overrides": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7"
   },
   "engines": {
     "node": ">=20.19.0"

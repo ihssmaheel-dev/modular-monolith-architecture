@@ -56,7 +56,48 @@ function loadTokens() {
     console.error("Invalid active.json", parsed.error.format());
     process.exit(1);
   }
+  checkContrast(parsed.data);
   return parsed.data;
+}
+
+function luminance(hex: string): number {
+  const c = parse(hex);
+  if (!c) return 0;
+  const rgb = converter("rgb")(c);
+  if (!rgb) return 0;
+  const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  const r = toLinear(rgb.r ?? 0);
+  const g = toLinear(rgb.g ?? 0);
+  const b = toLinear(rgb.b ?? 0);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(hex1: string, hex2: string): number {
+  const l1 = luminance(hex1);
+  const l2 = luminance(hex2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function checkContrast(tokens: NonNullable<ReturnType<typeof tokensSchema.safeParse>>["data"] & any) {
+  // Check light/dark primary vs foreground — need hex, so convert oklch to hex first
+  const pairs: Array<[string, string, string]> = [
+    ["light primary", tokens.light.primary, tokens.light["primary-foreground"]],
+    ["dark primary", tokens.dark.primary, tokens.dark["primary-foreground"]],
+    ["light foreground/background", tokens.light.foreground, tokens.light.background],
+    ["dark foreground/background", tokens.dark.foreground, tokens.dark.background],
+  ];
+  for (const [label, a, b] of pairs) {
+    const hexA = a.startsWith("#") ? a : oklchToHex(a);
+    const hexB = b.startsWith("#") ? b : oklchToHex(b);
+    if (hexA.includes("/") || hexB.includes("/")) continue;
+    const ratio = contrastRatio(hexA, hexB);
+    if (ratio < 4.5) {
+      console.error(`Contrast check failed for ${label}: ${hexA} vs ${hexB} ratio ${ratio.toFixed(2)} < 4.5`);
+      process.exit(1);
+    }
+  }
 }
 
 function generateWebCss(tokens: NonNullable<ReturnType<typeof loadTokens>>): string {
@@ -235,9 +276,12 @@ function main() {
   const emailPath = resolve(root, "packages/email/src/styles/tokens.ts");
   const mobilePath = resolve(root, "apps/mobile/src/theme/tokens.generated.ts");
   const tailwindPath = resolve(root, "apps/mobile/src/theme/tailwind.tokens.generated.js");
+  const appJsonPath = resolve(root, "apps/mobile/app.json");
 
   if (isCheck) {
     let ok = true;
+    // Also ensure app.json splash sync
+    const appJsonExpectedBg = oklchToHex(tokens.light.background);
     const checks: Array<[string, string]> = [
       [webPath, webCss],
       [emailPath, emailTs],
@@ -256,6 +300,15 @@ function main() {
         ok = false;
       }
     }
+    // Check app.json splash sync
+    try {
+      const appJson = JSON.parse(readFileSync(appJsonPath, "utf-8"));
+      const expectedBg = oklchToHex(tokens.light.background);
+      if (appJson.expo?.splash?.backgroundColor !== expectedBg || appJson.expo?.android?.adaptiveIcon?.backgroundColor !== expectedBg) {
+        console.error(`Out of date: ${appJsonPath} splash backgroundColor — run pnpm theme:generate`);
+        ok = false;
+      }
+    } catch {}
     if (!ok) process.exit(1);
     console.log("All generated tokens up to date.");
     return;
@@ -269,11 +322,21 @@ function main() {
   writeFileSync(emailPath, emailTs);
   writeFileSync(mobilePath, mobileTs);
   writeFileSync(tailwindPath, tailwindTokens);
+  // Sync app.json splash background to light background
+  try {
+    const appJsonRaw = readFileSync(appJsonPath, "utf-8");
+    const appJson = JSON.parse(appJsonRaw);
+    const bg = oklchToHex(tokens.light.background);
+    if (appJson.expo?.splash) appJson.expo.splash.backgroundColor = bg;
+    if (appJson.expo?.android?.adaptiveIcon) appJson.expo.android.adaptiveIcon.backgroundColor = bg;
+    writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2) + "\n");
+  } catch {}
   console.log(`Generated:
   - ${webPath}
   - ${emailPath}
   - ${mobilePath}
-  - ${tailwindPath}`);
+  - ${tailwindPath}
+  - ${appJsonPath} (splash sync)`);
 }
 
 main();

@@ -1,16 +1,18 @@
-# Frontend Architecture — Web and Shared Packages
+# Frontend Architecture — Web, Mobile and Shared Packages
 
-The repository currently ships one browser client (`apps/web`) backed by the modular-monolith API. Additional client platforms can be introduced later after the API, contracts, web application, and shared packages are hardened.
+The repository ships two clients (`apps/web` browser + `apps/mobile` Expo native) backed by the modular-monolith API.
 
 ## System map
 
 - `apps/web` — TanStack Start, TanStack Router, TanStack Query, Zustand, i18n, and the shared UI system.
+- `apps/mobile` — Expo 57, expo-router file-based, NativeWind 4, TanStack Query, Zustand, i18n, mirrored `src/components/ui/*` (same `variant/size` API as `@repo/ui` but RN-native) + `src/theme` tokens.
 - `packages/contracts` — Zod schemas, DTOs, oRPC contracts, pagination, and error constants.
 - `packages/api-client` — typed oRPC clients (OpenAPI link) used by default, REST compatibility
   fallbacks, and TanStack Query utilities with auth refresh, tenant, locale, CSRF, and idempotency
   headers.
 - `packages/i18n` — locale dictionaries and shared locale configuration.
-- `packages/ui` — Base UI/shadcn primitives, Tailwind tokens, and composed components.
+- `packages/ui` — Base UI/shadcn primitives, Tailwind tokens, and composed components (web only).
+- `packages/design-tokens` — single source `src/presets/active.json` → `pnpm theme:generate` regenerates web CSS + email TS + mobile RN hex.
 
 ## Web — `apps/web`
 
@@ -87,11 +89,20 @@ Reskin workflow: change `light.primary` or `brand.purple` in `active.json`, run 
 
 Use primitives from `@repo/ui/components/ui/*` and composed components from `@repo/ui/components/composed/*` on web. On mobile, use mirrored primitives from `apps/mobile/src/components/ui/*` (`Button/Card/Input/Label/Badge/Skeleton/EmptyState/ConfirmDialog/DataTable/Tabs/Sheet/Toast/Text/PageHeader`) — same prop names (`variant/size`) as web, implemented with RN `Pressable/View/TextInput` + `mobileTokens[resolvedTheme]` + Tailwind semantic classes (`bg-background/text-foreground/border-border`). Never import `@repo/ui` in mobile (DOM-only). Add web primitives via `pnpm dlx shadcn@latest add <c> -c apps/web` (lands in `@repo/ui`); add mobile mirrors manually to keep parity.
 
-## Adding a web feature
+## Adding a feature (web + mobile)
 
 1. Add or update schemas/contracts in `packages/contracts`.
 2. Add the typed API client subclient in `packages/api-client`.
-3. Add query/mutation helpers under `apps/web/src/features/[domain]`.
-4. Add a thin route under `apps/web/src/routes`.
-5. Add locale keys to `packages/i18n/src/locales/en.json`, `es.json`, and `fr.json`.
-6. Run `pnpm rules:check`, `pnpm lint`, `pnpm typecheck`, and `pnpm --filter web build`.
+3. Add query/mutation helpers under `apps/web/src/features/[domain]` and mirror under `apps/mobile/src/features/[domain]` (same `queryKeys` shape, tenant-scoped).
+4. Add a thin route under `apps/web/src/routes` and mirror screen under `apps/mobile/app`.
+5. Use semantic tokens (`bg-background/text-foreground/border-border/text-destructive`) and primitives (`@repo/ui` on web, `apps/mobile/src/components/ui/*` on mobile — never import `@repo/ui` in mobile).
+6. Add locale keys to `packages/i18n/src/locales/en.json`, `es.json`, and `fr.json`.
+7. Run `pnpm theme:check`, `pnpm rules:check`, `pnpm lint`, `pnpm typecheck`, and `pnpm --filter web build && pnpm --filter mobile build`.
+
+## Visual QA checklist (reskin / theme)
+
+- [ ] Edited only `packages/design-tokens/src/presets/active.json`, ran `pnpm theme:generate`, committed generated files together.
+- [ ] Web: light + dark screenshots (Dashboard/Notes/Settings), `d` key toggles, `localStorage theme` persists.
+- [ ] Mobile: Settings → Appearance `light/dark/system` screenshots, `useColorScheme` follows system.
+- [ ] No `slate-*`/`bg-white`/`@repo/ui` in `apps/mobile` (enforced by `pnpm rules:check`).
+- [ ] `pnpm theme:check && pnpm rules:check && pnpm --filter web build && pnpm --filter mobile build` green.

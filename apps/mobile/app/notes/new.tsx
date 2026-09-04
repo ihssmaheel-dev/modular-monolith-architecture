@@ -1,4 +1,6 @@
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { useTheme } from "@/theme/theme-provider";
+import { mobileTokens } from "@/theme/tokens.generated";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Controller, useForm } from "react-hook-form";
@@ -8,6 +10,8 @@ import { useCreateNoteMutation } from "@/features/notes/notes.mutations";
 
 export default function NewNote() {
   const { t } = useTranslation();
+  const { resolvedTheme } = useTheme();
+  const colors = mobileTokens[resolvedTheme];
   const form = useForm<CreateNoteDto>({
     resolver: zodResolver(CreateNoteSchema),
     defaultValues: { title: "", content: "" },
@@ -16,7 +20,7 @@ export default function NewNote() {
 
   return (
     <ScrollView
-      className="flex-1 bg-background"
+      style={{ backgroundColor: colors.background }} className="flex-1"
       contentContainerStyle={{ padding: 16, gap: 16 }}
       keyboardShouldPersistTaps="handled"
     >
@@ -28,7 +32,7 @@ export default function NewNote() {
           name="title"
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
-              className="rounded-lg border border-border bg-card px-3 py-2.5 text-base text-foreground"
+              style={{ backgroundColor: colors.card }} className="rounded-lg border border-border px-3 py-2.5 text-base text-foreground"
               placeholder={t("notes.noteTitlePlaceholder")}
               onBlur={onBlur}
               onChangeText={onChange}
@@ -47,12 +51,12 @@ export default function NewNote() {
           name="content"
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
-              className="rounded-lg border border-border bg-card px-3 py-2.5 text-base text-foreground"
+              style={{ backgroundColor: colors.card, minHeight: 180 } as unknown as object}
+              className="rounded-lg border border-border px-3 py-2.5 text-base text-foreground"
               placeholder={t("notes.contentPlaceholder")}
               multiline
               numberOfLines={9}
               textAlignVertical="top"
-              style={{ minHeight: 180 }}
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}

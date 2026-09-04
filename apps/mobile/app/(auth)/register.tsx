@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useTheme } from "@/theme/theme-provider";
+import { mobileTokens } from "@/theme/tokens.generated";
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Controller, useForm } from "react-hook-form";
@@ -12,6 +14,8 @@ import { AuthScreen } from "@/components/auth-screen";
 
 export default function Register() {
   const { t } = useTranslation();
+  const { resolvedTheme } = useTheme();
+  const colors = mobileTokens[resolvedTheme];
   const { inviteToken } = useLocalSearchParams<{ inviteToken?: string }>();
   const setAuth = useAuthStore((s) => s.setAuth);
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +35,7 @@ export default function Register() {
 
   return (
     <AuthScreen title={t("auth.createAccountTitle")} description={t("auth.registerDescription")}>
-      <View className="gap-4 rounded-2xl bg-card p-5 shadow-sm">
+      <View style={{ backgroundColor: colors.card }} className="gap-4 rounded-2xl p-5 shadow-sm">
         <View className="gap-1.5">
           <Text className="text-sm font-medium text-foreground">{t("auth.name")}</Text>
           <Controller

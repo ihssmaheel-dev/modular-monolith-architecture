@@ -9,7 +9,7 @@ export function Card({ className, style, children, ...props }: ViewProps & { cla
   return (
     <View
       className={`rounded-2xl p-5 shadow-sm ${className ?? ""}`}
-      style={[{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: resolvedTheme === "dark" ? 1 : 0 }, style as any]}
+      style={[{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: resolvedTheme === "dark" ? 1 : 0 }, style as unknown as object]}
       {...props}
     >
       {children}

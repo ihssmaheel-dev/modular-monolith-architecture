@@ -1,4 +1,6 @@
 import { Pressable, Text, View } from "react-native";
+import { useTheme } from "@/theme/theme-provider";
+import { mobileTokens } from "@/theme/tokens.generated";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
@@ -8,6 +10,8 @@ import { useAuthStore } from "@/stores/auth.store";
 
 export default function AcceptInvitation() {
   const { t } = useTranslation();
+  const { resolvedTheme } = useTheme();
+  const colors = mobileTokens[resolvedTheme];
   const user = useAuthStore((s) => s.user);
   const { token } = useLocalSearchParams<{ token?: string }>();
   const value = typeof token === "string" ? token : "";
@@ -17,7 +21,7 @@ export default function AcceptInvitation() {
   if (!isValidToken) {
     return (
       <View className="flex-1 items-center justify-center bg-background p-4">
-        <View className="w-full max-w-md gap-3 rounded-2xl bg-card p-5 shadow-sm">
+        <View style={{ backgroundColor: colors.card }} className="w-full max-w-md gap-3 rounded-2xl p-5 shadow-sm">
           <Text className="text-xl font-bold text-foreground">{t("tenancy.invalidInvitationLink")}</Text>
           <Text className="text-sm text-muted-foreground">{t("tenancy.invalidInvitationDescription")}</Text>
           <Link href="/(auth)/login" className="text-center text-sm font-medium underline">
@@ -31,7 +35,7 @@ export default function AcceptInvitation() {
   if (!user) {
     return (
       <View className="flex-1 items-center justify-center bg-background p-4">
-        <View className="w-full max-w-md gap-3 rounded-2xl bg-card p-5 shadow-sm">
+        <View style={{ backgroundColor: colors.card }} className="w-full max-w-md gap-3 rounded-2xl p-5 shadow-sm">
           <Text className="text-xl font-bold text-foreground">{t("tenancy.acceptInvitation")}</Text>
           <Text className="text-sm text-muted-foreground">{t("tenancy.signInToAccept")}</Text>
           <Link
@@ -48,7 +52,7 @@ export default function AcceptInvitation() {
   if (mutation.isSuccess) {
     return (
       <View className="flex-1 items-center justify-center bg-background p-4">
-        <View className="w-full max-w-md items-center gap-3 rounded-2xl bg-card p-5 shadow-sm">
+        <View style={{ backgroundColor: colors.card }} className="w-full max-w-md items-center gap-3 rounded-2xl p-5 shadow-sm">
           <Text className="text-xl font-bold text-foreground">{t("tenancy.invitationAccepted")}</Text>
           <Text className="text-center text-sm text-muted-foreground">
             {t("tenancy.invitationAcceptedDescription")}
@@ -66,7 +70,7 @@ export default function AcceptInvitation() {
 
   return (
     <View className="flex-1 items-center justify-center bg-background p-4">
-      <View className="w-full max-w-md gap-3 rounded-2xl bg-card p-5 shadow-sm">
+      <View style={{ backgroundColor: colors.card }} className="w-full max-w-md gap-3 rounded-2xl p-5 shadow-sm">
         <Text className="text-xl font-bold text-foreground">{t("tenancy.acceptInvitation")}</Text>
         <Text className="text-sm text-muted-foreground">{t("tenancy.acceptInvitationDescription")}</Text>
         {mutation.isError && (

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useTheme } from "@/theme/theme-provider";
+import { mobileTokens } from "@/theme/tokens.generated";
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Controller, useForm } from "react-hook-form";
@@ -11,6 +13,8 @@ import { AuthScreen } from "@/components/auth-screen";
 
 export default function ResetPassword() {
   const { t } = useTranslation();
+  const { resolvedTheme } = useTheme();
+  const colors = mobileTokens[resolvedTheme];
   const { token } = useLocalSearchParams<{ token?: string }>();
   const [complete, setComplete] = useState(false);
   const [confirmation, setConfirmation] = useState("");
@@ -33,7 +37,7 @@ export default function ResetPassword() {
   if (!token) {
     return (
       <AuthScreen title={t("auth.invalidToken")} description={t("auth.resetFailed")}>
-        <View className="rounded-2xl bg-card p-5 shadow-sm">
+        <View style={{ backgroundColor: colors.card }} className="rounded-2xl p-5 shadow-sm">
           <Link href="/(auth)/forgot-password" className="text-center text-sm font-medium underline">
             {t("auth.sendResetLink")}
           </Link>
@@ -44,7 +48,7 @@ export default function ResetPassword() {
 
   return (
     <AuthScreen title={t("auth.resetPasswordTitle")} description={t("auth.resetPasswordDescription")}>
-      <View className="gap-4 rounded-2xl bg-card p-5 shadow-sm">
+      <View style={{ backgroundColor: colors.card }} className="gap-4 rounded-2xl p-5 shadow-sm">
         {complete ? (
           <View className="items-center gap-3">
             <Text className="text-center text-sm text-muted-foreground">

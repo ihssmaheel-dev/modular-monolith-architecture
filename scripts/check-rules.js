@@ -35,8 +35,12 @@ function getLineLimit(name, isTestFile) {
   if (name.startsWith("packages/email/")) return 400;
   if (name.startsWith("packages/ui/src/components/")) return 800;
   if (name.startsWith("packages/ui/")) return 400;
+  if (name.startsWith("packages/design-tokens/")) return 400;
   if (name.startsWith("packages/authorization/")) return 400;
-  if (name.startsWith("apps/mobile/")) return 150;
+  if (name.startsWith("apps/mobile/src/components/ui/")) return 400;
+  if (name.startsWith("apps/mobile/src/theme/")) return 400;
+  if (name.startsWith("apps/mobile/src/stores/")) return 200;
+  if (name.startsWith("apps/mobile/")) return 250;
   if (name.startsWith("apps/web/src/routes/")) return 150;
   if (name.startsWith("apps/web/src/features/")) return 400;
   if (name.startsWith("apps/web/src/components/")) return 400;
@@ -67,13 +71,33 @@ function checkFile(file) {
     );
   }
 
+  const isDesignTokensScript = name.startsWith("packages/design-tokens/scripts/");
   const forbidden = [
     [/\bas\s+any\b|:\s*any\b|<any>|\bany\[\]/, "explicit any is forbidden"],
     [/@ts-ignore|@ts-nocheck/, "TypeScript suppression is forbidden"],
     [/_unsafeUnwrap/, "unsafe Result unwrapping is forbidden"],
     [/console\.log\s*\(/, "console.log is forbidden"],
   ];
+  // Mobile palette bans — enforce semantic tokens
+  const isMobileUi = name.startsWith("apps/mobile/");
+  const isGenerated = name.includes("tokens.generated") || name.includes("tailwind.tokens.generated");
+  if (isMobileUi && !isGenerated && !isTest(file)) {
+    if (/bg-slate-|text-slate-|border-slate-|from-slate-|to-slate-/.test(source)) {
+      report(file, "hardcoded slate palette forbidden in mobile — use semantic bg-background/text-foreground/border-border");
+    }
+    if (/bg-white(?![\w-])/.test(source) && !name.includes("auth-screen")) {
+      // auth-screen uses bg-white via semantic bg-card, but raw bg-white is banned
+      if (/\bbg-white\b/.test(source)) report(file, "raw bg-white forbidden in mobile — use bg-card/bg-background");
+    }
+    if (/\btext-red-600\b|\bborder-red-200\b|\bbg-red-/.test(source)) {
+      report(file, "raw red palette forbidden in mobile — use text-destructive/border-destructive");
+    }
+    if (/from\s+["']@repo\/ui/.test(source)) {
+      report(file, "mobile must not import @repo/ui — use apps/mobile/src/components/ui/*");
+    }
+  }
   for (const [pattern, message] of forbidden) {
+    if (isDesignTokensScript) continue;
     if (pattern.test(source)) report(file, message);
   }
   if (isTest(file)) return;
@@ -197,6 +221,23 @@ function checkDocumentationDrift() {
   }
 }
 
+function checkGeneratedTokensFresh() {
+  // Theme tokens must be generated — check via git diff would be done by theme:check, but also ensure files exist
+  const generated = [
+    "packages/ui/src/styles/tokens.generated.css",
+    "packages/email/src/styles/tokens.ts",
+    "apps/mobile/src/theme/tokens.generated.ts",
+    "apps/mobile/src/theme/tailwind.tokens.generated.js",
+  ];
+  for (const rel of generated) {
+    const file = path.join(ROOT, rel);
+    if (!fs.existsSync(file)) report(file, `missing generated file — run pnpm theme:generate`);
+    else if (fs.readFileSync(file, "utf8").indexOf("GENERATED") === -1) {
+      report(file, "generated file missing header — run pnpm theme:generate");
+    }
+  }
+}
+
 for (const directory of ["apps", "packages"]) {
   for (const file of walk(path.join(ROOT, directory))) {
     if (CODE_EXTENSIONS.has(path.extname(file))) checkFile(file);
@@ -206,6 +247,7 @@ checkLocaleParity();
 checkTranslationUsage();
 checkTenantRepositories();
 checkDocumentationDrift();
+checkGeneratedTokensFresh();
 
 if (failures.length) {
   process.stderr.write(

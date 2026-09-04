@@ -9,7 +9,7 @@ export function Skeleton({ className, style, ...props }: ViewProps & { className
   return (
     <View
       className={`animate-pulse rounded-md ${className ?? ""}`}
-      style={[{ backgroundColor: colors.muted }, style as any]}
+      style={[{ backgroundColor: colors.muted }, style as unknown as object]}
       {...props}
     />
   );

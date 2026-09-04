@@ -8,6 +8,8 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTheme } from "@/theme/theme-provider";
+import { mobileTokens } from "@/theme/tokens.generated";
 import { Link } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +18,8 @@ import { useDeleteNoteMutation } from "@/features/notes/notes.mutations";
 
 export default function Notes() {
   const { t } = useTranslation();
+  const { resolvedTheme } = useTheme();
+  const colors = mobileTokens[resolvedTheme];
   const [page, setPage] = useState(1);
   const limit = 20;
   const notesQuery = useQuery({ ...notesListQuery(page, limit) });
@@ -33,7 +37,7 @@ export default function Notes() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <View style={{ backgroundColor: colors.background }} className="flex-1">
       <FlatList
         data={notesQuery.data?.items ?? []}
         keyExtractor={(item) => item.id}
@@ -52,7 +56,7 @@ export default function Notes() {
           </View>
         }
         renderItem={({ item }) => (
-          <View className="flex-row items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-sm">
+          <View style={{ backgroundColor: colors.card }} className="flex-row items-center justify-between gap-3 rounded-xl p-4 shadow-sm">
             <View className="min-w-0 flex-1">
               <Text className="font-medium text-foreground" numberOfLines={1}>
                 {item.title}

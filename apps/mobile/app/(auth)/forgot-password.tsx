@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useTheme } from "@/theme/theme-provider";
+import { mobileTokens } from "@/theme/tokens.generated";
 import { Link } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Controller, useForm } from "react-hook-form";
@@ -11,6 +13,8 @@ import { AuthScreen } from "@/components/auth-screen";
 
 export default function ForgotPassword() {
   const { t } = useTranslation();
+  const { resolvedTheme } = useTheme();
+  const colors = mobileTokens[resolvedTheme];
   const [sent, setSent] = useState(false);
   const form = useForm<ForgotPasswordInput>({
     resolver: zodResolver(ForgotPasswordSchema),
@@ -23,7 +27,7 @@ export default function ForgotPassword() {
 
   return (
     <AuthScreen title={t("auth.forgotPassword")} description={t("auth.forgotDescription")}>
-      <View className="gap-4 rounded-2xl bg-card p-5 shadow-sm">
+      <View style={{ backgroundColor: colors.card }} className="gap-4 rounded-2xl p-5 shadow-sm">
         {sent ? (
           <View className="items-center gap-3">
             <Text className="text-center text-sm text-muted-foreground">
