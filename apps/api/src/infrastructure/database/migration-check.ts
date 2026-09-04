@@ -10,6 +10,7 @@ const MIGRATIONS_PATH = path.resolve(process.cwd(), "../../migrations/pg");
 const DATABASE_PREFIX = "monolith_migration_check";
 const ENUM_OWNER_MIGRATION = "0002_colossal_zodiak.sql";
 const HARDENING_MIGRATION = "0003_production_hardening.sql";
+const SINGLE_MIGRATION_TAG = "0000_initial";
 const HARDENED_TABLES = [
   "audit_logs",
   "outbox_events",
@@ -44,7 +45,16 @@ function assertSafeDatabaseName(database: string): void {
 
 async function assertEnumMigrationOwnership(): Promise<void> {
   const enumAlteration =
-    /ALTER TYPE\s+"public"\."outbox_status"\s+ADD VALUE(?:\s+IF NOT EXISTS)?\s+'DEAD_LETTER'/gi;
+    /ALTER TYPE\s+"public"\."outbox_status"\s+ADD VALUE(?:\s+IF NOT EXISTS)?\s+'DEAD_LETTER'|CREATE TYPE\s+"public"\."outbox_status"[^;]*'DEAD_LETTER'/gi;
+  const journal = JSON.parse(await readFile(path.join(MIGRATIONS_PATH, "meta", "_journal.json"), "utf8")) as MigrationJournal;
+  const isSingle = journal.entries.length === 1 && journal.entries[0]?.tag === SINGLE_MIGRATION_TAG;
+  if (isSingle) {
+    const single = await readFile(path.join(MIGRATIONS_PATH, `${SINGLE_MIGRATION_TAG}.sql`), "utf8");
+    if ((single.match(enumAlteration) ?? []).length !== 1) {
+      throw new Error(`${SINGLE_MIGRATION_TAG}.sql must contain DEAD_LETTER exactly once`);
+    }
+    return;
+  }
   const enumOwner = await readFile(path.join(MIGRATIONS_PATH, ENUM_OWNER_MIGRATION), "utf8");
   const hardening = await readFile(path.join(MIGRATIONS_PATH, HARDENING_MIGRATION), "utf8");
   if ((enumOwner.match(enumAlteration) ?? []).length !== 1) {

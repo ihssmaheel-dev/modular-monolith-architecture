@@ -14,11 +14,9 @@ The migration check creates isolated databases, applies the complete chain to on
 another from every migration except the latest. It also verifies the enum ownership, migration
 history, hardening RLS policies, and audit-retention function.
 
-Production migrations are append-only. Review generated SQL before applying it, never edit an
+> **Pre-production squash (2026-09-04):** History was squashed to a single `0000_initial.sql` because no production database exists yet. The single file contains the full schema + RLS + audit immutability + retention function. After this point, migrations are append-only — never edit `0000_initial` once you have production data.
+
+Production migrations are append-only after `0000_initial`. Review generated SQL before applying it, never edit an
 already-applied migration, and keep the journal entry in `migrations/pg/meta/_journal.json` in sync.
-The duplicate enum statement that was present in the pre-release hardening migration was removed
-before production rollout; subsequent migrations must remain immutable.
-Environments that already applied the pre-release 0003 should keep their existing migration
-history and must not replay that migration manually.
 Operational or security SQL that is not represented in the Drizzle schema belongs in a reviewed,
-journaled migration like `0003_production_hardening.sql`.
+journaled migration (e.g., `0001_add_feature.sql`).

@@ -1,1 +1,0 @@
-ALTER TYPE "public"."outbox_status" ADD VALUE 'DEAD_LETTER';
