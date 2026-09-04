@@ -1,11 +1,12 @@
 import { ok, err, Result } from "neverthrow";
 import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 import type { EmailDriver, EmailError, SendEmailParams, SendEmailResult } from "../email.types";
 import { env } from "../../../config/env";
 import { PinoLoggerService } from "../../logger/logger.service";
 
 export class SmtpDriver implements EmailDriver {
-  private transporter: nodemailer.Transporter;
+  private transporter: Transporter;
   private logger: PinoLoggerService;
 
   constructor(logger: PinoLoggerService) {

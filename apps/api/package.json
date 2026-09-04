@@ -50,10 +50,10 @@
     "@nestjs/websockets": "^11.2.3",
     "@node-rs/argon2": "^2.2.0",
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.79.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.221.0",
-    "@opentelemetry/sdk-node": "^0.221.0",
-    "@opentelemetry/sdk-trace-base": "^2.11.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.80.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.222.0",
+    "@opentelemetry/sdk-node": "^0.222.0",
+    "@opentelemetry/sdk-trace-base": "2.11.0",
     "@orpc/contract": "^1.15.0",
     "@orpc/nest": "^1.15.0",
     "@orpc/openapi": "^1.15.0",
@@ -73,7 +73,7 @@
     "jsonwebtoken": "^9.0.3",
     "nestjs-cls": "^6.2.2",
     "neverthrow": "^8.2.0",
-    "nodemailer": "^9.1.1",
+    "nodemailer": "^10.0.0",
     "opossum": "^10.0.0",
     "pg": "8.23.0",
     "pino": "^10.3.1",
@@ -101,7 +101,7 @@
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.69.0",
     "@typescript-eslint/parser": "^8.69.0",
-    "@vitest/coverage-v8": "4.1.11",
+    "@vitest/coverage-v8": "5.0.0",
     "concurrently": "^10.0.5",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.9.1",
@@ -110,6 +110,7 @@
     "nodemon": "^3.1.14",
     "testcontainers": "^12.1.0",
     "typescript": "~6.0.3",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.0",
+    "vite-tsconfig-paths": "^6.1.1"
   }
 }
