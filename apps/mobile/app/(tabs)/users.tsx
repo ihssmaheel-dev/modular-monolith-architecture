@@ -15,7 +15,7 @@ export default function Users() {
   if (role !== "admin") return <Redirect href="/(tabs)" />;
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-background">
       <FlatList
         data={usersQuery.data?.users ?? []}
         keyExtractor={(item) => item.id}
@@ -23,15 +23,15 @@ export default function Users() {
         onRefresh={() => usersQuery.refetch()}
         refreshing={usersQuery.isRefetching}
         ListHeaderComponent={
-          <Text className="mb-2 text-lg font-bold text-slate-900">
+          <Text className="mb-2 text-lg font-bold text-foreground">
             {t("users.title")} ({usersQuery.data?.total ?? "—"})
           </Text>
         }
         renderItem={({ item }) => (
-          <View className="rounded-xl bg-white p-4 shadow-sm">
-            <Text className="font-semibold text-slate-900">{item.name}</Text>
-            <Text className="font-mono text-xs text-slate-500">{item.email}</Text>
-            <Text className="mt-1 text-[10px] font-medium uppercase text-slate-500">
+          <View className="rounded-xl bg-card p-4 shadow-sm">
+            <Text className="font-semibold text-foreground">{item.name}</Text>
+            <Text className="font-mono text-xs text-muted-foreground">{item.email}</Text>
+            <Text className="mt-1 text-[10px] font-medium uppercase text-muted-foreground">
               {item.role}
             </Text>
           </View>
@@ -40,14 +40,14 @@ export default function Users() {
           usersQuery.isLoading ? (
             <ActivityIndicator className="mt-10" />
           ) : usersQuery.isError ? (
-            <View className="items-center gap-2 rounded-xl border border-red-200 p-6">
-              <Text className="text-sm text-red-600">{t("errors.networkError")}</Text>
+            <View className="items-center gap-2 rounded-xl border border-destructive p-6">
+              <Text className="text-sm text-destructive">{t("errors.networkError")}</Text>
               <Pressable onPress={() => usersQuery.refetch()}>
                 <Text className="text-sm font-medium underline">{t("common.retry")}</Text>
               </Pressable>
             </View>
           ) : (
-            <Text className="mt-10 text-center text-sm text-slate-500">{t("users.noUsers")}</Text>
+            <Text className="mt-10 text-center text-sm text-muted-foreground">{t("users.noUsers")}</Text>
           )
         }
         ListFooterComponent={
@@ -56,17 +56,17 @@ export default function Users() {
               <Pressable
                 disabled={page <= 1}
                 onPress={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-lg border border-slate-200 px-4 py-2 disabled:opacity-40"
+                className="rounded-lg border border-border px-4 py-2 disabled:opacity-40"
               >
                 <Text className="text-sm font-medium">{t("common.previous")}</Text>
               </Pressable>
-              <Text className="text-xs text-slate-500">
+              <Text className="text-xs text-muted-foreground">
                 {t("common.pageOf", { page, totalPages: usersQuery.data.totalPages })}
               </Text>
               <Pressable
                 disabled={page >= (usersQuery.data?.totalPages ?? 1)}
                 onPress={() => setPage((p) => p + 1)}
-                className="rounded-lg border border-slate-200 px-4 py-2 disabled:opacity-40"
+                className="rounded-lg border border-border px-4 py-2 disabled:opacity-40"
               >
                 <Text className="text-sm font-medium">{t("common.next")}</Text>
               </Pressable>

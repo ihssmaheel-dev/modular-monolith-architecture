@@ -16,10 +16,10 @@ export default function AcceptInvitation() {
 
   if (!isValidToken) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50 p-4">
-        <View className="w-full max-w-md gap-3 rounded-2xl bg-white p-5 shadow-sm">
-          <Text className="text-xl font-bold text-slate-900">{t("tenancy.invalidInvitationLink")}</Text>
-          <Text className="text-sm text-slate-500">{t("tenancy.invalidInvitationDescription")}</Text>
+      <View className="flex-1 items-center justify-center bg-background p-4">
+        <View className="w-full max-w-md gap-3 rounded-2xl bg-card p-5 shadow-sm">
+          <Text className="text-xl font-bold text-foreground">{t("tenancy.invalidInvitationLink")}</Text>
+          <Text className="text-sm text-muted-foreground">{t("tenancy.invalidInvitationDescription")}</Text>
           <Link href="/(auth)/login" className="text-center text-sm font-medium underline">
             {t("auth.backToLogin")}
           </Link>
@@ -30,13 +30,13 @@ export default function AcceptInvitation() {
 
   if (!user) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50 p-4">
-        <View className="w-full max-w-md gap-3 rounded-2xl bg-white p-5 shadow-sm">
-          <Text className="text-xl font-bold text-slate-900">{t("tenancy.acceptInvitation")}</Text>
-          <Text className="text-sm text-slate-500">{t("tenancy.signInToAccept")}</Text>
+      <View className="flex-1 items-center justify-center bg-background p-4">
+        <View className="w-full max-w-md gap-3 rounded-2xl bg-card p-5 shadow-sm">
+          <Text className="text-xl font-bold text-foreground">{t("tenancy.acceptInvitation")}</Text>
+          <Text className="text-sm text-muted-foreground">{t("tenancy.signInToAccept")}</Text>
           <Link
             href={{ pathname: "/(auth)/login", params: { inviteToken: value } }}
-            className="rounded-lg bg-slate-900 py-3 text-center font-semibold text-white"
+            className="rounded-lg bg-primary py-3 text-center font-semibold text-primary-foreground"
           >
             {t("auth.signIn")}
           </Link>
@@ -47,15 +47,15 @@ export default function AcceptInvitation() {
 
   if (mutation.isSuccess) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50 p-4">
-        <View className="w-full max-w-md items-center gap-3 rounded-2xl bg-white p-5 shadow-sm">
-          <Text className="text-xl font-bold text-slate-900">{t("tenancy.invitationAccepted")}</Text>
-          <Text className="text-center text-sm text-slate-500">
+      <View className="flex-1 items-center justify-center bg-background p-4">
+        <View className="w-full max-w-md items-center gap-3 rounded-2xl bg-card p-5 shadow-sm">
+          <Text className="text-xl font-bold text-foreground">{t("tenancy.invitationAccepted")}</Text>
+          <Text className="text-center text-sm text-muted-foreground">
             {t("tenancy.invitationAcceptedDescription")}
           </Text>
           <Link
             href="/(tabs)"
-            className="w-full rounded-lg bg-slate-900 py-3 text-center font-semibold text-white"
+            className="w-full rounded-lg bg-primary py-3 text-center font-semibold text-primary-foreground"
           >
             {t("tenancy.goToWorkspace")}
           </Link>
@@ -65,19 +65,19 @@ export default function AcceptInvitation() {
   }
 
   return (
-    <View className="flex-1 items-center justify-center bg-slate-50 p-4">
-      <View className="w-full max-w-md gap-3 rounded-2xl bg-white p-5 shadow-sm">
-        <Text className="text-xl font-bold text-slate-900">{t("tenancy.acceptInvitation")}</Text>
-        <Text className="text-sm text-slate-500">{t("tenancy.acceptInvitationDescription")}</Text>
+    <View className="flex-1 items-center justify-center bg-background p-4">
+      <View className="w-full max-w-md gap-3 rounded-2xl bg-card p-5 shadow-sm">
+        <Text className="text-xl font-bold text-foreground">{t("tenancy.acceptInvitation")}</Text>
+        <Text className="text-sm text-muted-foreground">{t("tenancy.acceptInvitationDescription")}</Text>
         {mutation.isError && (
-          <Text className="text-sm text-red-600">{t("tenancy.acceptFailed")}</Text>
+          <Text className="text-sm text-destructive">{t("tenancy.acceptFailed")}</Text>
         )}
         <Pressable
-          className="rounded-lg bg-slate-900 py-3 disabled:opacity-50"
+          className="rounded-lg bg-primary py-3 disabled:opacity-50"
           disabled={mutation.isPending}
           onPress={() => mutation.mutate(value)}
         >
-          <Text className="text-center font-semibold text-white">
+          <Text className="text-center font-semibold text-primary-foreground">
             {mutation.isPending ? t("tenancy.accepting") : t("tenancy.accept")}
           </Text>
         </Pressable>

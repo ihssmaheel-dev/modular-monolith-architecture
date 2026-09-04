@@ -31,15 +31,15 @@ export default function Register() {
 
   return (
     <AuthScreen title={t("auth.createAccountTitle")} description={t("auth.registerDescription")}>
-      <View className="gap-4 rounded-2xl bg-white p-5 shadow-sm">
+      <View className="gap-4 rounded-2xl bg-card p-5 shadow-sm">
         <View className="gap-1.5">
-          <Text className="text-sm font-medium text-slate-700">{t("auth.name")}</Text>
+          <Text className="text-sm font-medium text-foreground">{t("auth.name")}</Text>
           <Controller
             control={form.control}
             name="name"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className="rounded-lg border border-slate-200 px-3 py-2.5 text-base text-slate-900"
+                className="rounded-lg border border-border px-3 py-2.5 text-base text-foreground"
                 autoComplete="name"
                 placeholder={t("auth.namePlaceholder")}
                 onBlur={onBlur}
@@ -49,17 +49,17 @@ export default function Register() {
             )}
           />
           {form.formState.errors.name && (
-            <Text className="text-xs text-red-600">{form.formState.errors.name.message}</Text>
+            <Text className="text-xs text-destructive">{form.formState.errors.name.message}</Text>
           )}
         </View>
         <View className="gap-1.5">
-          <Text className="text-sm font-medium text-slate-700">{t("auth.email")}</Text>
+          <Text className="text-sm font-medium text-foreground">{t("auth.email")}</Text>
           <Controller
             control={form.control}
             name="email"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className="rounded-lg border border-slate-200 px-3 py-2.5 text-base text-slate-900"
+                className="rounded-lg border border-border px-3 py-2.5 text-base text-foreground"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -71,17 +71,17 @@ export default function Register() {
             )}
           />
           {form.formState.errors.email && (
-            <Text className="text-xs text-red-600">{form.formState.errors.email.message}</Text>
+            <Text className="text-xs text-destructive">{form.formState.errors.email.message}</Text>
           )}
         </View>
         <View className="gap-1.5">
-          <Text className="text-sm font-medium text-slate-700">{t("auth.password")}</Text>
+          <Text className="text-sm font-medium text-foreground">{t("auth.password")}</Text>
           <Controller
             control={form.control}
             name="password"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className="rounded-lg border border-slate-200 px-3 py-2.5 text-base text-slate-900"
+                className="rounded-lg border border-border px-3 py-2.5 text-base text-foreground"
                 secureTextEntry={!showPassword}
                 autoComplete="password-new"
                 placeholder={t("auth.createPasswordPlaceholder")}
@@ -92,28 +92,28 @@ export default function Register() {
             )}
           />
           {form.formState.errors.password && (
-            <Text className="text-xs text-red-600">{form.formState.errors.password.message}</Text>
+            <Text className="text-xs text-destructive">{form.formState.errors.password.message}</Text>
           )}
           <Pressable onPress={() => setShowPassword((v) => !v)}>
-            <Text className="text-xs text-slate-500">
+            <Text className="text-xs text-muted-foreground">
               {showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
             </Text>
           </Pressable>
         </View>
-        <Text className="text-xs text-slate-500">{t("auth.termsNotice")}</Text>
+        <Text className="text-xs text-muted-foreground">{t("auth.termsNotice")}</Text>
         {mutation.isError && (
-          <Text className="text-sm text-red-600">{t(mutation.error.message)}</Text>
+          <Text className="text-sm text-destructive">{t(mutation.error.message)}</Text>
         )}
         <Pressable
-          className="rounded-lg bg-slate-900 py-3 disabled:opacity-50"
+          className="rounded-lg bg-primary py-3 disabled:opacity-50"
           disabled={mutation.isPending}
           onPress={form.handleSubmit((data) => mutation.mutate(data))}
         >
-          <Text className="text-center font-semibold text-white">
+          <Text className="text-center font-semibold text-primary-foreground">
             {mutation.isPending ? t("auth.creatingAccount") : t("auth.createAccount")}
           </Text>
         </Pressable>
-        <Link href="/(auth)/login" className="text-center text-sm text-slate-500">
+        <Link href="/(auth)/login" className="text-center text-sm text-muted-foreground">
           {t("auth.hasAccount")} {t("auth.login")}
         </Link>
       </View>

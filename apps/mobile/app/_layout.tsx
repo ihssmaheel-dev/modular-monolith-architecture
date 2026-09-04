@@ -8,6 +8,8 @@ import { getApiClient } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLocaleStore } from "@/stores/locale.store";
 import { useTenantStore } from "@/stores/tenant.store";
+import { useThemeStore } from "@/stores/theme.store";
+import { ThemeProvider } from "@/theme/theme-provider";
 import "../global.css";
 
 export default function RootLayout() {
@@ -21,6 +23,7 @@ export default function RootLayout() {
         useAuthStore.persist.rehydrate(),
         useLocaleStore.persist.rehydrate(),
         useTenantStore.persist.rehydrate(),
+        useThemeStore.persist.rehydrate(),
       ]);
       if (!active) return;
       applyLocale(useLocaleStore.getState().locale);
@@ -42,7 +45,7 @@ export default function RootLayout() {
 
   if (!ready || status === "loading") {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator />
       </View>
     );
@@ -50,8 +53,10 @@ export default function RootLayout() {
 
   return (
     <QueryProvider>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }} />
+      <ThemeProvider>
+        <StatusBar style="auto" />
+        <Stack screenOptions={{ headerShown: false }} />
+      </ThemeProvider>
     </QueryProvider>
   );
 }

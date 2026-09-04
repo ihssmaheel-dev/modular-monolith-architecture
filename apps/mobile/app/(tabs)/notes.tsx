@@ -33,7 +33,7 @@ export default function Notes() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-background">
       <FlatList
         data={notesQuery.data?.items ?? []}
         keyExtractor={(item) => item.id}
@@ -43,26 +43,26 @@ export default function Notes() {
         }
         ListHeaderComponent={
           <View className="mb-2 flex-row items-center justify-between">
-            <Text className="text-lg font-bold text-slate-900">
+            <Text className="text-lg font-bold text-foreground">
               {t("notes.title")} ({notesQuery.data?.total ?? "—"})
             </Text>
-            <Link href="/notes/new" className="text-sm font-medium text-slate-900 underline">
+            <Link href="/notes/new" className="text-sm font-medium text-foreground underline">
               {t("notes.newNote")}
             </Link>
           </View>
         }
         renderItem={({ item }) => (
-          <View className="flex-row items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm">
+          <View className="flex-row items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-sm">
             <View className="min-w-0 flex-1">
-              <Text className="font-medium text-slate-900" numberOfLines={1}>
+              <Text className="font-medium text-foreground" numberOfLines={1}>
                 {item.title}
               </Text>
-              <Text className="text-xs text-slate-500" numberOfLines={2}>
+              <Text className="text-xs text-muted-foreground" numberOfLines={2}>
                 {item.content}
               </Text>
             </View>
             <Pressable onPress={() => confirmDelete(item.id, item.title)} className="px-2 py-1">
-              <Text className="text-sm font-medium text-red-600">{t("common.delete")}</Text>
+              <Text className="text-sm font-medium text-destructive">{t("common.delete")}</Text>
             </Pressable>
           </View>
         )}
@@ -70,14 +70,14 @@ export default function Notes() {
           notesQuery.isLoading ? (
             <ActivityIndicator className="mt-10" />
           ) : notesQuery.isError ? (
-            <View className="items-center gap-2 rounded-xl border border-red-200 p-6">
-              <Text className="text-sm text-red-600">{t("errors.networkError")}</Text>
+            <View className="items-center gap-2 rounded-xl border border-destructive p-6">
+              <Text className="text-sm text-destructive">{t("errors.networkError")}</Text>
               <Pressable onPress={() => notesQuery.refetch()}>
                 <Text className="text-sm font-medium underline">{t("common.retry")}</Text>
               </Pressable>
             </View>
           ) : (
-            <Text className="mt-10 text-center text-sm text-slate-500">{t("notes.noNotes")}</Text>
+            <Text className="mt-10 text-center text-sm text-muted-foreground">{t("notes.noNotes")}</Text>
           )
         }
         ListFooterComponent={
@@ -86,17 +86,17 @@ export default function Notes() {
               <Pressable
                 disabled={page <= 1}
                 onPress={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-lg border border-slate-200 px-4 py-2 disabled:opacity-40"
+                className="rounded-lg border border-border px-4 py-2 disabled:opacity-40"
               >
                 <Text className="text-sm font-medium">{t("common.previous")}</Text>
               </Pressable>
-              <Text className="text-xs text-slate-500">
+              <Text className="text-xs text-muted-foreground">
                 {t("common.pageOf", { page, totalPages: notesQuery.data.totalPages })}
               </Text>
               <Pressable
                 disabled={page >= (notesQuery.data?.totalPages ?? 1)}
                 onPress={() => setPage((p) => p + 1)}
-                className="rounded-lg border border-slate-200 px-4 py-2 disabled:opacity-40"
+                className="rounded-lg border border-border px-4 py-2 disabled:opacity-40"
               >
                 <Text className="text-sm font-medium">{t("common.next")}</Text>
               </Pressable>

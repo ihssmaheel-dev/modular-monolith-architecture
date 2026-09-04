@@ -23,26 +23,26 @@ export default function ForgotPassword() {
 
   return (
     <AuthScreen title={t("auth.forgotPassword")} description={t("auth.forgotDescription")}>
-      <View className="gap-4 rounded-2xl bg-white p-5 shadow-sm">
+      <View className="gap-4 rounded-2xl bg-card p-5 shadow-sm">
         {sent ? (
           <View className="items-center gap-3">
-            <Text className="text-center text-sm text-slate-500">
+            <Text className="text-center text-sm text-muted-foreground">
               {t("auth.checkEmailDescription")}
             </Text>
-            <Link href="/(auth)/login" className="text-sm font-medium text-slate-900 underline">
+            <Link href="/(auth)/login" className="text-sm font-medium text-foreground underline">
               {t("auth.backToLogin")}
             </Link>
           </View>
         ) : (
           <View className="gap-4">
             <View className="gap-1.5">
-              <Text className="text-sm font-medium text-slate-700">{t("auth.email")}</Text>
+              <Text className="text-sm font-medium text-foreground">{t("auth.email")}</Text>
               <Controller
                 control={form.control}
                 name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    className="rounded-lg border border-slate-200 px-3 py-2.5 text-base text-slate-900"
+                    className="rounded-lg border border-border px-3 py-2.5 text-base text-foreground"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
@@ -53,18 +53,18 @@ export default function ForgotPassword() {
                 )}
               />
               {form.formState.errors.email && (
-                <Text className="text-xs text-red-600">{form.formState.errors.email.message}</Text>
+                <Text className="text-xs text-destructive">{form.formState.errors.email.message}</Text>
               )}
             </View>
             {mutation.isError && (
-              <Text className="text-sm text-red-600">{t("auth.requestFailed")}</Text>
+              <Text className="text-sm text-destructive">{t("auth.requestFailed")}</Text>
             )}
             <Pressable
-              className="rounded-lg bg-slate-900 py-3 disabled:opacity-50"
+              className="rounded-lg bg-primary py-3 disabled:opacity-50"
               disabled={mutation.isPending}
               onPress={form.handleSubmit((data) => mutation.mutate(data))}
             >
-              <Text className="text-center font-semibold text-white">
+              <Text className="text-center font-semibold text-primary-foreground">
                 {mutation.isPending ? t("auth.sending") : t("auth.sendResetLink")}
               </Text>
             </Pressable>

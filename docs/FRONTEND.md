@@ -67,9 +67,25 @@ token, asks the recipient to sign in when necessary, and returns to the
 invitation after login or registration. Email listener tests assert the emitted
 paths and encoded token query values as link smoke tests.
 
+## Design tokens — single-file reskin
+
+One source: `packages/design-tokens/src/presets/active.json` (Zod-validated). Edit one file, run one command:
+
+```bash
+pnpm theme:generate # regenerates 3 targets
+pnpm theme:check    # CI guard — fails if generated files are stale
+```
+
+Generated targets (never hand-edit):
+- `packages/ui/src/styles/tokens.generated.css` → web light/dark CSS vars (`:root`/`.dark`, radius, fonts) — imported by `packages/ui/src/styles/globals.css`
+- `packages/email/src/styles/tokens.ts` → email light/dark + brand hex (CTA uses brand purple)
+- `apps/mobile/src/theme/tokens.generated.ts` + `tailwind.tokens.generated.js` → RN hex + NativeWind `theme.extend.colors` (semantic: `background/foreground/card/primary/muted/border/...`)
+
+Reskin workflow: change `light.primary` or `brand.purple` in `active.json`, run `pnpm theme:generate`, rebuild `web` + `mobile`. No component edits needed. Dark mode (`light|dark|system`) is shared: web via `ThemeProvider` (`localStorage` + `matchMedia` + `d` toggle), mobile via `useThemeStore` (`SecureStore` + `useColorScheme`) + `ThemeProvider` (`dark` class for NativeWind).
+
 ## Shared UI
 
-Use primitives from `@repo/ui/components/ui/*` and composed components from `@repo/ui/components/composed/*`. Keep tokens in `packages/ui/src/styles/globals.css`; import that stylesheet once from the web root. Add new primitives through the shadcn CLI configured by `apps/web/components.json`.
+Use primitives from `@repo/ui/components/ui/*` and composed components from `@repo/ui/components/composed/*` on web. On mobile, use mirrored primitives from `apps/mobile/src/components/ui/*` (`Button/Card/Input/Label/Badge/Skeleton/EmptyState/ConfirmDialog/DataTable/Tabs/Sheet/Toast/Text/PageHeader`) — same prop names (`variant/size`) as web, implemented with RN `Pressable/View/TextInput` + `mobileTokens[resolvedTheme]` + Tailwind semantic classes (`bg-background/text-foreground/border-border`). Never import `@repo/ui` in mobile (DOM-only). Add web primitives via `pnpm dlx shadcn@latest add <c> -c apps/web` (lands in `@repo/ui`); add mobile mirrors manually to keep parity.
 
 ## Adding a web feature
 
