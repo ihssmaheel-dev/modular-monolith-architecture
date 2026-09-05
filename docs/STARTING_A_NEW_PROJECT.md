@@ -2,6 +2,22 @@
 
 This repository is a reusable modular-monolith foundation. The `notes` module is a deliberately small reference vertical slice; it is not the product domain. Start every new product or business capability by copying the flow, not by copying storage tables or weakening the boundaries.
 
+## Initialize a fork
+
+After forking, initialize the product metadata and local application identity:
+
+```bash
+pnpm project:init --name "Acme Portal" --slug acme-portal --dry-run
+pnpm project:init --name "Acme Portal" --slug acme-portal --reset-local-env --yes
+```
+
+The command updates package/mobile identifiers, local display names, Docker service names, and
+observability labels. `--reset-local-env` recreates ignored local `.env` files with fresh secrets;
+it never resets a database or deletes tracked source without an explicit migration plan. The notes
+slice remains intentionally available as a reference implementation so its immutable baseline
+migration and contract tests stay coherent. Remove that slice only after replacing its migration
+with a new product baseline and updating the associated contract, client, UI, and test surfaces.
+
 ## Choose the deployment tenancy model first
 
 Set `TENANCY_MODE=single` for a product with one logical workspace, or `TENANCY_MODE=multi` for organizations with memberships. This is deployment configuration, not a request parameter. The same code supports both modes: single mode stores tenant-owned rows with a null tenant and multi mode requires a UUID `x-tenant-id` whose membership is verified for every request. Never accept a client-provided mode.
