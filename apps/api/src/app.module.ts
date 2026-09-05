@@ -25,6 +25,7 @@ import { I18nModule } from "./infrastructure/i18n/i18n.module";
 import { FeatureFlagsModule } from "./infrastructure/feature-flags";
 import { AuditModule } from "./infrastructure/audit/audit.module";
 import { OutboxModule } from "./infrastructure/outbox/outbox.module";
+import { ErrorReportingModule } from "./infrastructure/error-reporting";
 import { AuthorizationModule } from "./infrastructure/authorization";
 import { APP_INTERCEPTOR, APP_GUARD } from "@nestjs/core";
 import { MetricsModule } from "./infrastructure/metrics/metrics.module";
@@ -70,6 +71,7 @@ import { ORPCModule } from "./infrastructure/orpc/orpc-runtime";
     MetricsModule,
     AuditModule,
     OutboxModule,
+    ErrorReportingModule,
     AuthorizationModule,
     TenancyModule.forRoot(),
     UsersModule,

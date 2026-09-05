@@ -57,6 +57,7 @@ function rejectPlaceholders(env: EnvironmentForValidation, context: RefinementCt
     ["JWT_SECRET", env.JWT_SECRET],
     ["JWT_REFRESH_SECRET", env.JWT_REFRESH_SECRET],
     ["METRICS_TOKEN", env.METRICS_TOKEN],
+    ["ERROR_REPORTING_TOKEN", env.ERROR_REPORTING_TOKEN],
     ["DATABASE_URL", env.DATABASE_URL],
     ["REDIS_URL", env.REDIS_URL],
     ["S3_ACCESS_KEY_ID", env.S3_ACCESS_KEY_ID],

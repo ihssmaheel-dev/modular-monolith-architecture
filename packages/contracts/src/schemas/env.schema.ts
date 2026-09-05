@@ -20,6 +20,10 @@ function parseJsonKeyring(value: unknown): unknown {
   }
 }
 
+function emptyStringAsUndefined(value: unknown): unknown {
+  return value === "" ? undefined : value;
+}
+
 function isFeatureFlagsJson(value: string): boolean {
   try {
     const parsed: unknown = JSON.parse(value);
@@ -110,6 +114,8 @@ export const envSchema = z
 
     OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default("http://localhost:4318/v1/traces"),
     LOKI_HOST: z.string().url().default("http://localhost:3100"),
+    ERROR_REPORTING_URL: z.preprocess(emptyStringAsUndefined, z.string().url().optional()),
+    ERROR_REPORTING_TOKEN: z.preprocess(emptyStringAsUndefined, z.string().min(16).optional()),
 
     STORAGE_DRIVER: z.enum(["s3"]).default("s3"),
     S3_ENDPOINT: z.string().url().default("http://localhost:9000"),

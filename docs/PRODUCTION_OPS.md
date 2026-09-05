@@ -36,9 +36,19 @@ and `GET /` afterwards. Roll back by re-running with the previous `TAG`.
 Prefer file-mounted secrets over inline env in production: set `<NAME>_FILE` to a secret path
 (Docker secrets, Vault Agent, AWS SM mounts). Supported: `DATABASE_URL`, `REDIS_URL`,
 `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_SIGNING_KEYS`, `JWT_REFRESH_SIGNING_KEYS`,
-`METRICS_TOKEN`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+`METRICS_TOKEN`, `ERROR_REPORTING_TOKEN`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
 `SMTP_USER`, `SMTP_PASS`, `RESEND_API_KEY`, `SEED_ADMIN_PASSWORD`. File content wins and faces
 the same Zod validation. See `docs/ENVIRONMENT.md` and `docker/.env.prod.example`.
+
+## Error reporting
+
+The API always emits structured error logs. Set `ERROR_REPORTING_URL` to optionally forward only
+unhandled server errors to any HTTP JSON collector; `ERROR_REPORTING_TOKEN` adds a bearer token.
+The payload has a documented `schemaVersion`, sanitized request context, request ID, and optional
+trace/user/tenant IDs, but never includes request headers or bodies. Delivery is asynchronous,
+bounded by a short timeout, and protected by a circuit breaker so an unavailable collector cannot
+impact API requests. Keep logs as the baseline signal and adapt the neutral payload at the
+collector boundary for the chosen observability provider.
 
 ## Workers and migrations
 

@@ -29,3 +29,5 @@ export { FeatureFlagsService } from "./feature-flags/feature-flags.service";
 export type { FeatureFlagContext, FeatureFlagProvider } from "./feature-flags/feature-flags.types";
 export { AuthorizationModule, AuthorizationService } from "./authorization";
 export { setupApiDocs } from "./api-docs";
+export { ErrorReportingModule, ErrorReporterService } from "./error-reporting";
+export type { ErrorReport, ErrorReportContext, ErrorReporter } from "./error-reporting";

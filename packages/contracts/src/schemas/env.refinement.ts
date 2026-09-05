@@ -20,6 +20,8 @@ export type EnvironmentForValidation = {
   NODE_ENV: "development" | "test" | "production";
   REDIS_URL?: string;
   METRICS_TOKEN?: string;
+  ERROR_REPORTING_URL?: string;
+  ERROR_REPORTING_TOKEN?: string;
   STORAGE_DRIVER: "s3";
   S3_ACCESS_KEY_ID: string;
   S3_SECRET_ACCESS_KEY: string;
@@ -88,6 +90,13 @@ export function validateEnvironment(env: EnvironmentForValidation, context: Refi
       path: ["METRICS_TOKEN"],
       message: "METRICS_TOKEN is required in production",
     });
+  if (env.ERROR_REPORTING_URL && !isHttpsUrl(env.ERROR_REPORTING_URL)) {
+    context.addIssue({
+      code: "custom",
+      path: ["ERROR_REPORTING_URL"],
+      message: "ERROR_REPORTING_URL must use HTTPS in production",
+    });
+  }
   if (env.JWT_SECRET === DEFAULT_JWT_SECRET || env.JWT_SECRET.includes("change-in-prod")) {
     context.addIssue({
       code: "custom",
@@ -138,4 +147,12 @@ function activeSecret(env: EnvironmentForValidation, refresh: boolean): string {
   const activeKeyId = refresh ? env.JWT_REFRESH_ACTIVE_KEY_ID : env.JWT_ACTIVE_KEY_ID;
   const fallback = refresh ? env.JWT_REFRESH_SECRET : env.JWT_SECRET;
   return keyring?.[activeKeyId] ?? fallback;
+}
+
+function isHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
 }

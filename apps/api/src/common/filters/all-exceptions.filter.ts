@@ -5,6 +5,7 @@ import { PinoLoggerService } from "../../infrastructure/logger/logger.service";
 import { I18nService } from "../../infrastructure/i18n/i18n.service";
 import { createApiErrorEnvelope } from "../utils/error-envelope.utils";
 import { REQUEST_ID_HEADER, resolveRequestId } from "../utils/request-id.utils";
+import type { ErrorReporter } from "../../infrastructure/error-reporting";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -12,6 +13,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     private readonly logger: PinoLoggerService,
     private readonly i18n: I18nService,
     private readonly cls?: ClsService,
+    private readonly reporter?: ErrorReporter,
   ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -31,6 +33,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error({ err: exception, requestId }, "Unhandled exception");
+      void this.reporter?.capture(exception, this.reportContext(request, requestId));
     }
     response.header(REQUEST_ID_HEADER, requestId);
     if (this.isOrpcRequest(request)) {
@@ -59,5 +62,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
     return typeof active === "string" && active
       ? active
       : resolveRequestId(request.headers[REQUEST_ID_HEADER]);
+  }
+
+  private reportContext(request: FastifyRequest, requestId: string) {
+    const requestWithContext = request as FastifyRequest & {
+      user?: { sub?: string };
+      tenant?: { tenantId?: string };
+    };
+    return {
+      requestId,
+      method: request.method,
+      path: request.url?.split("?")[0] ?? "/",
+      ...(requestWithContext.user?.sub ? { userId: requestWithContext.user.sub } : {}),
+      ...(requestWithContext.tenant?.tenantId
+        ? { tenantId: requestWithContext.tenant.tenantId }
+        : {}),
+    };
   }
 }

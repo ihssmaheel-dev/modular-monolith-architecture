@@ -16,7 +16,7 @@ Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/we
 For Docker secrets, Vault Agent, or AWS Secrets Manager file mounts, any sensitive variable below
 may be supplied via a `<NAME>_FILE` path instead of inline. The file content (trimmed) wins over the
 inline value. Supported: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`,
-`JWT_SIGNING_KEYS`, `JWT_REFRESH_SIGNING_KEYS`, `METRICS_TOKEN`,
+`JWT_SIGNING_KEYS`, `JWT_REFRESH_SIGNING_KEYS`, `METRICS_TOKEN`, `ERROR_REPORTING_TOKEN`,
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `SMTP_USER`, `SMTP_PASS`, `RESEND_API_KEY`, `SEED_ADMIN_PASSWORD`.
 
 ```env
@@ -74,6 +74,8 @@ the same checks. See `docker/.env.prod.example` for the compose-side pattern.
 | `LOCKOUT_DURATION_MINUTES`           | `15`; account-lockout duration                                     |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`        | `http://localhost:4318/v1/traces`; trace collector endpoint        |
 | `LOKI_HOST`                          | `http://localhost:3100`; Loki log aggregation endpoint             |
+| `ERROR_REPORTING_URL`                | Optional provider-neutral JSON error sink                          |
+| `ERROR_REPORTING_TOKEN`              | Optional bearer token for the error sink                           |
 
 JWT keyrings are JSON objects whose values are secrets of at least 32 characters. For example:
 

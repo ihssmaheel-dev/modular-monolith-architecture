@@ -22,6 +22,7 @@ import {
   MAX_FILE_SIZE_BYTES,
 } from "@repo/contracts";
 import { ClsService } from "nestjs-cls";
+import { ErrorReporterService } from "./infrastructure/error-reporting";
 
 // Configure high-performance global HTTP agent
 setGlobalDispatcher(
@@ -125,7 +126,9 @@ async function bootstrap() {
 
   const logger = app.get(PinoLoggerService);
   const i18n = app.get(I18nService);
-  app.useGlobalFilters(new AllExceptionsFilter(logger, i18n, app.get(ClsService)));
+  app.useGlobalFilters(
+    new AllExceptionsFilter(logger, i18n, app.get(ClsService), app.get(ErrorReporterService)),
+  );
 
   await app.register(underPressure as unknown as never, {
     maxEventLoopDelay: UNDER_PRESSURE_MAX_EVENT_LOOP_DELAY_MS,

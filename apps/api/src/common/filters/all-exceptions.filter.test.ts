@@ -12,7 +12,8 @@ function createFilter() {
   const i18n = {
     t: vi.fn((key: string) => key),
   } as unknown as I18nService;
-  return new AllExceptionsFilter(logger, i18n);
+  const reporter = { capture: vi.fn().mockResolvedValue(undefined) };
+  return { filter: new AllExceptionsFilter(logger, i18n, undefined, reporter), reporter };
 }
 
 function host(url = "/api/v1/notes") {
@@ -21,7 +22,7 @@ function host(url = "/api/v1/notes") {
     status: vi.fn().mockReturnThis(),
     send: vi.fn(),
   };
-  const request = { url, headers: { "x-request-id": "request-1" } };
+  const request = { method: "GET", url, headers: { "x-request-id": "request-1" } };
   return {
     response,
     value: {
@@ -32,7 +33,7 @@ function host(url = "/api/v1/notes") {
 
 describe("AllExceptionsFilter", () => {
   it("emits the same typed envelope for REST failures", () => {
-    const filter = createFilter();
+    const { filter } = createFilter();
     const ctx = host();
     filter.catch(
       new BadRequestException({
@@ -48,7 +49,7 @@ describe("AllExceptionsFilter", () => {
   });
 
   it("keeps the typed envelope inside the oRPC error transport", () => {
-    const filter = createFilter();
+    const { filter } = createFilter();
     const ctx = host("/api/v1/rpc/notes/list");
     filter.catch(new BadRequestException(), ctx.value as never);
     const body = ctx.response.send.mock.calls[0]![0] as { data: unknown; requestId: string };
@@ -57,7 +58,7 @@ describe("AllExceptionsFilter", () => {
   });
 
   it("localizes Zod field errors without exposing schema messages", () => {
-    const filter = createFilter();
+    const { filter } = createFilter();
     const ctx = host();
     const parsed = z.object({ email: z.string().email() }).safeParse({ email: "bad" });
     if (parsed.success) throw new Error("test fixture unexpectedly passed");
@@ -68,5 +69,17 @@ describe("AllExceptionsFilter", () => {
       code: "VALIDATION_FAILED",
       fieldErrors: { email: [expect.any(String)] },
     });
+  });
+
+  it("forwards unhandled exceptions with sanitized request context", () => {
+    const { filter, reporter } = createFilter();
+    const ctx = host("/api/v1/notes?token=secret");
+
+    filter.catch(new Error("boom"), ctx.value as never);
+
+    expect(reporter.capture).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ method: "GET", path: "/api/v1/notes", requestId: "request-1" }),
+    );
   });
 });
