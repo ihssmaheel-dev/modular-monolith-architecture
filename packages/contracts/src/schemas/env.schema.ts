@@ -3,6 +3,22 @@ import { DEFAULT_JWT_SECRET, DEFAULT_REFRESH_SECRET, validateEnvironment } from 
 
 const MAX_PORT = 65_535;
 const MAX_POOL_SIZE = 200;
+const JWT_KEY_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+
+const jwtKeyringSchema = z.record(
+  z.string().regex(JWT_KEY_ID_PATTERN, "JWT key IDs must use letters, numbers, ., _, or -"),
+  z.string().min(32),
+);
+
+function parseJsonKeyring(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  if (!value.trim()) return undefined;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value;
+  }
+}
 
 function isFeatureFlagsJson(value: string): boolean {
   try {
@@ -45,6 +61,16 @@ export const envSchema = z
 
     JWT_SECRET: z.string().min(32).default(DEFAULT_JWT_SECRET),
     JWT_REFRESH_SECRET: z.string().min(32).default(DEFAULT_REFRESH_SECRET),
+    JWT_SIGNING_KEYS: z.preprocess(parseJsonKeyring, jwtKeyringSchema.optional()),
+    JWT_REFRESH_SIGNING_KEYS: z.preprocess(parseJsonKeyring, jwtKeyringSchema.optional()),
+    JWT_ACTIVE_KEY_ID: z
+      .string()
+      .regex(JWT_KEY_ID_PATTERN, "JWT_ACTIVE_KEY_ID is invalid")
+      .default("primary"),
+    JWT_REFRESH_ACTIVE_KEY_ID: z
+      .string()
+      .regex(JWT_KEY_ID_PATTERN, "JWT_REFRESH_ACTIVE_KEY_ID is invalid")
+      .default("primary"),
     METRICS_TOKEN: z.string().min(32).optional(),
     JWT_EXPIRES_IN: z.string().default("15m"),
     JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),

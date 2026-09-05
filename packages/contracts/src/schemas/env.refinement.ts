@@ -7,6 +7,10 @@ export const DEFAULT_REFRESH_SECRET = "your-super-secret-refresh-key-change-in-p
 export type EnvironmentForValidation = {
   JWT_SECRET: string;
   JWT_REFRESH_SECRET: string;
+  JWT_SIGNING_KEYS?: Record<string, string>;
+  JWT_REFRESH_SIGNING_KEYS?: Record<string, string>;
+  JWT_ACTIVE_KEY_ID: string;
+  JWT_REFRESH_ACTIVE_KEY_ID: string;
   SEED_ADMIN_EMAIL?: string;
   SEED_ADMIN_PASSWORD?: string;
   FILE_AV_ENABLED: boolean;
@@ -36,7 +40,14 @@ export type EnvironmentForValidation = {
 };
 
 export function validateEnvironment(env: EnvironmentForValidation, context: RefinementCtx): void {
-  if (env.JWT_SECRET === env.JWT_REFRESH_SECRET) {
+  validateActiveKey(env.JWT_SIGNING_KEYS, env.JWT_ACTIVE_KEY_ID, "JWT_ACTIVE_KEY_ID", context);
+  validateActiveKey(
+    env.JWT_REFRESH_SIGNING_KEYS,
+    env.JWT_REFRESH_ACTIVE_KEY_ID,
+    "JWT_REFRESH_ACTIVE_KEY_ID",
+    context,
+  );
+  if (activeSecret(env, false) === activeSecret(env, true)) {
     context.addIssue({
       code: "custom",
       path: ["JWT_REFRESH_SECRET"],
@@ -105,4 +116,26 @@ export function validateEnvironment(env: EnvironmentForValidation, context: Refi
     });
   }
   validateProductionEndpoints(env, context);
+}
+
+function validateActiveKey(
+  keyring: Record<string, string> | undefined,
+  activeKeyId: string,
+  path: string,
+  context: RefinementCtx,
+): void {
+  if (keyring && !keyring[activeKeyId]) {
+    context.addIssue({
+      code: "custom",
+      path: [path],
+      message: `${path} must reference a configured signing key`,
+    });
+  }
+}
+
+function activeSecret(env: EnvironmentForValidation, refresh: boolean): string {
+  const keyring = refresh ? env.JWT_REFRESH_SIGNING_KEYS : env.JWT_SIGNING_KEYS;
+  const activeKeyId = refresh ? env.JWT_REFRESH_ACTIVE_KEY_ID : env.JWT_ACTIVE_KEY_ID;
+  const fallback = refresh ? env.JWT_REFRESH_SECRET : env.JWT_SECRET;
+  return keyring?.[activeKeyId] ?? fallback;
 }

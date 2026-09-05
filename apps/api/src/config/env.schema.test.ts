@@ -28,6 +28,40 @@ describe("production environment validation", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts overlapping access and refresh signing keyrings", () => {
+    const result = envSchema.safeParse({
+      ...validProductionEnv(),
+      JWT_SIGNING_KEYS: JSON.stringify({ old: "o".repeat(32), current: "c".repeat(32) }),
+      JWT_REFRESH_SIGNING_KEYS: JSON.stringify({ old: "p".repeat(32), current: "q".repeat(32) }),
+      JWT_ACTIVE_KEY_ID: "current",
+      JWT_REFRESH_ACTIVE_KEY_ID: "current",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.JWT_SIGNING_KEYS).toEqual({
+        old: "o".repeat(32),
+        current: "c".repeat(32),
+      });
+      expect(result.data.JWT_ACTIVE_KEY_ID).toBe("current");
+    }
+  });
+
+  it("rejects a signing keyring with an unknown active key", () => {
+    const result = envSchema.safeParse({
+      ...validProductionEnv(),
+      JWT_SIGNING_KEYS: JSON.stringify({ current: "c".repeat(32) }),
+      JWT_ACTIVE_KEY_ID: "missing",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.path.join("."))).toContain(
+        "JWT_ACTIVE_KEY_ID",
+      );
+    }
+  });
+
   it("rejects insecure public endpoints in production", () => {
     const result = envSchema.safeParse({
       ...validProductionEnv(),

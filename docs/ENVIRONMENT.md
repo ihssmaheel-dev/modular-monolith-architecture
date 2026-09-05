@@ -15,7 +15,8 @@ Validated in `apps/web/src/lib/env.ts` (`z.string().url()`). Example in `apps/we
 
 For Docker secrets, Vault Agent, or AWS Secrets Manager file mounts, any sensitive variable below
 may be supplied via a `<NAME>_FILE` path instead of inline. The file content (trimmed) wins over the
-inline value. Supported: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `METRICS_TOKEN`,
+inline value. Supported: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`,
+`JWT_SIGNING_KEYS`, `JWT_REFRESH_SIGNING_KEYS`, `METRICS_TOKEN`,
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `SMTP_USER`, `SMTP_PASS`, `RESEND_API_KEY`, `SEED_ADMIN_PASSWORD`.
 
 ```env
@@ -54,6 +55,10 @@ the same checks. See `docker/.env.prod.example` for the compose-side pattern.
 | ------------------------------------ | ------------------------------------------------------------------ |
 | `JWT_SECRET`                         | Access-token secret, minimum 32 characters; replace in production  |
 | `JWT_REFRESH_SECRET`                 | Separate refresh-token secret, minimum 32 characters               |
+| `JWT_SIGNING_KEYS`                   | Optional JSON keyring for access tokens during rotation            |
+| `JWT_REFRESH_SIGNING_KEYS`           | Optional JSON keyring for refresh tokens during rotation           |
+| `JWT_ACTIVE_KEY_ID`                  | `primary`; key ID used to sign new access tokens                   |
+| `JWT_REFRESH_ACTIVE_KEY_ID`          | `primary`; key ID used to sign new refresh tokens                  |
 | `JWT_EXPIRES_IN`                     | `15m`; access-token lifetime                                       |
 | `JWT_REFRESH_EXPIRES_IN`             | `7d`; refresh-token lifetime                                       |
 | `JWT_ISSUER`                         | `modular-monolith-api`; `iss` claim verified on access tokens      |
@@ -69,6 +74,21 @@ the same checks. See `docker/.env.prod.example` for the compose-side pattern.
 | `LOCKOUT_DURATION_MINUTES`           | `15`; account-lockout duration                                     |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`        | `http://localhost:4318/v1/traces`; trace collector endpoint        |
 | `LOKI_HOST`                          | `http://localhost:3100`; Loki log aggregation endpoint             |
+
+JWT keyrings are JSON objects whose values are secrets of at least 32 characters. For example:
+
+```env
+JWT_SIGNING_KEYS={"2026-01":"old-access-secret-key-32-characters","2026-02":"new-access-secret-key-32-characters"}
+JWT_ACTIVE_KEY_ID=2026-02
+JWT_REFRESH_SIGNING_KEYS={"2026-01":"old-refresh-secret-key-32-characters","2026-02":"new-refresh-secret-key-32-characters"}
+JWT_REFRESH_ACTIVE_KEY_ID=2026-02
+```
+
+New tokens include the active key ID as `kid`; verification accepts every key retained in the
+keyring. Tokens created before keyrings were enabled have no `kid` and continue to use the legacy
+`JWT_SECRET` or `JWT_REFRESH_SECRET` fallback. Keep the legacy secret and old key IDs until all
+tokens signed with them have expired, then remove them in a later deployment. Every API and worker
+replica must receive the same keyrings during a rotation.
 
 ## Storage and CDN
 

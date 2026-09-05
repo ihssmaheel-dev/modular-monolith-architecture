@@ -79,7 +79,7 @@ Critical events are written to the transactional outbox in the same database tra
 
 ## Authentication
 
-Access tokens are short-lived and validate issuer, audience, algorithm, and account version. The protected web layout bootstraps against `GET /api/auth/me` before rendering application content, so persisted UI state is never treated as proof of a live session. Refresh tokens carry a unique `jti` and are single-use when Redis is available; reuse is rejected and logout/password reset increment the account version, revoke sessions, and disconnect realtime clients. Redis revocation fan-out ensures every API replica closes its local realtime connections. Signing-key rotation is an operational requirement: provision overlapping key verification (`kid`) before rotating secrets.
+Access tokens are short-lived and validate issuer, audience, algorithm, and account version. The protected web layout bootstraps against `GET /api/auth/me` before rendering application content, so persisted UI state is never treated as proof of a live session. Refresh tokens carry a unique `jti` and are single-use when Redis is available; reuse is rejected and logout/password reset increment the account version, revoke sessions, and disconnect realtime clients. Redis revocation fan-out ensures every API replica closes its local realtime connections. Signing-key rotation uses `JWT_SIGNING_KEYS` and `JWT_REFRESH_SIGNING_KEYS`: new tokens carry the active `kid`, verification accepts every retained key, and legacy tokens without `kid` use the legacy secret fallback. Keep old keys until the maximum token lifetime has elapsed before removing them.
 
 ## Transaction boundaries
 

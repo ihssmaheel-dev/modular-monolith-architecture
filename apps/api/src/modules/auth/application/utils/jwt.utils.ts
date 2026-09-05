@@ -1,6 +1,10 @@
 import type { UserRole } from "@repo/contracts";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { env } from "../../../../config/env";
+import {
+  getJwtKeyring,
+  verifyJwtWithKeyring,
+} from "../../../../infrastructure/security/jwt-keyring";
 
 interface RefreshTokenPayload {
   sub: string;
@@ -16,37 +20,44 @@ export function signAccessToken(
   role: UserRole,
   authVersion = 0,
 ): string {
+  const keyring = getJwtKeyring("access");
   return jwt.sign(
     { sub: userId, email, name, role, authVersion },
-    env.JWT_SECRET,
-    tokenOptions(env.JWT_EXPIRES_IN, env.JWT_ISSUER, env.JWT_AUDIENCE),
+    keyring.keys[keyring.activeKeyId] ?? env.JWT_SECRET,
+    tokenOptions(env.JWT_EXPIRES_IN, env.JWT_ISSUER, env.JWT_AUDIENCE, keyring.activeKeyId),
   );
 }
 
 export function signRefreshToken(userId: string, version: number): string {
+  const keyring = getJwtKeyring("refresh");
   return jwt.sign(
     { sub: userId, type: "refresh", version, jti: crypto.randomUUID() },
-    env.JWT_REFRESH_SECRET,
-    tokenOptions(env.JWT_REFRESH_EXPIRES_IN, env.JWT_ISSUER, env.JWT_AUDIENCE),
+    keyring.keys[keyring.activeKeyId] ?? env.JWT_REFRESH_SECRET,
+    tokenOptions(env.JWT_REFRESH_EXPIRES_IN, env.JWT_ISSUER, env.JWT_AUDIENCE, keyring.activeKeyId),
   );
 }
 
 export function verifyRefreshToken(token: string): RefreshTokenPayload | null {
-  try {
-    const value = jwt.verify(token, env.JWT_REFRESH_SECRET, {
-      algorithms: ["HS256"],
-      issuer: env.JWT_ISSUER,
-      audience: env.JWT_AUDIENCE,
-    });
-    if (!isRefreshTokenPayload(value)) return null;
-    return value;
-  } catch {
-    return null;
-  }
+  const value = verifyJwtWithKeyring(token, getJwtKeyring("refresh"), {
+    issuer: env.JWT_ISSUER,
+    audience: env.JWT_AUDIENCE,
+  });
+  return value && isRefreshTokenPayload(value) ? value : null;
 }
 
-function tokenOptions(expiresIn: string, issuer: string, audience: string): SignOptions {
-  return { algorithm: "HS256", expiresIn: expiresIn as SignOptions["expiresIn"], issuer, audience };
+function tokenOptions(
+  expiresIn: string,
+  issuer: string,
+  audience: string,
+  keyId: string,
+): SignOptions {
+  return {
+    algorithm: "HS256",
+    expiresIn: expiresIn as SignOptions["expiresIn"],
+    issuer,
+    audience,
+    keyid: keyId,
+  };
 }
 
 function isRefreshTokenPayload(value: unknown): value is RefreshTokenPayload {

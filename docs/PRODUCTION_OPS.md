@@ -35,7 +35,8 @@ and `GET /` afterwards. Roll back by re-running with the previous `TAG`.
 
 Prefer file-mounted secrets over inline env in production: set `<NAME>_FILE` to a secret path
 (Docker secrets, Vault Agent, AWS SM mounts). Supported: `DATABASE_URL`, `REDIS_URL`,
-`JWT_SECRET`, `JWT_REFRESH_SECRET`, `METRICS_TOKEN`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+`JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_SIGNING_KEYS`, `JWT_REFRESH_SIGNING_KEYS`,
+`METRICS_TOKEN`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
 `SMTP_USER`, `SMTP_PASS`, `RESEND_API_KEY`, `SEED_ADMIN_PASSWORD`. File content wins and faces
 the same Zod validation. See `docs/ENVIRONMENT.md` and `docker/.env.prod.example`.
 

@@ -32,8 +32,31 @@ describe("jwt.utils", () => {
           expiresIn: "15m",
           issuer: env.JWT_ISSUER,
           audience: env.JWT_AUDIENCE,
+          keyid: env.JWT_ACTIVE_KEY_ID,
         },
       );
+    });
+
+    it("signs with the active rotated key", () => {
+      const originalKeys = env.JWT_SIGNING_KEYS;
+      const originalActiveKeyId = env.JWT_ACTIVE_KEY_ID;
+      env.JWT_SIGNING_KEYS = { old: "o".repeat(32), current: "c".repeat(32) };
+      env.JWT_ACTIVE_KEY_ID = "current";
+      vi.mocked(jwt.sign).mockImplementation(() => "rotated-access-token");
+
+      try {
+        const token = signAccessToken("user-123", "test@example.com", "Test User", "user");
+
+        expect(token).toBe("rotated-access-token");
+        expect(jwt.sign).toHaveBeenCalledWith(
+          expect.anything(),
+          "c".repeat(32),
+          expect.objectContaining({ keyid: "current" }),
+        );
+      } finally {
+        env.JWT_SIGNING_KEYS = originalKeys;
+        env.JWT_ACTIVE_KEY_ID = originalActiveKeyId;
+      }
     });
   });
 
@@ -61,6 +84,7 @@ describe("jwt.utils", () => {
           expiresIn: "7d",
           issuer: env.JWT_ISSUER,
           audience: env.JWT_AUDIENCE,
+          keyid: env.JWT_REFRESH_ACTIVE_KEY_ID,
         },
       );
     });
