@@ -105,6 +105,19 @@ jobs:
           pnpm db:migrate
           pnpm db:migrate:status
 
+      - name: Backup and restore verification
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y postgresql-client
+          psql "postgres://postgres:postgres@localhost:5432/postgres" \
+            --set ON_ERROR_STOP=1 -c "CREATE DATABASE restore_verify"
+          BACKUP_DIR="/tmp/architecture-backups"
+          pnpm db:backup "$BACKUP_DIR"
+          BACKUP_FILE="$(find "$BACKUP_DIR" -name 'pg_backup_*.sql.gz' -print -quit)"
+          RESTORE_VERIFY_DATABASE_URL="postgres://postgres:postgres@localhost:5432/restore_verify" \
+          RESTORE_VERIFY_ALLOW_RESET=true \
+          pnpm db:restore:verify "$BACKUP_FILE"
+
       - name: Integration Tests
         run: pnpm test:integration
 

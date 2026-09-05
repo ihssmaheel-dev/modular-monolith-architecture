@@ -69,17 +69,22 @@ collector boundary for the chosen observability provider.
   `SLACK_WEBHOOK_URL`, run Alertmanager alongside Prometheus, and uncomment the block.
   Local `observability:up` intentionally runs without Alertmanager.
 
-## Backups (`scripts/db-backup.sh`, `scripts/db-restore.sh`)
+## Backups (`scripts/db-backup.sh`, `scripts/db-restore.sh`, `scripts/db-restore-verify.sh`)
 
 ```bash
 DATABASE_URL=... pnpm db:backup [./backups]     # pg_dump → gzip → verify → retain
 DATABASE_URL=... pnpm db:restore ./backups/pg_backup_<ts>.sql.gz
+RESTORE_VERIFY_DATABASE_URL=... RESTORE_VERIFY_ALLOW_RESET=true \
+  pnpm db:restore:verify ./backups/pg_backup_<ts>.sql.gz
 ```
 
 Every backup is integrity-checked (`gzip -t`, non-empty) and retention keeps the newest
 `BACKUP_RETENTION_COUNT` archives (default 7). Backup artifacts are git-ignored. Schedule
-`db:backup` from cron/systemd on the database host and periodically restore into a scratch
-database — an untested backup is not a backup.
+`db:backup` from cron/systemd on the database host. Run `db:restore:verify` against a disposable
+database whose name contains `restore`, `scratch`, or `test`; the command refuses other names,
+requires the explicit reset flag, restores in one transaction, and verifies that tables are
+queryable. The CI pipeline exercises this flow on every change, so a backup format or restore
+regression is caught before release.
 
 ## Load shedding (`apps/api/src/main.ts`)
 

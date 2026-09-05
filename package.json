@@ -29,6 +29,7 @@
     "db:seed": "pnpm --filter api db:seed",
     "db:backup": "bash scripts/db-backup.sh",
     "db:restore": "bash scripts/db-restore.sh",
+    "db:restore:verify": "bash scripts/db-restore-verify.sh",
     "docker:up": "docker compose -f docker/docker-compose.yml up -d --wait postgres redis minio mailpit pgadmin",
     "docker:init": "docker compose -f docker/docker-compose.yml run --rm minio-init",
     "docker:down": "docker compose -f docker/docker-compose.yml down",
