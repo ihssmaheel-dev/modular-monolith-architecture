@@ -51,7 +51,8 @@ export function Button({
 
   const textColor = React.useMemo(() => {
     if (variant === "destructive") return colors["destructive-foreground"] ?? "#fff";
-    if (variant === "outline" || variant === "ghost" || variant === "link") return colors.foreground;
+    if (variant === "outline" || variant === "ghost" || variant === "link")
+      return colors.foreground;
     if (variant === "secondary") return colors["secondary-foreground"];
     return colors["primary-foreground"];
   }, [variant, colors]);
@@ -59,7 +60,11 @@ export function Button({
   return (
     <Pressable
       disabled={disabled || loading}
-      style={[{ borderRadius: 8, opacity: disabled ? 0.5 : 1 }, variantStyle, style as unknown as object]}
+      style={[
+        { borderRadius: 8, opacity: disabled ? 0.5 : 1 },
+        variantStyle,
+        style as unknown as object,
+      ]}
       className={`items-center justify-center rounded-lg ${sizeStyles[size]} ${disabled ? "opacity-50" : ""}`}
       {...props}
     >

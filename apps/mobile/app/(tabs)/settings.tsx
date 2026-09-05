@@ -41,7 +41,9 @@ export default function Settings() {
 
       <Card>
         <Text className="text-base font-bold text-foreground">{t("settings.profile")}</Text>
-        <Text className="mt-1 text-xs text-muted-foreground">{t("settings.accountSecurityDescription")}</Text>
+        <Text className="mt-1 text-xs text-muted-foreground">
+          {t("settings.accountSecurityDescription")}
+        </Text>
         <View className="mt-4 gap-3">
           <View>
             <Text className="text-xs text-muted-foreground">{t("common.name")}</Text>
@@ -69,7 +71,9 @@ export default function Settings() {
               onPress={() => changeLocale(lng)}
               className={`rounded-lg border px-4 py-2 ${locale === lng ? "bg-primary border-primary" : "border-border"}`}
             >
-              <Text className={`text-sm font-medium ${locale === lng ? "text-primary-foreground" : "text-foreground"}`}>
+              <Text
+                className={`text-sm font-medium ${locale === lng ? "text-primary-foreground" : "text-foreground"}`}
+              >
                 {lng.toUpperCase()}
               </Text>
             </Pressable>
@@ -79,7 +83,9 @@ export default function Settings() {
 
       <Card>
         <Text className="text-base font-bold text-foreground">Appearance</Text>
-        <Text className="mt-1 text-xs text-muted-foreground">Light / Dark / System — mirrors web ThemeProvider</Text>
+        <Text className="mt-1 text-xs text-muted-foreground">
+          Light / Dark / System — mirrors web ThemeProvider
+        </Text>
         <View className="mt-3 flex-row gap-2">
           {(["light", "dark", "system"] as Theme[]).map((mode) => (
             <Pressable
@@ -87,7 +93,11 @@ export default function Settings() {
               onPress={() => setTheme(mode)}
               className={`rounded-lg border px-4 py-2 ${theme === mode ? "bg-primary border-primary" : "border-border"}`}
             >
-              <Text className={`text-sm font-medium capitalize ${theme === mode ? "text-primary-foreground" : "text-foreground"}`}>{mode}</Text>
+              <Text
+                className={`text-sm font-medium capitalize ${theme === mode ? "text-primary-foreground" : "text-foreground"}`}
+              >
+                {mode}
+              </Text>
             </Pressable>
           ))}
         </View>

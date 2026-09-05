@@ -46,10 +46,15 @@ function assertSafeDatabaseName(database: string): void {
 async function assertEnumMigrationOwnership(): Promise<void> {
   const enumAlteration =
     /ALTER TYPE\s+"public"\."outbox_status"\s+ADD VALUE(?:\s+IF NOT EXISTS)?\s+'DEAD_LETTER'|CREATE TYPE\s+"public"\."outbox_status"[^;]*'DEAD_LETTER'/gi;
-  const journal = JSON.parse(await readFile(path.join(MIGRATIONS_PATH, "meta", "_journal.json"), "utf8")) as MigrationJournal;
+  const journal = JSON.parse(
+    await readFile(path.join(MIGRATIONS_PATH, "meta", "_journal.json"), "utf8"),
+  ) as MigrationJournal;
   const isSingle = journal.entries.length === 1 && journal.entries[0]?.tag === SINGLE_MIGRATION_TAG;
   if (isSingle) {
-    const single = await readFile(path.join(MIGRATIONS_PATH, `${SINGLE_MIGRATION_TAG}.sql`), "utf8");
+    const single = await readFile(
+      path.join(MIGRATIONS_PATH, `${SINGLE_MIGRATION_TAG}.sql`),
+      "utf8",
+    );
     if ((single.match(enumAlteration) ?? []).length !== 1) {
       throw new Error(`${SINGLE_MIGRATION_TAG}.sql must contain DEAD_LETTER exactly once`);
     }

@@ -114,6 +114,7 @@
   },
   "navigation": {
     "workspace": "Workspace",
+    "platform": "Platform",
     "comingSoon": "Coming soon",
     "toggleSidebar": "Toggle sidebar"
   },

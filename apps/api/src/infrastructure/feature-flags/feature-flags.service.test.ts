@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { FeatureFlagsService } from "./feature-flags.service";
 import type { PinoLoggerService } from "../logger/logger.service";
 import type { RedisService } from "../redis/redis.service";
+import { env } from "../../config/env";
 
 vi.mock("ioredis", () => {
   return {
@@ -48,7 +49,7 @@ describe("FeatureFlagsService", () => {
   });
 
   afterEach(() => {
-    delete process.env.FEATURE_FLAG_TEST_FLAG;
+    env.FEATURE_FLAGS = "{}";
   });
 
   it("returns false for unknown flags by default", () => {
@@ -63,11 +64,11 @@ describe("FeatureFlagsService", () => {
     expect(service.isEnabled("beta_dashboard")).toBe(false);
   });
 
-  it("reads from environment variables when no override exists", () => {
-    process.env.FEATURE_FLAG_TEST_FLAG = "true";
+  it("reads from validated environment configuration when no override exists", () => {
+    env.FEATURE_FLAGS = JSON.stringify({ "test-flag": true });
     expect(service.isEnabled("test-flag")).toBe(true);
 
-    process.env.FEATURE_FLAG_TEST_FLAG = "false";
+    env.FEATURE_FLAGS = JSON.stringify({ "test-flag": false });
     expect(service.isEnabled("test-flag")).toBe(false);
   });
 

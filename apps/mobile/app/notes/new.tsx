@@ -20,7 +20,8 @@ export default function NewNote() {
 
   return (
     <ScrollView
-      style={{ backgroundColor: colors.background }} className="flex-1"
+      style={{ backgroundColor: colors.background }}
+      className="flex-1"
       contentContainerStyle={{ padding: 16, gap: 16 }}
       keyboardShouldPersistTaps="handled"
     >
@@ -32,7 +33,8 @@ export default function NewNote() {
           name="title"
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
-              style={{ backgroundColor: colors.card }} className="rounded-lg border border-border px-3 py-2.5 text-base text-foreground"
+              style={{ backgroundColor: colors.card }}
+              className="rounded-lg border border-border px-3 py-2.5 text-base text-foreground"
               placeholder={t("notes.noteTitlePlaceholder")}
               onBlur={onBlur}
               onChangeText={onChange}

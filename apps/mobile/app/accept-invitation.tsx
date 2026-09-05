@@ -21,9 +21,16 @@ export default function AcceptInvitation() {
   if (!isValidToken) {
     return (
       <View className="flex-1 items-center justify-center bg-background p-4">
-        <View style={{ backgroundColor: colors.card }} className="w-full max-w-md gap-3 rounded-2xl p-5 shadow-sm">
-          <Text className="text-xl font-bold text-foreground">{t("tenancy.invalidInvitationLink")}</Text>
-          <Text className="text-sm text-muted-foreground">{t("tenancy.invalidInvitationDescription")}</Text>
+        <View
+          style={{ backgroundColor: colors.card }}
+          className="w-full max-w-md gap-3 rounded-2xl p-5 shadow-sm"
+        >
+          <Text className="text-xl font-bold text-foreground">
+            {t("tenancy.invalidInvitationLink")}
+          </Text>
+          <Text className="text-sm text-muted-foreground">
+            {t("tenancy.invalidInvitationDescription")}
+          </Text>
           <Link href="/(auth)/login" className="text-center text-sm font-medium underline">
             {t("auth.backToLogin")}
           </Link>
@@ -35,7 +42,10 @@ export default function AcceptInvitation() {
   if (!user) {
     return (
       <View className="flex-1 items-center justify-center bg-background p-4">
-        <View style={{ backgroundColor: colors.card }} className="w-full max-w-md gap-3 rounded-2xl p-5 shadow-sm">
+        <View
+          style={{ backgroundColor: colors.card }}
+          className="w-full max-w-md gap-3 rounded-2xl p-5 shadow-sm"
+        >
           <Text className="text-xl font-bold text-foreground">{t("tenancy.acceptInvitation")}</Text>
           <Text className="text-sm text-muted-foreground">{t("tenancy.signInToAccept")}</Text>
           <Link
@@ -52,8 +62,13 @@ export default function AcceptInvitation() {
   if (mutation.isSuccess) {
     return (
       <View className="flex-1 items-center justify-center bg-background p-4">
-        <View style={{ backgroundColor: colors.card }} className="w-full max-w-md items-center gap-3 rounded-2xl p-5 shadow-sm">
-          <Text className="text-xl font-bold text-foreground">{t("tenancy.invitationAccepted")}</Text>
+        <View
+          style={{ backgroundColor: colors.card }}
+          className="w-full max-w-md items-center gap-3 rounded-2xl p-5 shadow-sm"
+        >
+          <Text className="text-xl font-bold text-foreground">
+            {t("tenancy.invitationAccepted")}
+          </Text>
           <Text className="text-center text-sm text-muted-foreground">
             {t("tenancy.invitationAcceptedDescription")}
           </Text>
@@ -70,9 +85,14 @@ export default function AcceptInvitation() {
 
   return (
     <View className="flex-1 items-center justify-center bg-background p-4">
-      <View style={{ backgroundColor: colors.card }} className="w-full max-w-md gap-3 rounded-2xl p-5 shadow-sm">
+      <View
+        style={{ backgroundColor: colors.card }}
+        className="w-full max-w-md gap-3 rounded-2xl p-5 shadow-sm"
+      >
         <Text className="text-xl font-bold text-foreground">{t("tenancy.acceptInvitation")}</Text>
-        <Text className="text-sm text-muted-foreground">{t("tenancy.acceptInvitationDescription")}</Text>
+        <Text className="text-sm text-muted-foreground">
+          {t("tenancy.acceptInvitationDescription")}
+        </Text>
         {mutation.isError && (
           <Text className="text-sm text-destructive">{t("tenancy.acceptFailed")}</Text>
         )}

@@ -43,7 +43,10 @@ export default function Notes() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
         refreshControl={
-          <RefreshControl refreshing={notesQuery.isRefetching} onRefresh={() => notesQuery.refetch()} />
+          <RefreshControl
+            refreshing={notesQuery.isRefetching}
+            onRefresh={() => notesQuery.refetch()}
+          />
         }
         ListHeaderComponent={
           <View className="mb-2 flex-row items-center justify-between">
@@ -56,7 +59,10 @@ export default function Notes() {
           </View>
         }
         renderItem={({ item }) => (
-          <View style={{ backgroundColor: colors.card }} className="flex-row items-center justify-between gap-3 rounded-xl p-4 shadow-sm">
+          <View
+            style={{ backgroundColor: colors.card }}
+            className="flex-row items-center justify-between gap-3 rounded-xl p-4 shadow-sm"
+          >
             <View className="min-w-0 flex-1">
               <Text className="font-medium text-foreground" numberOfLines={1}>
                 {item.title}
@@ -81,7 +87,9 @@ export default function Notes() {
               </Pressable>
             </View>
           ) : (
-            <Text className="mt-10 text-center text-sm text-muted-foreground">{t("notes.noNotes")}</Text>
+            <Text className="mt-10 text-center text-sm text-muted-foreground">
+              {t("notes.noNotes")}
+            </Text>
           )
         }
         ListFooterComponent={

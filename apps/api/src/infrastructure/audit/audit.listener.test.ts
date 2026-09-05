@@ -58,11 +58,9 @@ describe("AuditListener", () => {
     expect(database.withSystemScope).toHaveBeenCalled();
   });
 
-  it("logs failed audit writes so the mutation can roll back", async () => {
+  it("logs failed asynchronous audit writes without rejecting the mutation observer", async () => {
     mockInsert.mockRejectedValue(new Error("database unavailable"));
-    await expect(listener.handleDatabaseMutatedEvent(event)).rejects.toThrow(
-      "database unavailable",
-    );
+    await expect(listener.handleDatabaseMutatedEvent(event)).resolves.toBeUndefined();
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({ collectionName: "notes", documentId: "note-1" }),
       "Failed to save audit log",

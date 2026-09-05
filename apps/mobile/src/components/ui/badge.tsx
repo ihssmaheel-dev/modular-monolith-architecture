@@ -43,7 +43,11 @@ export function Badge({
   return (
     <View
       className={`self-start rounded-full px-2.5 py-0.5 ${className ?? ""}`}
-      style={{ backgroundColor: bg, borderWidth: variant === "outline" ? 1 : 0, borderColor: colors.border }}
+      style={{
+        backgroundColor: bg,
+        borderWidth: variant === "outline" ? 1 : 0,
+        borderColor: colors.border,
+      }}
       {...props}
     >
       <Text className="text-xs font-medium" style={{ color: fg }}>

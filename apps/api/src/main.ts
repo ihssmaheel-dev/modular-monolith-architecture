@@ -35,6 +35,11 @@ const UNDER_PRESSURE_RETRY_AFTER_SECONDS = 30;
 // orchestrator does not restart a merely busy (not dead) process.
 const UNDER_PRESSURE_BYPASS_PREFIXES = ["/api/health", "/metrics", "/api/docs", "/docs"];
 
+interface FastifyPressureRequest {
+  url?: string;
+  headers?: Record<string, string | string[] | undefined>;
+}
+
 interface FastifyPressureReply {
   code: (status: number) => FastifyPressureReply;
   header: (name: string, value: number) => FastifyPressureReply;
@@ -116,7 +121,11 @@ async function bootstrap() {
     maxEventLoopDelay: UNDER_PRESSURE_MAX_EVENT_LOOP_DELAY_MS,
     maxEventLoopUtilization: UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION,
     retryAfter: UNDER_PRESSURE_RETRY_AFTER_SECONDS,
-    pressureHandler: (request: { url?: string }, reply: FastifyPressureReply, type: string) => {
+    pressureHandler: (
+      request: FastifyPressureRequest,
+      reply: FastifyPressureReply,
+      type: string,
+    ) => {
       const url = request.url?.split("?")[0] ?? "";
       // Let probes and docs through; returning without sending lets
       // Fastify handle the request normally.
@@ -127,7 +136,10 @@ async function bootstrap() {
         .header("Retry-After", UNDER_PRESSURE_RETRY_AFTER_SECONDS)
         .send({
           statusCode: 503,
-          message: "Service temporarily unavailable",
+          message: i18n.t(
+            "api.error.serviceUnavailable",
+            request.headers?.["accept-language"]?.toString(),
+          ),
           error: "UNDER_PRESSURE",
         });
     },

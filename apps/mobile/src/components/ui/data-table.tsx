@@ -44,12 +44,23 @@ export function DataTable<T>({
   return (
     <View className="gap-3">
       {onSearch && searchPlaceholder ? (
-        <Input placeholder={searchPlaceholder} onChangeText={onSearch} placeholderTextColor={colors["muted-foreground"]} />
+        <Input
+          placeholder={searchPlaceholder}
+          onChangeText={onSearch}
+          placeholderTextColor={colors["muted-foreground"]}
+        />
       ) : null}
-      <View className="rounded-xl overflow-hidden border" style={{ borderColor: colors.border, backgroundColor: colors.card }}>
+      <View
+        className="rounded-xl overflow-hidden border"
+        style={{ borderColor: colors.border, backgroundColor: colors.card }}
+      >
         <View className="flex-row px-4 py-3 gap-4" style={{ backgroundColor: colors.muted }}>
           {columns.map((col) => (
-            <Text key={col.key} className="flex-1 text-xs font-medium uppercase" style={{ color: colors["muted-foreground"] }}>
+            <Text
+              key={col.key}
+              className="flex-1 text-xs font-medium uppercase"
+              style={{ color: colors["muted-foreground"] }}
+            >
               {col.header}
             </Text>
           ))}
@@ -64,7 +75,10 @@ export function DataTable<T>({
             keyExtractor={getRowKey}
             scrollEnabled={false}
             renderItem={({ item }) => (
-              <View className="flex-row px-4 py-3 gap-4 border-t" style={{ borderColor: colors.border }}>
+              <View
+                className="flex-row px-4 py-3 gap-4 border-t"
+                style={{ borderColor: colors.border }}
+              >
                 {columns.map((col) => (
                   <View key={col.key} className="flex-1">
                     {col.cell(item) as React.ReactNode}
@@ -88,7 +102,14 @@ interface PaginationProps {
   nextLabel?: string;
 }
 
-export function DataTablePagination({ page, totalPages, onPageChange, pageLabel, previousLabel = "Previous", nextLabel = "Next" }: PaginationProps) {
+export function DataTablePagination({
+  page,
+  totalPages,
+  onPageChange,
+  pageLabel,
+  previousLabel = "Previous",
+  nextLabel = "Next",
+}: PaginationProps) {
   const { resolvedTheme } = useTheme();
   const colors = mobileTokens[resolvedTheme];
   return (

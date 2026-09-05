@@ -57,7 +57,9 @@ export default function ForgotPassword() {
                 )}
               />
               {form.formState.errors.email && (
-                <Text className="text-xs text-destructive">{form.formState.errors.email.message}</Text>
+                <Text className="text-xs text-destructive">
+                  {form.formState.errors.email.message}
+                </Text>
               )}
             </View>
             {mutation.isError && (

@@ -9,7 +9,14 @@ export function Card({ className, style, children, ...props }: ViewProps & { cla
   return (
     <View
       className={`rounded-2xl p-5 shadow-sm ${className ?? ""}`}
-      style={[{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: resolvedTheme === "dark" ? 1 : 0 }, style as unknown as object]}
+      style={[
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+          borderWidth: resolvedTheme === "dark" ? 1 : 0,
+        },
+        style as unknown as object,
+      ]}
       {...props}
     >
       {children}
@@ -25,21 +32,37 @@ export function CardHeader({ className, children, ...props }: ViewProps & { clas
   );
 }
 
-export function CardTitle({ className, children, ...props }: { className?: string; children: React.ReactNode } & React.ComponentProps<typeof Text>) {
+export function CardTitle({
+  className,
+  children,
+  ...props
+}: { className?: string; children: React.ReactNode } & React.ComponentProps<typeof Text>) {
   const { resolvedTheme } = useTheme();
   const colors = mobileTokens[resolvedTheme];
   return (
-    <Text className={`text-base font-semibold ${className ?? ""}`} style={{ color: colors["card-foreground"] }} {...props}>
+    <Text
+      className={`text-base font-semibold ${className ?? ""}`}
+      style={{ color: colors["card-foreground"] }}
+      {...props}
+    >
       {children}
     </Text>
   );
 }
 
-export function CardDescription({ className, children, ...props }: { className?: string; children: React.ReactNode } & React.ComponentProps<typeof Text>) {
+export function CardDescription({
+  className,
+  children,
+  ...props
+}: { className?: string; children: React.ReactNode } & React.ComponentProps<typeof Text>) {
   const { resolvedTheme } = useTheme();
   const colors = mobileTokens[resolvedTheme];
   return (
-    <Text className={`text-sm ${className ?? ""}`} style={{ color: colors["muted-foreground"] }} {...props}>
+    <Text
+      className={`text-sm ${className ?? ""}`}
+      style={{ color: colors["muted-foreground"] }}
+      {...props}
+    >
       {children}
     </Text>
   );

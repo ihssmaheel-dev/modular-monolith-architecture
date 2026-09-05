@@ -1,5 +1,5 @@
-import * as React from "react";
 import { Alert } from "react-native";
+import i18n from "@/lib/i18n";
 
 interface ConfirmDialogOptions {
   title: string;
@@ -13,8 +13,8 @@ interface ConfirmDialogOptions {
 export function confirmDialog({
   title,
   description,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText = i18n.t("common.confirm"),
+  cancelText = i18n.t("common.cancel"),
   destructive,
   onConfirm,
 }: ConfirmDialogOptions) {

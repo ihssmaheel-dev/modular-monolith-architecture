@@ -43,7 +43,9 @@ export function Toaster() {
           onTouchEnd={() => remove(t.id)}
         >
           <Text style={{ color: colors.foreground, fontWeight: "600" }}>{t.title}</Text>
-          {t.description ? <Text style={{ color: colors["muted-foreground"] }}>{t.description}</Text> : null}
+          {t.description ? (
+            <Text style={{ color: colors["muted-foreground"] }}>{t.description}</Text>
+          ) : null}
         </View>
       ))}
     </View>

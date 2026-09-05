@@ -25,7 +25,7 @@ A production-grade, highly scalable TypeScript modular monolith architecture des
 ## Prerequisites
 
 - **Node.js**: `>= 20.19.0` (required for the CommonJS API build to load oRPC's ESM runtime)
-- **pnpm**: `>= 10.33.4` (`corepack enable` then `corepack prepare pnpm@10.33.4 --activate`)
+- **pnpm**: `10.34.5` (`corepack enable` then `corepack prepare pnpm@10.34.5 --activate`)
 - **Docker**: Docker Engine with Docker Compose v2.17+
 
 ---
@@ -80,7 +80,7 @@ pnpm --filter web start # Run the built SSR web bundle
 ### Full-Stack Vertical Slice Generator
 
 ```bash
-# Automatically scaffolds all domain layers (Contracts, CQRS, Drizzle, API Client, Tests)
+# Automatically scaffolds all backend layers plus the typed client, web slice, and mobile slice
 pnpm generate:feature <module> <feature>
 ```
 

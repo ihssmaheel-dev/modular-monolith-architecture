@@ -23,7 +23,10 @@ export function Tabs({ tabs, value, onValueChange }: TabsProps) {
             className="flex-1 items-center rounded-md px-3 py-2"
             style={{ backgroundColor: active ? colors.card : "transparent" }}
           >
-            <Text className="text-sm font-medium" style={{ color: active ? colors.foreground : colors["muted-foreground"] }}>
+            <Text
+              className="text-sm font-medium"
+              style={{ color: active ? colors.foreground : colors["muted-foreground"] }}
+            >
               {tab.label}
             </Text>
           </Pressable>

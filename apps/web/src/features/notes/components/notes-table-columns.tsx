@@ -25,9 +25,7 @@ export function getNotesColumns(
       key: "createdAt",
       header: t("common.created"),
       cell: (row) => (
-        <span className="text-xs text-muted-foreground">
-          {formatDate(row.createdAt)}
-        </span>
+        <span className="text-xs text-muted-foreground">{formatDate(row.createdAt)}</span>
       ),
       className: "hidden sm:table-cell",
     },

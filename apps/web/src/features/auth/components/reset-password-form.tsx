@@ -28,7 +28,10 @@ export function ResetPasswordForm({ token }: { token: string }) {
     resolver: zodResolver(ResetPasswordSchema),
     defaultValues: { token, password: "" },
   });
-  const mutation = useMutation({ ...resetPasswordMutationOptions(), onSuccess: () => setComplete(true) });
+  const mutation = useMutation({
+    ...resetPasswordMutationOptions(),
+    onSuccess: () => setComplete(true),
+  });
   const submit = (data: ResetPasswordInput) => {
     if (data.password !== confirmation) {
       form.setError("password", { type: "validate", message: t("auth.passwordsDoNotMatch") });

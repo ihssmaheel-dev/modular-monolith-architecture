@@ -51,7 +51,9 @@ export default function Users() {
               </Pressable>
             </View>
           ) : (
-            <Text className="mt-10 text-center text-sm text-muted-foreground">{t("users.noUsers")}</Text>
+            <Text className="mt-10 text-center text-sm text-muted-foreground">
+              {t("users.noUsers")}
+            </Text>
           )
         }
         ListFooterComponent={

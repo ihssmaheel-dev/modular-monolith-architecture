@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, Text } from "react-native";
 import { useTheme } from "@/theme/theme-provider";
 import { mobileTokens } from "@/theme/tokens.generated";
+import i18n from "@/lib/i18n";
 import { Button } from "./button";
 
 interface SheetProps {
@@ -16,7 +17,12 @@ export function Sheet({ open, onOpenChange, title, description, children }: Shee
   const { resolvedTheme } = useTheme();
   const colors = mobileTokens[resolvedTheme];
   return (
-    <Modal visible={open} transparent animationType="slide" onRequestClose={() => onOpenChange(false)}>
+    <Modal
+      visible={open}
+      transparent
+      animationType="slide"
+      onRequestClose={() => onOpenChange(false)}
+    >
       <Pressable className="flex-1 justify-end bg-black/50" onPress={() => onOpenChange(false)}>
         <Pressable
           className="rounded-t-2xl p-6 gap-4"
@@ -35,7 +41,7 @@ export function Sheet({ open, onOpenChange, title, description, children }: Shee
           ) : null}
           {children}
           <Button variant="outline" onPress={() => onOpenChange(false)}>
-            Close
+            {i18n.t("common.cancel")}
           </Button>
         </Pressable>
       </Pressable>

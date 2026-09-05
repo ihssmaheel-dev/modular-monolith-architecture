@@ -7,6 +7,7 @@ const { generateContracts } = require("./generators/contracts.generator");
 const { generateClient } = require("./generators/client.generator");
 const { generatePresentation } = require("./generators/presentation.generator");
 const { generateWeb } = require("./generators/web.generator");
+const { generateMobile } = require("./generators/mobile.generator");
 
 const rawModule = process.argv[2];
 const rawFeature = process.argv[3] || rawModule;
@@ -36,6 +37,7 @@ const rootPath = path.resolve(__dirname, "..");
 const modulePath = path.join(rootPath, "apps", "api", "src", "modules", moduleName);
 const contractsPath = path.join(rootPath, "packages", "contracts");
 const clientPath = path.join(rootPath, "packages", "api-client");
+const mobilePath = path.join(rootPath, "apps", "mobile");
 
 const context = {
   modulePath,
@@ -47,6 +49,7 @@ const context = {
   FeaturePlural,
   contractsPath,
   clientPath,
+  mobilePath,
 };
 
 console.log("1. Generating Domain Layer...");
@@ -64,11 +67,16 @@ generateContracts(context);
 console.log("\n5. Generating API Client SDK (@repo/api-client)...");
 generateClient(context);
 
-console.log("\n6. Generating Presentation Layer (Fastify Controller, Mapper, NestJS Module)...");
+console.log(
+  "\n6. Generating Presentation Layer (oRPC, REST compatibility, Mapper, NestJS Module)...",
+);
 generatePresentation(context);
 
 console.log("\n7. Generating Web Layer (TanStack Start route + queries + mutations)...");
 generateWeb(context);
+
+console.log("\n8. Generating Mobile Layer (Expo route + queries + mutations)...");
+generateMobile(context);
 
 console.log("\n=======================================================");
 console.log(`  Successfully generated vertical slice for '${feature}'!`);
@@ -80,4 +88,7 @@ console.log(` 3. Run 'pnpm test:unit' to run the new Vitest unit test suite.`);
 console.log(" 4. Run 'pnpm build' to verify end-to-end type safety.");
 console.log(
   ` 5. Web route: apps/web/src/routes/${featurePlural}.tsx + features/${featurePlural}/*`,
+);
+console.log(
+  ` 6. Mobile route: apps/mobile/app/${featurePlural}.tsx + src/features/${featurePlural}/*`,
 );

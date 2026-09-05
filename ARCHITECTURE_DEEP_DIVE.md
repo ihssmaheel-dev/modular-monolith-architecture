@@ -25,7 +25,7 @@ graph TD
         S[packages/contracts<br>Zod Schemas, oRPC Contracts]
         AuthZ[packages/authorization<br>FGA + Permissions]
         I18N[packages/i18n<br>Locales]
-        Client[packages/api-client<br>Type-Safe REST Client + TanStack Query]
+        Client[packages/api-client<br>Type-Safe oRPC Client + TanStack Query]
         UI[packages/ui<br>Base UI + shadcn + Tailwind 4]
         Email[packages/email<br>React Email Templates]
     end
@@ -37,7 +37,7 @@ graph TD
     Client -->|Imports Contracts| S
     Web -->|Imports Contracts + i18n| S
     Web -->|Uses UI primitives| UI
-    Web -->|Uses typed REST client| Client
+    Web -->|Uses typed oRPC client| Client
     Web -.->|HTTP + Cookies + x-tenant-id| A
 ```
 
@@ -46,9 +46,10 @@ graph TD
 The backend and web share capability packages (`@repo/contracts`, `@repo/authorization`, `@repo/i18n`, `@repo/api-client`, `@repo/ui`). If the backend changes a rule or contract, the web compiler catches drift before the code is run.
 
 - Web is TanStack Start (Vite 8, TanStack Router file-based, streaming SSR) + TanStack Query + Zustand + react-i18next + Tailwind 4 + `@repo/ui` (Base UI + shadcn base-nova). Forms use `react-hook-form` + `zodResolver` + schemas from `@repo/contracts`.
-- REST controllers are the canonical runtime API. The web uses `getApiClient()` from `@repo/api-client`,
-  which centralizes credentials, refresh, CSRF, tenant, locale, idempotency, and typed response DTOs.
-  oRPC contracts remain an optional schema/OpenAPI surface until a complete oRPC handler adapter is introduced.
+- oRPC procedures are the canonical runtime API under `/api/rpc`. Web and mobile use `getApiClient()`
+  from `@repo/api-client`, which centralizes credentials, refresh, CSRF, tenant, locale, idempotency,
+  and typed response DTOs. REST controllers remain a compatibility surface and delegate to the same
+  commands and queries.
 
 ---
 
@@ -62,7 +63,8 @@ This is the most important layer in the project. It holds all the rules for our 
 
 - **Zod Schemas (`@repo/contracts`)**: Rules for what data should look like (e.g., `Email must be a string`). Also `VITE_API_URL` env validation for web.
 - **oRPC Contracts (`@repo/contracts`)**: Exact endpoint blueprints (`oc.route().input().output()`)
-  used for OpenAPI generation and future typed transports. REST remains the canonical implementation.
+  used by the canonical OpenAPI transport and generated documentation. REST compatibility routes
+  implement the same use cases without duplicating business logic.
 - **Permissions & Evaluator (`@repo/authorization`)**: Central action vocabulary (`notes:create`, `team:invite`) and the pure FGA engine (RBAC + ReBAC + ABAC).
 - **Locales (`@repo/i18n`)**: All the text shown to users (`en.json` containing `"api.user.notFound": "User not found"`). Used by backend `I18nService` and the web `react-i18next` integration.
 - **UI System (`@repo/ui`)**: Single Tailwind 4 entry `src/styles/globals.css` with design tokens, Base UI headless primitives, shadcn base-nova preset, lucide icons. Web imports `@repo/ui/globals.css` once.

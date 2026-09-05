@@ -290,6 +290,7 @@
   },
   "navigation": {
     "workspace": "Espacio de trabajo",
+    "platform": "Plataforma",
     "comingSoon": "Próximamente",
     "toggleSidebar": "Alternar barra lateral"
   },

@@ -11,3 +11,7 @@ AGENTS.md
 ai_instructions/
 file-tree.js
 apps/web/src/routeTree.gen.ts
+packages/ui/src/styles/tokens.generated.css
+packages/email/src/styles/tokens.ts
+apps/mobile/src/theme/tokens.generated.ts
+apps/mobile/src/theme/tailwind.tokens.generated.js

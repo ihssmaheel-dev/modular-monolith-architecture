@@ -40,9 +40,11 @@ export function to${Feature}Response(entity: ${Feature}): ${Feature}ResponseDto 
   Req,
 } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
+import { z } from "zod";
 import {
   Idempotent,
-  RequirePermissions,
+  RequirePermission,
+  ResponseSchema,
   ZodValidationPipe,
   requireAuthenticatedUser,
 } from "../../../common";
@@ -60,6 +62,11 @@ import {
   PaginationQuerySchema,
   Update${Feature}Schema,
 } from "@repo/contracts";
+import {
+  ${Feature}ListResponseSchema,
+  ${Feature}ResponseSchema,
+  EmptyResponseSchema,
+} from "@repo/contracts";
 import { Create${Feature}Command } from "../application/commands/create-${feature}.command";
 import { Update${Feature}Command } from "../application/commands/update-${feature}.command";
 import { Delete${Feature}Command } from "../application/commands/delete-${feature}.command";
@@ -67,10 +74,10 @@ import { Get${Feature}ByIdQuery } from "../application/queries/get-${feature}-by
 import { Get${FeaturePlural}Query } from "../application/queries/get-${featurePlural}.query";
 import { to${Feature}Response } from "./${featurePlural}.mapper";
 
-const NOT_FOUND_CONFIG = {
+const ERROR_CONFIG = {
   ${Feature.toUpperCase()}_NOT_FOUND: {
     status: HttpStatus.NOT_FOUND,
-    i18nKey: "common.notFound",
+    i18nKey: "api.error.notFound",
   },
   EVENT_DISPATCH_FAILED: {
     status: HttpStatus.SERVICE_UNAVAILABLE,
@@ -90,7 +97,8 @@ export class ${FeaturePlural}Controller {
   ) {}
 
   @Get()
-  @RequirePermissions("${featurePlural}:read")
+  @RequirePermission("${featurePlural}:read")
+  @ResponseSchema(${Feature}ListResponseSchema)
   async list(@Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery, @Req() req: FastifyRequest): Promise<${Feature}ListResponseDto> {
     const actor = requireAuthenticatedUser(req);
     const lang = req?.headers["accept-language"];
@@ -106,51 +114,55 @@ export class ${FeaturePlural}Controller {
   }
 
   @Get(":id")
-  @RequirePermissions("${featurePlural}:read")
-  async getById(@Param("id") id: string, @Req() req: FastifyRequest): Promise<${Feature}ResponseDto> {
+  @RequirePermission("${featurePlural}:read")
+  @ResponseSchema(${Feature}ResponseSchema)
+  async getById(@Param("id", new ZodValidationPipe(z.string().min(1))) id: string, @Req() req: FastifyRequest): Promise<${Feature}ResponseDto> {
     const actor = requireAuthenticatedUser(req);
     const lang = req?.headers["accept-language"];
     const result = await this.getByIdQuery.execute(id, actor);
-    const entity = handleResult(result, NOT_FOUND_CONFIG, this.i18n, lang);
+    const entity = handleResult(result, ERROR_CONFIG, this.i18n, lang);
     return to${Feature}Response(entity);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Idempotent()
-  @RequirePermissions("${featurePlural}:write")
+  @RequirePermission("${featurePlural}:create")
+  @ResponseSchema(${Feature}ResponseSchema)
   async create(@Body(new ZodValidationPipe(Create${Feature}Schema)) body: Create${Feature}Dto, @Req() req: FastifyRequest): Promise<${Feature}ResponseDto> {
     const actor = requireAuthenticatedUser(req);
     const lang = req?.headers["accept-language"];
     const result = await this.createCmd.execute(body, actor);
-    const entity = handleResult(result, NOT_FOUND_CONFIG, this.i18n, lang);
+    const entity = handleResult(result, ERROR_CONFIG, this.i18n, lang);
     return to${Feature}Response(entity);
   }
 
   @Patch(":id")
   @Idempotent()
-  @RequirePermissions("${featurePlural}:write")
+  @RequirePermission("${featurePlural}:update")
+  @ResponseSchema(${Feature}ResponseSchema)
   async update(
-    @Param("id") id: string,
+    @Param("id", new ZodValidationPipe(z.string().min(1))) id: string,
     @Body(new ZodValidationPipe(Update${Feature}Schema)) body: Update${Feature}Dto,
     @Req() req: FastifyRequest,
   ): Promise<${Feature}ResponseDto> {
     const actor = requireAuthenticatedUser(req);
     const lang = req?.headers["accept-language"];
     const result = await this.updateCmd.execute(id, body, actor);
-    const entity = handleResult(result, NOT_FOUND_CONFIG, this.i18n, lang);
+    const entity = handleResult(result, ERROR_CONFIG, this.i18n, lang);
     return to${Feature}Response(entity);
   }
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @Idempotent()
-  @RequirePermissions("${featurePlural}:write")
-  async delete(@Param("id") id: string, @Req() req: FastifyRequest): Promise<void> {
+  @RequirePermission("${featurePlural}:delete")
+  @ResponseSchema(EmptyResponseSchema)
+  async delete(@Param("id", new ZodValidationPipe(z.string().min(1))) id: string, @Req() req: FastifyRequest): Promise<void> {
     const actor = requireAuthenticatedUser(req);
     const lang = req?.headers["accept-language"];
     const result = await this.deleteCmd.execute(id, actor);
-    handleResult(result, NOT_FOUND_CONFIG, this.i18n, lang);
+    handleResult(result, ERROR_CONFIG, this.i18n, lang);
   }
 }
 `;
@@ -158,6 +170,7 @@ export class ${FeaturePlural}Controller {
   const moduleContent = `import { Module } from "@nestjs/common";
 import { OutboxModule } from "../../../infrastructure/outbox/outbox.module";
 import { ${FeaturePlural}Controller } from "./presentation/${featurePlural}.controller";
+import { ${FeaturePlural}OrpcController } from "./presentation/${featurePlural}.orpc.controller";
 import { ${FeaturePlural}Repository } from "./infrastructure/${featurePlural}.repository";
 import { Create${Feature}Command } from "./application/commands/create-${feature}.command";
 import { Update${Feature}Command } from "./application/commands/update-${feature}.command";
@@ -168,7 +181,7 @@ import { ${Feature}RealtimeListener } from "./application/listeners/${feature}-r
 
 @Module({
   imports: [OutboxModule],
-  controllers: [${FeaturePlural}Controller],
+  controllers: [${FeaturePlural}Controller, ${FeaturePlural}OrpcController],
   providers: [
     ${FeaturePlural}Repository,
     Create${Feature}Command,
@@ -179,7 +192,6 @@ import { ${Feature}RealtimeListener } from "./application/listeners/${feature}-r
     ${Feature}RealtimeListener,
   ],
   exports: [
-    ${FeaturePlural}Repository,
     Create${Feature}Command,
     Update${Feature}Command,
     Delete${Feature}Command,
@@ -197,6 +209,90 @@ export class ${ModuleName}Module {}
   writeFileIfMissing(
     path.join(modulePath, "presentation", `${featurePlural}.controller.ts`),
     controllerContent,
+  );
+  const orpcControllerContent = `import { Controller, Req } from "@nestjs/common";
+import type { FastifyRequest } from "fastify";
+import { ${featurePlural}Contract } from "@repo/contracts";
+import { Implement, implement } from "../../../infrastructure/orpc/orpc-runtime";
+import { invokeOrpc } from "../../../infrastructure/orpc";
+import { Idempotent, RequirePermission } from "../../../common";
+import { I18nService } from "../../../infrastructure/i18n/i18n.service";
+import { ${FeaturePlural}Controller } from "./${featurePlural}.controller";
+
+@Controller("rpc")
+export class ${FeaturePlural}OrpcController {
+  constructor(
+    private readonly controller: ${FeaturePlural}Controller,
+    private readonly i18n: I18nService,
+  ) {}
+
+  @Implement(${featurePlural}Contract.list)
+  @RequirePermission("${featurePlural}:read")
+  list(@Req() request: FastifyRequest) {
+    return implement(${featurePlural}Contract.list).handler(({ input }) =>
+      invokeOrpc(
+        () => this.controller.list(input, request),
+        this.i18n,
+        request.headers["accept-language"],
+      ),
+    );
+  }
+
+  @Implement(${featurePlural}Contract.getById)
+  @RequirePermission("${featurePlural}:read")
+  getById(@Req() request: FastifyRequest) {
+    return implement(${featurePlural}Contract.getById).handler(({ input }) =>
+      invokeOrpc(
+        () => this.controller.getById(input.id, request),
+        this.i18n,
+        request.headers["accept-language"],
+      ),
+    );
+  }
+
+  @Implement(${featurePlural}Contract.create)
+  @Idempotent()
+  @RequirePermission("${featurePlural}:create")
+  create(@Req() request: FastifyRequest) {
+    return implement(${featurePlural}Contract.create).handler(({ input }) =>
+      invokeOrpc(
+        () => this.controller.create(input, request),
+        this.i18n,
+        request.headers["accept-language"],
+      ),
+    );
+  }
+
+  @Implement(${featurePlural}Contract.update)
+  @Idempotent()
+  @RequirePermission("${featurePlural}:update")
+  update(@Req() request: FastifyRequest) {
+    return implement(${featurePlural}Contract.update).handler(({ input }) =>
+      invokeOrpc(
+        () => this.controller.update(input.id, input, request),
+        this.i18n,
+        request.headers["accept-language"],
+      ),
+    );
+  }
+
+  @Implement(${featurePlural}Contract.delete)
+  @Idempotent()
+  @RequirePermission("${featurePlural}:delete")
+  delete(@Req() request: FastifyRequest) {
+    return implement(${featurePlural}Contract.delete).handler(({ input }) =>
+      invokeOrpc(
+        () => this.controller.delete(input.id, request),
+        this.i18n,
+        request.headers["accept-language"],
+      ),
+    );
+  }
+}
+`;
+  writeFileIfMissing(
+    path.join(modulePath, "presentation", `${featurePlural}.orpc.controller.ts`),
+    orpcControllerContent,
   );
   writeFileIfMissing(path.join(modulePath, `${moduleName}.module.ts`), moduleContent);
 }

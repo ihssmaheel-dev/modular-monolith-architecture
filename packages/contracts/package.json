@@ -15,6 +15,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration",
+    "typecheck": "tsc --noEmit",
     "dev": "tsup src/index.ts --format cjs,esm --watch",
     "clean": "rm -rf dist"
   },

@@ -80,14 +80,19 @@ function checkFile(file) {
   ];
   // Mobile palette bans — enforce semantic tokens
   const isMobileUi = name.startsWith("apps/mobile/");
-  const isGenerated = name.includes("tokens.generated") || name.includes("tailwind.tokens.generated");
+  const isGenerated =
+    name.includes("tokens.generated") || name.includes("tailwind.tokens.generated");
   if (isMobileUi && !isGenerated && !isTest(file)) {
     if (/bg-slate-|text-slate-|border-slate-|from-slate-|to-slate-/.test(source)) {
-      report(file, "hardcoded slate palette forbidden in mobile — use semantic bg-background/text-foreground/border-border");
+      report(
+        file,
+        "hardcoded slate palette forbidden in mobile — use semantic bg-background/text-foreground/border-border",
+      );
     }
     if (/bg-white(?![\w-])/.test(source) && !name.includes("auth-screen")) {
       // auth-screen uses bg-white via semantic bg-card, but raw bg-white is banned
-      if (/\bbg-white\b/.test(source)) report(file, "raw bg-white forbidden in mobile — use bg-card/bg-background");
+      if (/\bbg-white\b/.test(source))
+        report(file, "raw bg-white forbidden in mobile — use bg-card/bg-background");
     }
     if (/\btext-red-600\b|\bborder-red-200\b|\bbg-red-/.test(source)) {
       report(file, "raw red palette forbidden in mobile — use text-destructive/border-destructive");

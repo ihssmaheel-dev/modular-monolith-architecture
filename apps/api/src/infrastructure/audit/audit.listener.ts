@@ -52,7 +52,9 @@ export class AuditListener {
         },
         "Failed to save audit log",
       );
-      throw error;
+      // Audit is an asynchronous observer. The originating mutation has already
+      // committed, so a failed audit write must be visible without creating an
+      // unhandled rejection or falsely reporting the mutation as failed.
     }
   }
 

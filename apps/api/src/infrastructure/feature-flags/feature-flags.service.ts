@@ -14,6 +14,18 @@ interface FlagMessage {
   enabled?: boolean;
 }
 
+function parseConfiguredFlags(value: string): Record<string, boolean> {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter(([, enabled]) => typeof enabled === "boolean"),
+    ) as Record<string, boolean>;
+  } catch {
+    return {};
+  }
+}
+
 @Injectable()
 export class FeatureFlagsService
   implements FeatureFlagProvider, OnModuleInit, OnApplicationShutdown
@@ -94,11 +106,10 @@ export class FeatureFlagsService
       this.logger.debug({ flagKey, enabled, context }, "Evaluated feature flag from memory");
       return enabled;
     }
-    const envKey = `FEATURE_FLAG_${flagKey.toUpperCase().replace(/-/g, "_")}`;
-    const envVal = process.env[envKey];
-    if (envVal !== undefined) {
-      const enabled = envVal.toLowerCase() === "true" || envVal === "1";
-      this.logger.debug({ flagKey, envKey, enabled, context }, "Evaluated flag from env");
+    const configuredFlags = parseConfiguredFlags(env.FEATURE_FLAGS);
+    if (Object.hasOwn(configuredFlags, flagKey)) {
+      const enabled = configuredFlags[flagKey] ?? false;
+      this.logger.debug({ flagKey, enabled, context }, "Evaluated flag from environment config");
       return enabled;
     }
     return false;

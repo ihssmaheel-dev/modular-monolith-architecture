@@ -40,6 +40,7 @@ import {
   OriginValidationInterceptor,
   RequestIdInterceptor,
   DatabaseTransactionInterceptor,
+  LoggingInterceptor,
   ResponseValidationInterceptor,
 } from "./common";
 import { ORPCModule } from "./infrastructure/orpc/orpc-runtime";
@@ -104,6 +105,10 @@ import { ORPCModule } from "./infrastructure/orpc/orpc-runtime";
     {
       provide: APP_INTERCEPTOR,
       useClass: TracingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

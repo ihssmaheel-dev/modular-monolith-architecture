@@ -38,7 +38,10 @@ export default function ResetPassword() {
     return (
       <AuthScreen title={t("auth.invalidToken")} description={t("auth.resetFailed")}>
         <View style={{ backgroundColor: colors.card }} className="rounded-2xl p-5 shadow-sm">
-          <Link href="/(auth)/forgot-password" className="text-center text-sm font-medium underline">
+          <Link
+            href="/(auth)/forgot-password"
+            className="text-center text-sm font-medium underline"
+          >
             {t("auth.sendResetLink")}
           </Link>
         </View>
@@ -47,7 +50,10 @@ export default function ResetPassword() {
   }
 
   return (
-    <AuthScreen title={t("auth.resetPasswordTitle")} description={t("auth.resetPasswordDescription")}>
+    <AuthScreen
+      title={t("auth.resetPasswordTitle")}
+      description={t("auth.resetPasswordDescription")}
+    >
       <View style={{ backgroundColor: colors.card }} className="gap-4 rounded-2xl p-5 shadow-sm">
         {complete ? (
           <View className="items-center gap-3">
@@ -58,7 +64,9 @@ export default function ResetPassword() {
               className="w-full rounded-lg bg-primary py-3"
               onPress={() => router.replace("/(auth)/login")}
             >
-              <Text className="text-center font-semibold text-primary-foreground">{t("auth.backToLogin")}</Text>
+              <Text className="text-center font-semibold text-primary-foreground">
+                {t("auth.backToLogin")}
+              </Text>
             </Pressable>
           </View>
         ) : (
@@ -86,7 +94,9 @@ export default function ResetPassword() {
               )}
             </View>
             <View className="gap-1.5">
-              <Text className="text-sm font-medium text-foreground">{t("auth.confirmPassword")}</Text>
+              <Text className="text-sm font-medium text-foreground">
+                {t("auth.confirmPassword")}
+              </Text>
               <TextInput
                 className="rounded-lg border border-border px-3 py-2.5 text-base text-foreground"
                 secureTextEntry

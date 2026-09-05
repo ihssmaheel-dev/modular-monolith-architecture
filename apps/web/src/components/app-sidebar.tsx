@@ -35,7 +35,7 @@ export function AppSidebar() {
               {t("common.appName")}
             </p>
             <p className="truncate text-[10px] text-sidebar-foreground/60 uppercase tracking-wider font-mono">
-              Enterprise Platform
+              {t("navigation.platform")}
             </p>
           </div>
         </div>

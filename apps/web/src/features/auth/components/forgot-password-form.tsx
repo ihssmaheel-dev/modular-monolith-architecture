@@ -26,7 +26,10 @@ export function ForgotPasswordForm() {
     resolver: zodResolver(ForgotPasswordSchema),
     defaultValues: { email: "" },
   });
-  const mutation = useMutation({ ...forgotPasswordMutationOptions(), onSuccess: () => setSent(true) });
+  const mutation = useMutation({
+    ...forgotPasswordMutationOptions(),
+    onSuccess: () => setSent(true),
+  });
 
   return (
     <Card className="w-full max-w-md">
@@ -53,10 +56,7 @@ export function ForgotPasswordForm() {
             </Button>
           </div>
         ) : (
-          <form
-            onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="forgot-email">{t("auth.email")}</Label>
               <Input

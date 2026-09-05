@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "dev": "email dev -p 3001",
     "clean": "rm -rf dist .react-email"
   },

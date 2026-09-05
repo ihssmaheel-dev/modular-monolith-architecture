@@ -29,7 +29,9 @@ export default function Login() {
     onSuccess: (data) => {
       setAuth(data);
       router.replace(
-        inviteToken ? { pathname: "/accept-invitation", params: { token: inviteToken } } : "/(tabs)",
+        inviteToken
+          ? { pathname: "/accept-invitation", params: { token: inviteToken } }
+          : "/(tabs)",
       );
     },
   });
@@ -89,7 +91,10 @@ export default function Login() {
         {mutation.isError && (
           <Text className="text-sm text-destructive">{t(mutation.error.message)}</Text>
         )}
-        <Button loading={mutation.isPending} onPress={form.handleSubmit((data) => mutation.mutate(data))}>
+        <Button
+          loading={mutation.isPending}
+          onPress={form.handleSubmit((data) => mutation.mutate(data))}
+        >
           {mutation.isPending ? t("auth.signingIn") : t("auth.signIn")}
         </Button>
         <Link href="/(auth)/register" className="text-center text-sm text-muted-foreground">

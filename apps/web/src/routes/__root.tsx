@@ -21,6 +21,7 @@ import { QueryProvider } from "@/lib/query-client";
 import { I18nProvider } from "@/lib/i18n";
 import { useTranslation } from "react-i18next";
 import { FRONTEND_ROUTES } from "@repo/contracts";
+import { getWebEnv } from "@/lib/env";
 import "@repo/ui/globals.css";
 
 export interface RouterContext {
@@ -32,7 +33,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Workspace" },
+      { title: getWebEnv().VITE_APP_NAME },
     ],
     links: [{ rel: "icon", href: "/favicon.ico" }],
   }),

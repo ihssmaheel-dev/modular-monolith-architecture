@@ -39,6 +39,7 @@ export type ${Feature}ListResponseDto = z.infer<typeof ${Feature}ListResponseSch
 `;
 
   const contractContent = `import { oc } from "@orpc/contract";
+import { z } from "zod";
 import { PaginationQuerySchema } from "../schemas/pagination.schema";
 import {
   Create${Feature}Schema,
@@ -46,6 +47,7 @@ import {
   ${Feature}ResponseSchema,
   Update${Feature}Schema,
 } from "../schemas/${feature}.schema";
+import { EmptyResponseSchema } from "../schemas/common.schema";
 
 export const ${featurePlural}Contract = oc.prefix("/${featurePlural}").router({
   list: oc
@@ -54,21 +56,24 @@ export const ${featurePlural}Contract = oc.prefix("/${featurePlural}").router({
     .output(${Feature}ListResponseSchema),
 
   getById: oc
-    .route({ method: "GET", path: "/:id" })
+    .route({ method: "GET", path: "/{id}" })
+    .input(z.object({ id: z.string().min(1) }))
     .output(${Feature}ResponseSchema),
 
   create: oc
-    .route({ method: "POST", path: "/" })
+    .route({ method: "POST", path: "/", successStatus: 201 })
     .input(Create${Feature}Schema)
     .output(${Feature}ResponseSchema),
 
   update: oc
-    .route({ method: "PATCH", path: "/:id" })
-    .input(Update${Feature}Schema)
+    .route({ method: "PATCH", path: "/{id}" })
+    .input(z.object({ id: z.string().min(1) }).and(Update${Feature}Schema))
     .output(${Feature}ResponseSchema),
 
   delete: oc
-    .route({ method: "DELETE", path: "/:id" }),
+    .route({ method: "DELETE", path: "/{id}", successStatus: 204 })
+    .input(z.object({ id: z.string().min(1) }))
+    .output(EmptyResponseSchema),
 });
 `;
 

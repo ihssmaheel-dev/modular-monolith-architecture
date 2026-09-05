@@ -15,7 +15,10 @@ export default function Dashboard() {
 
   return (
     <ScrollView className="flex-1 bg-background" contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <PageHeader title={t("dashboard.welcome", { name: user?.name ?? "" })} description={t("dashboard.subtitle")} />
+      <PageHeader
+        title={t("dashboard.welcome", { name: user?.name ?? "" })}
+        description={t("dashboard.subtitle")}
+      />
 
       <Card>
         <Text className="text-xs font-medium text-muted-foreground">{t("notes.title")}</Text>
@@ -32,7 +35,9 @@ export default function Dashboard() {
       </Card>
 
       <Card>
-        <Text className="mb-3 text-base font-bold text-foreground">{t("dashboard.recentNotes")}</Text>
+        <Text className="mb-3 text-base font-bold text-foreground">
+          {t("dashboard.recentNotes")}
+        </Text>
         {notesQuery.isLoading ? (
           <ActivityIndicator />
         ) : notesQuery.isError ? (

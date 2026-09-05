@@ -10,7 +10,14 @@ interface EmptyStateProps extends ViewProps {
   icon?: React.ReactNode;
 }
 
-export function EmptyState({ title, description, action, icon, className, ...props }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  description,
+  action,
+  icon,
+  className,
+  ...props
+}: EmptyStateProps) {
   const { resolvedTheme } = useTheme();
   const colors = mobileTokens[resolvedTheme];
   return (

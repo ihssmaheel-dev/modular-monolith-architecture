@@ -28,7 +28,9 @@ export default function Register() {
     onSuccess: (data) => {
       setAuth(data);
       router.replace(
-        inviteToken ? { pathname: "/accept-invitation", params: { token: inviteToken } } : "/(tabs)",
+        inviteToken
+          ? { pathname: "/accept-invitation", params: { token: inviteToken } }
+          : "/(tabs)",
       );
     },
   });
@@ -96,7 +98,9 @@ export default function Register() {
             )}
           />
           {form.formState.errors.password && (
-            <Text className="text-xs text-destructive">{form.formState.errors.password.message}</Text>
+            <Text className="text-xs text-destructive">
+              {form.formState.errors.password.message}
+            </Text>
           )}
           <Pressable onPress={() => setShowPassword((v) => !v)}>
             <Text className="text-xs text-muted-foreground">

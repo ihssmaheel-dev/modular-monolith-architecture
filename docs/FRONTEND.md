@@ -79,6 +79,7 @@ pnpm theme:check    # CI guard — fails if generated files are stale
 ```
 
 Generated targets (never hand-edit):
+
 - `packages/ui/src/styles/tokens.generated.css` → web light/dark CSS vars (`:root`/`.dark`, radius, fonts) — imported by `packages/ui/src/styles/globals.css`
 - `packages/email/src/styles/tokens.ts` → email light/dark + brand hex (CTA uses brand purple)
 - `apps/mobile/src/theme/tokens.generated.ts` + `tailwind.tokens.generated.js` → RN hex + NativeWind `theme.extend.colors` (semantic: `background/foreground/card/primary/muted/border/...`)

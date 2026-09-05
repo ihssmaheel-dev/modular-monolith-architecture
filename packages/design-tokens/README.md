@@ -25,12 +25,12 @@ pnpm theme:check    # CI guard — fails if generated files are stale
 
 ## Mapping
 
-| Token | Web | Mobile | Email |
-|-------|-----|--------|-------|
-| `light.background/foreground/card/...` | `packages/ui/src/styles/tokens.generated.css` `:root { --background }` | `apps/mobile/src/theme/tokens.generated.ts` `mobileTokens.light.background` → `#ffffff` hex | `packages/email/src/styles/tokens.ts` `emailTokens.light.background` |
-| `dark.*` | `.dark { --background }` | `mobileTokens.dark` | `emailTokens.dark` |
-| `brand.purple` | used for `sidebar-primary` variant | `brandPurple` in `tailwind.tokens.generated.js` | `emailTokens.light.primary/ring/sidebar-primary` derived from `brand.purple` via `hexToOklch` (CTA stays brand) |
-| `radius/fonts/shadows` | CSS vars + `@theme inline` | `mobileTokens.radius/fonts/shadows` | `emailTokens.radius/fonts/shadows` |
+| Token                                  | Web                                                                    | Mobile                                                                                      | Email                                                                                                           |
+| -------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `light.background/foreground/card/...` | `packages/ui/src/styles/tokens.generated.css` `:root { --background }` | `apps/mobile/src/theme/tokens.generated.ts` `mobileTokens.light.background` → `#ffffff` hex | `packages/email/src/styles/tokens.ts` `emailTokens.light.background`                                            |
+| `dark.*`                               | `.dark { --background }`                                               | `mobileTokens.dark`                                                                         | `emailTokens.dark`                                                                                              |
+| `brand.purple`                         | used for `sidebar-primary` variant                                     | `brandPurple` in `tailwind.tokens.generated.js`                                             | `emailTokens.light.primary/ring/sidebar-primary` derived from `brand.purple` via `hexToOklch` (CTA stays brand) |
+| `radius/fonts/shadows`                 | CSS vars + `@theme inline`                                             | `mobileTokens.radius/fonts/shadows`                                                         | `emailTokens.radius/fonts/shadows`                                                                              |
 
 ## Reskin workflow
 

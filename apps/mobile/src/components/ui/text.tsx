@@ -1,7 +1,5 @@
 import * as React from "react";
 import { Text as RNText, type TextProps } from "react-native";
-import { useTheme } from "@/theme/theme-provider";
-import { mobileTokens } from "@/theme/tokens.generated";
 
 type TextVariant = "default" | "muted" | "error" | "heading" | "small";
 
@@ -20,8 +18,6 @@ export function Text({
   children,
   ...props
 }: TextProps & { variant?: TextVariant; className?: string }) {
-  const { resolvedTheme } = useTheme();
-  const colors = mobileTokens[resolvedTheme];
   // Use className for layout, style for color fallback via tokens
   return (
     <RNText className={`${variantStyles[variant]} ${className ?? ""}`} style={style} {...props}>

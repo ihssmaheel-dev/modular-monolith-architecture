@@ -39,9 +39,7 @@ function verifyPnpm() {
   const result = execute("pnpm", ["--version"], "pipe");
   const major = Number(result.stdout?.toString().trim().split(".")[0]);
   if (result.error || result.status !== 0 || major < 9) {
-    throw new Error(
-      "pnpm 9+ is required. Enable the repository version with Corepack (pnpm 10.33.4 recommended).",
-    );
+    throw new Error("pnpm 10.34.5 is required. Enable the repository version with Corepack.");
   }
 }
 

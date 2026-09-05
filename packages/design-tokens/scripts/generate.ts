@@ -80,7 +80,9 @@ function contrastRatio(hex1: string, hex2: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-function checkContrast(tokens: NonNullable<ReturnType<typeof tokensSchema.safeParse>>["data"] & any) {
+function checkContrast(
+  tokens: NonNullable<ReturnType<typeof tokensSchema.safeParse>>["data"] & any,
+) {
   // Check light/dark primary vs foreground — need hex, so convert oklch to hex first
   const pairs: Array<[string, string, string]> = [
     ["light primary", tokens.light.primary, tokens.light["primary-foreground"]],
@@ -94,7 +96,9 @@ function checkContrast(tokens: NonNullable<ReturnType<typeof tokensSchema.safePa
     if (hexA.includes("/") || hexB.includes("/")) continue;
     const ratio = contrastRatio(hexA, hexB);
     if (ratio < 4.5) {
-      console.error(`Contrast check failed for ${label}: ${hexA} vs ${hexB} ratio ${ratio.toFixed(2)} < 4.5`);
+      console.error(
+        `Contrast check failed for ${label}: ${hexA} vs ${hexB} ratio ${ratio.toFixed(2)} < 4.5`,
+      );
       process.exit(1);
     }
   }
@@ -123,8 +127,20 @@ function generateEmailTs(tokens: NonNullable<ReturnType<typeof loadTokens>>): st
   // We map email primary/ring/sidebar-primary to brand purple oklch, rest from active.
   const brandPrimaryOklch = hexToOklch(tokens.brand.purple);
   // For email light primary, use brand
-  const emailLight = { ...tokens.light, primary: brandPrimaryOklch, ring: brandPrimaryOklch, "sidebar-primary": brandPrimaryOklch, "sidebar-ring": brandPrimaryOklch } as any;
-  const emailDark = { ...tokens.dark, primary: hexToOklch(tokens.brand.purple), ring: hexToOklch(tokens.brand.purple), "sidebar-primary": hexToOklch(tokens.brand.purple), "sidebar-ring": hexToOklch(tokens.brand.purple) } as any;
+  const emailLight = {
+    ...tokens.light,
+    primary: brandPrimaryOklch,
+    ring: brandPrimaryOklch,
+    "sidebar-primary": brandPrimaryOklch,
+    "sidebar-ring": brandPrimaryOklch,
+  } as any;
+  const emailDark = {
+    ...tokens.dark,
+    primary: hexToOklch(tokens.brand.purple),
+    ring: hexToOklch(tokens.brand.purple),
+    "sidebar-primary": hexToOklch(tokens.brand.purple),
+    "sidebar-ring": hexToOklch(tokens.brand.purple),
+  } as any;
 
   // Keep email's previous chart/accent mapping but from active
   const shadows = tokens.shadows;
@@ -304,8 +320,13 @@ function main() {
     try {
       const appJson = JSON.parse(readFileSync(appJsonPath, "utf-8"));
       const expectedBg = oklchToHex(tokens.light.background);
-      if (appJson.expo?.splash?.backgroundColor !== expectedBg || appJson.expo?.android?.adaptiveIcon?.backgroundColor !== expectedBg) {
-        console.error(`Out of date: ${appJsonPath} splash backgroundColor — run pnpm theme:generate`);
+      if (
+        appJson.expo?.splash?.backgroundColor !== expectedBg ||
+        appJson.expo?.android?.adaptiveIcon?.backgroundColor !== expectedBg
+      ) {
+        console.error(
+          `Out of date: ${appJsonPath} splash backgroundColor — run pnpm theme:generate`,
+        );
         ok = false;
       }
     } catch {}

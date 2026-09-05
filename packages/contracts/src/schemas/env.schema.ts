@@ -4,6 +4,20 @@ import { DEFAULT_JWT_SECRET, DEFAULT_REFRESH_SECRET, validateEnvironment } from 
 const MAX_PORT = 65_535;
 const MAX_POOL_SIZE = 200;
 
+function isFeatureFlagsJson(value: string): boolean {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      !Array.isArray(parsed) &&
+      Object.values(parsed).every((flag) => typeof flag === "boolean")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -23,6 +37,10 @@ export const envSchema = z
     DB_IDLE_IN_TRANSACTION_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
     AUDIT_RETENTION_DAYS: z.coerce.number().int().min(30).max(3650).default(365),
     REDIS_URL: z.string().url().optional(),
+    FEATURE_FLAGS: z
+      .string()
+      .default("{}")
+      .refine(isFeatureFlagsJson, "FEATURE_FLAGS must be a JSON object of booleans"),
 
     JWT_SECRET: z.string().min(32).default(DEFAULT_JWT_SECRET),
     JWT_REFRESH_SECRET: z.string().min(32).default(DEFAULT_REFRESH_SECRET),

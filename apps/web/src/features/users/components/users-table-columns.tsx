@@ -3,9 +3,7 @@ import type { DataTableColumn } from "@repo/ui/components/composed/data-table";
 import type { UserResponse } from "@repo/contracts";
 import { formatDate } from "@/lib/format";
 
-export function getUsersColumns(
-  t: (key: string) => string,
-): DataTableColumn<UserResponse>[] {
+export function getUsersColumns(t: (key: string) => string): DataTableColumn<UserResponse>[] {
   return [
     {
       key: "name",

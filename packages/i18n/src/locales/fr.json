@@ -290,6 +290,7 @@
   },
   "navigation": {
     "workspace": "Espace de travail",
+    "platform": "Plateforme",
     "comingSoon": "Bientôt disponible",
     "toggleSidebar": "Afficher ou réduire la barre latérale"
   },
