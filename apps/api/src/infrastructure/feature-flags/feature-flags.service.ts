@@ -71,9 +71,10 @@ export class FeatureFlagsService
   }
 
   private async setupSubscriber(): Promise<void> {
-    if (!env.REDIS_URL) return;
+    const client = this.redisService?.getClient();
+    if (!client) return;
     try {
-      this.subscriber = new Redis(env.REDIS_URL);
+      this.subscriber = client.duplicate();
       this.subscriber.on("error", (error) => {
         this.logger.error({ error }, "Feature flags Redis subscriber error");
       });
@@ -84,6 +85,8 @@ export class FeatureFlagsService
       this.logger.info({}, "Subscribed to distributed feature flag updates");
     } catch (error) {
       this.logger.error({ error }, "Failed to connect feature flags Redis subscriber");
+      this.subscriber?.disconnect();
+      this.subscriber = null;
     }
   }
 

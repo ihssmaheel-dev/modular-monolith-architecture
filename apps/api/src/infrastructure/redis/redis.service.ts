@@ -16,7 +16,7 @@ export class RedisService implements OnModuleInit, OnApplicationShutdown {
     this.logger = logger.child({ module: "RedisService" });
   }
 
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     await this.connect();
   }
 
@@ -28,25 +28,40 @@ export class RedisService implements OnModuleInit, OnApplicationShutdown {
     }
 
     try {
-      this.client = new Redis(env.REDIS_URL, {
+      const client = new Redis(env.REDIS_URL, {
         maxRetriesPerRequest: MAX_RETRIES_PER_REQUEST,
         retryStrategy(times) {
           if (times > MAX_RETRIES_PER_REQUEST) return null; // Stop retrying on boot failure
           return Math.min(times * RETRY_DELAY_MULTIPLIER, MAX_RETRY_DELAY);
         },
       });
+      client.on("error", (error) => {
+        this.logger.error({ error }, "Redis client error");
+      });
+      this.client = client;
 
       await new Promise<void>((resolve, reject) => {
-        this.client!.once("ready", resolve);
-        this.client!.once("error", reject);
+        const onReady = () => {
+          client.off("error", onInitialError);
+          resolve();
+        };
+        const onInitialError = (error: Error) => {
+          client.off("ready", onReady);
+          reject(error);
+        };
+        client.once("ready", onReady);
+        client.once("error", onInitialError);
       });
-      return this.client;
+      return client;
     } catch (error) {
       this.logger.error(
         { error },
         "Failed to connect to Redis on startup. Redis dependents will be disabled.",
       );
-      this.client = null;
+      if (this.client) {
+        this.client.disconnect();
+        this.client = null;
+      }
       return null;
     }
   }
@@ -55,9 +70,15 @@ export class RedisService implements OnModuleInit, OnApplicationShutdown {
     return this.client;
   }
 
-  async onApplicationShutdown() {
-    if (this.client) {
-      await this.client.quit();
+  async onApplicationShutdown(): Promise<void> {
+    const client = this.client;
+    this.client = null;
+    if (!client) return;
+    try {
+      await client.quit();
+    } catch (error) {
+      this.logger.warn({ error }, "Redis client did not quit cleanly");
+      client.disconnect();
     }
   }
 }

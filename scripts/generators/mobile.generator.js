@@ -13,7 +13,7 @@ export function ${featurePlural}ListQuery(page = 1, limit = 20) {
   return queryOptions<${Feature}ListResponseDto>({
     queryKey: ["${featurePlural}", tenantId, "list", { page, limit }] as const,
     queryFn: async () => {
-      const response = await getApiClient().${featurePlural}.list({ page, limit });
+      const response = await getApiClient().${featurePlural}.list({ query: { page, limit } });
       if (response.status !== 200) throw new Error("errors.networkError");
       return response.body;
     },
@@ -40,7 +40,7 @@ export function update${Feature}MutationOptions() {
   return mutationOptions({
     mutationKey: ["${featurePlural}", "update"] as const,
     mutationFn: async ({ id, ...body }: Update${Feature}Dto & { id: string }) => {
-      const response = await getApiClient().${featurePlural}.update(id, body);
+      const response = await getApiClient().${featurePlural}.update({ params: { id }, body });
       if (response.status !== 200) throw new Error("errors.serverError");
       return response.body;
     },
@@ -51,7 +51,7 @@ export function delete${Feature}MutationOptions() {
   return mutationOptions({
     mutationKey: ["${featurePlural}", "delete"] as const,
     mutationFn: async (id: string) => {
-      const response = await getApiClient().${featurePlural}.remove(id);
+      const response = await getApiClient().${featurePlural}.delete({ params: { id } });
       if (response.status !== 204) throw new Error("errors.serverError");
     },
   });

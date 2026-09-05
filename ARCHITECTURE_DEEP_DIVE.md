@@ -232,7 +232,7 @@ If you are asked to build a new feature (like "Invoices"), use this simple check
 - [ ] **Presentation:** Did I create an `InvoicesController` that validates via `ZodValidationPipe` (schemas from `@repo/contracts`), calls the command, maps the `Result` via `handleResult` + `I18nService`, and is protected by `@RequirePermission` + `@Idempotent`?
 - [ ] **AuthZ:** Did I add the action to `packages/authorization/src/permissions.ts` and policies in `application/invoices.policies.ts` (`OnModuleInit` register)?
 - [ ] **Text:** Did I put all the English text inside `packages/i18n/src/locales/en.json` (and `es.json`/`fr.json`)? Then use `I18nService.t()` (api) and `useTranslation().t()` (web).
-- [ ] **API Client:** Did I export routes from `packages/api-client` (`createInvoicesClient`)? Tip: `pnpm generate:feature invoices invoice` scaffolds the slice.
+- [ ] **API Client:** Did I verify the generated `createInvoicesClient` registration and oRPC contract entry? Tip: `pnpm generate:feature invoices invoice` wires the slice.
 - [ ] **Web:** Did I add `apps/web/src/routes/invoices.tsx` + `apps/web/src/features/invoices/invoices.queries.ts` (queryOptions) + form with `zodResolver` + `@repo/ui` + `getApiClient()` + invalidate?
 - [ ] **UI:** If a new primitive was needed, did I add via `pnpm dlx shadcn@latest add <component> -c apps/web`?
 

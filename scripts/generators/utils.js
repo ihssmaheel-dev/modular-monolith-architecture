@@ -47,6 +47,25 @@ function writeFileIfMissing(filePath, content) {
   return true;
 }
 
+function writeFileIfMissingOrScaffold(filePath, content, scaffoldMarker) {
+  ensureDir(path.dirname(filePath));
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, content.trim() + "\n", "utf8");
+    console.log(`  [create] ${path.relative(process.cwd(), filePath)}`);
+    return true;
+  }
+
+  const existing = fs.readFileSync(filePath, "utf8");
+  if (!existing.includes(scaffoldMarker)) {
+    console.log(`  [skip] Existing customized file: ${path.relative(process.cwd(), filePath)}`);
+    return false;
+  }
+
+  fs.writeFileSync(filePath, content.trim() + "\n", "utf8");
+  console.log(`  [update] Replaced scaffold: ${path.relative(process.cwd(), filePath)}`);
+  return true;
+}
+
 function appendExportIfMissing(filePath, exportStatement) {
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, exportStatement.trim() + "\n", "utf8");
@@ -66,5 +85,6 @@ module.exports = {
   toPlural,
   ensureDir,
   writeFileIfMissing,
+  writeFileIfMissingOrScaffold,
   appendExportIfMissing,
 };

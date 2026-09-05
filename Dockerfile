@@ -1,12 +1,13 @@
 # Stage 1: Base
-FROM node:22-alpine AS base
+ARG NODE_VERSION=22.12.0
+FROM node:${NODE_VERSION}-alpine AS base
 RUN corepack enable pnpm
 
 # Stage 2: Prune workspace for API
 FROM base AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-RUN pnpm install turbo --global
+RUN pnpm install turbo@2.10.12 --global
 COPY . .
 RUN turbo prune api --docker
 
@@ -26,7 +27,7 @@ COPY turbo.json turbo.json
 RUN pnpm turbo build --filter=api...
 
 # Stage 5: Production Runner
-FROM node:22-alpine AS runner
+FROM base AS runner
 WORKDIR /app
 RUN corepack enable pnpm
 

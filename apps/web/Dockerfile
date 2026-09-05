@@ -4,7 +4,7 @@ RUN corepack enable pnpm
 
 FROM base AS builder
 WORKDIR /app
-RUN pnpm install turbo --global
+RUN pnpm install turbo@2.10.12 --global
 COPY . .
 RUN turbo prune web --docker
 

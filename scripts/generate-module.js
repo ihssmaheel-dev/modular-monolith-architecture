@@ -53,7 +53,8 @@ fs.writeFileSync(path.join(basePath, "domain/entities", `${moduleName}.entity.ts
 const moduleReadme = `# ${pascalName} module\n\nThis is a compilable boundary scaffold. Define the first feature with:\n\n'pnpm generate:feature ${moduleName} <feature>'\n\nBefore registering the module, add contracts, authorization policies, migrations, localized messages,\nand unit/integration/E2E coverage. Keep persistence tables private to this module.\n`;
 fs.writeFileSync(path.join(basePath, "README.md"), moduleReadme);
 
-const moduleFileContent = `import { Module } from "@nestjs/common";
+const moduleFileContent = `// GENERATED_MODULE_SCAFFOLD: feature generation may replace this file.
+import { Module } from "@nestjs/common";
 import { ${pascalName}Controller } from "./presentation/${moduleName}.controller";
 import { ${pascalName}Repository } from "./infrastructure/${moduleName}.repository";
 import { Create${pascalName}Command } from "./application/commands/create-${moduleName}.command";

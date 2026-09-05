@@ -1,16 +1,25 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("theme", () => {
-  test("web has light and dark CSS vars and d key toggles", async ({ page }) => {
+  test("d key toggles between light and dark themes", async ({ page }) => {
     await page.goto("/auth");
-    const bg = await page.evaluate(() =>
-      getComputedStyle(document.documentElement).getPropertyValue("--background"),
+    await page.waitForFunction(
+      () =>
+        document.documentElement.classList.contains("light") ||
+        document.documentElement.classList.contains("dark"),
     );
-    expect(bg.trim().length).toBeGreaterThan(0);
-    const hasDark = await page.evaluate(() => {
-      const css = document.documentElement.outerHTML;
-      return css.includes("dark") || true;
-    });
-    expect(hasDark).toBeTruthy();
+    const before = await readTheme(page);
+    await page.keyboard.press("d");
+    await expect.poll(() => readTheme(page)).not.toEqual(before);
+    const after = await readTheme(page);
+    expect(after.theme).not.toBe(before.theme);
+    expect(after.background).not.toBe(before.background);
   });
 });
+
+async function readTheme(page: import("@playwright/test").Page) {
+  return page.evaluate(() => ({
+    theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
+    background: getComputedStyle(document.documentElement).getPropertyValue("--background").trim(),
+  }));
+}

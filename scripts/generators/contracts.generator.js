@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 const { writeFileIfMissing, appendExportIfMissing } = require("./utils");
 
@@ -94,6 +95,34 @@ export const ${featurePlural}Contract = oc.prefix("/${featurePlural}").router({
     path.join(contractsPath, "src", "contracts", "index.ts"),
     `export * from "./${featurePlural}.contract";`,
   );
+  registerApiContract({ contractsPath, featurePlural });
+}
+
+function registerApiContract({ contractsPath, featurePlural }) {
+  const registryPath = path.join(contractsPath, "src", "contracts", "index.ts");
+  if (!fs.existsSync(registryPath)) return;
+
+  let registry = fs.readFileSync(registryPath, "utf8");
+  const importLine = `import { ${featurePlural}Contract } from "./${featurePlural}.contract";`;
+  if (!registry.includes(importLine)) {
+    const anchor = 'import { membershipsContract } from "./memberships.contract";';
+    registry = registry.includes(anchor)
+      ? registry.replace(anchor, `${importLine}\n${anchor}`)
+      : `${importLine}\n${registry}`;
+  }
+
+  const routeLine = `  ${featurePlural}: ${featurePlural}Contract,`;
+  if (!registry.includes(routeLine)) {
+    const anchor = "  memberships: membershipsContract,";
+    registry = registry.includes(anchor)
+      ? registry.replace(anchor, `${routeLine}\n${anchor}`)
+      : registry.replace(
+          "export const apiContract = oc.router({",
+          `export const apiContract = oc.router({\n${routeLine}`,
+        );
+  }
+
+  fs.writeFileSync(registryPath, registry, "utf8");
 }
 
 module.exports = { generateContracts };

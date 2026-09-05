@@ -235,8 +235,8 @@ When building a new feature (like "Invoices"), follow this flow:
 - [ ] **Presentation:** Create an `InvoicesController` in `presentation/` that validates via `ZodValidationPipe` (schemas from `@repo/contracts`), calls the command, handles the `Result` via `handleResult` + `I18nService`, and maps to HTTP; protect with `@RequirePermission` + `@Idempotent`.
 - [ ] **AuthZ:** Add action vocabulary in `packages/authorization/src/permissions.ts` and policies in `application/invoices.policies.ts`, register via `OnModuleInit`.
 - [ ] **Text:** Put all user-facing English text inside `packages/i18n/src/locales/en.json` (and `es.json`/`fr.json`), use `I18nService.t()` (api) and `useTranslation().t()` (web).
-- [ ] **API Client:** Export the new routes from `packages/api-client/src/subclients` (e.g., `createInvoicesClient`). Generate the slice fast with `pnpm generate:feature invoices invoice` (now also scaffolds web feature `apps/web/src/features/invoices/*.queries.ts` checklist note).
-- [ ] **Web:** Add route `apps/web/src/routes/invoices.tsx` + query `apps/web/src/features/invoices/invoices.queries.ts` + form with `zodResolver` + `@repo/ui` components, invalidate queries on mutation.
+- [ ] **API Client:** Verify `packages/api-client/src/subclients` and the oRPC client are registered. `pnpm generate:feature invoices invoice` wires both transports automatically.
+- [ ] **Web:** Verify generated `_app.invoices.index.tsx`/`_app.invoices.new.tsx`, feature components, `zodResolver`, and query invalidation.
 - [ ] **UI:** If a new primitive is needed, add via `pnpm dlx shadcn@latest add <component> -c apps/web` — it lands in `packages/ui`.
 
 ---

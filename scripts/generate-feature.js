@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 const { toPascalCase, toKebabCase, toPlural, ensureDir } = require("./generators/utils");
 const { generateDomain } = require("./generators/domain.generator");
@@ -40,6 +41,7 @@ const clientPath = path.join(rootPath, "packages", "api-client");
 const mobilePath = path.join(rootPath, "apps", "mobile");
 
 const context = {
+  rootPath,
   modulePath,
   moduleName,
   ModuleName,
@@ -71,6 +73,7 @@ console.log(
   "\n6. Generating Presentation Layer (oRPC, REST compatibility, Mapper, NestJS Module)...",
 );
 generatePresentation(context);
+registerModuleInAppModule(rootPath, moduleName, ModuleName);
 
 console.log("\n7. Generating Web Layer (TanStack Start route + queries + mutations)...");
 generateWeb(context);
@@ -82,8 +85,8 @@ console.log("\n=======================================================");
 console.log(`  Successfully generated vertical slice for '${feature}'!`);
 console.log("=======================================================");
 console.log("\nNext Steps:");
-console.log(` 1. Register ${ModuleName}Module in 'apps/api/src/app.module.ts'.`);
-console.log(` 2. Run 'pnpm db:generate && pnpm db:migrate' to create table migrations.`);
+console.log(` 1. Review the generated schema and run 'pnpm db:generate && pnpm db:migrate'.`);
+console.log(` 2. Add module-specific permissions and localized copy before exposing the feature.`);
 console.log(` 3. Run 'pnpm test:unit' to run the new Vitest unit test suite.`);
 console.log(" 4. Run 'pnpm build' to verify end-to-end type safety.");
 console.log(
@@ -92,3 +95,26 @@ console.log(
 console.log(
   ` 6. Mobile route: apps/mobile/app/${featurePlural}.tsx + src/features/${featurePlural}/*`,
 );
+
+function registerModuleInAppModule(root, name, pascalName) {
+  const appModulePath = path.join(root, "apps", "api", "src", "app.module.ts");
+  if (!fs.existsSync(appModulePath)) return;
+
+  const importLine = `import { ${pascalName}Module } from "./modules/${name}/${name}.module";`;
+  const moduleEntry = `    ${pascalName}Module,`;
+  let source = fs.readFileSync(appModulePath, "utf8");
+  if (!source.includes(importLine)) {
+    const anchor = 'import { TenancyModule } from "./modules/tenancy/tenancy.module";';
+    source = source.includes(anchor)
+      ? source.replace(anchor, `${importLine}\n${anchor}`)
+      : source.replace("@Module({", `${importLine}\n\n@Module({`);
+  }
+  if (!source.includes(moduleEntry)) {
+    const anchor = "    FilesModule,\n  ],";
+    source = source.includes(anchor)
+      ? source.replace(anchor, `    FilesModule,\n${moduleEntry}\n  ],`)
+      : source.replace("  providers: [", `${moduleEntry}\n  providers: [`);
+  }
+  fs.writeFileSync(appModulePath, source, "utf8");
+  console.log(`  [update] Registered ${pascalName}Module in apps/api/src/app.module.ts`);
+}

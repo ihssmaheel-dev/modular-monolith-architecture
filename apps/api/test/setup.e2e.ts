@@ -6,8 +6,7 @@ let redisContainer: StartedTestContainer;
 
 beforeAll(async () => {
   if (process.env.E2E_USE_CONTAINERS !== "true") {
-    process.env.E2E_SKIP = "true";
-    return;
+    throw new Error("E2E_USE_CONTAINERS=true is required for API E2E tests.");
   }
 
   postgresContainer = await new GenericContainer("postgres:16-alpine")

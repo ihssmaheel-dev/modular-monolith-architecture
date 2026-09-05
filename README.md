@@ -80,7 +80,7 @@ pnpm --filter web start # Run the built SSR web bundle
 ### Full-Stack Vertical Slice Generator
 
 ```bash
-# Automatically scaffolds all backend layers plus the typed client, web slice, and mobile slice
+# Automatically wires contracts, REST + oRPC, API client, backend module, web slice, and mobile slice
 pnpm generate:feature <module> <feature>
 ```
 
@@ -93,6 +93,7 @@ pnpm format           # Format code with Prettier
 pnpm format:check     # Check formatting
 pnpm typecheck        # Run TypeScript type check across all workspaces (api, web, ui, contracts ...)
 pnpm rules:check      # Enforce strict architectural boundaries and dependency rules
+pnpm test:generator   # Verify the full-stack feature generator remains compilable
 
 # Web shadcn
 pnpm dlx shadcn@latest add button -c apps/web   # add ui primitive to @repo/ui (see packages/ui)

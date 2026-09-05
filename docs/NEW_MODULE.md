@@ -23,7 +23,8 @@ apps/api/src/modules/orders/
 ```
 
 The generator cannot infer business rules, public contracts, persistence fields, or indexes. The
-module is not complete until the following steps are implemented.
+module is not complete until the following steps are implemented. Running
+`pnpm generate:feature orders order` later replaces the scaffold with a complete vertical slice.
 
 ## 2. Define the public API first
 
@@ -83,7 +84,9 @@ test that exercises at least one authenticated and one public procedure.
 
 List the controller, repository, commands, queries, and listeners in `orders.module.ts`.
 Export commands/queries needed by another module, never internal repositories.
-Finally import `OrdersModule` in `apps/api/src/app.module.ts`.
+The full-stack feature generator merges the feature into the module file and imports
+`OrdersModule` into `apps/api/src/app.module.ts` automatically. If you customize the module
+manually, verify those registrations after generation.
 
 Cross-module work calls another module's command/query or publishes an event; it never imports the
 other module's repository.

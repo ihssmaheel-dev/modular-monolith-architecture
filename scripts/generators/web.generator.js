@@ -1,204 +1,196 @@
 const path = require("path");
 const { writeFileIfMissing } = require("./utils");
 
-function generateWeb({ feature, Feature, featurePlural, FeaturePlural }) {
-  const rootPath = path.resolve(__dirname, "../..");
-  const webFeatureDir = path.join(rootPath, "apps", "web", "src", "features", featurePlural);
-
-  const queriesContent = `import { queryOptions } from '@tanstack/react-query'
-import { getApiClient } from '@/lib/api'
-import { useTenantStore } from '@/stores/tenant.store'
+function generateWeb({ feature, Feature, featurePlural, FeaturePlural, rootPath: contextRoot }) {
+  const rootPath = contextRoot ?? path.resolve(__dirname, "../..");
+  const featurePath = path.join(rootPath, "apps", "web", "src", "features", featurePlural);
+  const queries = `import { queryOptions } from "@tanstack/react-query";
+import type { ${Feature}ListResponseDto } from "@repo/contracts";
+import { getApiClient } from "@/lib/api";
+import { useTenantStore } from "@/stores/tenant.store";
 
 export function ${featurePlural}ListQuery(page = 1, limit = 20) {
-  const tenantId = useTenantStore.getState().tenantId
-  return queryOptions({
-    queryKey: ['${featurePlural}', tenantId, 'list', { page, limit }] as const,
+  const tenantId = useTenantStore.getState().tenantId;
+  return queryOptions<${Feature}ListResponseDto>({
+    queryKey: ["${featurePlural}", tenantId, "list", { page, limit }] as const,
     queryFn: async () => {
-      const client = getApiClient()
-      const res = await client.${featurePlural}.list({ query: { page, limit } })
-      if (res.status !== 200) throw new Error('errors.networkError')
-      return res.body
+      const response = await getApiClient().${featurePlural}.list({ query: { page, limit } });
+      if (response.status !== 200) throw new Error("errors.networkError");
+      return response.body;
     },
-  })
+  });
 }
 
 export function ${feature}ByIdQuery(id: string) {
-  const tenantId = useTenantStore.getState().tenantId
+  const tenantId = useTenantStore.getState().tenantId;
   return queryOptions({
-    queryKey: ['${featurePlural}', tenantId, 'detail', id] as const,
+    queryKey: ["${featurePlural}", tenantId, "detail", id] as const,
     queryFn: async () => {
-      const client = getApiClient()
-      const res = await client.${featurePlural}.getById({ params: { id } })
-      if (res.status !== 200) throw new Error('errors.notFound')
-      return res.body
+      const response = await getApiClient().${featurePlural}.getById({ params: { id } });
+      if (response.status !== 200) throw new Error("errors.notFound");
+      return response.body;
     },
-    enabled: !!id,
-  })
+    enabled: Boolean(id),
+  });
 }
 `;
 
-  const mutationsContent = `import { mutationOptions } from '@tanstack/react-query'
-import { getApiClient } from '@/lib/api'
-import type { Create${Feature}Dto, Update${Feature}Dto } from '@repo/contracts'
+  const mutations = `import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import type { Create${Feature}Dto, Update${Feature}Dto } from "@repo/contracts";
+import { toast } from "@repo/ui/components/ui/toast";
+import { getApiClient } from "@/lib/api";
 
-export function create${Feature}MutationOptions() {
-  return mutationOptions({
-    mutationKey: ['${featurePlural}', 'create'] as const,
-    mutationFn: async (data: Create${Feature}Dto) => {
-      const client = getApiClient()
-      const res = await client.${featurePlural}.create({ body: data })
-      if (![200, 201].includes(res.status)) throw new Error('errors.serverError')
-      return res.body
-    },
-  })
-}
-
-export function update${Feature}MutationOptions() {
-  return mutationOptions({
-    mutationKey: ['${featurePlural}', 'update'] as const,
-    mutationFn: async ({ id, ...data }: Update${Feature}Dto & { id: string }) => {
-      const client = getApiClient()
-      const res = await client.${featurePlural}.update({ params: { id }, body: data })
-      if (res.status !== 200) throw new Error('errors.serverError')
-      return res.body
-    },
-  })
-}
-
-export function delete${Feature}MutationOptions() {
-  return mutationOptions({
-    mutationKey: ['${featurePlural}', 'delete'] as const,
-    mutationFn: async (id: string) => {
-      const client = getApiClient()
-      const res = await client.${featurePlural}.delete({ params: { id } })
-      if (res.status !== 204) throw new Error('errors.serverError')
-    },
-  })
-}
-`;
-
-  const routeContent = `import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Create${Feature}Schema, PaginationQuerySchema, type Create${Feature}Dto } from '@repo/contracts'
-import { Button } from '@repo/ui/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
-import { Input } from '@repo/ui/components/ui/input'
-import { Textarea } from '@repo/ui/components/ui/textarea'
-import { Label } from '@repo/ui/components/ui/label'
-import { DataTable, type DataTableColumn, DataTablePagination } from '@repo/ui/components/composed/data-table'
-import { PageHeader } from '@repo/ui/components/composed/page-header'
-import { EmptyState } from '@repo/ui/components/composed/empty-state'
-import { toast } from '@repo/ui/components/ui/toast'
-import { useAuthStore } from '@/stores/auth.store'
-import { getApiClient } from '@/lib/api'
-import { ${featurePlural}ListQuery } from '@/features/${featurePlural}/${feature}.queries'
-
-export const Route = createFileRoute('/${featurePlural}')({
-  validateSearch: PaginationQuerySchema,
-  beforeLoad: () => {
-    const user = useAuthStore.getState().user
-    if (!user) throw redirect({ to: '/auth' })
-  },
-  loaderDeps: ({ search }) => ({ page: search.page, limit: search.limit }),
-  loader: async ({ deps, context }) => {
-    const qc = context.queryClient
-    await qc.ensureQueryData(${featurePlural}ListQuery(deps.page, deps.limit))
-  },
-  component: ${FeaturePlural}Page,
-})
-
-function ${FeaturePlural}Page() {
-  const { t } = useTranslation()
-  const search = Route.useSearch()
-  const navigate = Route.useNavigate()
-  const qc = useQueryClient()
-  const page = search.page ?? 1
-  const limit = search.limit ?? 20
-  const listQuery = useQuery(${featurePlural}ListQuery(page, limit))
-
-  const form = useForm<Create${Feature}Dto>({
-    resolver: zodResolver(Create${Feature}Schema),
-    defaultValues: { name: '', description: '' },
-  })
-
-  const createMutation = useMutation({
-    mutationFn: async (data: Create${Feature}Dto) => {
-      const client = getApiClient()
-      const res = await client.${featurePlural}.create({ body: data })
-      if (![200, 201].includes(res.status)) throw new Error('errors.serverError')
-      return res.body
+export function useCreate${Feature}Mutation(opts?: { onSuccess?: () => void }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: Create${Feature}Dto) => {
+      const response = await getApiClient().${featurePlural}.create({ body });
+      if (response.status !== 201) throw new Error("errors.serverError");
+      return response.body;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['${featurePlural}'] })
-      form.reset()
-      toast.add({ title: t('common.created'), type: 'success' } as never)
+      queryClient.invalidateQueries({ queryKey: ["${featurePlural}"] });
+      toast.add({ title: t("common.created"), type: "success" } as never);
+      opts?.onSuccess?.();
     },
-  })
+    onError: () => toast.add({ title: t("errors.serverError"), type: "error" } as never),
+  });
+}
 
-  const columns: DataTableColumn<{ id: string; name: string; description?: string; createdAt: string }>[] = [
-    { key: 'name', header: t('common.name'), cell: (r) => r.name },
-    { key: 'description', header: t('common.description'), cell: (r) => r.description ?? '—' },
-    { key: 'createdAt', header: t('common.created'), cell: (r) => new Date(r.createdAt).toLocaleString(), className: 'hidden sm:table-cell' },
-  ]
+export function useUpdate${Feature}Mutation() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: Update${Feature}Dto & { id: string }) => {
+      const response = await getApiClient().${featurePlural}.update({ params: { id }, body });
+      if (response.status !== 200) throw new Error("errors.serverError");
+      return response.body;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["${featurePlural}"] }),
+    onError: () => toast.add({ title: t("errors.serverError"), type: "error" } as never),
+  });
+}
 
-  return (
-    <div className="min-h-svh bg-muted/20">
-      <div className="border-b bg-background">
-        <div className="container mx-auto p-4">
-          <PageHeader title={t('common.items')} description={t('common.manageItems')} />
-        </div>
-      </div>
-      <div className="container mx-auto max-w-3xl p-4 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('common.create')}</CardTitle>
-            <CardDescription>{t('common.contractDriven')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={form.handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('common.name')}</Label>
-                <Input placeholder={t('common.name')} {...form.register('name')} />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('common.description')}</Label>
-                <Textarea placeholder={t('common.description')} rows={3} {...form.register('description')} />
-              </div>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? t('common.creating') : t('common.create')}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {listQuery.isLoading ? (
-          <Card><CardContent className="p-6">{t('common.loading')}</CardContent></Card>
-        ) : listQuery.data?.items.length === 0 ? (
-          <EmptyState title={t('common.noResults')} description={t('common.create')} />
-        ) : (
-          <Card>
-            <CardContent className="pt-6">
-              <DataTable data={listQuery.data?.items ?? []} columns={columns} getRowKey={(r) => r.id} emptyText={t('common.noResults')} />
-              {listQuery.data && (listQuery.data as { totalPages: number }).totalPages > 1 && (
-                <DataTablePagination page={page} totalPages={(listQuery.data as { totalPages: number }).totalPages} onPageChange={(p) => navigate({ search: (s) => ({ ...s, page: p }) })} pageLabel={(currentPage, pages) => t('common.pageOf', { page: currentPage, totalPages: pages })} previousLabel={t('common.previous')} nextLabel={t('common.next')} />
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
-  )
+export function useDelete${Feature}Mutation() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await getApiClient().${featurePlural}.delete({ params: { id } });
+      if (response.status !== 204) throw new Error("errors.serverError");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["${featurePlural}"] }),
+    onError: () => toast.add({ title: t("errors.serverError"), type: "error" } as never),
+  });
 }
 `;
 
-  writeFileIfMissing(path.join(webFeatureDir, `${feature}.queries.ts`), queriesContent);
-  writeFileIfMissing(path.join(webFeatureDir, `${feature}.mutations.ts`), mutationsContent);
+  const list = `import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import { DataTable, DataTablePagination, type DataTableColumn } from "@repo/ui/components/composed/data-table";
+import { EmptyState } from "@repo/ui/components/composed/empty-state";
+import { PageHeader } from "@repo/ui/components/composed/page-header";
+import { Card, CardContent } from "@repo/ui/components/ui/card";
+import { Button } from "@repo/ui/components/ui/button";
+import { formatDate } from "@/lib/format";
+import { ${featurePlural}ListQuery } from "@/features/${featurePlural}/${feature}.queries";
+
+type ${Feature}Row = { id: string; name: string; description?: string; createdAt: string };
+
+export function ${FeaturePlural}List({ page, limit, onPageChange }: {
+  page: number;
+  limit: number;
+  onPageChange: (page: number) => void;
+}) {
+  const { t } = useTranslation();
+  const query = useQuery(${featurePlural}ListQuery(page, limit));
+  const columns: DataTableColumn<${Feature}Row>[] = [
+    { key: "name", header: t("common.name"), cell: (row) => row.name },
+    { key: "description", header: t("common.description"), cell: (row) => row.description ?? "—" },
+    { key: "createdAt", header: t("common.created"), cell: (row) => formatDate(row.createdAt) },
+  ];
+
+  return <div className="w-full space-y-6">
+    <PageHeader title={t("common.items")} description={t("common.manageItems")} actions={<Button render={<Link to="/${featurePlural}/new" />}><Plus className="size-4" />{t("common.create")}</Button>} />
+    <Card><CardContent className="space-y-4 pt-6">
+      {query.isLoading ? <div className="h-40 animate-pulse rounded-lg bg-muted" /> : query.isError ? (
+        <EmptyState title={t("errors.networkError")} description={t("common.retry")} />
+      ) : query.data?.items.length === 0 ? <EmptyState title={t("common.noResults")} /> : <>
+        <DataTable data={query.data?.items ?? []} columns={columns} getRowKey={(row) => row.id} emptyText={t("common.noResults")} />
+        {query.data && query.data.totalPages > 1 ? <DataTablePagination page={page} totalPages={query.data.totalPages} onPageChange={onPageChange} pageLabel={(current, total) => t("common.pageOf", { page: current, totalPages: total })} previousLabel={t("common.previous")} nextLabel={t("common.next")} /> : null}
+      </>}
+    </CardContent></Card>
+  </div>;
+}
+`;
+
+  const create = `import { useTranslation } from "react-i18next";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Create${Feature}Schema, type Create${Feature}Dto } from "@repo/contracts";
+import { Button } from "@repo/ui/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
+import { Input } from "@repo/ui/components/ui/input";
+import { Label } from "@repo/ui/components/ui/label";
+import { Textarea } from "@repo/ui/components/ui/textarea";
+import { useCreate${Feature}Mutation } from "@/features/${featurePlural}/${feature}.mutations";
+
+export function ${Feature}CreateForm() {
+  const { t } = useTranslation();
+  const form = useForm<Create${Feature}Dto>({ resolver: zodResolver(Create${Feature}Schema), defaultValues: { name: "", description: "" } });
+  const mutation = useCreate${Feature}Mutation({ onSuccess: () => form.reset() });
+  return <Card><CardHeader><CardTitle>{t("common.create")}</CardTitle></CardHeader><CardContent>
+    <form onSubmit={form.handleSubmit((body) => mutation.mutate(body))} className="space-y-4">
+      <div className="space-y-2"><Label htmlFor="${feature}-name">{t("common.name")}</Label><Input id="${feature}-name" {...form.register("name")} /></div>
+      <div className="space-y-2"><Label htmlFor="${feature}-description">{t("common.description")}</Label><Textarea id="${feature}-description" {...form.register("description")} /></div>
+      <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? t("common.saving") : t("common.create")}</Button>
+    </form>
+  </CardContent></Card>;
+}
+`;
+
+  const indexRoute = `import { createFileRoute } from "@tanstack/react-router";
+import { PaginationQuerySchema } from "@repo/contracts";
+import { RouteErrorFallback } from "@/components/error-boundary";
+import { ${featurePlural}ListQuery } from "@/features/${featurePlural}/${feature}.queries";
+import { ${FeaturePlural}List } from "@/features/${featurePlural}/components/${featurePlural}-list";
+
+export const Route = createFileRoute("/_app/${featurePlural}/")({
+  validateSearch: PaginationQuerySchema,
+  loaderDeps: ({ search }) => ({ page: search.page, limit: search.limit }),
+  loader: ({ deps, context }) => context.queryClient.ensureQueryData(${featurePlural}ListQuery(deps.page, deps.limit)),
+  errorComponent: RouteErrorFallback,
+  component: ${FeaturePlural}Page,
+});
+
+function ${FeaturePlural}Page() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  return <${FeaturePlural}List page={search.page ?? 1} limit={search.limit ?? 20} onPageChange={(page) => navigate({ search: (current) => ({ ...current, page }) })} />;
+}
+`;
+  const newRoute = `import { createFileRoute } from "@tanstack/react-router";
+import { ${Feature}CreateForm } from "@/features/${featurePlural}/components/${feature}-create-form";
+
+export const Route = createFileRoute("/_app/${featurePlural}/new")({ component: ${Feature}CreatePage });
+function ${Feature}CreatePage() { return <${Feature}CreateForm />; }
+`;
+
+  writeFileIfMissing(path.join(featurePath, `${feature}.queries.ts`), queries);
+  writeFileIfMissing(path.join(featurePath, `${feature}.mutations.ts`), mutations);
+  writeFileIfMissing(path.join(featurePath, "components", `${featurePlural}-list.tsx`), list);
+  writeFileIfMissing(path.join(featurePath, "components", `${feature}-create-form.tsx`), create);
   writeFileIfMissing(
-    path.join(rootPath, "apps", "web", "src", "routes", `${featurePlural}.tsx`),
-    routeContent,
+    path.join(rootPath, "apps", "web", "src", "routes", `_app.${featurePlural}.index.tsx`),
+    indexRoute,
+  );
+  writeFileIfMissing(
+    path.join(rootPath, "apps", "web", "src", "routes", `_app.${featurePlural}.new.tsx`),
+    newRoute,
   );
 }
 

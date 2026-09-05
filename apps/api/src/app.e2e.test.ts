@@ -4,16 +4,19 @@ import cookie from "@fastify/cookie";
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { AppModule } from "./app.module";
-import { env } from "./config/env";
+
+let AppModule: typeof import("./app.module.js").AppModule;
+let env: typeof import("./config/env.js").env;
 
 describe("API liveness", () => {
   let app: NestFastifyApplication;
   let pool: Pool | undefined;
-  const originalTenancyMode = env.TENANCY_MODE;
+  let originalTenancyMode: "single" | "multi" = "single";
 
   beforeAll(async () => {
-    if (process.env.E2E_SKIP === "true") return;
+    ({ AppModule } = await import("./app.module.js"));
+    ({ env } = await import("./config/env.js"));
+    originalTenancyMode = env.TENANCY_MODE;
     env.TENANCY_MODE = "multi";
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
@@ -48,13 +51,12 @@ describe("API liveness", () => {
   });
 
   afterAll(async () => {
-    env.TENANCY_MODE = originalTenancyMode;
+    if (env) env.TENANCY_MODE = originalTenancyMode;
     await pool?.end();
     await app?.close();
   });
 
   it("returns a liveness response without database dependencies", async () => {
-    if (process.env.E2E_SKIP === "true") return;
     const response = await app.getHttpAdapter().getInstance().inject({
       method: "GET",
       url: "/api/health/live",
@@ -64,7 +66,6 @@ describe("API liveness", () => {
   });
 
   it("serves the tenancy status through REST and oRPC transports", async () => {
-    if (process.env.E2E_SKIP === "true") return;
     const instance = app.getHttpAdapter().getInstance();
     const [rest, orpc] = await Promise.all([
       instance.inject({ method: "GET", url: "/api/tenancy/status" }),
@@ -77,7 +78,6 @@ describe("API liveness", () => {
   });
 
   it("enforces authentication on REST and oRPC resource routes", async () => {
-    if (process.env.E2E_SKIP === "true") return;
     const instance = app.getHttpAdapter().getInstance();
     const [rest, orpc] = await Promise.all([
       instance.inject({ method: "GET", url: "/api/notes" }),
@@ -92,7 +92,6 @@ describe("API liveness", () => {
   it.each(protectedParityRoutes())(
     "keeps unauthenticated %s %s aligned across REST and oRPC",
     async (method, restPath, rpcPath, payload) => {
-      if (process.env.E2E_SKIP === "true") return;
       const instance = app.getHttpAdapter().getInstance();
       const [rest, orpc] = await Promise.all([
         instance.inject({ method, url: restPath, payload }),
@@ -105,7 +104,6 @@ describe("API liveness", () => {
   );
 
   it("bootstraps a session from the refresh cookie after access expiry", async () => {
-    if (process.env.E2E_SKIP === "true") return;
     const instance = app.getHttpAdapter().getInstance();
     const registration = await instance.inject({
       method: "POST",
@@ -142,7 +140,7 @@ describe("API liveness", () => {
   });
 
   it("creates a multi-tenant organization through both transports", async () => {
-    if (process.env.E2E_SKIP === "true" || !pool) return;
+    if (!pool) throw new Error("E2E database pool was not initialized.");
     const instance = app.getHttpAdapter().getInstance();
     const email = `organization-${crypto.randomUUID()}@example.com`;
     const registration = await instance.inject({
@@ -183,7 +181,6 @@ describe("API liveness", () => {
   });
 
   it("keeps REST and oRPC validation errors semantically aligned", async () => {
-    if (process.env.E2E_SKIP === "true") return;
     const instance = app.getHttpAdapter().getInstance();
     const payload = { email: "invalid", password: "short" };
     const [rest, orpc] = await Promise.all([
@@ -209,7 +206,7 @@ describe("API liveness", () => {
   it.each(["single", "multi"] as const)(
     "registers a global user and outbox event in %s-tenant mode",
     async (mode) => {
-      if (process.env.E2E_SKIP === "true" || !pool) return;
+      if (!pool) throw new Error("E2E database pool was not initialized.");
       env.TENANCY_MODE = mode;
       const email = `registration-${mode}-${crypto.randomUUID()}@example.com`;
       const response = await app

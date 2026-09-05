@@ -86,6 +86,9 @@ jobs:
       - name: Architecture Rules Check
         run: pnpm run rules:check
 
+      - name: Generator Smoke Test
+        run: pnpm run test:generator
+
       - name: Formatting Check
         run: pnpm run format:check
 

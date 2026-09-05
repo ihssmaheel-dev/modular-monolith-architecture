@@ -102,8 +102,9 @@ pnpm typecheck          # tsc across all workspaces
 pnpm --filter web typecheck
 ```
 
-Integration and E2E tests require `TEST_DATABASE_URL` in `apps/api/.env`; its database name must
-contain `test`. Run one API test with:
+Integration tests require `TEST_DATABASE_URL` in `apps/api/.env`; its database name must contain
+`test`. API E2E tests require `E2E_USE_CONTAINERS=true` and a working Docker-compatible runtime.
+Both suites fail fast when their required infrastructure is unavailable. Run one API test with:
 
 ```sh
 pnpm --filter api exec vitest run src/path/file.test.ts --config vitest.config.ts
@@ -133,7 +134,8 @@ pnpm --filter api db:migrate:status
 - **Environment validation fails:** compare the relevant `.env` with its `.env.example`; access and
   refresh JWT secrets must differ and contain at least 32 characters.
 - **PostgreSQL authentication fails:** verify `DATABASE_URL` matches credentials in `docker-compose.yml`.
-- **Integration tests are skipped:** set `TEST_DATABASE_URL` and keep `test` in the database name.
+- **Integration tests fail before running:** set `TEST_DATABASE_URL` and keep `test` in the database name.
+- **API E2E tests fail before running:** set `E2E_USE_CONTAINERS=true` and start Docker.
 - **Emails do not appear:** keep `EMAIL_DRIVER=smtp`, `SMTP_HOST=localhost`, and `SMTP_PORT=1025`,
   then inspect Mailpit at `http://localhost:8025`.
 - **Local data must be reset:** `docker compose -f docker/docker-compose.yml down -v` permanently

@@ -41,6 +41,7 @@
     "prepare": "husky",
     "generate:module": "node scripts/generate-module.js",
     "generate:feature": "node scripts/generate-feature.js",
+    "test:generator": "node scripts/generators/generator-smoke.js",
     "theme:generate": "pnpm --filter @repo/design-tokens generate",
     "theme:check": "pnpm --filter @repo/design-tokens check",
     "architecture:check": "depcruise --config .dependency-cruiser.cjs apps/api/src --output-type err",
@@ -62,11 +63,20 @@
     "typescript": "~6.0.3"
   },
   "packageManager": "pnpm@10.34.5",
-  "overrides": {
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.7",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.18",
+      "@types/react-dom": "19.2.7",
+      "decode-uri-component": "0.5.0",
+      "esbuild": "0.28.1",
+      "fast-uri@^3.0.1": "3.1.6",
+      "fast-uri@^4.0.0": "4.1.3",
+      "fastify": "5.12.1",
+      "qs": "6.16.0",
+      "react": "19.2.8",
+      "react-dom": "19.2.8",
+      "uuid": "11.1.1"
+    }
   },
   "engines": {
     "node": ">=20.19.0"

@@ -2,6 +2,7 @@ import { BeforeApplicationShutdown, Injectable } from "@nestjs/common";
 import { context as otelContext, trace } from "@opentelemetry/api";
 import { Job, Queue, Worker } from "bullmq";
 import { env } from "../../config/env";
+import { PinoLoggerService } from "../logger/logger.service";
 
 type SharedQueue = Queue<unknown, unknown, string>;
 type SharedWorker = Worker<unknown, unknown, string>;
@@ -11,11 +12,16 @@ export class QueueService implements BeforeApplicationShutdown {
   private queues = new Map<string, SharedQueue>();
   private workers = new Map<string, SharedWorker>();
 
+  constructor(private readonly loggerService: PinoLoggerService) {}
+
   getQueue<T = unknown>(name: string): Queue<T, unknown, string> | null {
     if (!env.REDIS_URL) return null;
     if (!this.queues.has(name)) {
       const queue = new Queue<unknown, unknown, string>(name, {
         connection: { url: env.REDIS_URL },
+      });
+      queue.on("error", (error) => {
+        this.loggerService.error({ queue: name, error }, "BullMQ queue error");
       });
       this.queues.set(name, queue);
     }
@@ -32,6 +38,9 @@ export class QueueService implements BeforeApplicationShutdown {
       (job) => this.runWorker(name, job, handler),
       { connection: { url: env.REDIS_URL } },
     );
+    worker.on("error", (error) => {
+      this.loggerService.error({ queue: name, error }, "BullMQ worker error");
+    });
     this.workers.set(name, worker as SharedWorker);
     return worker;
   }

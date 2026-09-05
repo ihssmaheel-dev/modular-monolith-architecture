@@ -1,5 +1,6 @@
+const fs = require("fs");
 const path = require("path");
-const { writeFileIfMissing } = require("./utils");
+const { writeFileIfMissing, writeFileIfMissingOrScaffold } = require("./utils");
 
 function generatePresentation({
   modulePath,
@@ -168,6 +169,7 @@ export class ${FeaturePlural}Controller {
 `;
 
   const moduleContent = `import { Module } from "@nestjs/common";
+import { AuthorizationModule } from "../../../infrastructure/authorization";
 import { OutboxModule } from "../../../infrastructure/outbox/outbox.module";
 import { ${FeaturePlural}Controller } from "./presentation/${featurePlural}.controller";
 import { ${FeaturePlural}OrpcController } from "./presentation/${featurePlural}.orpc.controller";
@@ -180,9 +182,10 @@ import { Get${FeaturePlural}Query } from "./application/queries/get-${featurePlu
 import { ${Feature}RealtimeListener } from "./application/listeners/${feature}-realtime.listener";
 
 @Module({
-  imports: [OutboxModule],
+  imports: [AuthorizationModule, OutboxModule],
   controllers: [${FeaturePlural}Controller, ${FeaturePlural}OrpcController],
   providers: [
+    ${FeaturePlural}Controller,
     ${FeaturePlural}Repository,
     Create${Feature}Command,
     Update${Feature}Command,
@@ -294,7 +297,147 @@ export class ${FeaturePlural}OrpcController {
     path.join(modulePath, "presentation", `${featurePlural}.orpc.controller.ts`),
     orpcControllerContent,
   );
-  writeFileIfMissing(path.join(modulePath, `${moduleName}.module.ts`), moduleContent);
+  const parityTestContent = `import "reflect-metadata";
+import { HTTP_CODE_METADATA, METHOD_METADATA, PATH_METADATA } from "@nestjs/common/constants";
+import { RequestMethod } from "@nestjs/common";
+import { ${featurePlural}Contract } from "@repo/contracts";
+import type { AnyContractProcedure } from "@orpc/contract" with { "resolution-mode": "import" };
+import { describe, expect, it } from "vitest";
+import { ${FeaturePlural}Controller } from "./${featurePlural}.controller";
+import { ${FeaturePlural}OrpcController } from "./${featurePlural}.orpc.controller";
+import { RESPONSE_SCHEMA_KEY } from "../../../common/decorators/response-schema.decorator";
+
+type RoutePair = { contract: AnyContractProcedure; rpc: object; rest: object; method: string };
+const featureContract = ${featurePlural}Contract as Record<string, AnyContractProcedure>;
+const ROUTES: RoutePair[] = [
+  ["list", "list"],
+  ["getById", "getById"],
+  ["create", "create"],
+  ["update", "update"],
+  ["delete", "delete"],
+].map(([method, restMethod]) => ({
+  contract: featureContract[method],
+  rpc: ${FeaturePlural}OrpcController,
+  rest: ${FeaturePlural}Controller,
+  method: restMethod,
+}));
+
+describe("${featurePlural} oRPC and REST route parity", () => {
+  it.each(ROUTES)("keeps $method aligned with its contract", (route) => {
+    const contractRoute = route.contract["~orpc"].route;
+    const restPath = routePath(route.rest, route.method);
+    const rpcPath = routePath(route.rpc, route.method);
+    expect(restPath).toBe(nestPath(contractRoute.path));
+    expect(rpcPath).toBe(\`/rpc\${nestPath(contractRoute.path)}\`);
+    expect(methodName(route.rest, route.method)).toBe(contractRoute.method);
+    expect(methodName(route.rpc, route.method)).toBe(contractRoute.method);
+    const expectedStatus = contractRoute.successStatus ?? 200;
+    expect(successStatus(route.rest, route.method)).toBe(expectedStatus);
+    expect(successStatus(route.rpc, route.method)).toBe(expectedStatus);
+    expect(responseSchema(route.rest, route.method)).toBe(route.contract["~orpc"].outputSchema);
+  });
+});
+
+function routePath(controller: object, method: string): string {
+  const type = controller as { prototype: object };
+  const classPath = Reflect.getMetadata(PATH_METADATA, controller) as string | undefined;
+  const callback = (type.prototype as Record<string, unknown>)[method] as object;
+  const methodPath = Reflect.getMetadata(PATH_METADATA, callback) as string | undefined;
+  return normalize([classPath, methodPath].filter(Boolean).join("/"));
+}
+function responseSchema(controller: object, method: string): unknown {
+  const callback = ((controller as { prototype: object }).prototype as Record<string, unknown>)[method] as object;
+  return Reflect.getMetadata(RESPONSE_SCHEMA_KEY, callback);
+}
+function methodName(controller: object, method: string): string {
+  const callback = ((controller as { prototype: object }).prototype as Record<string, unknown>)[method] as object;
+  return RequestMethod[Reflect.getMetadata(METHOD_METADATA, callback) as RequestMethod];
+}
+function successStatus(controller: object, method: string): number {
+  const callback = ((controller as { prototype: object }).prototype as Record<string, unknown>)[method] as object;
+  return (Reflect.getMetadata(HTTP_CODE_METADATA, callback) as number | undefined) ?? 200;
+}
+function normalize(path?: string): string {
+  return \`/\${(path ?? "").replace(/^\\/+|\\/+$/g, "")}\`.replace(/\\/+/g, "/");
+}
+function nestPath(path?: string): string {
+  return normalize(path).replace(/\\{([^}]+)\\}/g, ":$1");
+}
+`;
+  writeFileIfMissing(
+    path.join(modulePath, "presentation", `${featurePlural}.parity.test.ts`),
+    parityTestContent,
+  );
+  writeOrUpdateModule(path.join(modulePath, `${moduleName}.module.ts`), moduleContent, {
+    imports: [
+      `import { AuthorizationModule } from "../../../infrastructure/authorization";`,
+      `import { OutboxModule } from "../../../infrastructure/outbox/outbox.module";`,
+      `import { ${FeaturePlural}Controller } from "./presentation/${featurePlural}.controller";`,
+      `import { ${FeaturePlural}OrpcController } from "./presentation/${featurePlural}.orpc.controller";`,
+      `import { ${FeaturePlural}Repository } from "./infrastructure/${featurePlural}.repository";`,
+      `import { Create${Feature}Command } from "./application/commands/create-${feature}.command";`,
+      `import { Update${Feature}Command } from "./application/commands/update-${feature}.command";`,
+      `import { Delete${Feature}Command } from "./application/commands/delete-${feature}.command";`,
+      `import { Get${Feature}ByIdQuery } from "./application/queries/get-${feature}-by-id.query";`,
+      `import { Get${FeaturePlural}Query } from "./application/queries/get-${featurePlural}.query";`,
+      `import { ${Feature}RealtimeListener } from "./application/listeners/${feature}-realtime.listener";`,
+    ],
+    controllers: [`${FeaturePlural}Controller`, `${FeaturePlural}OrpcController`],
+    providers: [
+      `${FeaturePlural}Controller`,
+      `${FeaturePlural}Repository`,
+      `Create${Feature}Command`,
+      `Update${Feature}Command`,
+      `Delete${Feature}Command`,
+      `Get${Feature}ByIdQuery`,
+      `Get${FeaturePlural}Query`,
+      `${Feature}RealtimeListener`,
+    ],
+    exports: [
+      `Create${Feature}Command`,
+      `Update${Feature}Command`,
+      `Delete${Feature}Command`,
+      `Get${Feature}ByIdQuery`,
+      `Get${FeaturePlural}Query`,
+    ],
+  });
+}
+
+function writeOrUpdateModule(filePath, content, additions) {
+  if (!fs.existsSync(filePath)) {
+    writeFileIfMissingOrScaffold(filePath, content, "GENERATED_MODULE_SCAFFOLD");
+    return;
+  }
+  const existing = fs.readFileSync(filePath, "utf8");
+  if (existing.includes("GENERATED_MODULE_SCAFFOLD")) {
+    writeFileIfMissingOrScaffold(filePath, content, "GENERATED_MODULE_SCAFFOLD");
+    return;
+  }
+
+  let updated = existing;
+  for (const line of additions.imports) {
+    if (!updated.includes(line)) updated = updated.replace("@Module({", `${line}\n\n@Module({`);
+  }
+  updated = addModuleEntries(updated, "controllers", additions.controllers);
+  updated = addModuleEntries(updated, "providers", additions.providers);
+  updated = addModuleEntries(updated, "exports", additions.exports);
+  if (updated !== existing) {
+    fs.writeFileSync(filePath, updated, "utf8");
+    console.log(
+      `  [update] Added ${additions.controllers[0]} feature wiring to ${path.relative(process.cwd(), filePath)}`,
+    );
+  }
+}
+
+function addModuleEntries(source, property, entries) {
+  const pattern = new RegExp(`(${property}: \\[)([\\s\\S]*?)(\\])`);
+  const match = source.match(pattern);
+  if (!match) return source;
+  const missing = entries.filter((entry) => !match[2].includes(entry));
+  if (missing.length === 0) return source;
+  const additions = missing.map((entry) => `    ${entry},`).join("\n");
+  const current = match[2].trim();
+  return source.replace(pattern, `$1\n${current}${current ? "\n" : ""}${additions}\n$3`);
 }
 
 module.exports = { generatePresentation };

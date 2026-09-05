@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit, OnApplicationShutdown } from "@nestjs/common";
 import { RedisService } from "../redis/redis.service";
 import { PinoLoggerService } from "../logger/logger.service";
-import { env } from "../../config/env";
 import Redis from "ioredis";
 import { CacheMetricsService } from "./cache-metrics.service";
 import { Result } from "neverthrow";
@@ -23,16 +22,17 @@ export class DistributedCacheService implements OnModuleInit, OnApplicationShutd
   }
 
   async onModuleInit() {
-    if (!env.REDIS_URL) {
+    const client = this.redisService.getClient();
+    if (!client) {
       this.logger.warn(
         {},
-        "REDIS_URL not set. Distributed cache invalidation will only work locally.",
+        "Redis is unavailable. Distributed cache invalidation will only work locally.",
       );
       return;
     }
 
     try {
-      this.subscriber = new Redis(env.REDIS_URL);
+      this.subscriber = client.duplicate();
 
       this.subscriber.on("error", (error) => {
         this.logger.error({ error }, "Cache subscriber error");
@@ -49,6 +49,8 @@ export class DistributedCacheService implements OnModuleInit, OnApplicationShutd
       });
     } catch (error) {
       this.logger.error({ error }, "Failed to initialize distributed cache subscriber");
+      this.subscriber?.disconnect();
+      this.subscriber = null;
     }
   }
 
