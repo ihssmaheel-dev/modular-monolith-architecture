@@ -47,7 +47,7 @@ describe("RateLimitService", () => {
   });
 
   it("should check by route", async () => {
-    const result = await service.checkByRoute("/api/users");
+    const result = await service.checkByRoute("/api/v1/users");
     expect(result.allowed).toBe(true);
   });
 });

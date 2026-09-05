@@ -15,7 +15,7 @@ function createFilter() {
   return new AllExceptionsFilter(logger, i18n);
 }
 
-function host(url = "/api/notes") {
+function host(url = "/api/v1/notes") {
   const response = {
     header: vi.fn(),
     status: vi.fn().mockReturnThis(),
@@ -49,7 +49,7 @@ describe("AllExceptionsFilter", () => {
 
   it("keeps the typed envelope inside the oRPC error transport", () => {
     const filter = createFilter();
-    const ctx = host("/api/rpc/notes/list");
+    const ctx = host("/api/v1/rpc/notes/list");
     filter.catch(new BadRequestException(), ctx.value as never);
     const body = ctx.response.send.mock.calls[0]![0] as { data: unknown; requestId: string };
     expect(ApiErrorEnvelopeSchema.safeParse(body.data).success).toBe(true);

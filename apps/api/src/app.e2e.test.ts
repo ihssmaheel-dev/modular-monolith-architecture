@@ -3,6 +3,7 @@ import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify
 import cookie from "@fastify/cookie";
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
+import { API_GLOBAL_PREFIX } from "@repo/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 let AppModule: typeof import("./app.module.js").AppModule;
@@ -45,7 +46,7 @@ describe("API liveness", () => {
         }
         done();
       });
-    app.setGlobalPrefix("api");
+    app.setGlobalPrefix(API_GLOBAL_PREFIX);
     await app.init();
     pool = new Pool({ connectionString: env.DATABASE_URL, max: 1 });
   });
@@ -59,7 +60,7 @@ describe("API liveness", () => {
   it("returns a liveness response without database dependencies", async () => {
     const response = await app.getHttpAdapter().getInstance().inject({
       method: "GET",
-      url: "/api/health/live",
+      url: "/api/v1/health/live",
     });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ status: "ok" });
@@ -68,8 +69,8 @@ describe("API liveness", () => {
   it("serves the tenancy status through REST and oRPC transports", async () => {
     const instance = app.getHttpAdapter().getInstance();
     const [rest, orpc] = await Promise.all([
-      instance.inject({ method: "GET", url: "/api/tenancy/status" }),
-      instance.inject({ method: "GET", url: "/api/rpc/tenancy/status" }),
+      instance.inject({ method: "GET", url: "/api/v1/tenancy/status" }),
+      instance.inject({ method: "GET", url: "/api/v1/rpc/tenancy/status" }),
     ]);
 
     expect(rest.statusCode).toBe(200);
@@ -80,8 +81,8 @@ describe("API liveness", () => {
   it("enforces authentication on REST and oRPC resource routes", async () => {
     const instance = app.getHttpAdapter().getInstance();
     const [rest, orpc] = await Promise.all([
-      instance.inject({ method: "GET", url: "/api/notes" }),
-      instance.inject({ method: "GET", url: "/api/rpc/notes" }),
+      instance.inject({ method: "GET", url: "/api/v1/notes" }),
+      instance.inject({ method: "GET", url: "/api/v1/rpc/notes" }),
     ]);
 
     expect(rest.statusCode).toBe(401);
@@ -107,7 +108,7 @@ describe("API liveness", () => {
     const instance = app.getHttpAdapter().getInstance();
     const registration = await instance.inject({
       method: "POST",
-      url: "/api/auth/register",
+      url: "/api/v1/auth/register",
       payload: {
         name: "Cookie Owner",
         email: `cookie-${crypto.randomUUID()}@example.com`,
@@ -128,7 +129,7 @@ describe("API liveness", () => {
     const xsrf = xsrfCookie.split(";", 1)[0] ?? "";
     const refreshed = await instance.inject({
       method: "POST",
-      url: "/api/rpc/auth/refresh",
+      url: "/api/v1/rpc/auth/refresh",
       headers: {
         cookie: `${refreshCookie.split(";", 1)[0]}; ${xsrf}`,
         "x-xsrf-token": xsrf.split("=", 1)[1] ?? "",
@@ -145,7 +146,7 @@ describe("API liveness", () => {
     const email = `organization-${crypto.randomUUID()}@example.com`;
     const registration = await instance.inject({
       method: "POST",
-      url: "/api/auth/register",
+      url: "/api/v1/auth/register",
       payload: { name: "Organization Owner", email, password: "Password123!" },
     });
     expect(registration.statusCode).toBe(201);
@@ -157,13 +158,13 @@ describe("API liveness", () => {
     const [rest, orpc] = await Promise.all([
       instance.inject({
         method: "POST",
-        url: "/api/tenancy/organizations",
+        url: "/api/v1/tenancy/organizations",
         headers,
         payload: { name: "REST Organization" },
       }),
       instance.inject({
         method: "POST",
-        url: "/api/rpc/tenancy/organizations",
+        url: "/api/v1/rpc/tenancy/organizations",
         headers: { ...headers, "idempotency-key": crypto.randomUUID() },
         payload: { name: "oRPC Organization" },
       }),
@@ -184,8 +185,8 @@ describe("API liveness", () => {
     const instance = app.getHttpAdapter().getInstance();
     const payload = { email: "invalid", password: "short" };
     const [rest, orpc] = await Promise.all([
-      instance.inject({ method: "POST", url: "/api/auth/login", payload }),
-      instance.inject({ method: "POST", url: "/api/rpc/auth/login", payload }),
+      instance.inject({ method: "POST", url: "/api/v1/auth/login", payload }),
+      instance.inject({ method: "POST", url: "/api/v1/rpc/auth/login", payload }),
     ]);
 
     expect(rest.statusCode).toBe(400);
@@ -214,7 +215,7 @@ describe("API liveness", () => {
         .getInstance()
         .inject({
           method: "POST",
-          url: "/api/auth/register",
+          url: "/api/v1/auth/register",
           payload: { name: `Registration ${mode}`, email, password: "Password123!" },
         });
 
@@ -235,51 +236,61 @@ function protectedParityRoutes(): Array<
   ["GET" | "POST" | "PATCH" | "DELETE", string, string, Record<string, unknown> | undefined]
 > {
   return [
-    ["GET", "/api/notes", "/api/rpc/notes", undefined],
-    ["GET", "/api/notes/note-1", "/api/rpc/notes/note-1", undefined],
-    ["POST", "/api/notes", "/api/rpc/notes", { title: "Title", content: "Content" }],
-    ["PATCH", "/api/notes/note-1", "/api/rpc/notes/note-1", { title: "Updated" }],
-    ["DELETE", "/api/notes/note-1", "/api/rpc/notes/note-1", undefined],
-    ["GET", "/api/users", "/api/rpc/users", undefined],
-    ["GET", "/api/users/user-1", "/api/rpc/users/user-1", undefined],
-    ["PATCH", "/api/users/user-1", "/api/rpc/users/user-1", { name: "Updated" }],
+    ["GET", "/api/v1/notes", "/api/v1/rpc/notes", undefined],
+    ["GET", "/api/v1/notes/note-1", "/api/v1/rpc/notes/note-1", undefined],
+    ["POST", "/api/v1/notes", "/api/v1/rpc/notes", { title: "Title", content: "Content" }],
+    ["PATCH", "/api/v1/notes/note-1", "/api/v1/rpc/notes/note-1", { title: "Updated" }],
+    ["DELETE", "/api/v1/notes/note-1", "/api/v1/rpc/notes/note-1", undefined],
+    ["GET", "/api/v1/users", "/api/v1/rpc/users", undefined],
+    ["GET", "/api/v1/users/user-1", "/api/v1/rpc/users/user-1", undefined],
+    ["PATCH", "/api/v1/users/user-1", "/api/v1/rpc/users/user-1", { name: "Updated" }],
     [
       "POST",
-      "/api/users",
-      "/api/rpc/users",
+      "/api/v1/users",
+      "/api/v1/rpc/users",
       { email: "a@b.com", name: "A", password: "Password123!" },
     ],
-    ["DELETE", "/api/users/user-1", "/api/rpc/users/user-1", undefined],
-    ["POST", "/api/tenancy/organizations", "/api/rpc/tenancy/organizations", { name: "Org" }],
-    ["GET", "/api/tenancy/organizations", "/api/rpc/tenancy/organizations", undefined],
-    ["GET", "/api/tenancy/members", "/api/rpc/tenancy/members", undefined],
-    ["PATCH", "/api/tenancy/members/user-1", "/api/rpc/tenancy/members/user-1", { role: "member" }],
-    ["DELETE", "/api/tenancy/members/user-1", "/api/rpc/tenancy/members/user-1", undefined],
+    ["DELETE", "/api/v1/users/user-1", "/api/v1/rpc/users/user-1", undefined],
+    ["POST", "/api/v1/tenancy/organizations", "/api/v1/rpc/tenancy/organizations", { name: "Org" }],
+    ["GET", "/api/v1/tenancy/organizations", "/api/v1/rpc/tenancy/organizations", undefined],
+    ["GET", "/api/v1/tenancy/members", "/api/v1/rpc/tenancy/members", undefined],
+    [
+      "PATCH",
+      "/api/v1/tenancy/members/user-1",
+      "/api/v1/rpc/tenancy/members/user-1",
+      { role: "member" },
+    ],
+    ["DELETE", "/api/v1/tenancy/members/user-1", "/api/v1/rpc/tenancy/members/user-1", undefined],
     [
       "POST",
-      "/api/tenancy/invitations",
-      "/api/rpc/tenancy/invitations",
+      "/api/v1/tenancy/invitations",
+      "/api/v1/rpc/tenancy/invitations",
       { email: "a@b.com", role: "member" },
     ],
-    ["GET", "/api/tenancy/invitations", "/api/rpc/tenancy/invitations", undefined],
+    ["GET", "/api/v1/tenancy/invitations", "/api/v1/rpc/tenancy/invitations", undefined],
     [
       "POST",
-      "/api/tenancy/invitations/accept",
-      "/api/rpc/tenancy/invitations/accept",
+      "/api/v1/tenancy/invitations/accept",
+      "/api/v1/rpc/tenancy/invitations/accept",
       { token: "token" },
     ],
-    ["GET", "/api/files", "/api/rpc/files", undefined],
+    ["GET", "/api/v1/files", "/api/v1/rpc/files", undefined],
     [
       "POST",
-      "/api/files/upload-url",
-      "/api/rpc/files/upload-url",
+      "/api/v1/files/upload-url",
+      "/api/v1/rpc/files/upload-url",
       { fileName: "a.txt", contentType: "text/plain", fileSize: 1, parentType: "general" },
     ],
-    ["POST", "/api/files/confirm", "/api/rpc/files/confirm", { fileKey: "uploads/key" }],
-    ["GET", "/api/files/file-1", "/api/rpc/files/file-1", undefined],
-    ["GET", "/api/files/file-1/download-url", "/api/rpc/files/file-1/download-url", undefined],
-    ["DELETE", "/api/files/file-1", "/api/rpc/files/file-1", undefined],
-    ["GET", "/api/auth/me", "/api/rpc/auth/me", undefined],
-    ["POST", "/api/auth/logout", "/api/rpc/auth/logout", undefined],
+    ["POST", "/api/v1/files/confirm", "/api/v1/rpc/files/confirm", { fileKey: "uploads/key" }],
+    ["GET", "/api/v1/files/file-1", "/api/v1/rpc/files/file-1", undefined],
+    [
+      "GET",
+      "/api/v1/files/file-1/download-url",
+      "/api/v1/rpc/files/file-1/download-url",
+      undefined,
+    ],
+    ["DELETE", "/api/v1/files/file-1", "/api/v1/rpc/files/file-1", undefined],
+    ["GET", "/api/v1/auth/me", "/api/v1/rpc/auth/me", undefined],
+    ["POST", "/api/v1/auth/logout", "/api/v1/rpc/auth/logout", undefined],
   ];
 }

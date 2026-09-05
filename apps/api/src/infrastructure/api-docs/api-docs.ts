@@ -1,5 +1,5 @@
 import { NestFastifyApplication } from "@nestjs/platform-fastify";
-import { apiContract } from "@repo/contracts";
+import { API_BASE_PATH, API_DOCS_PATH, apiContract } from "@repo/contracts";
 import { env } from "../../config/env";
 import { Zod4SchemaConverter } from "./zod-schema-converter";
 import { PinoLoggerService } from "../logger/logger.service";
@@ -19,24 +19,26 @@ export async function setupApiDocs(app: NestFastifyApplication): Promise<void> {
         description: "Auto-generated OpenAPI 3.1 Documentation via oRPC and Zod 4 schemas.",
       },
       servers: [
-        { url: "/api/rpc", description: "oRPC runtime transport (relative)" },
-        { url: `${env.API_URL}/api/rpc`, description: "Direct oRPC runtime transport" },
-        { url: "/api", description: "REST compatibility transport" },
+        { url: `${API_BASE_PATH}/rpc`, description: "oRPC runtime transport (relative)" },
+        {
+          url: `${env.API_URL}${API_BASE_PATH}/rpc`,
+          description: "Direct oRPC runtime transport",
+        },
+        { url: API_BASE_PATH, description: "REST compatibility transport" },
       ],
     });
 
     const fastify = app.getHttpAdapter().getInstance();
 
-    // Expose raw OpenAPI JSON at /api/docs/json for debugging and for Scalar URL reference
-    fastify.get("/api/docs/json", async (_req, reply) => {
+    // Expose raw OpenAPI JSON at /api/docs/json for debugging and for Scalar URL reference.
+    fastify.get(`${API_DOCS_PATH}/json`, async (_req, reply) => {
       reply.type("application/json").send(document);
     });
 
     // Scalar is a Fastify plugin — register directly on the Fastify instance
-    // BEFORE Nest global prefix/versioning so /api/docs is not versioned.
-    // Serve at exactly /api/docs (matching banner) regardless of Nest prefix.
+    // Register before Nest's global prefix so the documentation URL remains stable.
     await fastify.register(fastifyApiReference as unknown as never, {
-      routePrefix: "/api/docs",
+      routePrefix: API_DOCS_PATH,
       configuration: {
         content: document,
         theme: "kepler",

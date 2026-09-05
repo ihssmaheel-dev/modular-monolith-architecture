@@ -97,7 +97,7 @@ jobs:
           JWT_REFRESH_SECRET=ci-production-refresh-secret-32chars \
           CLIENT_URL=https://app.example.test \
           API_URL=https://api.example.test \
-          VITE_API_URL=https://api.example.test/api \
+          VITE_API_URL=https://api.example.test/api/v1 \
           S3_ENDPOINT=https://storage.example.test \
           S3_ACCESS_KEY_ID=ci-storage-key \
           S3_SECRET_ACCESS_KEY=ci-storage-secret \
@@ -111,4 +111,4 @@ jobs:
           echo "Deploy on your host with:"
           echo "  TAG=${GITHUB_SHA::12} docker compose -f docker/docker-compose.prod.yml up -d --wait"
           echo "Migrations run via the 'migrate' service with service_completed_successfully gate."
-          echo "Verify health: GET /api/health/live (api) and GET / (web)."
+          echo "Verify health: GET /api/v1/health/live (api) and GET / (web)."

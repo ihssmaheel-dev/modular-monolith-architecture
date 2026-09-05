@@ -31,7 +31,7 @@ describe("AuthGuard", () => {
   it("accepts and stores a verified access-token actor", async () => {
     const actor = { sub: "user-1", email: "user@example.com", role: "user" } as const;
     vi.mocked(verifyAccessToken).mockReturnValue(actor);
-    const request = { url: "/api/users", headers: { authorization: "Bearer token" } };
+    const request = { url: "/api/v1/users", headers: { authorization: "Bearer token" } };
 
     await expect(guard.canActivate(contextFor(request))).resolves.toBe(true);
     expect(request).toHaveProperty("user", actor);
@@ -39,9 +39,9 @@ describe("AuthGuard", () => {
   });
 
   it("rejects a protected route without a valid token", async () => {
-    await expect(guard.canActivate(contextFor({ url: "/api/users", headers: {} }))).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(
+      guard.canActivate(contextFor({ url: "/api/v1/users", headers: {} })),
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it("allows metrics only with the dedicated token", async () => {
@@ -70,7 +70,7 @@ describe("AuthGuard", () => {
 
     await expect(
       guard.canActivate(
-        contextFor({ url: "/api/users", headers: { authorization: "Bearer token" } }),
+        contextFor({ url: "/api/v1/users", headers: { authorization: "Bearer token" } }),
       ),
     ).rejects.toThrow(UnauthorizedException);
     expect(users.execute).toHaveBeenCalledWith(actor.sub);

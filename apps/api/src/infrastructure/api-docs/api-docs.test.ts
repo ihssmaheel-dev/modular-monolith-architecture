@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import Fastify from "fastify";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
+import { API_BASE_PATH } from "@repo/contracts";
 import { setupApiDocs } from "./api-docs";
 
 vi.mock("../../config/env", () => ({
@@ -29,7 +30,9 @@ describe("setupApiDocs", () => {
     const spec = jsonRes.json();
     expect(spec.paths["/auth/register"].post.requestBody).toBeDefined();
     expect(spec.paths["/auth/register"].post.responses["201"]).toBeDefined();
-    expect(spec.servers.map((server: { url: string }) => server.url)).toContain("/api/rpc");
+    expect(spec.servers.map((server: { url: string }) => server.url)).toContain(
+      `${API_BASE_PATH}/rpc`,
+    );
     expect(
       spec.paths["/tenancy/members/{userId}"].patch.parameters.some(
         (parameter: { name: string; in: string }) =>

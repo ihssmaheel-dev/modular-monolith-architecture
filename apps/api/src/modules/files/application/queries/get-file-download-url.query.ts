@@ -4,7 +4,7 @@ import { StorageService } from "../../../../infrastructure/storage/storage.servi
 import { env } from "../../../../config/env";
 import { FilesRepository } from "../../infrastructure/files.repository";
 import type { FileError } from "../../domain/errors/file.errors";
-import type { AuthenticatedUser } from "@repo/contracts";
+import { API_BASE_PATH, type AuthenticatedUser } from "@repo/contracts";
 import { AuthorizationService } from "../../../../infrastructure/authorization";
 import { TenantContextService } from "../../../../infrastructure/database";
 import { canAccessResource } from "../../../../common/utils/resource-authorization";
@@ -49,7 +49,9 @@ export class GetFileDownloadUrlQuery {
       return err({ type: "FILE_NOT_FOUND", message: "api.file.notFound" });
     }
     if (!this.storage.usesDirectTransfer()) {
-      return ok({ downloadUrl: new URL(`/api/files/${file.id}/content`, env.API_URL).toString() });
+      return ok({
+        downloadUrl: new URL(`${API_BASE_PATH}/files/${file.id}/content`, env.API_URL).toString(),
+      });
     }
     const urlResult = await this.storage.getPresignedDownloadUrl(file.key);
 

@@ -131,7 +131,7 @@ jobs:
           JWT_REFRESH_SECRET=ci-production-refresh-secret-32chars \
           CLIENT_URL=https://app.example.test \
           API_URL=https://api.example.test \
-          VITE_API_URL=https://api.example.test/api \
+          VITE_API_URL=https://api.example.test/api/v1 \
           S3_ENDPOINT=https://storage.example.test \
           S3_ACCESS_KEY_ID=ci-storage-key \
           S3_SECRET_ACCESS_KEY=ci-storage-secret \
@@ -143,4 +143,4 @@ jobs:
         run: docker build --file Dockerfile --tag modular-monolith-api:ci .
 
       - name: Build production web image
-        run: docker build --file apps/web/Dockerfile --build-arg VITE_API_URL=http://localhost:3000 --tag modular-monolith-web:ci .
+        run: docker build --file apps/web/Dockerfile --build-arg VITE_API_URL=http://localhost:3000/api/v1 --tag modular-monolith-web:ci .

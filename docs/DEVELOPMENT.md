@@ -47,7 +47,7 @@ pnpm --filter web build && pnpm --filter web start # standalone production-like 
 
 Local endpoints:
 
-- API `http://localhost:3000/api`, Scalar `http://localhost:3000/api/docs`
+- API `http://localhost:3000/api/v1`, Scalar `http://localhost:3000/api/docs`
 - Web `http://localhost:5173`
 - MinIO console `http://localhost:9001`, Mailpit `http://localhost:8025`
 
@@ -58,7 +58,7 @@ Stop infrastructure with `pnpm docker:down`.
 Web reads `apps/web/.env` (copied from `.env.example` on `pnpm bootstrap`):
 
 ```env
-VITE_API_URL=http://localhost:3000/api
+VITE_API_URL=http://localhost:3000/api/v1
 ```
 
 The web app is independently runnable, but it still needs `VITE_API_URL` to point to a separately running

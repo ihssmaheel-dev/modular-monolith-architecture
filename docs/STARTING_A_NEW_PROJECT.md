@@ -51,12 +51,17 @@ Set `TENANCY_MODE=single` for a product with one logical workspace, or `TENANCY_
 
 The notes feature shows the intended path: Zod contract → API client → authenticated/tenant-aware controller → command/query → tenant-scoped repository → domain event/outbox/audit → localized TanStack Start screen. Replace the domain vocabulary and policies for a real feature; do not expose the sample's assumptions as shared infrastructure.
 
-## API transport decision
+## API transport and versioning decision
 
 oRPC is the canonical application transport. Contracts in `@repo/contracts` define the input,
 output, method, path, and success status once; the Nest `@orpc/nest` adapter exposes those
-procedures under `/api/rpc/*`, and `@repo/api-client` calls them by default. The oRPC adapter and
+procedures under `/api/v1/rpc/*`, and `@repo/api-client` calls them by default. The oRPC adapter and
 the compatibility REST controllers delegate to the same application commands and queries, so
-business rules are never duplicated. REST remains available at `/api/*` for health checks,
+business rules are never duplicated. REST remains available at `/api/v1/*` for health checks,
 integrations, uploads, and gradual migrations. Every new route must add the contract, oRPC
 presentation handler, REST compatibility mapping when needed, and a parity/smoke test.
+
+`v1` is the stable public API surface. Keep contracts and module code version-neutral; add a new
+version at the transport boundary when a breaking change is required. The Scalar documentation
+stays at `/api/docs`, while application health stays under `/api/v1/health/*` and metrics stay at
+`/metrics`.

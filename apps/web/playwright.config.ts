@@ -1,7 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const apiUrl = process.env.VITE_API_URL ?? "http://127.0.0.1:3000/api";
-const apiOrigin = new URL(apiUrl).origin;
+const apiUrl = process.env.VITE_API_URL ?? "http://127.0.0.1:3000/api/v1";
+const parsedApiUrl = new URL(apiUrl);
+const apiOrigin = parsedApiUrl.origin;
+const apiBasePath = parsedApiUrl.pathname.replace(/\/+$/, "");
 
 export default defineConfig({
   testDir: "./e2e",
@@ -18,7 +20,7 @@ export default defineConfig({
   webServer: [
     {
       command: "pnpm --filter api start",
-      url: `${apiOrigin}/api/health/live`,
+      url: `${apiOrigin}${apiBasePath}/health/live`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },

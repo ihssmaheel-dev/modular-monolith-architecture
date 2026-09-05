@@ -15,7 +15,12 @@ import { I18nService } from "./infrastructure/i18n/i18n.service";
 import { env } from "./config/env";
 import { setupApiDocs } from "./infrastructure/api-docs";
 import { printStartupBanner } from "./common/utils/startup-banner.util";
-import { MAX_FILE_SIZE_BYTES } from "@repo/contracts";
+import {
+  API_BASE_PATH,
+  API_DOCS_PATH,
+  API_GLOBAL_PREFIX,
+  MAX_FILE_SIZE_BYTES,
+} from "@repo/contracts";
 import { ClsService } from "nestjs-cls";
 
 // Configure high-performance global HTTP agent
@@ -33,7 +38,12 @@ const UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION = 0.98;
 const UNDER_PRESSURE_RETRY_AFTER_SECONDS = 30;
 // Probes and docs must keep answering during load spikes so the
 // orchestrator does not restart a merely busy (not dead) process.
-const UNDER_PRESSURE_BYPASS_PREFIXES = ["/api/health", "/metrics", "/api/docs", "/docs"];
+const UNDER_PRESSURE_BYPASS_PREFIXES = [
+  `${API_BASE_PATH}/health`,
+  "/metrics",
+  API_DOCS_PATH,
+  "/docs",
+];
 
 interface FastifyPressureRequest {
   url?: string;
@@ -106,7 +116,7 @@ async function bootstrap() {
       done();
     });
 
-  // Register API docs BEFORE global prefix/versioning so /api/docs is not versioned
+  // Register API docs BEFORE the versioned global prefix so /api/docs remains stable.
   if (env.NODE_ENV !== "production") {
     await setupApiDocs(app);
   }
@@ -145,7 +155,7 @@ async function bootstrap() {
     },
   });
 
-  app.setGlobalPrefix("api", { exclude: ["metrics", "docs", "api/docs"] });
+  app.setGlobalPrefix(API_GLOBAL_PREFIX, { exclude: ["metrics", "docs", "api/docs"] });
   app.enableCors({
     origin:
       env.NODE_ENV === "production"

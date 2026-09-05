@@ -12,7 +12,7 @@ or:
 TENANCY_MODE=multi
 ```
 
-Single mode is the default. It registers only `GET /api/tenancy/status`, adds no tenant fields to
+Single mode is the default. It registers only `GET /api/v1/tenancy/status`, adds no tenant fields to
 new records, and preserves the existing application behavior. Multi mode registers the complete
 organization, membership, and invitation API.
 
@@ -20,7 +20,7 @@ organization, membership, and invitation API.
 
 The shared API client automatically sends the selected organization as `x-tenant-id`. The web
 client persists the selection through its tenant store. The first organization can be created
-from the built-in switcher or with `POST /api/tenancy/organizations`.
+from the built-in switcher or with `POST /api/v1/tenancy/organizations`.
 
 Tenant-owned frontend caches must include the active tenant ID in their query key, or reset when
 the tenant changes. Authentication logout/failure already clears the built-in query caches.

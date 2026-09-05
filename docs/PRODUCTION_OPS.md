@@ -19,7 +19,7 @@ TAG=<sha> docker compose -f docker/docker-compose.prod.yml up -d --wait
 ```
 
 Migrations run first via the `migrate` service (`service_completed_successfully` gate), so API
-and worker never start against an unmigrated database. Verify with `GET /api/health/live`
+and worker never start against an unmigrated database. Verify with `GET /api/v1/health/live`
 and `GET /` afterwards. Roll back by re-running with the previous `TAG`.
 
 ## TLS (`docker/nginx.conf`, `docker/ssl/`)
@@ -75,7 +75,7 @@ database — an untested backup is not a backup.
 
 `@fastify/under-pressure` sheds traffic with `503 + Retry-After: 30` when the event loop
 exceeds 1000ms delay or 0.98 utilization (container-size-independent signals; no heap/RSS
-byte thresholds by design). Probes and docs (`/api/health`, `/metrics`, `/api/docs`, `/docs`)
+byte thresholds by design). Probes and docs (`/api/v1/health`, `/metrics`, `/api/docs`, `/docs`)
 bypass shedding so the orchestrator never restarts a merely busy process. Shed events log a
 Pino warning with `pressureType`. Tune thresholds from Grafana event-loop panels under real
 traffic; the 503 envelope is `{ statusCode: 503, message, error: "UNDER_PRESSURE" }`.

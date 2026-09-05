@@ -5,9 +5,9 @@ This repository is a modular monolith with one deployable API and one web client
 ## API and contracts
 
 `@repo/contracts` is the schema source of truth and the oRPC contract registry. The Nest
-`@orpc/nest` adapter serves the contracts as the runtime transport at `/api/rpc/*`; the typed
+`@orpc/nest` adapter serves the contracts as the runtime transport at `/api/v1/rpc/*`; the typed
 `@repo/api-client` uses this transport by default. Compatibility REST controllers remain at
-`/api/*` and call the same application commands/queries. A route is complete only when its
+`/api/v1/*` and call the same application commands/queries. A route is complete only when its
 contract, oRPC handler, REST compatibility mapping (where required), and transport parity smoke
 test are present.
 
@@ -17,6 +17,11 @@ test are present.
 oRPC client → OpenAPI link → Nest @orpc/nest adapter → guards/interceptors
   → contract validation → application command/query → repository → database/outbox/audit
 ```
+
+`v1` is the stable public API surface. Contracts and module controllers are version-neutral; a
+breaking API change creates a new transport version without modifying the previous version's
+contract. API documentation remains at `/api/docs`, health checks use `/api/v1/health/*`, and
+metrics use `/metrics`.
 
 Authentication, tenant, locale, CSRF, and idempotency headers are injected by the shared client;
 the same global Nest security pipeline protects both transports. oRPC errors use the stable API
@@ -79,7 +84,7 @@ Critical events are written to the transactional outbox in the same database tra
 
 ## Authentication
 
-Access tokens are short-lived and validate issuer, audience, algorithm, and account version. The protected web layout bootstraps against `GET /api/auth/me` before rendering application content, so persisted UI state is never treated as proof of a live session. Refresh tokens carry a unique `jti` and are single-use when Redis is available; reuse is rejected and logout/password reset increment the account version, revoke sessions, and disconnect realtime clients. Redis revocation fan-out ensures every API replica closes its local realtime connections. Signing-key rotation uses `JWT_SIGNING_KEYS` and `JWT_REFRESH_SIGNING_KEYS`: new tokens carry the active `kid`, verification accepts every retained key, and legacy tokens without `kid` use the legacy secret fallback. Keep old keys until the maximum token lifetime has elapsed before removing them.
+Access tokens are short-lived and validate issuer, audience, algorithm, and account version. The protected web layout bootstraps against `GET /api/v1/auth/me` before rendering application content, so persisted UI state is never treated as proof of a live session. Refresh tokens carry a unique `jti` and are single-use when Redis is available; reuse is rejected and logout/password reset increment the account version, revoke sessions, and disconnect realtime clients. Redis revocation fan-out ensures every API replica closes its local realtime connections. Signing-key rotation uses `JWT_SIGNING_KEYS` and `JWT_REFRESH_SIGNING_KEYS`: new tokens carry the active `kid`, verification accepts every retained key, and legacy tokens without `kid` use the legacy secret fallback. Keep old keys until the maximum token lifetime has elapsed before removing them.
 
 ## Transaction boundaries
 

@@ -142,18 +142,18 @@ pnpm observability:logs # Tail telemetry logs
 
 ## Local Service Directory
 
-| Service                  | Local URL / Port                 | Credentials / Purpose                        |
-| :----------------------- | :------------------------------- | :------------------------------------------- |
-| **API Backend**          | `http://localhost:3000`          | Fastify API Server (`/api`, `/api/health/*`) |
-| **Web (TanStack Start)** | `http://localhost:5173`          | Vite + SSR (dev) `pnpm --filter web dev`     |
-| **Scalar API Reference** | `http://localhost:3000/api/docs` | Interactive OpenAPI 3.1 Docs                 |
-| **Grafana Dashboard**    | `http://localhost:3001`          | `admin / admin` (API, DB, Redis metrics)     |
-| **Jaeger Trace Viewer**  | `http://localhost:16686`         | OpenTelemetry Distributed Traces             |
-| **Prometheus Metrics**   | `http://localhost:9090`          | Time-series Metrics Server                   |
-| **Loki Log Engine**      | `http://localhost:3100`          | High-performance Log Aggregator              |
-| **Mailpit Web UI**       | `http://localhost:8025`          | Local SMTP Email Inbox (`:1025`)             |
-| **MinIO Console**        | `http://localhost:9001`          | `minioadmin / minioadmin` (S3: `:9000`)      |
-| **pgAdmin 4**            | `http://localhost:5050`          | `admin@example.com / admin`                  |
+| Service                  | Local URL / Port                 | Credentials / Purpose                              |
+| :----------------------- | :------------------------------- | :------------------------------------------------- |
+| **API Backend**          | `http://localhost:3000`          | Fastify API Server (`/api/v1`, `/api/v1/health/*`) |
+| **Web (TanStack Start)** | `http://localhost:5173`          | Vite + SSR (dev) `pnpm --filter web dev`           |
+| **Scalar API Reference** | `http://localhost:3000/api/docs` | Interactive OpenAPI 3.1 Docs                       |
+| **Grafana Dashboard**    | `http://localhost:3001`          | `admin / admin` (API, DB, Redis metrics)           |
+| **Jaeger Trace Viewer**  | `http://localhost:16686`         | OpenTelemetry Distributed Traces                   |
+| **Prometheus Metrics**   | `http://localhost:9090`          | Time-series Metrics Server                         |
+| **Loki Log Engine**      | `http://localhost:3100`          | High-performance Log Aggregator                    |
+| **Mailpit Web UI**       | `http://localhost:8025`          | Local SMTP Email Inbox (`:1025`)                   |
+| **MinIO Console**        | `http://localhost:9001`          | `minioadmin / minioadmin` (S3: `:9000`)            |
+| **pgAdmin 4**            | `http://localhost:5050`          | `admin@example.com / admin`                        |
 
 ---
 
@@ -209,8 +209,8 @@ For delivery, TLS, secrets, alerting, backups, and load shedding, follow [Produc
 
 ## Health Checks
 
-- **Liveness:** `GET /api/health/live`
-- **Readiness:** `GET /api/health/ready`
+- **Liveness:** `GET /api/v1/health/live`
+- **Readiness:** `GET /api/v1/health/ready`
 - **Prometheus Metrics:** `GET /metrics`
 
 ---

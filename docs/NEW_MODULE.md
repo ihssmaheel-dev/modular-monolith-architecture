@@ -76,7 +76,7 @@ Protect mutations with permissions and idempotency where required.
 
 Add the oRPC presentation adapter beside the REST controller. Decorate each procedure with
 `@Implement(contract.procedure)`, use `implement(contract.procedure).handler(...)`, and delegate
-to the same command/query as REST. The adapter is served below `/api/rpc`; keep it free of a
+to the same command/query as REST. The adapter is served below `/api/v1/rpc`; keep it free of a
 second business implementation. Add a parity test that compares contract metadata and a smoke
 test that exercises at least one authenticated and one public procedure.
 
